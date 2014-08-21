@@ -7,11 +7,19 @@ var connect = require('gulp-connect');
 var http = require('http');
 var io = require('socket.io');
 var events = require('events');
-var verbose = false;
 var gutil = require('gulp-util');
 var SauceTunnel = require('sauce-tunnel');
 var extend = require('extend');
 var argv = require('yargs').argv;
+var freeport = require('freeport');
+var seleniumLauncher = require('selenium-standalone');
+
+// Helper to get a fully-qualified string from a browser definition
+function toBrowserString(browser) {
+  return (browser.platform ? (browser.platform + ' ') : '') + 
+    browser.browserName + 
+    (browser.version ? (' ' + browser.version) : '');
+}
 
 // Browser abstraction, responsible for spinning up a browser instance via wd.js and
 // executing runner.html test files passed in options.files
@@ -37,7 +45,7 @@ function BrowserRunner(reporter, local, def, options, doneCallback) {
 
   // Create wd browser instance
   if (local) {
-    this.browser = wd.remote();
+    this.browser = wd.remote('localhost', options.seleniumPort);
   } else {
     var user = options.sauceUser || process.env.SAUCE_USERNAME;
     var key = options.sauceKey || process.env.SAUCE_ACCESS_KEY;
@@ -45,7 +53,7 @@ function BrowserRunner(reporter, local, def, options, doneCallback) {
   }
 
   // Setup browser logging
-  if (verbose) {
+  if (argv.verbose) {
     this.browser.on('status', function(info) {
       console.log(info.cyan);
     });
@@ -219,23 +227,25 @@ function runTests(reporter, local, browsers, options, doneCallback) {
 
 // Direct testing entry point
 function test(local, browsers, options, doneCallback) {
+  var tunnel;
+  var selenium;
+  var serverOpen = false;
+  var reporter = new events.EventEmitter();
   options = extend({}, options);
-  options.port = options.port|| 9998;
+  options.port = options.port || 9998;
+  options.startTunnel = local ? false : (options.startTunnel === undefined ? true : options.startTunnel);
+  options.startSelenium = local ? (options.startSelenium === undefined) : options.startSelenium;
   if (argv['only-browsers']) {
     browsers = argv['only-browsers'].toString().split(',').map(function(b) {
-      return browsers[parseInt(b)];
+      return browsers[parseInt(b)-1];
     });
   }
-  var reporter = new events.EventEmitter();
-  var tunnel;
-  var serverOpen = false;
   // Allow users to set up reporter listeners
   setImmediate(function() {
     async.series([
+      // Start sauce tunnel (remote only)
       function(next) {
-        if (!options.tunnel) {
-          next();
-        } else {
+        if (options.startTunnel) {
           var user = options.sauceUser || process.env.SAUCE_USERNAME;
           var key = options.sauceKey || process.env.SAUCE_ACCESS_KEY;
           options.sauceTunnelId = options.sauceTunnelId || 'Tunnel'+Date.now();
@@ -247,19 +257,51 @@ function test(local, browsers, options, doneCallback) {
             }
             next(status ? null : 'Could not start sauce tunnel');
           });
+        } else {
+          next();
         }
       },
+      // Start selenium (local only)
+      function(next) {
+        if (options.startSelenium) {
+          freeport(function(err, port) {
+            reporter.emit('selenium starting', {port: port});
+            options.seleniumPort = port;
+            selenium = seleniumLauncher({stdio: null}, ['-port', options.seleniumPort]);
+            var badExit = function() { next('Could not start selenium'); };
+            selenium.on('exit', badExit);
+            selenium.stdout.on('data', function(data) {
+              if (data.toString().indexOf('Started org.openqa.jetty.jetty.Server') > -1) {
+                selenium.removeListener('exit', badExit);
+                next();
+              }
+            });
+          });
+        } else {
+          next();
+        }
+      },
+      // Start web server
       function(next) {
         connect.server({
           root: options.root || path.join(process.cwd(), '..'),
           port: options.port
         });
         serverOpen = true;
-        runTests(reporter, local, browsers, options, next);
+        next();
       },
-    ], function(err) {
+      // Run the tests
+      function(next) {
+        runTests(reporter, local, browsers, options, next);
+      }
+    ], 
+    // Cleanup
+    function(err) {
       if (serverOpen) {
         connect.serverClose();
+      }
+      if (selenium) {
+        selenium.kill();
       }
       if (tunnel) {
         reporter.emit('tunnel stopping');
@@ -278,7 +320,6 @@ function test(local, browsers, options, doneCallback) {
 // Gulp task initialization entry point
 function init(gulp, options) {
   options = options || {};
-  options.tunnel = (options.tunnel === undefined) ? true : options.tunnel;
   var browsersJson = path.join(process.cwd(), '../polymer-test-tools/ci-browsers.json');
   gulp.task('test-local', function(cb) {
     var reporter = test(true, options.browsers || require(browsersJson).local, options, cb);
@@ -298,30 +339,36 @@ function init(gulp, options) {
     reporter.on('tunnel started', function(data) {
       gutil.log('Tunnel started');
     });
-    reporter.on('browser started', function(data) {
-      gutil.log('Browser started: ' + (data.browser.platform + ' ' + data.browser.browserName + ' ' + (data.browser.version || '')).cyan);
+    reporter.on('selenium starting', function(data) {
+      gutil.log('Selenium starting on port ' + data.port + '...');
     });
-    if (verbose) {
+    reporter.on('selenium started', function(data) {
+      gutil.log('Selenium started');
+    });
+    reporter.on('browser started', function(data) {
+      gutil.log('Browser started: ' + toBrowserString(data.browser).cyan);
+    });
+    if (argv.verbose) {
       reporter.on('mocha event', function(data) {
-        gutil.log('Mocha event: ' + data.event + ' ' + (data.platform + ' ' + data.browserName + ' ' + (data.version || '')).cyan);
+        gutil.log('Mocha event: ' + data.event + ' ' + toBrowserString(data).cyan);
       });
     }
     reporter.on('mocha event', function(data) {
       if (data.event == 'fail') {
-        gutil.log('Test failed: ' + (data.platform + ' ' + data.browserName + ' ' + (data.version || '')).cyan + ': ' +
+        gutil.log('Test failed: ' + toBrowserString(data).cyan + ': ' +
           '\n   ' + ('Test: ' + data.data.titles).red + 
           '\n   ' + ('Message: ' + data.data.message).red + 
           (data.data.stack ? '\n   ' + ('Stack: ' + data.data.stack.gray).red : ''));
       }
     });
     reporter.on('browser stopped', function(data) {
-      gutil.log('Browser complete: ' + (data.browser.platform + ' ' + data.browser.browserName + ' ' + (data.browser.version || '')).cyan + ': ' + 
+      gutil.log('Browser complete: ' + toBrowserString(data.browser).cyan + ': ' + 
         (data.error ? 'error'.red : (data.results[0].failures ? 'fail'.red : 'pass'.green)) + 
         (data.error ? ('\n   ' + data.error.toString().red) : ''));
     });
     reporter.on('runner stopped', function(data) {
       gutil.log('Run complete\n', data.results.map(function(r) { 
-          return '   ' + r.browser.id + ': ' + r.browser.platform + ' ' + r.browser.browserName + ' ' + r.browser.version + 
+          return '   ' + (r.browser.id+1) + ': ' + toBrowserString(r.browser) + 
           ': ' + (r.error ? 'error'.red : (r.results[0].failures ? 'fail'.red : 'pass'.green));
         }).join('\n'));
     });
