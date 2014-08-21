@@ -232,7 +232,6 @@ function test(local, browsers, options, doneCallback) {
   var serverOpen = false;
   var reporter = new events.EventEmitter();
   options = extend({}, options);
-  options.port = options.port || 9998;
   options.startTunnel = local ? false : (options.startTunnel === undefined ? true : options.startTunnel);
   options.startSelenium = local ? (options.startSelenium === undefined) : options.startSelenium;
   if (argv['only-browsers']) {
@@ -240,7 +239,7 @@ function test(local, browsers, options, doneCallback) {
       return browsers[parseInt(b)-1];
     });
   }
-  // Allow users to set up reporter listeners
+  // Allow users to set up reporter listeners synchronously before starting anything
   setImmediate(function() {
     async.series([
       // Start sauce tunnel (remote only)
@@ -276,6 +275,24 @@ function test(local, browsers, options, doneCallback) {
                 next();
               }
             });
+          });
+        } else {
+          next();
+        }
+      },
+      // Obtain free port for web server
+      function(next) {
+        if (!options.port) {
+          freeport(function(err, port) {
+            if (err) {
+              next('Could not obtain port for web server: ' + err);
+            } else {
+              if (argv.verbose || true) {
+                console.log('Obtained web server port: ' + port)
+              }
+              options.port = port;
+              next();
+            }
           });
         } else {
           next();
@@ -346,30 +363,31 @@ function init(gulp, options) {
       gutil.log('Selenium started');
     });
     reporter.on('browser started', function(data) {
-      gutil.log('Browser started: ' + toBrowserString(data.browser).cyan);
+      gutil.log('Browser started: ' + toBrowserString(data.browser).blue);
     });
     if (argv.verbose) {
       reporter.on('mocha event', function(data) {
-        gutil.log('Mocha event: ' + data.event + ' ' + toBrowserString(data).cyan);
+        gutil.log('Mocha event: ' + data.event + ' ' + toBrowserString(data).blue);
       });
     }
     reporter.on('mocha event', function(data) {
       if (data.event == 'fail') {
-        gutil.log('Test failed: ' + toBrowserString(data).cyan + ': ' +
+        gutil.log('Test failed: ' + toBrowserString(data).blue + ': ' +
           '\n   ' + ('Test: ' + data.data.titles).red + 
           '\n   ' + ('Message: ' + data.data.message).red + 
-          (data.data.stack ? '\n   ' + ('Stack: ' + data.data.stack.gray).red : ''));
+          (data.data.stack && argv['show-stack'] ? '\n   ' + ('Stack: ' + data.data.stack.grey).red : ''));
       }
     });
     reporter.on('browser stopped', function(data) {
-      gutil.log('Browser complete: ' + toBrowserString(data.browser).cyan + ': ' + 
-        (data.error ? 'error'.red : (data.results[0].failures ? 'fail'.red : 'pass'.green)) + 
+      gutil.log('Browser complete: ' + toBrowserString(data.browser).blue + ': ' + 
+        (data.error ? 'error'.magenta : (data.results[0].results.failures ? 'fail'.red : 'pass'.green)) + 
         (data.error ? ('\n   ' + data.error.toString().red) : ''));
     });
     reporter.on('runner stopped', function(data) {
-      gutil.log('Run complete\n', data.results.map(function(r) { 
-          return '   ' + (r.browser.id+1) + ': ' + toBrowserString(r.browser) + 
-          ': ' + (r.error ? 'error'.red : (r.results[0].failures ? 'fail'.red : 'pass'.green));
+      gutil.log('Run complete\n' + data.results.map(function(r) { 
+        return '   ' + (argv['only-browsers'] ? '' : (r.browser.id+1)) + ': ' +
+          toBrowserString(r.browser) + ': ' + 
+          (r.error ? 'error'.magenta : (r.results[0].results.failures ? 'fail'.red : 'pass'.green));
         }).join('\n'));
     });
     reporter.on('tunnel stopping', function(data) {
