@@ -1,4 +1,6 @@
 {
+  "name": "gulp-web-component-tester",
+  "version": "0.1.0",
   "dependencies": {
     "async": "^0.9.0",
     "chai": "^1.9.1",
