@@ -3,7 +3,9 @@ var fs = require('fs');
 var path = require('path');
 var async = require('async');
 var wd = require('wd');
-var connect = require('gulp-connect');
+var finalhandler = require('finalhandler')
+var http = require('http')
+var serveStatic = require('serve-static')
 var http = require('http');
 var io = require('socket.io');
 var events = require('events');
@@ -86,7 +88,7 @@ BrowserRunner.prototype.testNextFile = function() {
   if (!file) {
     this.doneCallback(null);
   } else {
-    var qs = ['?stream=' + (this.options.port+1), 'browser=' + this.def.id].join('&');
+    var qs = ['?stream=' + (this.options.port), 'browser=' + this.def.id].join('&');
     var url = ['http://localhost:' + this.options.port, this.options.component, 'tests', file + qs].join('/');
     this.test = new TestRunner(this.browser, url, false, function(err, res) {
       if (err) {
@@ -158,7 +160,7 @@ TestRunner.prototype.extendTimeout = function() {
 };
 
 // Main test running sequence
-function runTests(reporter, local, browsers, options, doneCallback) {
+function runTests(reporter, server, local, browsers, options, doneCallback) {
   var results = [];
   var runners = [];
   browsers = browsers.slice();
@@ -168,10 +170,8 @@ function runTests(reporter, local, browsers, options, doneCallback) {
   options.component = options.component || path.basename(process.cwd());
   options.files = options.files || ['runner.html'];
 
-  // Setup socket.io v for mocha streaming
-  var server = http.createServer();
+  // Setup socket.io for mocha streaming
   var ioserver = io(server);
-  server.listen(options.port+1);
   ioserver.on('connection', function(socket) {
     socket.on('mocha event', function(data) {
       // Notify browser runner of test start/completion
@@ -189,9 +189,6 @@ function runTests(reporter, local, browsers, options, doneCallback) {
   // Performs end-of-run cleanup
   var done = function() {
     reporter.emit('run-end', {results: results});
-    if (server) {
-      server.close();
-    }
     doneCallback(null, results);
   };
 
@@ -229,7 +226,7 @@ function runTests(reporter, local, browsers, options, doneCallback) {
 function test(local, browsers, options, doneCallback) {
   var tunnel;
   var selenium;
-  var serverOpen = false;
+  var server;
   var reporter = new events.EventEmitter();
   options = extend({}, options);
   options.startTunnel = local ? false : (options.startTunnel === undefined ? true : options.startTunnel);
@@ -288,7 +285,7 @@ function test(local, browsers, options, doneCallback) {
               next('Could not obtain port for web server: ' + err);
             } else {
               if (argv.verbose || true) {
-                console.log('Obtained web server port: ' + port)
+                console.log('Obtained web server port: ' + port);
               }
               options.port = port;
               next();
@@ -300,22 +297,24 @@ function test(local, browsers, options, doneCallback) {
       },
       // Start web server
       function(next) {
-        connect.server({
-          root: options.root || path.join(process.cwd(), '..'),
-          port: options.port
+        var root = options.root || path.join(process.cwd(), '..');
+        var serve = serveStatic(root, {'index': ['index.html', 'index.htm']});
+        server = http.createServer(function(req, res){
+          var done = finalhandler(req, res);
+          serve(req, res, done);
         });
-        serverOpen = true;
+        server.listen(options.port);
         next();
       },
       // Run the tests
       function(next) {
-        runTests(reporter, local, browsers, options, next);
+        runTests(reporter, server, local, browsers, options, next);
       }
     ], 
     // Cleanup
     function(err) {
-      if (serverOpen) {
-        connect.serverClose();
+      if (server) {
+        server.close();
       }
       if (selenium) {
         selenium.kill();
