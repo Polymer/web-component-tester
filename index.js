@@ -9,6 +9,9 @@ var io = require('socket.io');
 var events = require('events');
 var verbose = false;
 var gutil = require('gulp-util');
+var SauceTunnel = require('sauce-tunnel');
+var extend = require('extend');
+var argv = require('yargs').argv;
 
 // Browser abstraction, responsible for spinning up a browser instance via wd.js and
 // executing runner.html test files passed in options.files
@@ -21,17 +24,24 @@ function BrowserRunner(reporter, local, def, options, doneCallback) {
   this.files = options.files.slice();
   
   this.doneCallback = function(err) {
-    doneCallback(err, this);
-    this.reporter.emit('browser stopped', {browser: this.def});
+    var data = {browser: this.def};
+    if (err) {
+      data.error = err;
+    } else {
+      data.results = this.results;
+    }
+    this.reporter.emit('browser stopped', data);
     this.browser.quit();
+    doneCallback(err, this);
   };
 
   // Create wd browser instance
   if (local) {
     this.browser = wd.remote();
   } else {
-    this.browser = wd.remote('ondemand.saucelabs.com', 80, 
-        process.env.SAUCE_USERNAME, process.env.SAUCE_ACCESS_KEY);
+    var user = options.sauceUser || process.env.SAUCE_USERNAME;
+    var key = options.sauceKey || process.env.SAUCE_ACCESS_KEY;
+    this.browser = wd.remote('ondemand.saucelabs.com', 80, user, key);
   }
 
   // Setup browser logging
@@ -143,22 +153,18 @@ TestRunner.prototype.extendTimeout = function() {
 function runTests(reporter, local, browsers, options, doneCallback) {
   var results = [];
   var runners = [];
+  browsers = browsers.slice();
 
   // Initialize default options
-  options = options || {};
+  options = extend({}, options);
   options.component = options.component || path.basename(process.cwd());
   options.files = options.files || ['runner.html'];
 
   // Setup socket.io v for mocha streaming
   var server = http.createServer();
   var ioserver = io(server);
-  var sockets = [];
   server.listen(options.port+1);
   ioserver.on('connection', function(socket) {
-    sockets.push(socket);
-    socket.on('close', function() {
-      sockets.splice(sockets.indexOf(socket), 1);
-    });
     socket.on('mocha event', function(data) {
       // Notify browser runner of test start/completion
       var browserRunner = runners[data.browser];
@@ -175,17 +181,16 @@ function runTests(reporter, local, browsers, options, doneCallback) {
   // Performs end-of-run cleanup
   var done = function() {      
     reporter.emit('runner stopped', {results: results});
-    server.close();
-    sockets.forEach(function(socket) {
-      socket.destroy();
-    });
+    if (server) {
+      server.close();
+    }
     doneCallback(null, results);
   };
 
   // Start browsers and wait for results
   reporter.emit('runner started', {browsers: browsers, options: options});
   for (var i=0; i<browsers.length; i++) {
-    browsers[i].id = i;
+    browsers[i] = extend({id: i, 'tunnel-identifier': options.sauceTunnelId}, browsers[i]);
     runners.push(new BrowserRunner(reporter, local, browsers[i], options, function(err, browser) {
       if (err) {
         results[browser.def.id] = {
@@ -193,7 +198,6 @@ function runTests(reporter, local, browsers, options, doneCallback) {
           error: err.toString()
         };
       } else {
-        var r = browser.results[0].results;
         results[browser.def.id] = {
           browser: browser.def,
           results: browser.results
@@ -215,21 +219,57 @@ function runTests(reporter, local, browsers, options, doneCallback) {
 
 // Direct testing entry point
 function test(local, browsers, options, doneCallback) {
-  options = options || {};
+  options = extend({}, options);
+  options.port = options.port|| 9998;
+  if (argv['only-browsers']) {
+    browsers = argv['only-browsers'].toString().split(',').map(function(b) {
+      return browsers[parseInt(b)];
+    });
+  }
   var reporter = new events.EventEmitter();
+  var tunnel;
+  var serverOpen = false;
   // Allow users to set up reporter listeners
   setImmediate(function() {
     async.series([
       function(next) {
+        if (!options.tunnel) {
+          next();
+        } else {
+          var user = options.sauceUser || process.env.SAUCE_USERNAME;
+          var key = options.sauceKey || process.env.SAUCE_ACCESS_KEY;
+          options.sauceTunnelId = options.sauceTunnelId || 'Tunnel'+Date.now();
+          tunnel = new SauceTunnel(user, key, options.sauceTunnelId, true, options.sauceTunnelOptions);
+          reporter.emit('tunnel starting');
+          tunnel.start(function(status) {
+            if (status) {
+              reporter.emit('tunnel started');
+            }
+            next(status ? null : 'Could not start sauce tunnel');
+          });
+        }
+      },
+      function(next) {
         connect.server({
           root: options.root || path.join(process.cwd(), '..'),
-          port: options.port || 9998
+          port: options.port
         });
+        serverOpen = true;
         runTests(reporter, local, browsers, options, next);
-      }
+      },
     ], function(err) {
-      connect.serverClose();
-      doneCallback();
+      if (serverOpen) {
+        connect.serverClose();
+      }
+      if (tunnel) {
+        reporter.emit('tunnel stopping');
+        tunnel.stop(function() {
+          reporter.emit('tunnel stopped');
+          doneCallback(err);
+        });
+      } else {
+        doneCallback(err);        
+      }
     });
   });
   return reporter;
@@ -238,6 +278,7 @@ function test(local, browsers, options, doneCallback) {
 // Gulp task initialization entry point
 function init(gulp, options) {
   options = options || {};
+  options.tunnel = (options.tunnel === undefined) ? true : options.tunnel;
   var browsersJson = path.join(process.cwd(), '../polymer-test-tools/ci-browsers.json');
   gulp.task('test-local', function(cb) {
     var reporter = test(true, options.browsers || require(browsersJson).local, options, cb);
@@ -249,19 +290,46 @@ function init(gulp, options) {
   });
   var setupReporter = function(reporter) {
     reporter.on('runner started', function(data) {
-      gutil.log('Runner started');
+      gutil.log('Run started');
+    });
+    reporter.on('tunnel starting', function(data) {
+      gutil.log('Tunnel starting...');
+    });
+    reporter.on('tunnel started', function(data) {
+      gutil.log('Tunnel started');
     });
     reporter.on('browser started', function(data) {
-      gutil.log('Browser started: ', data.browser.platform, data.browser.browserName);
+      gutil.log('Browser started: ' + (data.browser.platform + ' ' + data.browser.browserName + ' ' + (data.browser.version || '')).cyan);
     });
+    if (verbose) {
+      reporter.on('mocha event', function(data) {
+        gutil.log('Mocha event: ' + data.event + ' ' + (data.platform + ' ' + data.browserName + ' ' + (data.version || '')).cyan);
+      });
+    }
     reporter.on('mocha event', function(data) {
-      gutil.log('Mocha event: ', data.event, data.browser.platform, data.browser.browserName);
+      if (data.event == 'fail') {
+        gutil.log('Test failed: ' + (data.platform + ' ' + data.browserName + ' ' + (data.version || '')).cyan + ': ' +
+          '\n   ' + ('Test: ' + data.data.titles).red + 
+          '\n   ' + ('Message: ' + data.data.message).red + 
+          (data.data.stack ? '\n   ' + ('Stack: ' + data.data.stack.gray).red : ''));
+      }
     });
     reporter.on('browser stopped', function(data) {
-      gutil.log('Browser stopped: ', data.browser.platform, data.browser.browserName);
+      gutil.log('Browser complete: ' + (data.browser.platform + ' ' + data.browser.browserName + ' ' + (data.browser.version || '')).cyan + ': ' + 
+        (data.error ? 'error'.red : (data.results[0].failures ? 'fail'.red : 'pass'.green)) + 
+        (data.error ? ('\n   ' + data.error.toString().red) : ''));
     });
     reporter.on('runner stopped', function(data) {
-      gutil.log('Runner stopped');
+      gutil.log('Run complete\n', data.results.map(function(r) { 
+          return '   ' + r.browser.id + ': ' + r.browser.platform + ' ' + r.browser.browserName + ' ' + r.browser.version + 
+          ': ' + (r.error ? 'error'.red : (r.results[0].failures ? 'fail'.red : 'pass'.green));
+        }).join('\n'));
+    });
+    reporter.on('tunnel stopping', function(data) {
+      gutil.log('Tunnel stopping...');
+    });
+    reporter.on('tunnel stopped', function(data) {
+      gutil.log('Tunnel stopped');
     });
   };
 }
