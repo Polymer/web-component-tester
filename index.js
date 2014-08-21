@@ -38,7 +38,7 @@ function BrowserRunner(reporter, local, def, options, doneCallback) {
     } else {
       data.results = this.results;
     }
-    this.reporter.emit('browser stopped', data);
+    this.reporter.emit('browser-end', data);
     this.browser.quit();
     doneCallback(err, this);
   };
@@ -70,7 +70,7 @@ function BrowserRunner(reporter, local, def, options, doneCallback) {
     if (err) {
       this.doneCallback(err);
     } else {
-      this.reporter.emit('browser started', {browser: this.def, session: session, result: result});
+      this.reporter.emit('browser-start', {browser: this.def, session: session, result: result});
       this.testNextFile();
     }
   }.bind(this));
@@ -182,13 +182,13 @@ function runTests(reporter, local, browsers, options, doneCallback) {
       data.browserName = browser.browserName;
       data.platform = browser.platform;
       data.version = browser.version;
-      reporter.emit('mocha event', data);
+      reporter.emit('test-status', data);
     });
   });
 
   // Performs end-of-run cleanup
-  var done = function() {      
-    reporter.emit('runner stopped', {results: results});
+  var done = function() {
+    reporter.emit('run-end', {results: results});
     if (server) {
       server.close();
     }
@@ -196,7 +196,7 @@ function runTests(reporter, local, browsers, options, doneCallback) {
   };
 
   // Start browsers and wait for results
-  reporter.emit('runner started', {browsers: browsers, options: options});
+  reporter.emit('run-start', {browsers: browsers, options: options});
   for (var i=0; i<browsers.length; i++) {
     browsers[i] = extend({id: i, 'tunnel-identifier': options.sauceTunnelId}, browsers[i]);
     runners.push(new BrowserRunner(reporter, local, browsers[i], options, function(err, browser) {
@@ -249,10 +249,10 @@ function test(local, browsers, options, doneCallback) {
           var key = options.sauceKey || process.env.SAUCE_ACCESS_KEY;
           options.sauceTunnelId = options.sauceTunnelId || 'Tunnel'+Date.now();
           tunnel = new SauceTunnel(user, key, options.sauceTunnelId, true, options.sauceTunnelOptions);
-          reporter.emit('tunnel starting');
+          reporter.emit('log', 'tunnel starting');
           tunnel.start(function(status) {
             if (status) {
-              reporter.emit('tunnel started');
+              reporter.emit('log', 'tunnel started');
             }
             next(status ? null : 'Could not start sauce tunnel');
           });
@@ -264,7 +264,7 @@ function test(local, browsers, options, doneCallback) {
       function(next) {
         if (options.startSelenium) {
           freeport(function(err, port) {
-            reporter.emit('selenium starting', {port: port});
+            reporter.emit('log', 'selenium starting on port', port);
             options.seleniumPort = port;
             selenium = seleniumLauncher({stdio: null}, ['-port', options.seleniumPort]);
             var badExit = function() { next('Could not start selenium'); };
@@ -321,9 +321,9 @@ function test(local, browsers, options, doneCallback) {
         selenium.kill();
       }
       if (tunnel) {
-        reporter.emit('tunnel stopping');
+        reporter.emit('log', 'tunnel stopping');
         tunnel.stop(function() {
-          reporter.emit('tunnel stopped');
+          reporter.emit('log', 'tunnel stopped');
           doneCallback(err);
         });
       } else {
@@ -347,30 +347,27 @@ function init(gulp, options) {
     setupReporter(reporter);
   });
   var setupReporter = function(reporter) {
-    reporter.on('runner started', function(data) {
-      gutil.log('Run started');
+    reporter.on('log', function() {
+      gutil.log.apply(gutil, arguments);
     });
-    reporter.on('tunnel starting', function(data) {
-      gutil.log('Tunnel starting...');
+
+    reporter.on('run-start', function(config) {
+      if (argv.verbose) {
+        gutil.log('Run started with configuration', config);
+      } else {
+        gutil.log('Run started');
+      }
     });
-    reporter.on('tunnel started', function(data) {
-      gutil.log('Tunnel started');
-    });
-    reporter.on('selenium starting', function(data) {
-      gutil.log('Selenium starting on port ' + data.port + '...');
-    });
-    reporter.on('selenium started', function(data) {
-      gutil.log('Selenium started');
-    });
-    reporter.on('browser started', function(data) {
+
+    reporter.on('browser-start', function(data) {
       gutil.log('Browser started: ' + toBrowserString(data.browser).blue);
     });
     if (argv.verbose) {
-      reporter.on('mocha event', function(data) {
+      reporter.on('test-status', function(data) {
         gutil.log('Mocha event: ' + data.event + ' ' + toBrowserString(data).blue);
       });
     }
-    reporter.on('mocha event', function(data) {
+    reporter.on('test-status', function(data) {
       if (data.event == 'fail') {
         gutil.log('Test failed: ' + toBrowserString(data).blue + ': ' +
           '\n   ' + ('Test: ' + data.data.titles).red + 
@@ -378,23 +375,17 @@ function init(gulp, options) {
           (data.data.stack && argv['show-stack'] ? '\n   ' + ('Stack: ' + data.data.stack.grey).red : ''));
       }
     });
-    reporter.on('browser stopped', function(data) {
-      gutil.log('Browser complete: ' + toBrowserString(data.browser).blue + ': ' + 
-        (data.error ? 'error'.magenta : (data.results[0].results.failures ? 'fail'.red : 'pass'.green)) + 
+    reporter.on('browser-end', function(data) {
+      gutil.log('Browser complete: ' + toBrowserString(data.browser).blue + ': ' +
+        (data.error ? 'error'.magenta : (data.results[0].results.failures ? 'fail'.red : 'pass'.green)) +
         (data.error ? ('\n   ' + data.error.toString().red) : ''));
     });
-    reporter.on('runner stopped', function(data) {
-      gutil.log('Run complete\n' + data.results.map(function(r) { 
+    reporter.on('run-end', function(data) {
+      gutil.log('Run complete\n' + data.results.map(function(r) {
         return '   ' + (argv['only-browsers'] ? '' : (r.browser.id+1)) + ': ' +
           toBrowserString(r.browser) + ': ' + 
           (r.error ? 'error'.magenta : (r.results[0].results.failures ? 'fail'.red : 'pass'.green));
         }).join('\n'));
-    });
-    reporter.on('tunnel stopping', function(data) {
-      gutil.log('Tunnel stopping...');
-    });
-    reporter.on('tunnel stopped', function(data) {
-      gutil.log('Tunnel stopped');
     });
   };
 }
