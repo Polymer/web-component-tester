@@ -177,6 +177,13 @@ function runTests(reporter, server, local, browsers, options, doneCallback) {
       // Notify browser runner of test start/completion
       var browserRunner = runners[data.browser];
       browserRunner.onEvent(data);
+
+      // Sometimes we get objects, sometimes JSON. Unsure where the behavior is
+      // diverging.
+      if (typeof data.data === 'string') {
+        data.data = JSON.parse(data.data);
+      }
+
       data.browser = browsers[data.browser];
       reporter.emit('test-status', data);
     });
