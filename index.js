@@ -177,11 +177,7 @@ function runTests(reporter, server, local, browsers, options, doneCallback) {
       // Notify browser runner of test start/completion
       var browserRunner = runners[data.browser];
       browserRunner.onEvent(data);
-      // Notify any external listeners
-      var browser = browsers[data.browser];
-      data.browserName = browser.browserName;
-      data.platform = browser.platform;
-      data.version = browser.version;
+      data.browser = browsers[data.browser];
       reporter.emit('test-status', data);
     });
   });
@@ -363,14 +359,14 @@ function init(gulp, options) {
     });
     if (argv.verbose) {
       reporter.on('test-status', function(data) {
-        gutil.log('Mocha event: ' + data.event + ' ' + toBrowserString(data).blue);
+        gutil.log('Mocha event: ' + data.event + ' ' + toBrowserString(data.browser).blue);
       });
     }
     reporter.on('test-status', function(data) {
       if (data.event == 'fail') {
-        gutil.log('Test failed: ' + toBrowserString(data).blue + ': ' +
-          '\n   ' + ('Test: ' + data.data.titles).red + 
-          '\n   ' + ('Message: ' + data.data.message).red + 
+        gutil.log('Test failed: ' + toBrowserString(data.browser).blue + ': ' +
+          '\n   ' + ('Test: ' + data.data.titles).red +
+          '\n   ' + ('Message: ' + data.data.message).red +
           (data.data.stack && argv['show-stack'] ? '\n   ' + ('Stack: ' + data.data.stack.grey).red : ''));
       }
     });
