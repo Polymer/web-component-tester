@@ -1,169 +1,26 @@
-require('colors');
-var fs = require('fs');
 var path = require('path');
 var async = require('async');
-var wd = require('wd');
 var finalhandler = require('finalhandler')
-var http = require('http')
 var serveStatic = require('serve-static')
 var http = require('http');
 var io = require('socket.io');
 var events = require('events');
-var gutil = require('gulp-util');
 var SauceTunnel = require('sauce-tunnel');
 var extend = require('extend');
 var argv = require('yargs').argv;
 var freeport = require('freeport');
 var seleniumLauncher = require('selenium-standalone');
 
-// Helper to get a fully-qualified string from a browser definition
-function toBrowserString(browser) {
-  return (browser.platform ? (browser.platform + ' ') : '') + 
-    browser.browserName + 
-    (browser.version ? (' ' + browser.version) : '');
-}
-
-// Browser abstraction, responsible for spinning up a browser instance via wd.js and
-// executing runner.html test files passed in options.files
-function BrowserRunner(reporter, local, def, options, doneCallback) {
-  
-  this.reporter = reporter;
-  this.options = options;
-  this.def = def;
-  this.results = [];
-  this.files = options.files.slice();
-  
-  this.doneCallback = function(err) {
-    var data = {browser: this.def};
-    if (err) {
-      data.error = err;
-    } else {
-      data.results = this.results;
-    }
-    this.reporter.emit('browser-end', data);
-    this.browser.quit();
-    doneCallback(err, this);
-  };
-
-  // Create wd browser instance
-  if (local) {
-    this.browser = wd.remote('localhost', options.seleniumPort);
-  } else {
-    var user = options.sauceUser || process.env.SAUCE_USERNAME;
-    var key = options.sauceKey || process.env.SAUCE_ACCESS_KEY;
-    this.browser = wd.remote('ondemand.saucelabs.com', 80, user, key);
-  }
-
-  // Setup browser logging
-  if (argv.verbose) {
-    this.browser.on('status', function(info) {
-      console.log(info.cyan);
-    });
-    this.browser.on('command', function(eventType, command, response) {
-      console.log(' > ' + eventType.cyan, command, (response || '').grey);
-    });
-    this.browser.on('http', function(meth, path, data) {
-      console.log(' > ' + meth.magenta, path, (data || '').grey);
-    });
-  }
-
-  // Initialize the browser, then start tests
-  this.browser.init(def, function(err, session, result) {
-    if (err) {
-      this.doneCallback(err);
-    } else {
-      this.reporter.emit('browser-start', {browser: this.def, session: session, result: result});
-      this.testNextFile();
-    }
-  }.bind(this));
-}
-BrowserRunner.prototype.onEvent = function(data) {
-  this.test.extendTimeout();
-  if (data.event == 'end') {
-    this.test.setResults(data.data);
-  }
-};
-BrowserRunner.prototype.testNextFile = function() {
-  var file = this.files.shift();
-  if (!file) {
-    this.doneCallback(null);
-  } else {
-    var qs = ['?stream=' + (this.options.port), 'browser=' + this.def.id].join('&');
-    var url = ['http://localhost:' + this.options.port, this.options.component, 'tests', file + qs].join('/');
-    this.test = new TestRunner(this.browser, url, false, function(err, res) {
-      if (err) {
-        this.doneCallback(err);
-      } else {
-        this.results.push({
-          file: file,
-          results: this.test.results
-        });
-        this.testNextFile();
-      }
-    }.bind(this));
-  }
-};
-
-// Abstraction around a single test runner.html to be run on a given browser
-function TestRunner(browser, url, shouldPoll, doneCallback) {
-  this.timeout = 1000 * 30;
-  this.doneCallback = doneCallback;
-  this.browser = browser;
-  async.series([
-    function(next) {
-      browser.get(url, next);
-    }, function(next) {
-      // Legacy support for polled results -- currently unused 
-      if (shouldPoll) {
-        this.waitForResults();
-      } else {
-        this.extendTimeout();
-      }
-    }.bind(this)
-  ], doneCallback);
-}
-// Polled results
-TestRunner.prototype.waitForResults = function() {
-  this.resultsTimeout = Date.now() + this.timeout;
-  this.pollResult();
-};
-TestRunner.prototype.pollResult = function() {
-  this.browser.eval("window.mochaResults", function(err, res) {
-    if (res) {
-      this.results = res;
-      this.doneCallback(null, this);
-    } else {
-      if (Date.now() < this.resultsTimeout) {
-        setTimeout(this.pollResult.bind(this), 1000);
-      } else {
-        this.doneCallback('Timed out waiting for mochaResults');
-      }
-    }
-  }.bind(this));
-};
-// Event-based results
-TestRunner.prototype.setResults = function(results) {
-  this.results = results;
-  this.resetTimeout();
-  this.doneCallback();
-};
-TestRunner.prototype.resetTimeout = function() {
-  if (this.timeoutId) {
-    clearTimeout(this.timeoutId);
-  }
-};
-TestRunner.prototype.extendTimeout = function() {
-  this.resetTimeout();
-  this.timeoutId = setTimeout(function() {
-    this.doneCallback('Timed out waiting for mochaResults');
-  }.bind(this), this.timeout);
-};
+var BrowserRunner = require('./lib/browserrunner');
+var CliReporter   = require('./lib/clireporter');
 
 // Main test running sequence
 function runTests(reporter, server, local, browsers, options, doneCallback) {
-  var results = [];
   var runners = [];
   browsers = browsers.slice();
+  if (browsers.length === 0) {
+    return doneCallback('No browsers configured to run');
+  }
 
   // Initialize default options
   options = extend({}, options);
@@ -173,52 +30,33 @@ function runTests(reporter, server, local, browsers, options, doneCallback) {
   // Setup socket.io for mocha streaming
   var ioserver = io(server);
   ioserver.on('connection', function(socket) {
-    socket.on('mocha event', function(data) {
-      // Notify browser runner of test start/completion
-      var browserRunner = runners[data.browser];
-      browserRunner.onEvent(data);
-      // Notify any external listeners
-      var browser = browsers[data.browser];
-      data.browserName = browser.browserName;
-      data.platform = browser.platform;
-      data.version = browser.version;
-      reporter.emit('test-status', data);
+    socket.on('client-event', function(data) {
+      runners[data.browserId].onEvent(data);
     });
   });
 
-  // Performs end-of-run cleanup
+  // Start browsers and wait for them to finish.
+  reporter.emit('run-init', {browsers: browsers, options: options});
+
+  var numComplete = 0;
+  var failed = false;
   var done = function() {
-    reporter.emit('run-end', {results: results});
-    doneCallback(null, results);
+    var error = failed ? 'There were test failures' : null;
+    reporter.emit('run-end', error);
+    doneCallback(error);
   };
 
-  // Start browsers and wait for results
-  reporter.emit('run-start', {browsers: browsers, options: options});
   for (var i=0; i<browsers.length; i++) {
     browsers[i] = extend({id: i, 'tunnel-identifier': options.sauceTunnelId}, browsers[i]);
     runners.push(new BrowserRunner(reporter, local, browsers[i], options, function(err, browser) {
       if (err) {
-        results[browser.def.id] = {
-          browser: browser.def,
-          error: err.toString()
-        };
-      } else {
-        results[browser.def.id] = {
-          browser: browser.def,
-          results: browser.results
-        };
+        failed = true;
       }
-      var total = 0;
-      for (var j=0; j<browsers.length; j++) {
-        total += results[j] ? 1 : 0;
-      }
-      if (total == browsers.length) {
+      numComplete = numComplete + 1;
+      if (numComplete === browsers.length) {
         done();
       }
     }));
-  }
-  if (!browsers.length) {
-    done();
   }
 }
 
@@ -284,7 +122,7 @@ function test(local, browsers, options, doneCallback) {
             if (err) {
               next('Could not obtain port for web server: ' + err);
             } else {
-              if (argv.verbose || true) {
+              if (options.verbose) {
                 console.log('Obtained web server port: ' + port);
               }
               options.port = port;
@@ -310,7 +148,7 @@ function test(local, browsers, options, doneCallback) {
       function(next) {
         runTests(reporter, server, local, browsers, options, next);
       }
-    ], 
+    ],
     // Cleanup
     function(err) {
       if (server) {
@@ -326,7 +164,7 @@ function test(local, browsers, options, doneCallback) {
           doneCallback(err);
         });
       } else {
-        doneCallback(err);        
+        doneCallback(err);
       }
     });
   });
@@ -336,57 +174,18 @@ function test(local, browsers, options, doneCallback) {
 // Gulp task initialization entry point
 function init(gulp, options) {
   options = options || {};
+  options.verbose = options.verbose || argv.verbose;
   var browsersJson = path.join(process.cwd(), '../polymer-test-tools/ci-browsers.json');
+
   gulp.task('test-local', function(cb) {
     var reporter = test(true, options.browsers || require(browsersJson).local, options, cb);
-    setupReporter(reporter);
+    new CliReporter(reporter, process.stdout, options.verbose);
   });
+
   gulp.task('test-sauce', function(cb) {
     var reporter = test(false, options.browsers || require(browsersJson).remote, options, cb);
-    setupReporter(reporter);
+    new CliReporter(reporter, process.stdout, options.verbose);
   });
-  var setupReporter = function(reporter) {
-    reporter.on('log', function() {
-      gutil.log.apply(gutil, arguments);
-    });
-
-    reporter.on('run-start', function(config) {
-      if (argv.verbose) {
-        gutil.log('Run started with configuration', config);
-      } else {
-        gutil.log('Run started');
-      }
-    });
-
-    reporter.on('browser-start', function(data) {
-      gutil.log('Browser started: ' + toBrowserString(data.browser).blue);
-    });
-    if (argv.verbose) {
-      reporter.on('test-status', function(data) {
-        gutil.log('Mocha event: ' + data.event + ' ' + toBrowserString(data).blue);
-      });
-    }
-    reporter.on('test-status', function(data) {
-      if (data.event == 'fail') {
-        gutil.log('Test failed: ' + toBrowserString(data).blue + ': ' +
-          '\n   ' + ('Test: ' + data.data.titles).red + 
-          '\n   ' + ('Message: ' + data.data.message).red + 
-          (data.data.stack && argv['show-stack'] ? '\n   ' + ('Stack: ' + data.data.stack.grey).red : ''));
-      }
-    });
-    reporter.on('browser-end', function(data) {
-      gutil.log('Browser complete: ' + toBrowserString(data.browser).blue + ': ' +
-        (data.error ? 'error'.magenta : (data.results[0].results.failures ? 'fail'.red : 'pass'.green)) +
-        (data.error ? ('\n   ' + data.error.toString().red) : ''));
-    });
-    reporter.on('run-end', function(data) {
-      gutil.log('Run complete\n' + data.results.map(function(r) {
-        return '   ' + (argv['only-browsers'] ? '' : (r.browser.id+1)) + ': ' +
-          toBrowserString(r.browser) + ': ' + 
-          (r.error ? 'error'.magenta : (r.results[0].results.failures ? 'fail'.red : 'pass'.green));
-        }).join('\n'));
-    });
-  };
 }
 
 module.exports = {
