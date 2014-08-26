@@ -35,7 +35,7 @@ function defaultOptions() {
     // The file (mounted under `<root>/<component>`) that runs the tests.
     webRunner:   'tests/runner.html',
     // Idle timeout for tests.
-    testTimeout: 300 * 1000,
+    testTimeout: 60 * 1000,
     // Whether the browser should be closed after the tests run.
     persistent:  false,
     // Extra capabilities to pass to wd when building a client.
@@ -43,7 +43,9 @@ function defaultOptions() {
     // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
     // Sauce:    https://docs.saucelabs.com/reference/test-configuration/
     browserOptions: {
-      'idle-timeout': 30,
+      // 'idle-timeout': 10,
+      // 'command-timeout': 5,
+      // 'test-timeout': 30,
     },
     // Sauce Labs configuration.
     sauce: {
@@ -249,13 +251,13 @@ function startTestServer(options, emitter, done) {
       emitter.emit('log:debug', 'Test client opened sideband socket');
       socket.on('client-event', function(data) {
         var runner = runners[data.browserId];
-        data.browser = runner.def;
-        emitter.emit('log:debug', data.browser, chalk.magenta('client-event'), data);
+        runner.extendTimeout();
+        emitter.emit('log:debug', runner.def, chalk.magenta('client-event'), data.data);
 
         if (data.event === 'browser-end') {
           runner.done();
         } else {
-          emitter.emit(data.event, data.browser, data.data);
+          emitter.emit(data.event, runner.def, data.data);
         }
       });
     });
