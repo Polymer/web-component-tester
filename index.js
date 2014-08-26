@@ -43,7 +43,7 @@ function defaultOptions() {
     // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
     // Sauce:    https://docs.saucelabs.com/reference/test-configuration/
     browserOptions: {
-      'idle-timeout': 10,
+      'idle-timeout': 30,
     },
     // Sauce Labs configuration.
     sauce: {
