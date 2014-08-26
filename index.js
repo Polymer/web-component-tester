@@ -324,10 +324,12 @@ function startReducedTests(options, emitter, done) {
         emitter.emit('log:info', browser, chalk.cyan('client.init done'), 'sessionId:', sessionId);
         emitter.emit('log:debug', browser, 'capabilities:', fullCaps);
         if (error) return emitter.emit('log:error', browser, error);
+        var start = Date.now();
 
         emitter.emit('log:info', browser, chalk.magenta('client.get'), 'https://google.com');
         client.get('https://google.com', function(error) {
-          emitter.emit('log:info', browser, chalk.green('client.get done'), arguments);
+          var status = 'client.get done after ' + ((Date.now() - start) / 1000) + 's';
+          emitter.emit('log:info', browser, chalk.magenta(status), arguments);
           if (error) return emitter.emit('log:error', browser, error);
         });
       });
