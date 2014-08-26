@@ -267,20 +267,18 @@ function runBrowsers(options, emitter, done) {
     return done('No browsers configured to run');
   }
 
-  var failed  = false;
+  var errored  = false;
   var numDone = 0;
   return options.browsers.map(function(browser, id) {
     _.defaults(browser, options.browserOptions);
     browser.id = id;
+    emitter.emit()
     return new BrowserRunner(emitter, isLocal(browser), browser, options, function(error) {
       emitter.emit('log:debug', browser, 'BrowserRunner complete');
-      if (error) {
-        failed = true;
-        emitter.emit('log:warn', browser, 'Test run failure:', error);
-      }
+      if (error) errored = true;
       numDone = numDone + 1;
       if (numDone === options.browsers.length) {
-        done(failed ? 'Test failures' : null);
+        done(errored ? 'Test errors' : null);
       }
     });
   });
