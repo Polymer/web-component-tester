@@ -270,7 +270,6 @@ function runBrowsers(options, emitter, done) {
   var errored  = false;
   var numDone = 0;
   return options.browsers.map(function(browser, id) {
-    _.defaults(browser, options.browserOptions);
     browser.id = id;
     emitter.emit()
     return new BrowserRunner(emitter, isLocal(browser), browser, options, function(error) {
