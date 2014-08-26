@@ -1,0 +1,68 @@
+{
+  "local": [
+    {"browserName": "chrome"},
+    {"browserName": "firefox"},
+    {"browserName": "safari"}
+  ],
+  "remote": [
+    {
+      "browserName": "internet explorer",
+      "platform":    "Windows 8.1",
+      "version":     "11"
+    },
+    {
+      "browserName": "internet explorer",
+      "platform":    "Windows 7",
+      "version":     "11"
+    },
+    {
+      "browserName": "internet explorer",
+      "platform":    "Windows 7",
+      "version":     "10"
+    },
+
+    {
+      "browserName": "chrome",
+      "platform":    "Windows 8.1",
+      "version":     "36"
+    },
+    {
+      "browserName": "chrome",
+      "platform":    "OS X 10.9",
+      "version":     "35"
+    },
+    {
+      "browserName": "chrome",
+      "platform":    "Linux",
+      "version":     "36"
+    },
+
+    {
+      "browserName": "firefox",
+      "platform":    "Windows 8.1",
+      "version":     "31"
+    },
+    {
+      "browserName": "firefox",
+      "platform":    "OS X 10.9",
+      "version":     "30"
+    },
+    {
+      "browserName": "firefox",
+      "platform":    "Linux",
+      "version":     "31"
+    },
+
+    {
+      "browserName": "safari",
+      "platform":    "OS X 10.9",
+      "version":     "7"
+    },
+
+    {
+      "browserName": "iphone",
+      "platform":    "OS X 10.9",
+      "version":     "7.1"
+    }
+  ]
+}
