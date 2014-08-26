@@ -1,26 +1,14 @@
-var path = require('path');
-
-var finalhandler = require('finalhandler')
-var serveStatic = require('serve-static')
-var http = require('http');
-var io = require('socket.io');
-var events = require('events');
-var SauceTunnel = require('sauce-tunnel');
-var extend = require('extend');
-
-
-
-
-
-
 var _            = require('lodash');
 var async        = require('async');
 var chalk        = require('chalk');
+var events       = require('events');
 var express      = require('express');
 var freeport     = require('freeport');
 var http         = require('http');
+var path         = require('path');
 var sauceConnect = require('sauce-connect-launcher');
 var selenium     = require('selenium-standalone');
+var serveStatic  = require('serve-static');
 var socketIO     = require('socket.io');
 var uuid         = require('uuid');
 var yargs        = require('yargs');
