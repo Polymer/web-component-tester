@@ -86,9 +86,12 @@ function endRun(emitter, spin, done) {
     // Many of our tasks should spin indefinitely ...unless they encounter an error.
     if (error || !spin) {
       emitter.emit('run-end', error);
-      done(error);
-      CleanKill.interrupt();
     }
+    if (_.isString(error)) {
+      error = new Error(error);
+      error.showStack = false;
+    }
+    CleanKill.close(done.bind(null, error));
   }
 }
 
@@ -241,20 +244,19 @@ function startTestServer(options, emitter, done) {
       options.browserOptions['tunnel-identifier'] = results.sauceTunnel;
     }
 
-    var runners = runBrowsers(options, emitter, done);
+    var failed = false;
+    var runners = runBrowsers(options, emitter, function(error) {
+      if (error) {
+        done(error);
+      } else {
+        done(failed ? 'Had failed tests' : null);
+      }
+    });
 
     socketIO(results.http).on('connection', function(socket) {
       emitter.emit('log:debug', 'Test client opened sideband socket');
       socket.on('client-event', function(data) {
-        var runner = runners[data.browserId];
-        runner.extendTimeout();
-        emitter.emit('log:debug', runner.def, chalk.magenta('client-event'), data.data);
-
-        if (data.event === 'browser-end') {
-          runner.done();
-        } else {
-          emitter.emit(data.event, runner.def, data.data);
-        }
+        runners[data.browserId].onEvent(data.event, data.data);
       });
     });
   });
@@ -269,16 +271,16 @@ function runBrowsers(options, emitter, done) {
   // TODO(nevir): We should be queueing the browsers above some limit too.
   http.globalAgent.maxSockets = Math.max(5, options.browsers.length * 2);
 
-  var errored = false;
+  var errors  = [];
   var numDone = 0;
   return options.browsers.map(function(browser, id) {
     browser.id = id;
     return new BrowserRunner(emitter, isLocal(browser), browser, options, function(error) {
       emitter.emit('log:debug', browser, 'BrowserRunner complete');
-      if (error) errored = true;
+      if (error) errors.push(error);
       numDone = numDone + 1;
       if (numDone === options.browsers.length) {
-        done(errored ? 'Test errors' : null);
+        done(errors.length > 0 ? errors.join(' '): null);
       }
     });
   });
