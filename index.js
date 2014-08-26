@@ -47,7 +47,7 @@ function defaultOptions() {
     // The file (mounted under `<root>/<component>`) that runs the tests.
     webRunner:   'tests/runner.html',
     // Idle timeout for tests.
-    testTimeout: 10000,
+    testTimeout: 300 * 1000,
     // Whether the browser should be closed after the tests run.
     persistent:  false,
     // Sauce Labs configuration.
