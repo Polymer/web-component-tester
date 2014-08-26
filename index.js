@@ -42,11 +42,7 @@ function defaultOptions() {
     //
     // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
     // Sauce:    https://docs.saucelabs.com/reference/test-configuration/
-    browserOptions: {
-      // 'idle-timeout': 10,
-      // 'command-timeout': 5,
-      // 'test-timeout': 30,
-    },
+    browserOptions: {},
     // Sauce Labs configuration.
     sauce: {
       username:  undefined,
@@ -129,14 +125,6 @@ function initGulp(gulp) {
       options.browsers = DEFAULT_BROWSERS.remote;
     }
     startTestServer(options, emitter, cleanRun(done));
-  });
-
-  gulp.task('test:remote:reduced', function(done) {
-    if (options.browsers.length === 0) {
-      options.browsers = DEFAULT_BROWSERS.remote;
-    }
-    options.verbose = true;
-    startReducedTests(options, emitter, cleanRun(done));
   });
 
   gulp.task('test', ['test:local']);
@@ -246,7 +234,7 @@ function startTestServer(options, emitter, done) {
   async.parallel(jobs, function(error, results) {
     if (error) return done(error);
 
-    // TODO(nevir) Clean up hackish semi-private options.
+    // TODO(nevir): Clean up hackish semi-private options.
     options._seleniumPort = results.selenium;
     options._httpPort     = results.http.port;
     if (results.sauceTunnel) {
@@ -277,6 +265,10 @@ function runBrowsers(options, emitter, done) {
     return done('No browsers configured to run');
   }
 
+  // Up the socket limit so that we can maintain more active requests.
+  // TODO(nevir): We should be queueing the browsers above some limit too.
+  http.globalAgent.maxSockets = Math.max(5, options.browsers.length * 2);
+
   var errored = false;
   var numDone = 0;
   return options.browsers.map(function(browser, id) {
@@ -288,30 +280,6 @@ function runBrowsers(options, emitter, done) {
       if (numDone === options.browsers.length) {
         done(errored ? 'Test errors' : null);
       }
-    });
-  });
-}
-
-function startReducedTests(options, emitter, done) {
-  ensureSauceTunnel(options, emitter, function(error, tunnelId) {
-    if (error) return console.log('Sauce tunnel error:', error);
-
-    options.browsers.forEach(function(browser) {
-      browser['tunnel-identifier'] = tunnelId;
-
-      var client = require('wd').remote('ondemand.saucelabs.com', 80, options.sauce.username, options.sauce.accessKey);
-      client.on('http', function(method, path, data) {
-        console.log(chalk.magenta(method), chalk.cyan(path), data);
-      });
-
-      client.init(browser, function(error, session, result) {
-        console.log(chalk.cyan('client.init callback:'), error, session, result);
-
-        client.get('https://google.com', function(error) {
-          console.log(chalk.cyan('client.get callback:'), error);
-          client.quit();
-        });
-      });
     });
   });
 }
