@@ -131,6 +131,13 @@ function initGulp(gulp) {
     startTestServer(options, emitter, cleanRun(done));
   });
 
+  gulp.task('test:remote:reduced', function(done) {
+    if (options.browsers.length === 0) {
+      options.browsers = DEFAULT_BROWSERS.remote;
+    }
+    startReducedTests(options, emitter, cleanRun(done));
+  });
+
   gulp.task('test', ['test:local']);
 }
 
@@ -269,11 +276,10 @@ function runBrowsers(options, emitter, done) {
     return done('No browsers configured to run');
   }
 
-  var errored  = false;
+  var errored = false;
   var numDone = 0;
   return options.browsers.map(function(browser, id) {
     browser.id = id;
-    emitter.emit()
     return new BrowserRunner(emitter, isLocal(browser), browser, options, function(error) {
       emitter.emit('log:debug', browser, 'BrowserRunner complete');
       if (error) errored = true;
@@ -281,6 +287,43 @@ function runBrowsers(options, emitter, done) {
       if (numDone === options.browsers.length) {
         done(errored ? 'Test errors' : null);
       }
+    });
+  });
+}
+
+function startReducedTests(options, emitter, done) {
+  var jobs = {
+    http:     startStaticServer.bind(null, options, emitter),
+    selenium: startSeleniumServer.bind(null, options, emitter),
+  };
+  if (!_.every(options.browsers, isLocal)) {
+    jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
+  }
+
+  async.parallel(jobs, function(error, results) {
+    if (error) return done(error);
+
+    // TODO(nevir) Clean up hackish semi-private options.
+    options._seleniumPort = results.selenium;
+    options._httpPort     = results.http.port;
+    if (results.sauceTunnel) {
+      options.browserOptions['tunnel-identifier'] = results.sauceTunnel;
+    }
+
+    options.browsers.forEach(function(browser) {
+      var capabilities = _.defaults(_.clone(browser), options.browserOptions);
+      var client = require('wd').remote('ondemand.saucelabs.com', 80, options.sauce.username, options.sauce.accessKey);
+
+      emitter.emit('log:info', browser, chalk.cyan('client.init'), capabilities);
+      client.init(capabilities, function(error) {
+        emitter.emit('log:info', browser, chalk.cyan('client.init done'), arguments);
+        if (error) return;
+
+        emitter.emit('log:info', browser, chalk.magenta('client.get'), 'https://google.com');
+        client.get('https://google.com', function() {
+          emitter.emit('log:info', browser, chalk.green('client.get done'), arguments);
+        });
+      });
     });
   });
 }
