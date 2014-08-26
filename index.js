@@ -38,6 +38,13 @@ function defaultOptions() {
     testTimeout: 300 * 1000,
     // Whether the browser should be closed after the tests run.
     persistent:  false,
+    // Extra capabilities to pass to wd when building a client.
+    //
+    // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
+    // Sauce:    https://docs.saucelabs.com/reference/test-configuration/
+    browserOptions: {
+      'idle-timeout': 10,
+    },
     // Sauce Labs configuration.
     sauce: {
       username:  undefined,
@@ -233,7 +240,7 @@ function startTestServer(options, emitter, done) {
     options._seleniumPort = results.selenium;
     options._httpPort     = results.http.port;
     if (results.sauceTunnel) {
-      options._sauceTunnelId = results.sauceTunnel;
+      options.browserOptions['tunnel-identifier'] = results.sauceTunnel;
     }
 
     var runners = runBrowsers(options, emitter, done);
@@ -263,8 +270,8 @@ function runBrowsers(options, emitter, done) {
   var failed  = false;
   var numDone = 0;
   return options.browsers.map(function(browser, id) {
+    _.defaults(browser, options.browserOptions);
     browser.id = id;
-    browser['tunnel-identifier'] = options._sauceTunnelId;
     return new BrowserRunner(emitter, isLocal(browser), browser, options, function(error) {
       emitter.emit('log:debug', browser, 'BrowserRunner complete');
       if (error) {
