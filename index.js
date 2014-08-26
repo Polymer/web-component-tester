@@ -135,6 +135,7 @@ function initGulp(gulp) {
     if (options.browsers.length === 0) {
       options.browsers = DEFAULT_BROWSERS.remote;
     }
+    options.verbose = true;
     startReducedTests(options, emitter, cleanRun(done));
   });
 
@@ -292,45 +293,23 @@ function runBrowsers(options, emitter, done) {
 }
 
 function startReducedTests(options, emitter, done) {
-  var jobs = {
-    http:     startStaticServer.bind(null, options, emitter),
-    selenium: startSeleniumServer.bind(null, options, emitter),
-  };
-  if (!_.every(options.browsers, isLocal)) {
-    jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
-  }
-
-  async.parallel(jobs, function(error, results) {
-    if (error) return done(error);
-
-    // TODO(nevir) Clean up hackish semi-private options.
-    options._seleniumPort = results.selenium;
-    options._httpPort     = results.http.port;
-    if (results.sauceTunnel) {
-      options.browserOptions['tunnel-identifier'] = results.sauceTunnel;
-    }
+  ensureSauceTunnel(options, emitter, function(error, tunnelId) {
+    if (error) return console.log('Sauce tunnel error:', error);
 
     options.browsers.forEach(function(browser) {
-      var capabilities = _.defaults(_.clone(browser), options.browserOptions);
-      var client = require('wd').remote('ondemand.saucelabs.com', 80, options.sauce.username, options.sauce.accessKey);
+      browser['tunnel-identifier'] = tunnelId;
 
-      // Logs HTTP requests.
+      var client = require('wd').remote('ondemand.saucelabs.com', 80, options.sauce.username, options.sauce.accessKey);
       client.on('http', function(method, path, data) {
-        emitter.emit('log:debug', browser, chalk.magenta(method), chalk.cyan(path), data);
+        console.log(chalk.magenta(method), chalk.cyan(path), data);
       });
 
-      emitter.emit('log:info', browser, chalk.cyan('client.init'), capabilities);
-      client.init(capabilities, function(error, sessionId, fullCaps) {
-        emitter.emit('log:info', browser, chalk.cyan('client.init done'), 'sessionId:', sessionId);
-        emitter.emit('log:debug', browser, 'capabilities:', fullCaps);
-        if (error) return emitter.emit('log:error', browser, error);
-        var start = Date.now();
+      client.init(browser, function(error, session, result) {
+        console.log(chalk.cyan('client.init callback:'), error, session, result);
 
-        emitter.emit('log:info', browser, chalk.magenta('client.get'), 'https://google.com');
         client.get('https://google.com', function(error) {
-          var status = 'client.get done after ' + ((Date.now() - start) / 1000) + 's';
-          emitter.emit('log:info', browser, chalk.magenta(status), arguments);
-          if (error) return emitter.emit('log:error', browser, error);
+          console.log(chalk.cyan('client.get callback:'), error);
+          client.quit();
         });
       });
     });
