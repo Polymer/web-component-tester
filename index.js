@@ -314,14 +314,21 @@ function startReducedTests(options, emitter, done) {
       var capabilities = _.defaults(_.clone(browser), options.browserOptions);
       var client = require('wd').remote('ondemand.saucelabs.com', 80, options.sauce.username, options.sauce.accessKey);
 
+      // Logs HTTP requests.
+      client.on('http', function(method, path, data) {
+        emitter.emit('log:debug', browser, chalk.magenta(method), chalk.cyan(path), data);
+      });
+
       emitter.emit('log:info', browser, chalk.cyan('client.init'), capabilities);
-      client.init(capabilities, function(error) {
-        emitter.emit('log:info', browser, chalk.cyan('client.init done'), arguments);
-        if (error) return;
+      client.init(capabilities, function(error, sessionId, fullCaps) {
+        emitter.emit('log:info', browser, chalk.cyan('client.init done'), 'sessionId:', sessionId);
+        emitter.emit('log:debug', browser, 'capabilities:', fullCaps);
+        if (error) return emitter.emit('log:error', browser, error);
 
         emitter.emit('log:info', browser, chalk.magenta('client.get'), 'https://google.com');
-        client.get('https://google.com', function() {
+        client.get('https://google.com', function(error) {
           emitter.emit('log:info', browser, chalk.green('client.get done'), arguments);
+          if (error) return emitter.emit('log:error', browser, error);
         });
       });
     });
