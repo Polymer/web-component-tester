@@ -38,6 +38,7 @@ Flags:
 `--persistent`: Doesn't close the browsers after their first run. Refresh the
 browser windows to re-run tests.
 
+`--expanded`: Lists each test as it passes/fails/pends.
 
 ## gulp test:remote
 
