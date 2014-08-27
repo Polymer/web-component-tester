@@ -121,7 +121,7 @@ function initGulp(gulp) {
 function test(options, done) {
   mergeDefaults(options);
   var emitter = new events.EventEmitter();
-  startTestServer(options, emitter, done);
+  startTestServer(options, emitter, endRun(emitter, false, done));
   return emitter;
 }
 
@@ -171,8 +171,12 @@ function startSeleniumServer(options, emitter, done) {
         done(null, port);
       }
     });
-    server.stdout.on('data', emitter.emit.bind(emitter, 'log:debug'));
-    server.stderr.on('data', emitter.emit.bind(emitter, 'log:debug'));
+    server.stdout.on('data', function(data) {
+      emitter.emit('log:debug', data.toString());
+    });
+    server.stderr.on('data', function(data) {
+      emitter.emit('log:debug', data.toString());
+    });
 
     CleanKill.onInterrupt(function(done) {
       server.kill();
