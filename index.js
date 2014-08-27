@@ -282,7 +282,7 @@ function runBrowsers(options, emitter, done) {
       if (error) errors.push(error);
       numDone = numDone + 1;
       if (numDone === options.browsers.length) {
-        done(errors.length > 0 ? errors.join(' '): null);
+        done(errors.length > 0 ? _.unique(errors).join(', '): null);
       }
     });
   });
