@@ -214,12 +214,18 @@ function startStaticServer(options, emitter, done) {
 }
 
 function startTestServer(options, emitter, done) {
+  if (options.browsers.length === 0) {
+    options.browsers = options.remote ? DEFAULT_BROWSERS.remote : DEFAULT_BROWSERS.local;
+  }
+
   var jobs = {
-    http:     startStaticServer.bind(null, options, emitter),
-    selenium: startSeleniumServer.bind(null, options, emitter),
+    http: startStaticServer.bind(null, options, emitter),
   };
+  if (_.any(options.browsers, isLocal)) {
+    jobs.selenium = startSeleniumServer.bind(null, options, emitter);
+  }
   if (!_.every(options.browsers, isLocal)) {
-    assertSauceCredentials(options); // Assert for thw runners.
+    assertSauceCredentials(options); // Assert for the runners.
     jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
   }
 
@@ -292,12 +298,14 @@ function endRun(emitter, spin, done) {
 
 function runBrowsers(options, emitter, done) {
   if (options.browsers.length === 0) {
-    options.browsers = options.remote ? DEFAULT_BROWSERS.remote : DEFAULT_BROWSERS.local;
+    throw stacklessError('No browsers configured to run');
   }
 
   // Up the socket limit so that we can maintain more active requests.
   // TODO(nevir): We should be queueing the browsers above some limit too.
-  http.globalAgent.maxSockets = Math.max(5, options.browsers.length * 2);
+  http.globalAgent.maxSockets = Math.max(http.globalAgent.maxSockets, options.browsers.length * 2);
+
+  emitter.emit('run-start', options);
 
   var errors  = [];
   var numDone = 0;
