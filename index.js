@@ -131,6 +131,7 @@ function ensureSauceTunnel(options, emitter, done) {
     return done(null, options.sauce.tunnelId);
   }
 
+  assertSauceCredentials(options);
   var connectOptions = {
     username:         options.sauce.username,
     accessKey:        options.sauce.accessKey,
@@ -213,6 +214,7 @@ function startTestServer(options, emitter, done) {
     selenium: startSeleniumServer.bind(null, options, emitter),
   };
   if (!_.every(options.browsers, isLocal)) {
+    assertSauceCredentials(options); // Assert for thw runners.
     jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
   }
 
@@ -246,6 +248,17 @@ function startTestServer(options, emitter, done) {
 
 // Utility
 
+function assertSauceCredentials(options) {
+  if (options.sauce.username && options.sauce.accessKey) return;
+  throw stacklessError('Missing Sauce credentials. Did you forget to set SAUCE_USERNAME and/or SAUCE_ACCESS_KEY?');
+}
+
+function stacklessError(message) {
+  var error = new Error(chalk.red(message));
+  error.showStack = false;
+  throw error;
+}
+
 function isLocal(browser) {
   return !browser.platform
 }
@@ -257,8 +270,7 @@ function endRun(emitter, spin, done) {
       emitter.emit('run-end', error);
     }
     if (_.isString(error)) {
-      error = new Error(error);
-      error.showStack = false;
+      error = stacklessError(error);
     }
     CleanKill.close(done.bind(null, error));
   }
