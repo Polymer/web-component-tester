@@ -77,23 +77,7 @@ function optionsFromEnv(env, args) {
   return options;
 }
 
-function isLocal(browser) {
-  return !browser.platform
-}
-
-function endRun(emitter, spin, done) {
-  return function(error) {
-    // Many of our tasks should spin indefinitely ...unless they encounter an error.
-    if (error || !spin) {
-      emitter.emit('run-end', error);
-    }
-    if (_.isString(error)) {
-      error = new Error(error);
-      error.showStack = false;
-    }
-    CleanKill.close(done.bind(null, error));
-  }
-}
+// Standalone testing
 
 function initGulp(gulp) {
   var emitter = new events.EventEmitter();
@@ -132,8 +116,6 @@ function initGulp(gulp) {
 
   gulp.task('test', ['test:local']);
 }
-
-// Standalone testing
 
 function test(options, done) {
   _.defaults(options, defaultOptions());
@@ -262,6 +244,26 @@ function startTestServer(options, emitter, done) {
   });
 }
 
+// Utility
+
+function isLocal(browser) {
+  return !browser.platform
+}
+
+function endRun(emitter, spin, done) {
+  return function(error) {
+    // Many of our tasks should spin indefinitely ...unless they encounter an error.
+    if (error || !spin) {
+      emitter.emit('run-end', error);
+    }
+    if (_.isString(error)) {
+      error = new Error(error);
+      error.showStack = false;
+    }
+    CleanKill.close(done.bind(null, error));
+  }
+}
+
 function runBrowsers(options, emitter, done) {
   if (options.browsers.length === 0) {
     return done('No browsers configured to run');
@@ -286,7 +288,14 @@ function runBrowsers(options, emitter, done) {
   });
 }
 
+// Exports
+
 module.exports = {
-  initGulp: initGulp,
-  test:     test,
+  test:              test,
+  initGulp:          initGulp,
+  defaultOptions:    defaultOptions,
+  optionsFromEnv:    optionsFromEnv,
+  ensureSauceTunnel: ensureSauceTunnel,
+  startStaticServer: startStaticServer,
+  startTestServer:   startTestServer,
 };
