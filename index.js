@@ -256,7 +256,7 @@ function assertSauceCredentials(options) {
 function stacklessError(message) {
   var error = new Error(chalk.red(message));
   error.showStack = false;
-  throw error;
+  return error;
 }
 
 function isLocal(browser) {
