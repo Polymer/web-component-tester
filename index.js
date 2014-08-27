@@ -26,6 +26,8 @@ function defaultOptions() {
     verbose:     false,
     // Display test results in expanded form. Verbose implies expanded.
     expanded:    false,
+    // Whether local (or remote) browsers should be targeted.
+    remote:      true,
     // The on-disk path where tests & static files should be served from.
     root:        path.resolve('..'),
     // The component being tested. Must be a directory under `root`.
@@ -57,24 +59,24 @@ function defaultOptions() {
 
 function optionsFromEnv(env, args) {
   var argv = yargs(args).argv;
-  var options = defaultOptions();
 
-  if (!_.isUndefined(argv.verbose))    options.verbose    = argv.verbose;
-  if (!_.isUndefined(argv.expanded))   options.expanded   = argv.expanded;
-  if (!_.isUndefined(argv.persistent)) options.persistent = argv.persistent;
+  var options = {
+    verbose:    argv.verbose,
+    expanded:   argv.expanded,
+    persistent: argv.persistent,
+    sauce: {
+      username:  env.SAUCE_USERNAME,
+      accessKey: env.SAUCE_ACCESS_KEY,
+      tunnelId:  env.SAUCE_TUNNEL_ID,
+    }
+  };
   if (argv.browsers) {
     options.browsers = argv.browsers.split(',').map(function(name) {
       return {browserName: name};
     });
   }
 
-  _.defaults(options.sauce, {
-    username:  env.SAUCE_USERNAME,
-    accessKey: env.SAUCE_ACCESS_KEY,
-    tunnelId:  env.SAUCE_TUNNEL_ID,
-  });
-
-  return options;
+  return mergeDefaults(options);
 }
 
 // Standalone testing
@@ -93,24 +95,13 @@ function initGulp(gulp) {
   gulp.task('wc:selenium-server', function(done) {
     startSeleniumServer(options, emitter, spinRun(done));
   });
-  gulp.task('wc:static-server', function(done) {
-    startStaticServer(options, emitter, spinRun(done));
-  });
-  gulp.task('wc:test-server', function(done) {
-    startTestServer(options, emitter, spinRun(done));
-  });
-
   gulp.task('test:local', function(done) {
-    if (options.browsers.length === 0) {
-      options.browsers = DEFAULT_BROWSERS.local;
-    }
+    options.remote = false;
     startTestServer(options, emitter, cleanRun(done));
   });
 
   gulp.task('test:remote', function(done) {
-    if (options.browsers.length === 0) {
-      options.browsers = DEFAULT_BROWSERS.remote;
-    }
+    options.remote = true;
     startTestServer(options, emitter, cleanRun(done));
   });
 
@@ -118,7 +109,7 @@ function initGulp(gulp) {
 }
 
 function test(options, done) {
-  _.defaults(options, defaultOptions());
+  mergeDefaults(options);
   var emitter = new events.EventEmitter();
   startTestServer(options, emitter, done);
   return emitter;
@@ -248,6 +239,15 @@ function startTestServer(options, emitter, done) {
 
 // Utility
 
+function mergeDefaults(options) {
+  var defaults = defaultOptions();
+
+  _.defaults(options,       defaults);
+  _.defaults(options.sauce, defaults.sauce);
+
+  return options;
+}
+
 function assertSauceCredentials(options) {
   if (options.sauce.username && options.sauce.accessKey) return;
   throw stacklessError('Missing Sauce credentials. Did you forget to set SAUCE_USERNAME and/or SAUCE_ACCESS_KEY?');
@@ -278,7 +278,7 @@ function endRun(emitter, spin, done) {
 
 function runBrowsers(options, emitter, done) {
   if (options.browsers.length === 0) {
-    return done('No browsers configured to run');
+    options.browsers = options.remote ? DEFAULT_BROWSERS.remote : DEFAULT_BROWSERS.local;
   }
 
   // Up the socket limit so that we can maintain more active requests.
