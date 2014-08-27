@@ -268,11 +268,11 @@ function endRun(emitter, spin, done) {
     // Many of our tasks should spin indefinitely ...unless they encounter an error.
     if (error || !spin) {
       emitter.emit('run-end', error);
+      if (_.isString(error)) {
+        error = stacklessError(error);
+      }
+      CleanKill.close(done.bind(null, error));
     }
-    if (_.isString(error)) {
-      error = stacklessError(error);
-    }
-    CleanKill.close(done.bind(null, error));
   }
 }
 
