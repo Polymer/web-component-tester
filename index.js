@@ -71,6 +71,7 @@ function optionsFromEnv(env, args) {
   var argv = yargs(args).argv;
 
   var options = {
+    webRunner:  argv.webRunner,
     verbose:    argv.verbose,
     expanded:   argv.expanded,
     persistent: argv.persistent,
