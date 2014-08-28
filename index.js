@@ -32,10 +32,15 @@ var DEFAULT_BROWSERS = require('./default-browsers.json');
 // Also, the full set of options, as a reference.
 function defaultOptions() {
   return {
+    // Output stream to write log messages to.
+    output:      process.stdout,
+    // Whether the output stream should be treated as a TTY (and be given more
+    // complex output formatting). Defaults to `output.isTTY`.
+    ttyOutput:   undefined,
     // Spew all sorts of debugging messages.
     verbose:     false,
     // Display test results in expanded form. Verbose implies expanded.
-    expanded:    false,
+    expanded:    true,
     // Whether local (or remote) browsers should be targeted.
     remote:      true,
     // The on-disk path where tests & static files should be served from.
@@ -72,7 +77,7 @@ function optionsFromEnv(env, args) {
 
   var options = {
     verbose:    argv.verbose,
-    expanded:   argv.expanded,
+    expanded:   Boolean(argv.expanded), // override the default of true.
     persistent: argv.persistent,
     sauce: {
       username:  env.SAUCE_USERNAME,
@@ -94,7 +99,7 @@ function optionsFromEnv(env, args) {
 function initGulp(gulp) {
   var emitter = new events.EventEmitter();
   var options = optionsFromEnv(process.env, process.argv);
-  new CliReporter(emitter, process.stdout, options);
+  new CliReporter(emitter, options.output, options);
 
   var spinRun  = endRun.bind(null, emitter, true);
   var cleanRun = endRun.bind(null, emitter, false);
@@ -121,6 +126,8 @@ function initGulp(gulp) {
 function test(options, done) {
   mergeDefaults(options);
   var emitter = new events.EventEmitter();
+  new CliReporter(emitter, options.output, options);
+
   startTestServer(options, emitter, endRun(emitter, false, done));
   return emitter;
 }
@@ -264,6 +271,10 @@ function mergeDefaults(options) {
 
   _.defaults(options,       defaults);
   _.defaults(options.sauce, defaults.sauce);
+
+  if (typeof(options.ttyOutput) === 'undefined') {
+    options.ttyOutput = options.output.isTTY;
+  }
 
   return options;
 }
