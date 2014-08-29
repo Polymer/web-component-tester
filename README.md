@@ -22,7 +22,7 @@ take advantage of:
 `gulpfile.js`:
 
     var gulp = require('gulp');
-    require('gulp-web-component-tester').initGulp(gulp);
+    require('web-component-tester').initGulp(gulp);
 
 
 ## gulp test:local
