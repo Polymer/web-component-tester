@@ -76,6 +76,7 @@ function optionsFromEnv(env, args) {
   var argv = yargs(args).argv;
 
   var options = {
+    webRunner:  argv.webRunner,
     verbose:    argv.verbose,
     expanded:   Boolean(argv.expanded), // override the default of true.
     persistent: argv.persistent,
