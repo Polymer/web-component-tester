@@ -50,7 +50,7 @@ function defaultOptions() {
     // The browsers that tests will be run on.
     browsers:    [],
     // The file (mounted under `<root>/<component>`) that runs the tests.
-    webRunner:   'tests/runner.html',
+    webRunner:   'tests/index.html',
     // Idle timeout for tests.
     testTimeout: 60 * 1000,
     // Whether the browser should be closed after the tests run.
