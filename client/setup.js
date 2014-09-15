@@ -15,11 +15,20 @@
  * @param {Object} mochaOptions Custom options to pass to Mocha.
  */
 WCT.runSuites = function(files, mochaOptions) {
-  mocha.setup({ui: 'tdd', reporter: WCT.HTMLReporter})
-  this.loadSuites(files, function(error) {
+  mocha.setup({ui: 'tdd', reporter: WCT.HTMLReporter});
+  // Set up the socket, first, as needed.
+  WCT.CLISocket.init(function(error, socket) {
     if (error) throw error;
-    mocha.run();
-  });
+
+    // Then we load our suites into the environment.
+    this.loadSuites(files, function(error) {
+      if (error) throw error;
+
+      // And finally we run the tests.
+      var runner = mocha.run();
+      if (socket) socket.observe(runner);
+    }.bind(this));
+  }.bind(this));
 }
 
 // File Loading
@@ -33,7 +42,7 @@ WCT.runSuites = function(files, mochaOptions) {
 WCT.loadSuites = function loadSuites(files, done) {
   var loaders = files.map(function(file) {
     if (file.slice(-3) === '.js') {
-      return this.loadScriptSuite.bind(this, file);
+      return WCT.Util.loadScript.bind(this, file);
     } else if (file.slice(-5) === '.html') {
       return this.loadDocumentSuite.bind(this, file);
     } else {
@@ -43,22 +52,6 @@ WCT.loadSuites = function loadSuites(files, done) {
 
   async.parallel(loaders, done);
 };
-
-// Individual File Loading
-
-/**
- * Loads a script relative to the main document.
- *
- * @param {string} path
- * @param {function} done
- */
-WCT.loadScriptSuite = function loadScriptSuite(path, done) {
-  var script = document.createElement('script');
-  script.src = path;
-  script.onload = done.bind(null, null);
-  script.onerror = done.bind(null, 'Failed to load script ' + script.src);
-  document.head.appendChild(script);
-}
 
 /**
  * Imports a document relative to the main document.

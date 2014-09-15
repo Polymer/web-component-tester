@@ -11,7 +11,7 @@ WCT.Util = {};
 /**
  * @param {number} count
  * @param {string} kind
- * @return {string} "<count> <kind> tests" or "<count> <kind> test".
+ * @return {string} '<count> <kind> tests' or '<count> <kind> test'.
  */
 WCT.Util.pluralizedStat = function pluralizedStat(count, kind) {
   if (count === 1) {
@@ -20,5 +20,33 @@ WCT.Util.pluralizedStat = function pluralizedStat(count, kind) {
     return count + ' ' + kind + ' tests';
   }
 };
+
+/**
+ * @param {string} param The param to return a value for.
+ * @return {?string} The first value for `param`, if found.
+ */
+WCT.Util.getParam = function getParam(param) {
+  var query = window.location.search.substring(1);
+  var vars = query.split('&');
+  for (var i=0;i<vars.length;i++) {
+    var pair = vars[i].split('=');
+    if (decodeURIComponent(pair[0]) === param) {
+      return decodeURIComponent(pair[1]);
+    }
+  }
+  return null;
+};
+
+/**
+ * @param {string} path The URI of the script to load.
+ * @param {function} done
+ */
+WCT.Util.loadScript = function loadScript(path, done) {
+  var script = document.createElement('script');
+  script.src = path;
+  script.onload = done.bind(null, null);
+  script.onerror = done.bind(null, 'Failed to load script ' + script.src);
+  document.head.appendChild(script);
+}
 
 })();

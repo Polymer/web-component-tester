@@ -76,7 +76,7 @@ function BrowserRunner(emitter, local, def, options, doneCallback) {
 BrowserRunner.prototype.startTest = function startTest() {
   var host  = 'http://localhost:' + this.options._httpPort;
   var path  = '/' + this.options.component + '/' + this.options.webRunner;
-  var query = '?browser=' + this.def.id;
+  var query = '?cli_browser_id=' + this.def.id;
   this.browser.get(host + path + query, function(error) {
     if (error) {
       this.done(error.data || error);
