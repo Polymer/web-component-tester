@@ -9,6 +9,19 @@
 WCT.Util = {};
 
 /**
+ * @param {function()} done A function to call when the active web component
+ *     frameworks have loaded.
+ */
+WCT.Util.whenFrameworksReady = function(done) {
+  var loaders = [];
+  if (window.Polymer && Polymer.whenReady) {
+    loaders.push(Polymer.whenReady);
+  }
+
+  async.parallel(loaders, done);
+};
+
+/**
  * @param {number} count
  * @param {string} kind
  * @return {string} '<count> <kind> tests' or '<count> <kind> test'.

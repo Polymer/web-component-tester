@@ -77,7 +77,7 @@ CLISocket.prototype.emitEvent = function emitEvent(event, data) {
  */
 CLISocket.init = function init(done) {
   var browserId = WCT.Util.getParam('cli_browser_id');
-  if (!browserId) return done(null);
+  if (!browserId) return done();
 
   WCT.Util.loadScript(SOCKETIO_LIBRARY, function(error) {
     if (error) return done(error);

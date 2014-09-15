@@ -6,32 +6,60 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 (function() {
 
+/** @return {!Object} The default options used within `runSuites`. */
+function defaultOptions() {
+  return {
+    // Options passed directly to Mocha.
+    mocha: {
+      ui:      'tdd',
+      reporter: WCT.HTMLReporter,
+    },
+    // Whether we should wait for web component frameworks to load before running
+    // any tests.
+    //
+    // Note that this only applies suites of **only** `.js` tests. There is no
+    // way for us to guarantee that tests within `.html` documents will be run
+    // prior to framework load.
+    waitForFrameworks: true,
+  };
+}
+
 /**
  * Load and run a set of Mocha suites. This is the entry point you're looking
  * for.
  *
  * @param {!Array.<string>} tests An array of test files to load. They can be
  *     either `.js` or `.html` files.
- * @param {Object} mochaOptions Custom options to pass to Mocha.
  */
-WCT.runSuites = function(files, mochaOptions) {
-  mocha.setup({ui: 'tdd', reporter: WCT.HTMLReporter});
-  // Set up the socket, first, as needed.
-  WCT.CLISocket.init(function(error, socket) {
-    if (error) throw error;
+WCT.runSuites = function(files) {
+  // TODO(nevir): Configurable
+  var options = defaultOptions();
+  mocha.setup(options.mocha);
 
-    // Then we load our suites into the environment.
-    this.loadSuites(files, function(error) {
-      if (error) throw error;
+  var steps = [];
 
-      // And finally we run the tests.
-      var runner = mocha.run();
-      if (socket) socket.observe(runner);
-    }.bind(this));
-  }.bind(this));
+  // Set up the socket w/ the CLI runner, as needed.
+  var socket;
+  steps.push(function(callback) {
+    WCT.CLISocket.init(function(error, socket) {
+      socket = socket;
+      callback(error);
+    });
+  });
+
+  steps.push(this.loadSuites.bind(this, files));
+
+  if (options.waitForFrameworks) {
+    steps.push(WCT.Util.whenFrameworksReady);
+  }
+
+  steps.push(function() {
+    var runner = mocha.run();
+    if (socket) socket.observe(runner);
+  });
+
+  async.series(steps);
 }
-
-// File Loading
 
 /**
  * Loads suites of tests, supporting `.js` as well as `.html` files.
@@ -42,9 +70,9 @@ WCT.runSuites = function(files, mochaOptions) {
 WCT.loadSuites = function loadSuites(files, done) {
   var loaders = files.map(function(file) {
     if (file.slice(-3) === '.js') {
-      return WCT.Util.loadScript.bind(this, file);
+      return WCT.Util.loadScript.bind(WCT.Util, file);
     } else if (file.slice(-5) === '.html') {
-      return this.loadDocumentSuite.bind(this, file);
+      return WCT.SubSuite.load.bind(WCT.SubSuite, file);
     } else {
       throw new Error('Unknown resource type ' + file);
     }
@@ -52,22 +80,5 @@ WCT.loadSuites = function loadSuites(files, done) {
 
   async.parallel(loaders, done);
 };
-
-/**
- * Imports a document relative to the main document.
- *
- * @param {string} path
- * @param {function} done
- */
-WCT.loadDocumentSuite = function loadDocumentSuite(path, done) {
-  var iframe = document.createElement('iframe');
-  WCT.SubSuite.register(path, iframe);
-  iframe.src = path;
-  iframe.classList.add('subsuite');
-  // TODO(nevir): also defer for polymer ready, if configured.
-  iframe.onload = done.bind(null, null);
-  iframe.onerror = done.bind(null, 'Failed to load document ' + iframe.src);
-  document.body.appendChild(iframe);
-}
 
 })();

@@ -28,12 +28,22 @@ function SubSuite(name, parentScope) {
 WCT.SubSuite = SubSuite;
 
 /**
- * @param {string} name The name of the child document to register.
- * @param {!HTMLIFrameElement} iframe The iframe containing the child document.
+ * Loads a HTML document containing Mocha suites that should be injected into
+ * the current Mocha environment.
+ *
+ * @param {string} url The URL of the document to load.
+ * @param {function} done Node-style callback.
  */
-SubSuite.register = function register(name, iframe) {
-  var subSuite = new this(name, window);
+SubSuite.load = function load(url, done) {
+  var subSuite = new this(url, window);
+  subSuite.onload = done.bind(null, null);
+
+  var iframe = document.createElement('iframe');
+  iframe.src = url;
   iframe.subSuite = subSuite;
+  iframe.classList.add('subsuite');
+  iframe.onerror = done.bind(null, 'Failed to load document ' + iframe.src);
+  document.body.appendChild(iframe);
 };
 
 /**
@@ -47,12 +57,21 @@ SubSuite.get = function(window) {
 /**
  * Injects Mocha's global functions into an object scope.
  *
- * @param {!Object} scope
+ * @param {!Window} scope
  */
 SubSuite.prototype.inject = function(scope) {
   for (var i = 0, key; key = MOCHA_EXPORTS[i]; i++) {
     scope[key] = this.parentScope[key];
   }
+
+  // Because tests cannot be defined in the middle of a run, we cannot guarantee
+  // that tests can be run prior to frameworks being ready.
+  //
+  // If you need to test logic prior to framework ready within `.html`
+  // documents, your best bet is to run your tests outside of mocha.
+  scope.addEventListener('load', function() {
+    WCT.Util.whenFrameworksReady(this.onload);
+  }.bind(this));
 };
 
 // If we are within a sub suite, we want to inject Mocha's functions as early as
