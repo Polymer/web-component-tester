@@ -23,9 +23,9 @@ var socketIO     = require('socket.io');
 var uuid         = require('uuid');
 var yargs        = require('yargs');
 
-var BrowserRunner = require('./lib/browserrunner');
-var CleanKill     = require('./lib/cleankill');
-var CliReporter   = require('./lib/clireporter');
+var BrowserRunner = require('./runner/browserrunner');
+var CleanKill     = require('./runner/cleankill');
+var CliReporter   = require('./runner/clireporter');
 
 var DEFAULT_BROWSERS = require('./default-browsers.json');
 
