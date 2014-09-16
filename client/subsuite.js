@@ -68,7 +68,7 @@ SubSuite.prototype.inject = function(scope) {
   // If you need to test logic prior to framework ready within `.html`
   // documents, your best bet is to run your tests outside of mocha.
   scope.addEventListener('load', function() {
-    WCT.Util.whenFrameworksReady(this.onload);
+    WCT.Util.whenFrameworksReady(this.onload, scope);
   }.bind(this));
 };
 

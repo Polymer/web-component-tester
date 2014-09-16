@@ -24,15 +24,17 @@ WCT.Util.MochaExports = {
 /**
  * @param {function()} done A function to call when the active web component
  *     frameworks have loaded.
+ * @param {Window} opt_scope A scope to check for polymer within.
  */
-WCT.Util.whenFrameworksReady = function(done) {
+WCT.Util.whenFrameworksReady = function(done, opt_scope) {
+  var scope = opt_scope || window;
   // TODO(nevir): Frameworks other than Polymer?
-  if (!window.Polymer) return done();
+  if (!scope.Polymer) return done();
 
-  if (Polymer.whenReady) {
-    Polymer.whenReady(done);
+  if (scope.Polymer.whenReady) {
+    scope.Polymer.whenReady(done);
   } else {
-    window.addEventListener('polymer-ready', done);
+    scope.addEventListener('polymer-ready', done);
   }
 };
 
