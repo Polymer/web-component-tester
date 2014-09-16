@@ -27,7 +27,6 @@ function CLISocket(browserId, socket) {
  *     interesting events back to the CLI runner.
  */
 CLISocket.prototype.observe = function observe(runner) {
-  console.warn('observing', runner);
   this.emitEvent('browser-start', {
     total: runner.total,
     url:   window.location.toString(),

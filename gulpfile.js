@@ -20,7 +20,9 @@ gulp.task('build:client', function() {
       'vendor/chai/chai.js',
       'vendor/async/lib/async.js',
       'vendor/WebConsole-reporter/WebConsole.js',
+      // Poor-man's dependency management, for now.
       'client/index.js',
+      'client/util.js',
       'client/**/*',
     ])
     .pipe(sourcemaps.init())

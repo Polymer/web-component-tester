@@ -6,17 +6,6 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 (function() {
 
-// TODO(nevir): Support BDD style too.
-// https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
-var MOCHA_EXPORTS = [
-  'setup',
-  'teardown',
-  'suiteSetup',
-  'suiteTeardown',
-  'suite',
-  'test',
-];
-
 /**
  * A Mocha suite (or suites) run within a child iframe, but reported as if they
  * are part of the current context.
@@ -36,7 +25,10 @@ WCT.SubSuite = SubSuite;
  */
 SubSuite.load = function load(url, done) {
   var subSuite = new this(url, window);
-  subSuite.onload = done.bind(null, null);
+  subSuite.onload = function(error) {
+    subSuite.onload = null;
+    done(error);
+  };
 
   var iframe = document.createElement('iframe');
   iframe.src = url;
@@ -60,9 +52,15 @@ SubSuite.get = function(window) {
  * @param {!Window} scope
  */
 SubSuite.prototype.inject = function(scope) {
-  for (var i = 0, key; key = MOCHA_EXPORTS[i]; i++) {
+  // TODO(nevir): Support more than just TDD.
+  for (var i = 0, key; key = WCT.Util.MochaExports.tdd[i]; i++) {
     scope[key] = this.parentScope[key];
   }
+
+  scope.addEventListener('error', function(error) {
+    console.error('Load-time error in ' + this.name + ':', error.stack || error.message || error);
+    this.onload(error);
+  }.bind(this));
 
   // Because tests cannot be defined in the middle of a run, we cannot guarantee
   // that tests can be run prior to frameworks being ready.

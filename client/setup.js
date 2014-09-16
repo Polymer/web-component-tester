@@ -41,8 +41,8 @@ WCT.runSuites = function(files) {
   // Set up the socket w/ the CLI runner, as needed.
   var socket;
   steps.push(function(callback) {
-    WCT.CLISocket.init(function(error, socket) {
-      socket = socket;
+    WCT.CLISocket.init(function(error, innerSocket) {
+      socket = innerSocket;
       callback(error);
     });
   });

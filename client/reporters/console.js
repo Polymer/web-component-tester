@@ -40,7 +40,7 @@ function ConsoleReporter(runner) {
     if (console.exception) {
       console.exception(error);
     } else {
-      console.error(error.stack);
+      console.error(error.stack || error.message || error);
     }
   }.bind(this));
 

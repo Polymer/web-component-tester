@@ -8,17 +8,32 @@
 
 WCT.Util = {};
 
+// Mocha global helpers, broken out by testing method.
+WCT.Util.MochaExports = {
+  // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
+  tdd: [
+    'setup',
+    'teardown',
+    'suiteSetup',
+    'suiteTeardown',
+    'suite',
+    'test',
+  ],
+};
+
 /**
  * @param {function()} done A function to call when the active web component
  *     frameworks have loaded.
  */
 WCT.Util.whenFrameworksReady = function(done) {
-  var loaders = [];
-  if (window.Polymer && Polymer.whenReady) {
-    loaders.push(Polymer.whenReady);
-  }
+  // TODO(nevir): Frameworks other than Polymer?
+  if (!window.Polymer) return done();
 
-  async.parallel(loaders, done);
+  if (Polymer.whenReady) {
+    Polymer.whenReady(done);
+  } else {
+    window.addEventListener('polymer-ready', done);
+  }
 };
 
 /**

@@ -6,3 +6,7 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 
 var WCT = {};
+
+// Convenience Globals
+var assert = chai.assert;
+var expect = chai.expect;

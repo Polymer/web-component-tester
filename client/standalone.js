@@ -6,19 +6,36 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 (function() {
 
+// We expose all Mocha methods up front, configuring and running mocha
+// automatically when you call them.
+//
+// The assumption is that it is a one-off (sub-)suite of tests being run.
+Object.keys(WCT.Util.MochaExports).forEach(function(ui) {
+  WCT.Util.MochaExports[ui].forEach(function(key) {
+    window[key] = function wrappedMochaFunction() {
+      setupAndRunAsync(ui);
+      if (!window[key] || window[key] === wrappedMochaFunction) {
+        throw new Error('Expected mocha.setup to define ' + key);
+      }
+      window[key].apply(window, arguments);
+    }
+  });
+});
+
+var chosenUI;
+
 /**
- * If you set up a suite before `mocha.setup`, we assume that this is a one-off
- * test, and just run it for you.
  *
- * This is bashed over by `mocha.setup`.
- *
- * @param {...*} var_args The regular arguments for Mocha's `suite`.
  */
-window.suite = function suite(var_args) {
-  mocha.setup({ui: 'tdd', reporter: WCT.ConsoleReporter});
-  window.suite.apply(window, arguments);
-  // TODO(nevir): Defer til after Polymer load.
-  mocha.run();
-};
+function setupAndRunAsync(ui) {
+  if (chosenUI && chosenUI === ui) return;
+  if (chosenUI && chosenUI !== ui) {
+    throw new Error('Mixing ' + chosenUI + ' and ' + ui + ' Mocha styles is not supported.');
+  }
+  mocha.setup({ui: ui, reporter: WCT.ConsoleReporter});
+  async.nextTick(function() {
+    WCT.Util.whenFrameworksReady(mocha.run.bind(mocha));
+  });
+}
 
 })();
