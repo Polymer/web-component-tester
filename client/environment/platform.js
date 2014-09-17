@@ -4,22 +4,14 @@
 // The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
 // Code distributed by Google as part of the polymer project is also
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
-(function() {
-
-WCT.reporters.HTML = HTML;
 
 /**
- * WCT-specific behavior on top of Mocha's default HTML reporter.
+ * It is often useful to trigger a Platform.flush, and perform work on the next
+ * run loop tick.
  *
- * @param {!Mocha.Runner} runner The runner that is being reported on.
+ * @param {function} callback
  */
-function HTML(runner) {
-  var output = document.createElement('div');
-  output.id = 'mocha';
-  document.body.appendChild(output);
-
-  Mocha.reporters.HTML.call(this, runner);
-};
-HTML.prototype = Object.create(Mocha.reporters.HTML.prototype);
-
-})();
+function asyncPlatformFlush(callback) {
+  Platform.flush();
+  async.nextTick(callback);
+}

@@ -6,7 +6,16 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 
 var WCT = {};
+WCT.reporters = {};
 
-// Convenience Globals
-var assert = chai.assert;
-var expect = chai.expect;
+// Evaluated in mocha/run.js.
+WCT.suitesToLoad = [];
+
+/**
+ * Loads suites of tests, supporting `.js` as well as `.html` files.
+ *
+ * @param {!Array.<string>} files The files to load.
+ */
+WCT.loadSuites = function loadSuites(files) {
+  WCT.suitesToLoad = WCT.suitesToLoad.concat(files);
+};

@@ -6,20 +6,51 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 (function() {
 
-WCT.ConsoleReporter = ConsoleReporter;
+WCT.reporters.Console = Console;
+
+var FONT = ';font: normal 13px "Roboto", "Helvetica Neue", "Helvetica", sans-serif;'
+var STYLES = {
+  plain:   FONT,
+  suite:   'color: #5c6bc0' + FONT,
+  test:    FONT,
+  passing: 'color: #259b24' + FONT,
+  pending: 'color: #e65100' + FONT,
+  failing: 'color: #c41411' + FONT,
+  stack:   'color: #c41411',
+  results: FONT + 'font-size: 16px',
+}
+
+function log(text, style) {
+  console.log('%c' + text, STYLES[style] || STYLES.plain);
+}
+
+function logGroup(text, style) {
+  if (navigator.userAgent.toLowerCase().indexOf('firefox') !== -1) {
+    console.group(text);
+  } else {
+    console.group('%c' + text, STYLES[style] || STYLES.plain);
+  }
+}
+
+function logException(error) {
+  if (console.exception) {
+    console.exception(error);
+  } else {
+    log(error.stack || error.message || error, 'stack');
+  }
+}
 
 /**
  * A Mocha reporter that logs results out to the web `console`.
  *
  * @param {!Mocha.Runner} runner The runner that is being reported on.
  */
-function ConsoleReporter(runner) {
+function Console(runner) {
   Mocha.reporters.Base.call(this, runner);
-  this.titleReporter = new WCT.TitleReporter(runner);
 
   runner.on('suite', function(suite) {
     if (suite.root) return;
-    console.group(suite.title);
+    logGroup(suite.title, 'suite');
   }.bind(this));
 
   runner.on('suite end', function(suite) {
@@ -28,20 +59,15 @@ function ConsoleReporter(runner) {
   }.bind(this));
 
   runner.on('test', function(test) {
-    console.group(test.title);
+    logGroup(test.title, 'test');
   }.bind(this));
 
   runner.on('pending', function(test) {
-    console.group(test.title);
-    console.warn('pending');
+    logGroup(test.title, 'pending');
   }.bind(this));
 
   runner.on('fail', function(test, error) {
-    if (console.exception) {
-      console.exception(error);
-    } else {
-      console.error(error.stack || error.message || error);
-    }
+    logException(error);
   }.bind(this));
 
   runner.on('test end', function(test) {
@@ -50,23 +76,24 @@ function ConsoleReporter(runner) {
 
   runner.on('end', this.logSummary.bind(this));
 };
-ConsoleReporter.prototype = Object.create(Mocha.reporters.Base.prototype);
+Console.prototype = Object.create(Mocha.reporters.Base.prototype);
 
 /** Prints out a final summary of test results. */
-ConsoleReporter.prototype.logSummary = function logSummary() {
-  console.group('Test Results');
-    if (this.stats.failures > 0) {
-    console.error(WCT.Util.pluralizedStat(this.stats.failures, 'failing'));
+Console.prototype.logSummary = function logSummary() {
+  logGroup('Test Results', 'results');
+
+  if (this.stats.failures > 0) {
+    log(WCT.Util.pluralizedStat(this.stats.failures, 'failing'), 'failing');
   }
   if (this.stats.pending > 0) {
-    console.warn('%c' + WCT.Util.pluralizedStat(this.stats.pending, 'pending'), 'color: #e65100');
+    log(WCT.Util.pluralizedStat(this.stats.pending, 'pending'), 'pending');
   }
-  console.log(WCT.Util.pluralizedStat(this.stats.passes, 'passing'))
+  log(WCT.Util.pluralizedStat(this.stats.passes, 'passing'));
 
-  if (!this.stats.failures && !this.stats.pending) {
-    console.log('%call tests passed', 'color: #259b24');
+  if (!this.stats.failures) {
+    log('test suite passed', 'passing');
   }
-  console.log('Evaluated', this.stats.tests, 'tests in', this.stats.duration + 'ms.');
+  log('Evaluated ' + this.stats.tests + ' tests in ' + this.stats.duration + 'ms.');
   console.groupEnd();
 };
 

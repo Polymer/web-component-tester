@@ -22,12 +22,13 @@ WCT.SubSuite = SubSuite;
  *
  * @param {string} url The URL of the document to load.
  * @param {function} done Node-style callback.
+ * @return {!SubSuite}
  */
 SubSuite.load = function load(url, done) {
   var subSuite = new this(url, window);
   subSuite.onload = function(error) {
     subSuite.onload = null;
-    done(error);
+    done(error, subSuite);
   };
 
   var iframe = document.createElement('iframe');
@@ -36,47 +37,22 @@ SubSuite.load = function load(url, done) {
   iframe.classList.add('subsuite');
   iframe.onerror = done.bind(null, 'Failed to load document ' + iframe.src);
   document.body.appendChild(iframe);
+
+  subSuite.iframe = iframe;
+  return subSuite;
 };
 
 /**
- * @param {!Window} window The window to retrieve a `SubSuite` for.
  * @return {SubSuite} The `SubSuite` that was registered for this window.
  */
-SubSuite.get = function(window) {
+SubSuite.current = function() {
   return window.frameElement && window.frameElement.subSuite || null;
 }
 
-/**
- * Injects Mocha's global functions into an object scope.
- *
- * @param {!Window} scope
- */
-SubSuite.prototype.inject = function(scope) {
-  // TODO(nevir): Support more than just TDD.
-  for (var i = 0, key; key = WCT.Util.MochaExports.tdd[i]; i++) {
-    scope[key] = this.parentScope[key];
-  }
-
-  scope.addEventListener('error', function(error) {
-    console.error('Load-time error in ' + this.name + ':', error.stack || error.message || error);
-    this.onload(error);
-  }.bind(this));
-
-  // Because tests cannot be defined in the middle of a run, we cannot guarantee
-  // that tests can be run prior to frameworks being ready.
-  //
-  // If you need to test logic prior to framework ready within `.html`
-  // documents, your best bet is to run your tests outside of mocha.
-  scope.addEventListener('load', function() {
-    WCT.Util.whenFrameworksReady(this.onload, scope);
-  }.bind(this));
-};
-
-// If we are within a sub suite, we want to inject Mocha's functions as early as
-// possible.
-var thisSubSuite = SubSuite.get(window);
+// Complete the load process, if we are within a sub suite.
+var thisSubSuite = SubSuite.current();
 if (thisSubSuite) {
-  thisSubSuite.inject(window);
+  thisSubSuite.onload();
 }
 
 })();

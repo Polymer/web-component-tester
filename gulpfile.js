@@ -23,7 +23,7 @@ gulp.task('build:client', function() {
       // Poor-man's dependency management, for now.
       'client/index.js',
       'client/util.js',
-      'client/**/*',
+      'client/**/*.{js,css}',
     ])
     .pipe(sourcemaps.init())
     .pipe(gulpIf(/\.css$/, wrap(CSS_TO_JS)))

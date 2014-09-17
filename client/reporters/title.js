@@ -6,7 +6,7 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 (function() {
 
-WCT.TitleReporter = TitleReporter;
+WCT.reporters.Title = Title;
 
 // start at vertical.
 var ARC_OFFSET = -Math.PI / 2;
@@ -18,20 +18,20 @@ var ARC_WIDTH  = 6;
  *
  * @param {!Mocha.Runner} runner The runner that is being reported on.
  */
-function TitleReporter(runner) {
+function Title(runner) {
   Mocha.reporters.Base.call(this, runner);
 
   runner.on('test end', this.report.bind(this));
 }
 
 /** Reports current stats via the page title and favicon. */
-TitleReporter.prototype.report = function report() {
+Title.prototype.report = function report() {
   this.updateTitle();
   this.updateFavicon();
 };
 
 /** Updates the document title with a summary of current stats. */
-TitleReporter.prototype.updateTitle = function updateTitle() {
+Title.prototype.updateTitle = function updateTitle() {
   if (this.stats.failures > 0) {
     document.title = WCT.Util.pluralizedStat(this.stats.failures, 'failing');
   } else {
@@ -60,7 +60,7 @@ function drawFaviconArc(context, total, start, length, color) {
 };
 
 /** Updates the document's favicon w/ a summary of current stats. */
-TitleReporter.prototype.updateFavicon = function updateFavicon() {
+Title.prototype.updateFavicon = function updateFavicon() {
   var canvas = document.createElement('canvas');
   canvas.height = canvas.width = 32;
   var context = canvas.getContext('2d');
@@ -77,7 +77,7 @@ TitleReporter.prototype.updateFavicon = function updateFavicon() {
 };
 
 /** Sets the current favicon by URL. */
-TitleReporter.prototype.setFavicon = function setFavicon(url) {
+Title.prototype.setFavicon = function setFavicon(url) {
   var current = document.head.querySelector('link[rel="icon"]');
   if (current) current.remove();
 

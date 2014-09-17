@@ -9,6 +9,11 @@
   z-index: 100;
 }
 
+/* TODO(nevir): Fix grep support */
+#mocha .replay {
+  display: none !important;
+}
+
 .subsuite {
   position: absolute;
   left: 0;

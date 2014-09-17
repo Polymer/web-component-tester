@@ -8,19 +8,6 @@
 
 WCT.Util = {};
 
-// Mocha global helpers, broken out by testing method.
-WCT.Util.MochaExports = {
-  // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
-  tdd: [
-    'setup',
-    'teardown',
-    'suiteSetup',
-    'suiteTeardown',
-    'suite',
-    'test',
-  ],
-};
-
 /**
  * @param {function()} done A function to call when the active web component
  *     frameworks have loaded.
