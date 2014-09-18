@@ -28,8 +28,7 @@ function CLISocket(browserId, socket) {
  */
 CLISocket.prototype.observe = function observe(runner) {
   this.emitEvent('browser-start', {
-    total: runner.total,
-    url:   window.location.toString(),
+    url: window.location.toString(),
   });
 
   // We only emit a subset of events that we care about, and follow a more

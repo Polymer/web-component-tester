@@ -93,8 +93,6 @@ BrowserRunner.prototype.onEvent = function onEvent(event, data) {
     // Always assign, to handle re-runs (no browser-init).
     this.stats = {
       status:  'running',
-      total:   data.total,
-      running: 0,
       passing: 0,
       pending: 0,
       failing: 0,
