@@ -13,7 +13,7 @@ var CSS_TO_JS =
     "document.head.appendChild(style);\n" +
     "})();";
 
-gulp.task('build:client', function() {
+gulp.task('build:browser', function() {
   return gulp.src([
       'vendor/mocha/mocha.js',
       'vendor/mocha/mocha.css',
@@ -21,19 +21,19 @@ gulp.task('build:client', function() {
       'vendor/async/lib/async.js',
       'vendor/WebConsole-reporter/WebConsole.js',
       // Poor-man's dependency management, for now.
-      'client/index.js',
-      'client/util.js',
-      'client/**/*.{js,css}',
+      'browser/index.js',
+      'browser/util.js',
+      'browser/**/*.{js,css}',
     ])
     .pipe(sourcemaps.init())
     .pipe(gulpIf(/\.css$/, wrap(CSS_TO_JS)))
-    .pipe(concat('client.js'))
+    .pipe(concat('browser.js'))
     .pipe(sourcemaps.write())
     .pipe(gulp.dest('.'));
 });
 
 gulp.task('watch', function() {
-  watch('client/**/*', function() {
-    gulp.start('build:client');
+  watch('browser/**/*', function() {
+    gulp.start('build:browser');
   });
 });

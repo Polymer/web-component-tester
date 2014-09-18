@@ -13,10 +13,10 @@ browsers.
 # Writing Tests
 
 All tests are driven by `.html` files. At the top of each test file, you will
-need to load `client.js`:
+need to load `browser.js`:
 
 ```html
-<script src="../../web-component-tester/client.js"></script>
+<script src="../../web-component-tester/browser.js"></script>
 ```
 
 Then, you just need to write your [Mocha][mocha] tests normally (either
