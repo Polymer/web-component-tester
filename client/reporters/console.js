@@ -20,15 +20,24 @@ var STYLES = {
   results: FONT + 'font-size: 16px',
 }
 
+// I don't think we can feature detect this one...
+var userAgent = navigator.userAgent.toLowerCase();
+var CAN_STYLE_LOG   = userAgent.match('firefox') || userAgent.match('webkit');
+var CAN_STYLE_GROUP = userAgent.match('webkit');
+
 function log(text, style) {
-  console.log('%c' + text, STYLES[style] || STYLES.plain);
+  if (CAN_STYLE_LOG) {
+    console.log('%c' + text, STYLES[style] || STYLES.plain);
+  } else {
+    console.log(text);
+  }
 }
 
 function logGroup(text, style) {
-  if (navigator.userAgent.toLowerCase().indexOf('firefox') !== -1) {
-    console.group(text);
-  } else {
+  if (CAN_STYLE_GROUP) {
     console.group('%c' + text, STYLES[style] || STYLES.plain);
+  } else {
+    console.group(text);
   }
 }
 

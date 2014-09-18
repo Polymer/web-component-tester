@@ -79,7 +79,9 @@ Title.prototype.updateFavicon = function updateFavicon() {
 /** Sets the current favicon by URL. */
 Title.prototype.setFavicon = function setFavicon(url) {
   var current = document.head.querySelector('link[rel="icon"]');
-  if (current) current.remove();
+  if (current) {
+    document.head.removeChild(current);
+  }
 
   var link = document.createElement('link');
   link.rel = 'icon';

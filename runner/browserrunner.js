@@ -102,16 +102,7 @@ BrowserRunner.prototype.onEvent = function onEvent(event, data) {
   }
 
   if (event === 'browser-end') {
-    var error = data
-    if (error) {
-      this.stats.status = 'error';
-    } else if (!error && this.stats.failing > 0) {
-      this.stats.status = 'complete';
-      error = this.stats.failing + ' failed tests';
-    } else {
-      this.stats.status = 'complete';
-    }
-    this.done(error);
+    this.done(data);
   } else {
     this.emitter.emit(event, this.def, data, this.stats);
   }
@@ -126,6 +117,11 @@ BrowserRunner.prototype.done = function done(error) {
   if (!this.browser) return;
   var browser = this.browser;
   this.browser = null;
+
+  this.stats.status = error ? 'error' : 'complete';
+  if (!error && this.stats.failing > 0) {
+    error = this.stats.failing + ' failed tests';
+  }
 
   this.emitter.emit('browser-end', this.def, error, this.stats);
 
