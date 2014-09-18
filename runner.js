@@ -23,9 +23,9 @@ var socketIO     = require('socket.io');
 var uuid         = require('uuid');
 var yargs        = require('yargs');
 
-var BrowserRunner = require('./lib/browserrunner');
-var CleanKill     = require('./lib/cleankill');
-var CliReporter   = require('./lib/clireporter');
+var BrowserRunner = require('./runner/browserrunner');
+var CleanKill     = require('./runner/cleankill');
+var CliReporter   = require('./runner/clireporter');
 
 var DEFAULT_BROWSERS = require('./default-browsers.json');
 
@@ -105,11 +105,8 @@ function initGulp(gulp) {
   var spinRun  = endRun.bind(null, emitter, true);
   var cleanRun = endRun.bind(null, emitter, false);
 
-  gulp.task('wc:sauce-tunnel', function(done) {
+  gulp.task('wct:sauce-tunnel', function(done) {
     ensureSauceTunnel(options, emitter, spinRun(done));
-  });
-  gulp.task('wc:selenium-server', function(done) {
-    startSeleniumServer(options, emitter, spinRun(done));
   });
   gulp.task('test:local', function(done) {
     options.remote = false;
@@ -172,19 +169,19 @@ function startSeleniumServer(options, emitter, done) {
     var server = selenium({}, ['-port', port]);
     var badExit = function() { done('Could not start Selenium'); };
     server.on('exit', badExit);
-    server.stdout.on('data', function(data) {
-      if (data.toString().indexOf('Started org.openqa.jetty.jetty.Server') > -1) {
+
+    function onOutput(data) {
+      var str = data.toString();
+      emitter.emit('log:debug', str);
+
+      if (str.indexOf('Started org.openqa.jetty.jetty.Server') > -1) {
         server.removeListener('exit', badExit);
         emitter.emit('log:info', 'Selenium server running on port', chalk.yellow(port));
         done(null, port);
       }
-    });
-    server.stdout.on('data', function(data) {
-      emitter.emit('log:debug', data.toString());
-    });
-    server.stderr.on('data', function(data) {
-      emitter.emit('log:debug', data.toString());
-    });
+    }
+    server.stdout.on('data', onOutput);
+    server.stderr.on('data', onOutput);
 
     CleanKill.onInterrupt(function(done) {
       server.kill();

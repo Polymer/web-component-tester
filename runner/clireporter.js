@@ -126,12 +126,12 @@ CliReporter.prototype.updateStatus = function(force) {
     var pretty = this.prettyBrowsers[browserId];
     var stats  = this.browserStats[browserId];
     var status = stats.status === 'error' ? chalk.red('error') : stats.status;
-    if (stats && stats.total) {
+    if (status === 'running' || status === 'complete') {
       var counts = [stats.passing, stats.pending, stats.failing];
       if (counts[0] > 0) counts[0] = chalk.green(counts[0]);
       if (counts[1] > 0) counts[1] = chalk.yellow(counts[1]);
       if (counts[2] > 0) counts[2] = chalk.red(counts[2]);
-      status = counts.join('/') + ' of ' + stats.total;
+      status = counts.join('/');
     }
 
     return padRight(pretty + ' (' + status + ')', STATUS_PAD);

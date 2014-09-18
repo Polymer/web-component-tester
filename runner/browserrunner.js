@@ -76,7 +76,7 @@ function BrowserRunner(emitter, local, def, options, doneCallback) {
 BrowserRunner.prototype.startTest = function startTest() {
   var host  = 'http://localhost:' + this.options._httpPort;
   var path  = '/' + this.options.component + '/' + this.options.webRunner;
-  var query = '?browser=' + this.def.id;
+  var query = '?cli_browser_id=' + this.def.id;
   this.browser.get(host + path + query, function(error) {
     if (error) {
       this.done(error.data || error);
@@ -93,8 +93,6 @@ BrowserRunner.prototype.onEvent = function onEvent(event, data) {
     // Always assign, to handle re-runs (no browser-init).
     this.stats = {
       status:  'running',
-      total:   data.total,
-      running: 0,
       passing: 0,
       pending: 0,
       failing: 0,
@@ -104,16 +102,7 @@ BrowserRunner.prototype.onEvent = function onEvent(event, data) {
   }
 
   if (event === 'browser-end') {
-    var error = data
-    if (error) {
-      this.stats.status = 'error';
-    } else if (!error && this.stats.failing > 0) {
-      this.stats.status = 'complete';
-      error = this.stats.failing + ' failed tests';
-    } else {
-      this.stats.status = 'complete';
-    }
-    this.done(error);
+    this.done(data);
   } else {
     this.emitter.emit(event, this.def, data, this.stats);
   }
@@ -128,6 +117,11 @@ BrowserRunner.prototype.done = function done(error) {
   if (!this.browser) return;
   var browser = this.browser;
   this.browser = null;
+
+  this.stats.status = error ? 'error' : 'complete';
+  if (!error && this.stats.failing > 0) {
+    error = this.stats.failing + ' failed tests';
+  }
 
   this.emitter.emit('browser-end', this.def, error, this.stats);
 

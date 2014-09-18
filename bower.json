@@ -1,0 +1,8 @@
+{
+  "name": "web-component-tester",
+  "private": true,
+  "dependencies": {
+    "chai": "chai#1.9.1",
+    "mocha": "mocha#^1.21.4"
+  }
+}

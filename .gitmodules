@@ -1,0 +1,9 @@
+[submodule "vendor/mocha"]
+	path = vendor/mocha
+	url = https://github.com/visionmedia/mocha
+[submodule "vendor/chai"]
+	path = vendor/chai
+	url = https://github.com/chaijs/chai
+[submodule "vendor/async"]
+	path = vendor/async
+	url = https://github.com/caolan/async

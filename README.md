@@ -1,31 +1,69 @@
-`web-component-tester` tests your web components; ohmygosh.
+`web-component-tester` makes testing your web components a breeze!
 
-It is a wrapper around WebDriver endpoints (via [`wd`](https://github.com/admc/wd)), supporting local selenium testing, as well as remote tests via Sauce.
+You get a browser-based testing environment, configured out of the box with:
+
+* [Mocha][mocha] as a test framework.
+* [Chai][chai] assertions.
+
+Additionally, `web-component-tester` provides integration with `selenium` via
+`gulp` or `grunt`, so that you can easily run your test suites across multiple
+browsers. 
 
 
+# Writing Tests
 
-# Getting Started
+All tests are driven by `.html` files. At the top of each test file, you will
+need to load `client.js`:
 
-    npm install web-component-tester --save
+```html
+<script src="../../web-component-tester/client.js"></script>
+```
 
-You will also need to install a client library to communicate with the runner.
-For Polymer web components:
+Then, you just need to write your [Mocha][mocha] tests normally (either
+[TDD](http://visionmedia.github.io/mocha/#tdd-interface) or
+[BDD](http://visionmedia.github.io/mocha/#bdd-interface)).
 
-    bower install Polymer/polymer-test-tools --save
-    
+```html
+<script>
+  suite('<awesome-element>', function() {
+    test('is awesome', function() {
+      assert.isTrue(document.createElement('awesome-element').awesome);
+    });
+  });
+</script>
+```
 
-# Gulp Configuration
+You can use either the [TDD](http://visionmedia.github.io/mocha/#tdd-interface)
+or [BDD](http://visionmedia.github.io/mocha/#bdd-interface) interfaces.
 
-`web-component-tester` provides several handy gulp tasks that you may want to
-take advantage of:
+
+## Suites of Suites
+
+To run multiple test files together, you can use the `WCT.loadSuites` helper to
+load and concurrently run all your tests:
+
+```html
+<script>
+  WCT.loadSuites([
+    'awesome-element.html',
+    'awesomesauce.js',
+  ]);
+</script>
+```
+
+
+# Command Line Interface
+
+## Gulp
 
 `gulpfile.js`:
 
-    var gulp = require('gulp');
-    require('web-component-tester').initGulp(gulp);
+```js
+var gulp = require('gulp');
+require('web-component-tester').initGulp(gulp);
+```
 
-
-## gulp test:local
+### gulp test:local
 
 Aliased to `gulp test` for convenience.
 
@@ -40,13 +78,13 @@ browser windows to re-run tests.
 
 `--expanded`: Lists each test as it passes/fails/pends.
 
-## gulp test:remote
+### gulp test:remote
 
 Runs tests remotely against [configured browsers](default-browsers.json).
 Requires that `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` are set in your 
 environment.
 
 
-## gulp wc:sauce-tunnel
+### gulp wct:sauce-tunnel
 
 Starts a Sauce Connect tunnel, and keeps it open.
