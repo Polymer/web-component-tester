@@ -105,11 +105,8 @@ function initGulp(gulp) {
   var spinRun  = endRun.bind(null, emitter, true);
   var cleanRun = endRun.bind(null, emitter, false);
 
-  gulp.task('wc:sauce-tunnel', function(done) {
+  gulp.task('wct:sauce-tunnel', function(done) {
     ensureSauceTunnel(options, emitter, spinRun(done));
-  });
-  gulp.task('wc:selenium-server', function(done) {
-    startSeleniumServer(options, emitter, spinRun(done));
   });
   gulp.task('test:local', function(done) {
     options.remote = false;
