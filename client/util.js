@@ -18,6 +18,10 @@ WCT.Util.whenFrameworksReady = function(done, opt_scope) {
   // TODO(nevir): Frameworks other than Polymer?
   if (!scope.Polymer) return done();
 
+  // Platform isn't quite ready for IE10.
+  // TODO(nevir): Should this be baked into platform ready?
+  done = asyncPlatformFlush.bind(null, done);
+
   if (scope.Polymer.whenReady) {
     scope.Polymer.whenReady(done);
   } else {

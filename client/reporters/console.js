@@ -24,8 +24,11 @@ var STYLES = {
 var userAgent = navigator.userAgent.toLowerCase();
 var CAN_STYLE_LOG   = userAgent.match('firefox') || userAgent.match('webkit');
 var CAN_STYLE_GROUP = userAgent.match('webkit');
+// Track the indent for faked `console.group`
+var logIndent = '';
 
 function log(text, style) {
+  text = text.split('\n').map(function(l) { return logIndent + l; }).join('\n');
   if (CAN_STYLE_LOG) {
     console.log('%c' + text, STYLES[style] || STYLES.plain);
   } else {
@@ -36,8 +39,19 @@ function log(text, style) {
 function logGroup(text, style) {
   if (CAN_STYLE_GROUP) {
     console.group('%c' + text, STYLES[style] || STYLES.plain);
-  } else {
+  } else if (console.group) {
     console.group(text);
+  } else {
+    logIndent = logIndent + '  ';
+    log(text, style);
+  }
+}
+
+function logGroupEnd() {
+  if (console.groupEnd) {
+    console.groupEnd();
+  } else {
+    logIndent = logIndent.substr(0, logIndent.length - 2);
   }
 }
 
@@ -64,7 +78,7 @@ function Console(runner) {
 
   runner.on('suite end', function(suite) {
     if (suite.root) return;
-    console.groupEnd();
+    logGroupEnd();
   }.bind(this));
 
   runner.on('test', function(test) {
@@ -80,7 +94,7 @@ function Console(runner) {
   }.bind(this));
 
   runner.on('test end', function(test) {
-    console.groupEnd();
+    logGroupEnd();
   }.bind(this));
 
   runner.on('end', this.logSummary.bind(this));
@@ -103,7 +117,7 @@ Console.prototype.logSummary = function logSummary() {
     log('test suite passed', 'passing');
   }
   log('Evaluated ' + this.stats.tests + ' tests in ' + this.stats.duration + 'ms.');
-  console.groupEnd();
+  logGroupEnd();
 };
 
 })();
