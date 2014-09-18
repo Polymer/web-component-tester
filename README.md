@@ -88,3 +88,8 @@ environment.
 ### gulp wct:sauce-tunnel
 
 Starts a Sauce Connect tunnel, and keeps it open.
+
+
+<!-- References -->
+[mocha]: http://visionmedia.github.io/mocha/ "Mocha Test Framework"
+[chai]:  http://chaijs.com/                  "Chai Assertion Library"
