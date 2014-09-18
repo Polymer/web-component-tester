@@ -101,7 +101,7 @@ CLISocket.init = function init(done) {
  */
 function getTitles(runnable) {
   var titles = [];
-  while (runnable && runnable.title) {
+  while (runnable && !runnable.root && runnable.title) {
     titles.unshift(runnable.title);
     runnable = runnable.parent;
   }
