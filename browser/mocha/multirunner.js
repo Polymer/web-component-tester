@@ -90,7 +90,7 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner) {
  */
 MultiRunner.prototype.onRunnerStart = function onRunnerStart(runner) {
   this.currentRunner = runner;
-  self.total = self.total - 1 + runner.total;
+  this.total = this.total - 1 + runner.total;
 };
 
 /**
