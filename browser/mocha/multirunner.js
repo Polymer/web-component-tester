@@ -34,21 +34,6 @@ MultiRunner.prototype = Object.getPrototypeOf(Mocha.Runner.prototype);
 /**
  *
  */
-MultiRunner.prototype.setNumSuites = function setNumSuites(numSuites) {
-  this.numSuites = numSuites;
-  // We should have at least this many tests...
-  this.total = numSuites;
-
-  // Unlikely.
-  if (this.numSuitesDone == this.numSuites) {
-    this.emit('end');
-  }
-}
-
-
-/**
- *
- */
 MultiRunner.prototype.childReporter = function childReporter() {
   // The reporter is used as a constructor, so we can't depend on `this` being
   // properly bound.

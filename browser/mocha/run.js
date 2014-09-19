@@ -20,12 +20,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // CLI runner is established (if we're running in that context). Less
   // buffering to deal with.
   WCT.CLISocket.init(function(error, socket) {
-    var numSubSuites = countSubSuites();
-    var runner = new WCT.MultiRunner(numSubSuites, determineReporters(socket, numSubSuites));
+    var runner = new WCT.MultiRunner(countSubSuites(), determineReporters(socket));
     WCT._multiRunner = runner;
 
-    loadDependencies(function(error, numSubSuites) {
-      runner.setNumSuites(numSubSuites + 1);
+    loadDependencies(function(error) {
       runMocha(runner.childReporter());
     });
   });
@@ -59,7 +57,7 @@ function runMocha(reporter, done, waited) {
 /**
  *
  */
-function determineReporters(socket, numSubSuites) {
+function determineReporters(socket) {
   var reporters = [
     WCT.reporters.Title,
     WCT.reporters.Console,
@@ -69,7 +67,7 @@ function determineReporters(socket, numSubSuites) {
     reporters.push(function(runner) {
       socket.observe(runner);
     });
-  } else if (numSubSuites > 0) {
+  } else if (WCT.suitesToLoad.length > 0) {
     reporters.push(WCT.reporters.HTML);
   }
 
@@ -80,21 +78,17 @@ function determineReporters(socket, numSubSuites) {
  *
  */
 function loadDependencies(done) {
-  var numSubSuites = 0;
   var loaders =  WCT.suitesToLoad.map(function(file) {
     if (file.slice(-3) === '.js') {
       return WCT.Util.loadScript.bind(WCT.Util, file);
     } else if (file.slice(-5) === '.html') {
-      numSubSuites = numSubSuites + 1;
       return WCT.SubSuite.load.bind(WCT.SubSuite, file);
     } else {
       throw new Error('Unknown resource type ' + file);
     }
   }.bind(this));
 
-  async.parallel(loaders, function(error) {
-    done(error, numSubSuites)
-  });
+  async.parallel(loaders, done);
 }
 
 /**
