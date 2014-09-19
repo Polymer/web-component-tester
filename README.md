@@ -52,6 +52,14 @@ load and concurrently run all your tests:
 ```
 
 
+## Test Helpers
+
+The browser environment is also set up with some helpful additions:
+
+* [Async.js][async] is made available. Use it!
+* [`platform.js` specific helpers](browser/environment/platform.js).
+
+
 # Command Line Interface
 
 ## Gulp
@@ -93,3 +101,4 @@ Starts a Sauce Connect tunnel, and keeps it open.
 <!-- References -->
 [mocha]: http://visionmedia.github.io/mocha/ "Mocha Test Framework"
 [chai]:  http://chaijs.com/                  "Chai Assertion Library"
+[async]: https://github.com/caolan/async     "Async.js"
