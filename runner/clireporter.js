@@ -147,7 +147,12 @@ CliReporter.prototype.writeTestError = function(browser, data) {
   this.write('\n');
   this.write(chalk.red('  ' + (error.message || error)));
   if (error.stack) {
-    this.write(stacky.pretty(data.error.stack, STACKY_CONFIG));
+    try {
+      this.write(stacky.pretty(data.error.stack, STACKY_CONFIG));
+    } catch (error) {
+      // If we couldn't extract a stack (i.e. there was no stack), the message
+      // is enough.
+    }
   }
   this.write('\n');
 };
