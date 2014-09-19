@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // CLI runner is established (if we're running in that context). Less
   // buffering to deal with.
   WCT.CLISocket.init(function(error, socket) {
-    var runner = new WCT.MultiRunner(countSubSuites(), determineReporters(socket));
+    var runner = new WCT.MultiRunner(countSubSuites() + 1, determineReporters(socket));
     WCT._multiRunner = runner;
 
     loadDependencies(function(error) {
