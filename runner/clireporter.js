@@ -21,7 +21,7 @@ var STACKY_CONFIG = {
     /^https?:\/\/[^\/]+\//,
   ],
   unimportantLocation: [
-    /^polymer-test-tools\//,
+    /^web-component-tester\//,
   ],
 };
 
