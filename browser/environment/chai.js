@@ -7,3 +7,6 @@
 
 var assert = chai.assert;
 var expect = chai.expect;
+
+// We prefer to get as much stack information as possible.
+chai.config.includeStack = true;
