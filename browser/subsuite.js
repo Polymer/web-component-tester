@@ -6,10 +6,6 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 (function() {
 
-// We can't maintain properties on iframe elements in Firefox/Safari/???, so we
-// track subSuites by URL.
-var subSuitesByFrameUrl = {};
-
 /**
  * A Mocha suite (or suites) run within a child iframe, but reported as if they
  * are part of the current context.
@@ -19,6 +15,10 @@ function SubSuite(name, parentScope) {
   this.parentScope = parentScope;
 }
 WCT.SubSuite = SubSuite;
+
+// We can't maintain properties on iframe elements in Firefox/Safari/???, so we
+// track subSuites by URL.
+SubSuite._byUrl = {};
 
 /**
  * Loads a HTML document containing Mocha suites that should be injected into
@@ -41,7 +41,7 @@ SubSuite.load = function load(url, done) {
   iframe.addEventListener('error', done.bind(null, 'Failed to load document ' + iframe.src));
   document.body.appendChild(iframe);
 
-  subSuitesByFrameUrl[iframe.src] = subSuite;
+  SubSuite._byUrl[iframe.src] = subSuite;
 
   subSuite.iframe = iframe;
   return subSuite;
@@ -59,7 +59,10 @@ SubSuite.current = function() {
  * @return {SubSuite} The `SubSuite` that was registered for `target`.
  */
 SubSuite.get = function(target) {
-  return subSuitesByFrameUrl[target.location.href];
+  var subSuite = SubSuite._byUrl[target.location.href];
+  if (subSuite || window.parent === window) return subSuite;
+  // Otherwise, traverse.
+  return window.parent.WCT.SubSuite.get(target);
 }
 
 /**

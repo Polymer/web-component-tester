@@ -22,7 +22,8 @@ window.addEventListener('message', function(event) {
 
   // Fake a Mocha suite (enough to satisfy MultiRunner)...
   var root = new Mocha.Suite();
-  var test = new Mocha.Test(path, function() {});
+  var test = new Mocha.Test(path, function() {
+  });
   test.parent = root;
   test.state  = event.data === 'ok' ? 'passed' : 'failed'
 

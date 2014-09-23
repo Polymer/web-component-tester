@@ -62,6 +62,7 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner) {
   }
 
   if (eventName === 'start') {
+    runner.title = runner.suite.title;
     this.onRunnerStart(runner);
   } else if (eventName === 'end') {
     this.onRunnerEnd(runner);

@@ -52,6 +52,7 @@ function runMocha(reporter, done, waited) {
   }
 
   mocha.reporter(reporter);
+  mocha.suite.title = window.location.pathname;
   mocha.run(done);
 }
 
