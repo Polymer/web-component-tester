@@ -32,7 +32,7 @@ function ensureSauceTunnel(options, emitter, done) {
     return done(null, options.sauce.tunnelId);
   }
 
-  assertSauceCredentials(options);
+  if (!assertSauceCredentials(options, done)) return;
   var connectOptions = {
     username:         options.sauce.username,
     accessKey:        options.sauce.accessKey,
@@ -125,7 +125,7 @@ function runTests(options, emitter, done) {
     jobs.selenium = startSeleniumServer.bind(null, options, emitter);
   }
   if (!_.every(options.browsers, isLocal)) {
-    assertSauceCredentials(options); // Assert for the runners.
+    if (!assertSauceCredentials(options, done)) return; // Assert for the runners.
     jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
   }
 
@@ -159,15 +159,9 @@ function runTests(options, emitter, done) {
 
 // Helpers
 
-function assertSauceCredentials(options) {
-  if (options.sauce.username && options.sauce.accessKey) return;
-  throw stacklessError('Missing Sauce credentials. Did you forget to set SAUCE_USERNAME and/or SAUCE_ACCESS_KEY?');
-}
-
-function stacklessError(message) {
-  var error = new Error(chalk.red(message));
-  error.showStack = false;
-  return error;
+function assertSauceCredentials(options, done) {
+  if (options.sauce.username && options.sauce.accessKey) return true;
+  done('Missing Sauce credentials. Did you forget to set SAUCE_USERNAME and/or SAUCE_ACCESS_KEY?');
 }
 
 function isLocal(browser) {
@@ -176,7 +170,7 @@ function isLocal(browser) {
 
 function runBrowsers(options, emitter, done) {
   if (options.browsers.length === 0) {
-    throw stacklessError('No browsers configured to run');
+    throw new Error('No browsers configured to run');
   }
 
   // Up the socket limit so that we can maintain more active requests.
@@ -194,7 +188,9 @@ function runBrowsers(options, emitter, done) {
       if (error) errors.push(error);
       numDone = numDone + 1;
       if (numDone === options.browsers.length) {
-        done(errors.length > 0 ? _.unique(errors).join(', '): null);
+        var error = errors.length > 0 ? _.unique(errors).join(', ') : null;
+        emitter.emit('run-end', error);
+        done(error);
       }
     });
   });
