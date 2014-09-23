@@ -64,7 +64,7 @@ WCT.Util.getParam = function getParam(param) {
  */
 WCT.Util.loadScript = function loadScript(path, done) {
   var script = document.createElement('script');
-  script.src = path;
+  script.src = path + '?' + Math.random();
   script.onload = done.bind(null, null);
   script.onerror = done.bind(null, 'Failed to load script ' + script.src);
   document.head.appendChild(script);

@@ -9,6 +9,9 @@
 /** By default, we wait for any web component frameworks to load. */
 WCT.waitForFrameworks = true;
 
+/** How many `.html` suites that can be concurrently loaded & run. */
+WCT.numConcurrentSuites = 8;
+
 // Give any scripts on the page a chance to twiddle the environment.
 document.addEventListener('DOMContentLoaded', function() {
   var subSuite = WCT.SubSuite.current();
@@ -24,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     WCT._multiRunner = runner;
 
     loadDependencies(function(error) {
+      if (error) throw error;
       runMocha(runner.childReporter());
     });
   });
@@ -35,9 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function runSubSuite(subSuite) {
   // Not very pretty.
   var reporter = subSuite.parentScope.WCT._multiRunner.childReporter();
-  runMocha(reporter, function() {
-    subSuite.iframe.style.display = 'none';
-  });
+  runMocha(reporter, subSuite.done.bind(subSuite));
 }
 
 /**
@@ -50,7 +52,6 @@ function runMocha(reporter, done, waited) {
   }
 
   mocha.reporter(reporter);
-  mocha.suite.title = window.location.pathname;
   mocha.run(done);
 }
 
@@ -88,7 +89,7 @@ function loadDependencies(done) {
     }
   }.bind(this));
 
-  async.parallel(loaders, done);
+  async.parallelLimit(loaders, WCT.numConcurrentSuites, done);
 }
 
 /**

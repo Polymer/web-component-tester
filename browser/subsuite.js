@@ -6,6 +6,10 @@
 // subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 (function() {
 
+// We can't maintain properties on iframe elements in Firefox/Safari/???, so we
+// track subSuites by URL.
+var subSuitesByFrameUrl = {};
+
 /**
  * A Mocha suite (or suites) run within a child iframe, but reported as if they
  * are part of the current context.
@@ -32,11 +36,12 @@ SubSuite.load = function load(url, done) {
   };
 
   var iframe = document.createElement('iframe');
-  iframe.src = url;
-  iframe.subSuite = subSuite;
+  iframe.src = url + '?' + Math.random();
   iframe.classList.add('subsuite');
-  iframe.onerror = done.bind(null, 'Failed to load document ' + iframe.src);
+  iframe.addEventListener('error', done.bind(null, 'Failed to load document ' + iframe.src));
   document.body.appendChild(iframe);
+
+  subSuitesByFrameUrl[iframe.src] = subSuite;
 
   subSuite.iframe = iframe;
   return subSuite;
@@ -46,8 +51,23 @@ SubSuite.load = function load(url, done) {
  * @return {SubSuite} The `SubSuite` that was registered for this window.
  */
 SubSuite.current = function() {
-  return window.frameElement && window.frameElement.subSuite || null;
+  return SubSuite.get(window);
 }
+
+/**
+ * @param {!Window} target A window to find the SubSuite of.
+ * @return {SubSuite} The `SubSuite` that was registered for `target`.
+ */
+SubSuite.get = function(target) {
+  return subSuitesByFrameUrl[target.location.href];
+}
+
+/**
+ * Called when the sub suite's tests are complete, so that it can clean up.
+ */
+SubSuite.prototype.done = function done() {
+  this.iframe.parentNode.removeChild(this.iframe);
+};
 
 // Complete the load process, if we are within a sub suite.
 var thisSubSuite = SubSuite.current();

@@ -29,7 +29,7 @@ function MultiRunner(numSuites, reporters) {
   this.emit('start');
 }
 // Mocha doesn't expose its `EventEmitter` shim directly, so:
-MultiRunner.prototype = Object.getPrototypeOf(Mocha.Runner.prototype);
+MultiRunner.prototype = Object.create(Object.getPrototypeOf(Mocha.Runner.prototype));
 
 /**
  *
