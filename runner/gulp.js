@@ -8,7 +8,6 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-var _      = require('lodash');
 var chalk  = require('chalk');
 var events = require('events');
 
@@ -19,7 +18,7 @@ var steps       = require('./steps');
 
 function init(gulp) {
   var emitter = new events.EventEmitter();
-  var options = config.fromEnv(process.env, process.argv);
+  var options = config.mergeDefaults(config.fromEnv(process.env, process.argv));
   new CliReporter(emitter, options.output, options);
 
   var spinRun  = endRun.bind(null, emitter, true);
@@ -28,6 +27,7 @@ function init(gulp) {
   gulp.task('wct:sauce-tunnel', function(done) {
     steps.ensureSauceTunnel(options, emitter, spinRun(done));
   });
+
   gulp.task('test:local', function(done) {
     options.remote = false;
     steps.runTests(options, emitter, cleanRun(done));

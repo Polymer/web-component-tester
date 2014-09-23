@@ -102,7 +102,7 @@ function CliReporter(emitter, stream, options) {
 
   emitter.on('run-end', function(error) {
     if (error) {
-      this.log(chalk.red, 'Test run ended in failure', error);
+      this.log(chalk.red, 'Test run ended in failure:', error);
     } else {
       this.log(chalk.green, 'Test run ended with great success');
     }

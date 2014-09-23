@@ -24,7 +24,7 @@ function defaults() {
     verbose:     false,
     // Display test results in expanded form. Verbose implies expanded.
     expanded:    true,
-    // Whether local (or remote) browsers should be targeted.
+    // Whether the default set of local (or remote) browsers should be targeted.
     remote:      true,
     // The on-disk path where tests & static files should be served from.
     root:        path.resolve('..'),
@@ -33,7 +33,7 @@ function defaults() {
     // The browsers that tests will be run on.
     browsers:    [],
     // The file (mounted under `<root>/<component>`) that runs the tests.
-    webRunner:   'tests/index.html',
+    webRunner:   'tests/index.html',  // TODO(nevir): migrate to test/index.html
     // Idle timeout for tests.
     testTimeout: 60 * 1000,
     // Whether the browser should be closed after the tests run.
@@ -75,7 +75,7 @@ function fromEnv(env, args) {
     });
   }
 
-  return mergeDefaults(options);
+  return options;
 }
 
 function mergeDefaults(options) {

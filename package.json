@@ -2,6 +2,9 @@
   "name": "web-component-tester",
   "version": "0.5.1",
   "main": "runner.js",
+  "keywords": [
+    "gruntplugin"
+  ],
   "dependencies": {
     "async": "^0.9.0",
     "chalk": "^0.5.1",
@@ -11,7 +14,7 @@
     "http": "0.0.0",
     "lodash": "^2.4.1",
     "sauce-connect-launcher": "^0.6.1",
-    "selenium-standalone": "^2.42.2-2.9.0",
+    "selenium-standalone": ">=2.43.1-2.9.0-1",
     "serve-static": "^1.5.3",
     "socket.io": "^1.0.6",
     "stacky": "^1.0.1",
