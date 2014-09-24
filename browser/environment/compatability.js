@@ -13,7 +13,7 @@ window.addEventListener('message', function(event) {
   var subSuite = WCT.SubSuite.get(event.source);
   if (!subSuite) return;
   subSuite.onload();
-  var path = relativeLocation(event.source.location);
+  var path = WCT.util.relativeLocation(event.source.location);
 
   // Mocha doesn't expose its `EventEmitter` shim directly, so:
   var runner = Object.create(Object.getPrototypeOf(Mocha.Runner.prototype));
@@ -45,14 +45,5 @@ window.addEventListener('message', function(event) {
 
   subSuite.done();
 });
-
-/** @return {string} `location` relative to the current window. */
-function relativeLocation(location) {
-  var path = location.pathname;
-  if (path.indexOf(window.location.pathname) === 0) {
-    path = path.substr(window.location.pathname.length);
-  }
-  return path;
-}
 
 })();

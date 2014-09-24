@@ -33,9 +33,9 @@ Title.prototype.report = function report() {
 /** Updates the document title with a summary of current stats. */
 Title.prototype.updateTitle = function updateTitle() {
   if (this.stats.failures > 0) {
-    document.title = WCT.Util.pluralizedStat(this.stats.failures, 'failing');
+    document.title = WCT.util.pluralizedStat(this.stats.failures, 'failing');
   } else {
-    document.title = WCT.Util.pluralizedStat(this.stats.passes, 'passing');
+    document.title = WCT.util.pluralizedStat(this.stats.passes, 'passing');
   }
 };
 

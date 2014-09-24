@@ -106,12 +106,12 @@ Console.prototype.logSummary = function logSummary() {
   logGroup('Test Results', 'results');
 
   if (this.stats.failures > 0) {
-    log(WCT.Util.pluralizedStat(this.stats.failures, 'failing'), 'failing');
+    log(WCT.util.pluralizedStat(this.stats.failures, 'failing'), 'failing');
   }
   if (this.stats.pending > 0) {
-    log(WCT.Util.pluralizedStat(this.stats.pending, 'pending'), 'pending');
+    log(WCT.util.pluralizedStat(this.stats.pending, 'pending'), 'pending');
   }
-  log(WCT.Util.pluralizedStat(this.stats.passes, 'passing'));
+  log(WCT.util.pluralizedStat(this.stats.passes, 'passing'));
 
   if (!this.stats.failures) {
     log('test suite passed', 'passing');

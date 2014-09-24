@@ -34,11 +34,13 @@ MultiRunner.prototype = Object.create(Object.getPrototypeOf(Mocha.Runner.prototy
 /**
  *
  */
-MultiRunner.prototype.childReporter = function childReporter() {
+MultiRunner.prototype.childReporter = function childReporter(name) {
   // The reporter is used as a constructor, so we can't depend on `this` being
   // properly bound.
   var self = this;
   return function childReporter(runner) {
+    console.log(runner, name);
+    runner.name = name;
     self.bindChildRunner(runner);
   };
 };
@@ -60,6 +62,7 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner) {
     this.pendingEvents.push(arguments);
     return;
   }
+  // console.debug(runner.name, 'proxyEvent:', eventName);
 
   if (eventName === 'start') {
     this.onRunnerStart(runner);
@@ -74,6 +77,7 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner) {
  *
  */
 MultiRunner.prototype.onRunnerStart = function onRunnerStart(runner) {
+  console.debug('Starting runner', runner.name);
   this.currentRunner = runner;
   this.total = this.total - 1 + runner.total;
 };
@@ -82,6 +86,7 @@ MultiRunner.prototype.onRunnerStart = function onRunnerStart(runner) {
  *
  */
 MultiRunner.prototype.onRunnerEnd = function onRunnerEnd(runner) {
+  console.debug('Ending runner', runner.name, this.numSuitesDone, this.numSuites);
   this.currentRunner = null;
   this.flushPendingEvents();
 

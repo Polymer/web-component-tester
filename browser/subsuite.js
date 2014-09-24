@@ -10,8 +10,8 @@
  * A Mocha suite (or suites) run within a child iframe, but reported as if they
  * are part of the current context.
  */
-function SubSuite(name, parentScope) {
-  this.name        = name;
+function SubSuite(url, parentScope) {
+  this.url         = url + '?' + Math.random();
   this.parentScope = parentScope;
 }
 WCT.SubSuite = SubSuite;
@@ -25,26 +25,14 @@ SubSuite._byUrl = {};
  * the current Mocha environment.
  *
  * @param {string} url The URL of the document to load.
- * @param {function} done Node-style callback.
- * @return {!SubSuite}
+ * @param {function} done Node-style callback, given the sub suite as the
+ *     second argument.
  */
 SubSuite.load = function load(url, done) {
   var subSuite = new this(url, window);
-  subSuite.onload = function(error) {
-    subSuite.onload = null;
+  subSuite.load(function(error) {
     done(error, subSuite);
-  };
-
-  var iframe = document.createElement('iframe');
-  iframe.src = url + '?' + Math.random();
-  iframe.classList.add('subsuite');
-  iframe.addEventListener('error', done.bind(null, 'Failed to load document ' + iframe.src));
-  document.body.appendChild(iframe);
-
-  SubSuite._byUrl[iframe.src] = subSuite;
-
-  subSuite.iframe = iframe;
-  return subSuite;
+  });
 };
 
 /**
@@ -66,16 +54,27 @@ SubSuite.get = function(target) {
 }
 
 /**
- * Called when the sub suite's tests are complete, so that it can clean up.
+ * Loads the subsuite.
+ *
+ * @param {function} done Node-style callback.
  */
+SubSuite.prototype.load = function(done) {
+  this.iframe = document.createElement('iframe');
+  this.iframe.src = this.url;
+  this.iframe.classList.add('subsuite');
+  document.body.appendChild(this.iframe);
+
+  // let the iframe expand the URL for us.
+  this.url = this.iframe.src;
+  SubSuite._byUrl[this.url] = this;
+
+  this.iframe.addEventListener('error', done.bind(null, 'Failed to load document ' + this.url));
+  this.iframe.contentWindow.addEventListener('DOMContentLoaded', done);
+};
+
+/** Called when the sub suite's tests are complete, so that it can clean up. */
 SubSuite.prototype.done = function done() {
   this.iframe.parentNode.removeChild(this.iframe);
 };
-
-// Complete the load process, if we are within a sub suite.
-var thisSubSuite = SubSuite.current();
-if (thisSubSuite) {
-  thisSubSuite.onload();
-}
 
 })();

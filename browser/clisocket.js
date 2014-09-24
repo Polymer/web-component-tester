@@ -74,10 +74,10 @@ CLISocket.prototype.emitEvent = function emitEvent(event, data) {
  * @param {function(*, CLISocket)} done Node-style callback.
  */
 CLISocket.init = function init(done) {
-  var browserId = WCT.Util.getParam('cli_browser_id');
+  var browserId = WCT.util.getParam('cli_browser_id');
   if (!browserId) return done();
 
-  WCT.Util.loadScript(SOCKETIO_LIBRARY, function(error) {
+  WCT.util.loadScript(SOCKETIO_LIBRARY, function(error) {
     if (error) return done(error);
 
     var socket = io(SOCKETIO_ENDPOINT);

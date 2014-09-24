@@ -16,7 +16,9 @@ WCT.numConcurrentSuites = 8;
 document.addEventListener('DOMContentLoaded', function() {
   var subSuite = WCT.SubSuite.current();
   if (subSuite) {
-    return runSubSuite(subSuite);
+    // Give the subsuite time to complete its load (see `SubSuite.initialized`).
+    async.nextTick(runSubSuite.bind(null, subSuite));
+    return;
   }
 
   // Before anything else, we need to ensure our communication channel with the
@@ -26,9 +28,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var runner = new WCT.MultiRunner(countSubSuites() + 1, determineReporters(socket));
     WCT._multiRunner = runner;
 
-    loadDependencies(function(error) {
-      if (error) throw error;
-      runMocha(runner.childReporter());
+    // We ignore errors, under the assumption that the script/subsuite loaders
+    // handle error propagation.
+    loadDependencies(function() {
+      runMocha(runner.childReporter(WCT.util.relativeLocation(window.location)));
     });
   });
 });
@@ -38,7 +41,9 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function runSubSuite(subSuite) {
   // Not very pretty.
-  var reporter = subSuite.parentScope.WCT._multiRunner.childReporter();
+  var parentWCT = subSuite.parentScope.WCT;
+  var suiteName = parentWCT.util.relativeLocation(window.location);
+  var reporter  = parentWCT._multiRunner.childReporter(suiteName);
   runMocha(reporter, subSuite.done.bind(subSuite));
 }
 
@@ -47,12 +52,11 @@ function runSubSuite(subSuite) {
  */
 function runMocha(reporter, done, waited) {
   if (WCT.waitForFrameworks && !waited) {
-    WCT.Util.whenFrameworksReady(runMocha.bind(null, reporter, done, true));
+    WCT.util.whenFrameworksReady(runMocha.bind(null, reporter, done, true));
     return;
   }
 
   mocha.reporter(reporter);
-  mocha.suite.title = window.location.pathname;
   mocha.run(done);
 }
 
@@ -82,7 +86,7 @@ function determineReporters(socket) {
 function loadDependencies(done) {
   var loaders =  WCT.suitesToLoad.map(function(file) {
     if (file.slice(-3) === '.js') {
-      return WCT.Util.loadScript.bind(WCT.Util, file);
+      return WCT.util.loadScript.bind(WCT.util, file);
     } else if (file.slice(-5) === '.html') {
       return WCT.SubSuite.load.bind(WCT.SubSuite, file);
     } else {
