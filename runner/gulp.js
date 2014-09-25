@@ -44,7 +44,6 @@ function init(gulp) {
 
 function endRun(emitter, spin, done) {
   return function(error) {
-    console.log('endRun', spin, error);
     // Some of our tasks should spin indefinitely...
     if (spin && !error) return;
     // ...unless they encounter an error.
