@@ -32,8 +32,8 @@ window.done = function() {
   parent.postMessage('ok', '*');
 };
 
-window.addEventListener('error', function(error) {
-  parent.postMessage({error: error}, '*');
+window.addEventListener('error', function(event) {
+  parent.postMessage({error: event.error}, '*');
 });
 
 })();
