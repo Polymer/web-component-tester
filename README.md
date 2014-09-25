@@ -102,3 +102,30 @@ Starts a Sauce Connect tunnel, and keeps it open.
 [mocha]: http://visionmedia.github.io/mocha/ "Mocha Test Framework"
 [chai]:  http://chaijs.com/                  "Chai Assertion Library"
 [async]: https://github.com/caolan/async     "Async.js"
+
+
+## Grunt
+
+`gruntfile.js`:
+
+```js
+grunt.initConfig({
+  'wct-test': {
+    local: {
+      options: {remote: false},
+    },
+    remote: {
+      options: {remote: true},
+    },
+  },
+});
+
+grunt.loadNpmTasks('web-component-tester');
+```
+
+Gives you two grunt tasks: `wct-test:local` and `wct-test:remote` which will
+use the [default browsers](default-browsers.json) for their runs.
+
+### wct-sauce-tunnel
+
+Starts a Sauce Connect tunnel, and keeps it open.
