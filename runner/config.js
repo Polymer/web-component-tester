@@ -32,7 +32,7 @@ function defaults() {
     // The browsers that tests will be run on.
     browsers:    [],
     // The file (mounted under `<root>/<component>`) that runs the tests.
-    webRunner:   'tests/index.html',  // TODO(nevir): migrate to test/index.html
+    webRunner:   'test/index.html',
     // Idle timeout for tests.
     testTimeout: 90 * 1000,
     // Whether the browser should be closed after the tests run.

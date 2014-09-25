@@ -36,6 +36,9 @@ Then, you just need to write your [Mocha][mocha] tests normally (either
 You can use either the [TDD](http://visionmedia.github.io/mocha/#tdd-interface)
 or [BDD](http://visionmedia.github.io/mocha/#bdd-interface) interfaces.
 
+By default, `web-component-tester` will run `test/index.html`. You can use this
+as your root test, which then loads all your suites:
+
 
 ## Suites of Suites
 
