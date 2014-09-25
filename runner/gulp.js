@@ -1,4 +1,4 @@
-/*
+/**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
  * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
@@ -7,7 +7,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-
 var chalk  = require('chalk');
 var events = require('events');
 
@@ -45,14 +44,17 @@ function init(gulp) {
 
 function endRun(emitter, spin, done) {
   return function(error) {
-    // Many of our tasks should spin indefinitely ...unless they encounter an error.
-    if (error || !spin) {
+    console.log('endRun', spin, error);
+    // Some of our tasks should spin indefinitely...
+    if (spin && !error) return;
+    // ...unless they encounter an error.
+    if (error) {
       // Pretty error for gulp.
-      var cleanError = new Error(chalk.red(error.message || error));
-      cleanError.showStack = false;
-
-      CleanKill.close(done.bind(null, cleanError));
+      error = new Error(chalk.red(error.message || error));
+      error.showStack = false;
     }
+
+    CleanKill.close(done.bind(null, error));
   }
 }
 

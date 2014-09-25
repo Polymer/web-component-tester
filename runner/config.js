@@ -1,4 +1,4 @@
-/*
+/**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
  * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
@@ -7,7 +7,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-
 var _     = require('lodash');
 var path  = require('path');
 var yargs = require('yargs');
@@ -35,7 +34,7 @@ function defaults() {
     // The file (mounted under `<root>/<component>`) that runs the tests.
     webRunner:   'tests/index.html',  // TODO(nevir): migrate to test/index.html
     // Idle timeout for tests.
-    testTimeout: 60 * 1000,
+    testTimeout: 90 * 1000,
     // Whether the browser should be closed after the tests run.
     persistent:  false,
     // Extra capabilities to pass to wd when building a client.

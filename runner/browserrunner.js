@@ -1,4 +1,4 @@
-/*
+/**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
  * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
@@ -7,7 +7,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-
 var _     = require('lodash');
 var chalk = require('chalk');
 var wd    = require('wd');
@@ -99,6 +98,10 @@ BrowserRunner.prototype.onEvent = function onEvent(event, data) {
     };
   } else if (event === 'test-end') {
     this.stats[data.state] = this.stats[data.state] + 1;
+    // Bump the connection to advance any remote timeouts.
+    if (this.browser) {
+      this.browser.title(function() {});
+    }
   }
 
   if (event === 'browser-end') {

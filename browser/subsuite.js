@@ -1,9 +1,12 @@
-// Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-// This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-// The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-// The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-// Code distributed by Google as part of the polymer project is also
-// subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+/**
+ * @license
+ * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
 (function() {
 
 /**
@@ -13,27 +16,17 @@
 function SubSuite(url, parentScope) {
   this.url         = url + '?' + Math.random();
   this.parentScope = parentScope;
+
+  this.state = 'initializing';
 }
 WCT.SubSuite = SubSuite;
+
+// SubSuites get a pretty generous load timeout by default.
+SubSuite.loadTimeout = 5000;
 
 // We can't maintain properties on iframe elements in Firefox/Safari/???, so we
 // track subSuites by URL.
 SubSuite._byUrl = {};
-
-/**
- * Loads a HTML document containing Mocha suites that should be injected into
- * the current Mocha environment.
- *
- * @param {string} url The URL of the document to load.
- * @param {function} done Node-style callback, given the sub suite as the
- *     second argument.
- */
-SubSuite.load = function load(url, done) {
-  var subSuite = new this(url, window);
-  subSuite.load(function(error) {
-    done(error, subSuite);
-  });
-};
 
 /**
  * @return {SubSuite} The `SubSuite` that was registered for this window.
@@ -54,11 +47,15 @@ SubSuite.get = function(target) {
 }
 
 /**
- * Loads the subsuite.
+ * Loads and runs the subsuite.
  *
  * @param {function} done Node-style callback.
  */
-SubSuite.prototype.load = function(done) {
+SubSuite.prototype.run = function(done) {
+  WCT.util.debug('SubSuite#run', this.url);
+  this.state = 'loading';
+  this.onRunComplete = done;
+
   this.iframe = document.createElement('iframe');
   this.iframe.src = this.url;
   this.iframe.classList.add('subsuite');
@@ -68,13 +65,44 @@ SubSuite.prototype.load = function(done) {
   this.url = this.iframe.src;
   SubSuite._byUrl[this.url] = this;
 
-  this.iframe.addEventListener('error', done.bind(null, 'Failed to load document ' + this.url));
-  this.iframe.contentWindow.addEventListener('DOMContentLoaded', done);
+  this.timeoutId = setTimeout(
+      this.loaded.bind(this, new Error('Timed out loading ' + this.url)), SubSuite.loadTimeout);
+
+  this.iframe.addEventListener('error',
+      this.loaded.bind(this, new Error('Failed to load document ' + this.url)));
+
+  this.iframe.contentWindow.addEventListener('DOMContentLoaded', this.loaded.bind(this, null));
+};
+
+/**
+ * Called when the sub suite's iframe has loaded (or errored during load).
+ *
+ * @param {*} error The error that occured, if any.
+ */
+SubSuite.prototype.loaded = function(error) {
+  if (this.timeoutId) {
+    clearTimeout(this.timeoutId);
+  }
+  if (error) {
+    this.signalRunComplete(error);
+    this.done();
+  }
 };
 
 /** Called when the sub suite's tests are complete, so that it can clean up. */
 SubSuite.prototype.done = function done() {
+  WCT.util.debug('SubSuite#done', this.url, arguments);
+  this.signalRunComplete();
+
+  if (!this.iframe) return;
   this.iframe.parentNode.removeChild(this.iframe);
 };
+
+SubSuite.prototype.signalRunComplete = function signalRunComplete(error) {
+  if (!this.onRunComplete) return;
+  this.state = 'complete';
+  this.onRunComplete(error);
+  this.onRunComplete = null;
+}
 
 })();

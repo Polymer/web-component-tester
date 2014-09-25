@@ -1,22 +1,30 @@
-// Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-// This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-// The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-// The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-// Code distributed by Google as part of the polymer project is also
-// subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+/**
+ * @license
+ * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+/**
+ * @fileoverview
+ *
+ * Runs all tests described by this document, after giving the document a chance
+ * to load.
+ *
+ * If `WCT.waitForFrameworks` is true (the default), we will also wait for any
+ * present web component frameworks to have fully initialized as well.
+ */
 (function() {
-
-/** By default, we wait for any web component frameworks to load. */
-WCT.waitForFrameworks = true;
-
-/** How many `.html` suites that can be concurrently loaded & run. */
-WCT.numConcurrentSuites = 8;
 
 // Give any scripts on the page a chance to twiddle the environment.
 document.addEventListener('DOMContentLoaded', function() {
+  WCT.util.debug('run stage: DOMContentLoaded');
   var subSuite = WCT.SubSuite.current();
   if (subSuite) {
-    // Give the subsuite time to complete its load (see `SubSuite.initialized`).
+    WCT.util.debug('run stage: subsuite');
+    // Give the subsuite time to complete its load (see `SubSuite.load`).
     async.nextTick(runSubSuite.bind(null, subSuite));
     return;
   }
@@ -25,21 +33,39 @@ document.addEventListener('DOMContentLoaded', function() {
   // CLI runner is established (if we're running in that context). Less
   // buffering to deal with.
   WCT.CLISocket.init(function(error, socket) {
-    var runner = new WCT.MultiRunner(countSubSuites() + 1, determineReporters(socket));
-    WCT._multiRunner = runner;
+    WCT.util.debug('run stage: WCT.CLISocket.init done', error);
+    if (error) throw error;
 
-    // We ignore errors, under the assumption that the script/subsuite loaders
-    // handle error propagation.
-    loadDependencies(function() {
-      runMocha(runner.childReporter(WCT.util.relativeLocation(window.location)));
+    loadDependencies(function(error) {
+      WCT.util.debug('run stage: loadDependencies done', error);
+      if (error) throw error;
+
+      runMultiSuite(determineReporters(socket));
     });
   });
 });
 
 /**
+ * Loads any dependencies of the _current_ suite (e.g. `.js` sources).
  *
+ * @param {function} done A node style callback.
+ */
+function loadDependencies(done) {
+  WCT.util.debug('loadDependencies:', WCT._dependencies);
+  var loaders = WCT._dependencies.map(function(file) {
+    // We only support `.js` dependencies for now.
+    return WCT.util.loadScript.bind(WCT.util, file);
+  });
+
+  async.parallel(loaders, done);
+}
+
+/**
+ * @param {!WCT.SubSuite} subSuite The `SubSuite` for this frame, that `mocha`
+ *     should be run for.
  */
 function runSubSuite(subSuite) {
+  WCT.util.debug('runSubSuite', window.location.pathname);
   // Not very pretty.
   var parentWCT = subSuite.parentScope.WCT;
   var suiteName = parentWCT.util.relativeLocation(window.location);
@@ -48,20 +74,61 @@ function runSubSuite(subSuite) {
 }
 
 /**
+ * @param {!Array.<!Mocha.reporters.Base>} reporters The reporters that should
+ *     consume the output of this `MultiRunner`.
+ */
+function runMultiSuite(reporters) {
+  WCT.util.debug('runMultiSuite', window.location.pathname);
+  var rootName = WCT.util.relativeLocation(window.location);
+  var runner   = new WCT.MultiRunner(WCT._suitesToLoad.length + 1, reporters);
+  WCT._multiRunner = runner;
+
+
+  var suiteRunners = [
+    // Run the local tests (if any) first, not stopping on error;
+    runMocha.bind(null, runner.childReporter(rootName)),
+  ];
+
+  // As well as any sub suites. Again, don't stop on error.
+  WCT._suitesToLoad.forEach(function(file) {
+    suiteRunners.push(function(next) {
+      var subSuite = new WCT.SubSuite(file, window);
+      subSuite.run(function(error) {
+        if (error) runner.emitOutOfBandTest(title, error);
+        next();
+      });
+    });
+  });
+
+  async.parallelLimit(suiteRunners, WCT.numConcurrentSuites, function(error) {
+    WCT.util.debug('runMultiSuite done', error);
+    runner.done();
+  });
+}
+
+/**
+ * Kicks off a mocha run, waiting for frameworks to load if necessary.
  *
+ * @param {!Mocha.reporters.Base} reporter The reporter to pass to `mocha.run`.
+ * @param {function} done A callback fired, _no error is passed_.
  */
 function runMocha(reporter, done, waited) {
   if (WCT.waitForFrameworks && !waited) {
     WCT.util.whenFrameworksReady(runMocha.bind(null, reporter, done, true));
     return;
   }
+  WCT.util.debug('runMocha', window.location.pathname);
 
   mocha.reporter(reporter);
-  mocha.run(done);
+  mocha.run(function(error) {
+    done();  // We ignore the Mocha failure count.
+  });
 }
 
 /**
+ * Figure out which reporters should be used for the current `window`.
  *
+ * @param {WCT.CLISocket} socket The CLI socket, if present.
  */
 function determineReporters(socket) {
   var reporters = [
@@ -73,41 +140,13 @@ function determineReporters(socket) {
     reporters.push(function(runner) {
       socket.observe(runner);
     });
-  } else if (WCT.suitesToLoad.length > 0) {
+  }
+
+  if (WCT._suitesToLoad.length > 0) {
     reporters.push(WCT.reporters.HTML);
   }
 
   return reporters;
-}
-
-/**
- *
- */
-function loadDependencies(done) {
-  var loaders =  WCT.suitesToLoad.map(function(file) {
-    if (file.slice(-3) === '.js') {
-      return WCT.util.loadScript.bind(WCT.util, file);
-    } else if (file.slice(-5) === '.html') {
-      return WCT.SubSuite.load.bind(WCT.SubSuite, file);
-    } else {
-      throw new Error('Unknown resource type ' + file);
-    }
-  }.bind(this));
-
-  async.parallelLimit(loaders, WCT.numConcurrentSuites, done);
-}
-
-/**
- *
- */
-function countSubSuites() {
-  var count = 0;
-  for (var i = 0, file; file = WCT.suitesToLoad[i]; i++) {
-    if (file.slice(-5) === '.html') {
-      count = count + 1;
-    }
-  }
-  return count;
 }
 
 })();

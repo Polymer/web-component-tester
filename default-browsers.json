@@ -23,12 +23,17 @@
     {
       "browserName": "chrome",
       "platform":    "Windows 8.1",
-      "version":     "36"
+      "version":     "beta"
+    },
+    {
+      "browserName": "chrome",
+      "platform":    "Windows 8.1",
+      "version":     "37"
     },
     {
       "browserName": "chrome",
       "platform":    "OS X 10.9",
-      "version":     "35"
+      "version":     "36"
     },
     {
       "browserName": "chrome",
@@ -39,29 +44,23 @@
     {
       "browserName": "firefox",
       "platform":    "Windows 8.1",
-      "version":     "31"
+      "version":     "32"
     },
     {
       "browserName": "firefox",
       "platform":    "OS X 10.9",
-      "version":     "30"
+      "version":     "32"
     },
     {
       "browserName": "firefox",
       "platform":    "Linux",
-      "version":     "31"
+      "version":     "32"
     },
 
     {
       "browserName": "safari",
       "platform":    "OS X 10.9",
       "version":     "7"
-    },
-
-    {
-      "browserName": "iphone",
-      "platform":    "OS X 10.9",
-      "version":     "7.1"
     }
   ]
 }
