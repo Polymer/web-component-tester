@@ -7,6 +7,8 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+var events = require('events');
+
 var CleanKill   = require('./runner/cleankill');
 var CliReporter = require('./runner/clireporter');
 var config      = require('./runner/config');
