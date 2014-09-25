@@ -68,7 +68,7 @@ The browser environment is also set up with some helpful additions:
 
 ```js
 var gulp = require('gulp');
-require('web-component-tester').initGulp(gulp);
+require('web-component-tester').gulp.init(gulp);
 ```
 
 ### gulp test:local
