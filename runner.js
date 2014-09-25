@@ -20,7 +20,9 @@ function test(options, done) {
   var emitter = new events.EventEmitter();
   new CliReporter(emitter, options.output, options);
 
-  steps.runTests(options, emitter, endRun(emitter, false, done));
+  steps.runTests(options, emitter, function() {
+    CleanKill.close(done);
+  });
   return emitter;
 }
 

@@ -20,8 +20,8 @@ function init(gulp) {
   var options = config.mergeDefaults(config.fromEnv(process.env, process.argv));
   new CliReporter(emitter, options.output, options);
 
-  var spinRun  = endRun.bind(null, emitter, true);
-  var cleanRun = endRun.bind(null, emitter, false);
+  var spinRun  = endRun.bind(null, true);
+  var cleanRun = endRun.bind(null, false);
 
   gulp.task('wct:sauce-tunnel', function(done) {
     steps.ensureSauceTunnel(options, emitter, spinRun(done));
@@ -42,7 +42,7 @@ function init(gulp) {
 
 // Utility
 
-function endRun(emitter, spin, done) {
+function endRun(spin, done) {
   return function(error) {
     // Some of our tasks should spin indefinitely...
     if (spin && !error) return;
