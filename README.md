@@ -126,6 +126,10 @@ grunt.loadNpmTasks('web-component-tester');
 Gives you two grunt tasks: `wct-test:local` and `wct-test:remote` which will
 use the [default browsers](default-browsers.json) for their runs.
 
+The `options` you can use are specified in
+[`runner/config.js`](runner/config.js).
+
+
 ### wct-sauce-tunnel
 
 Starts a Sauce Connect tunnel, and keeps it open.
