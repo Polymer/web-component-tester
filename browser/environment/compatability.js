@@ -25,15 +25,4 @@ window.addEventListener('message', function(event) {
   subSuite.done();
 });
 
-/**
- *
- */
-window.done = function() {
-  parent.postMessage('ok', '*');
-};
-
-window.addEventListener('error', function(event) {
-  parent.postMessage({error: event.error}, '*');
-});
-
 })();
