@@ -27,7 +27,6 @@ function test(options, done) {
 module.exports = {
   config:   config,
   gulp:     gulp,
-  initGulp: gulp.init,  /* TODO(nevir): deprecate */
   steps:    steps,
   test:     test,
 };
