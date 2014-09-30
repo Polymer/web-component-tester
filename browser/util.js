@@ -12,23 +12,38 @@
 WCT.util = {};
 
 /**
- * @param {function()} done A function to call when the active web component
+ * @param {function()} callback A function to call when the active web component
  *     frameworks have loaded.
  */
-WCT.util.whenFrameworksReady = function(done) {
-  var handlers = [];
-  if (window.HTMLImports && window.HTMLImports.whenReady) {
-    handlers.push(window.HTMLImports.whenReady.bind(window.HTMLImports));
-  }
-  if (window.Polymer && window.Polymer.whenReady) {
-    handlers.push(window.Polymer.whenReady.bind(window.Polymer));
+WCT.util.whenFrameworksReady = function(callback) {
+  WCT.util.debug(window.location.pathname, 'WCT.util.whenFrameworksReady');
+  var done = function() {
+    WCT.util.debug(window.location.pathname, 'WCT.util.whenFrameworksReady done');
+    callback();
   }
 
-  async.parallel(handlers, function() {
-    // Platform isn't quite ready for IE10.
-    // TODO(nevir): Should this be baked into platform ready?
-    asyncPlatformFlush(done);
-  });
+  function importsReady() {
+    window.removeEventListener('HTMLImportsLoaded', importsReady);
+    WCT.util.debug(window.location.pathname, 'HTMLImportsLoaded');
+
+    if (window.Polymer && Polymer.whenReady) {
+      Polymer.whenReady(function() {
+        WCT.util.debug(window.location.pathname, 'polymer-ready');
+        done();
+      });
+    } else {
+      done();
+    }
+  }
+
+  // All our supported framework configurations depend on imports.
+  if (!window.HTMLImports) {
+    done();
+  } else if (HTMLImports.ready) {
+    importsReady();
+  } else {
+    window.addEventListener('HTMLImportsLoaded', importsReady);
+  }
 };
 
 /**
