@@ -18,7 +18,7 @@ There's a bit of setup necessary.
 
 You will need to set up WCT as a dependency of your project. Via bower:
 
-```bash
+```sh
 bower install web-component-tester --save
 ```
 
@@ -56,12 +56,13 @@ you'll want to use this to declare all your test suites:
 Your test suites can either be `.js` sources, which run in the context of your
 text index. For example, `test/awesome-tests.js`:
 
-```
+```js
 suite('AwesomeLib', function() {
   test('is awesome', function() {
     assert.isTrue(AwesomeLib.awesome);
   });
 });
+```
 
 
 ## `.html` Suites
@@ -96,20 +97,20 @@ Or, you can write tests in separate `.html` documents. For example,
 You can run your tests by hosting them via a web server (sorry, `file://` is
 not supported), or by using the `wct` command line tool:
 
-```bash
+```sh
 npm install -g web-component-tester
 ```
 
 The `wct` tool will run your tests in multiple browsers at once, either on your
 machine...
 
-```bash
+```sh
 wct
 ```
 
 ..or remotely via [Sauce Labs][sauce]:
 
-```bash
+```sh
 wct --remote
 ```
 
@@ -183,9 +184,9 @@ Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
 <!-- References -->
 [async]:     https://github.com/caolan/async     "Async.js"
 [chai]:      http://chaijs.com/                  "Chai Assertion Library"
-[chai-bdd]:  http://chaijs.com/api/bdd/
-[chai-tdd]:  http://chaijs.com/api/assert/
-[mocha-bdd]: http://visionmedia.github.io/mocha/#bdd-interface
-[mocha-tdd]: http://visionmedia.github.io/mocha/#tdd-interface
+[chai-bdd]:  http://chaijs.com/api/bdd/          "Chai's BDD Interface"
+[chai-tdd]:  http://chaijs.com/api/assert/       "Chai's TDD Interface"
+[mocha-bdd]: http://visionmedia.github.io/mocha/#bdd-interface "Mocha's BDD Interface"
+[mocha-tdd]: http://visionmedia.github.io/mocha/#tdd-interface "Mocha's TDD Interface"
 [mocha]:     http://visionmedia.github.io/mocha/ "Mocha Test Framework"
 [sauce]:     http://saucelabs.com                "Sauce Labs"
