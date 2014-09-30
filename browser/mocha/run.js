@@ -83,7 +83,6 @@ function runMultiSuite(reporters) {
   var runner   = new WCT.MultiRunner(WCT._suitesToLoad.length + 1, reporters);
   WCT._multiRunner = runner;
 
-
   var suiteRunners = [
     // Run the local tests (if any) first, not stopping on error;
     runMocha.bind(null, runner.childReporter(rootName)),

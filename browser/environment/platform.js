@@ -15,7 +15,7 @@
  * @param {function} callback
  */
 function asyncPlatformFlush(callback) {
-  Platform.flush();
+  if (window.Platform && window.Platform.flush) Platform.flush();
   async.nextTick(callback);
 }
 

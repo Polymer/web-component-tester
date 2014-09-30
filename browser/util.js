@@ -14,22 +14,21 @@ WCT.util = {};
 /**
  * @param {function()} done A function to call when the active web component
  *     frameworks have loaded.
- * @param {Window} opt_scope A scope to check for polymer within.
  */
-WCT.util.whenFrameworksReady = function(done, opt_scope) {
-  var scope = opt_scope || window;
-  // TODO(nevir): Frameworks other than Polymer?
-  if (!scope.Polymer) return done();
-
-  // Platform isn't quite ready for IE10.
-  // TODO(nevir): Should this be baked into platform ready?
-  done = asyncPlatformFlush.bind(null, done);
-
-  if (scope.Polymer.whenReady) {
-    scope.Polymer.whenReady(done);
-  } else {
-    scope.addEventListener('polymer-ready', done);
+WCT.util.whenFrameworksReady = function(done) {
+  var handlers = [];
+  if (window.HTMLImports && window.HTMLImports.whenReady) {
+    handlers.push(window.HTMLImports.whenReady.bind(window.HTMLImports));
   }
+  if (window.Polymer && window.Polymer.whenReady) {
+    handlers.push(window.Polymer.whenReady.bind(window.Polymer));
+  }
+
+  async.parallel(handlers, function() {
+    // Platform isn't quite ready for IE10.
+    // TODO(nevir): Should this be baked into platform ready?
+    asyncPlatformFlush(done);
+  });
 };
 
 /**
