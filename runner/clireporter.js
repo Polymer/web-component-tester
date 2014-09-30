@@ -17,12 +17,12 @@ var CleanKill = require('./cleankill');
 var STACKY_CONFIG = {
   indent: '    ',
   locationStrip: [
-    /^https?:\/\/[^\/]+\//,
+    /^https?:\/\/[^\/]+/,
     /\?[\d\.]+$/,
   ],
   unimportantLocation: [
-    /^web-component-tester\//,
-  ],
+    /^\/web-component-tester\//,
+  ]
 };
 
 var STATE_ICONS = {

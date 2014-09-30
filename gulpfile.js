@@ -29,6 +29,9 @@ gulp.task('build:browser', function() {
       'vendor/chai/chai.js',
       'vendor/async/lib/async.js',
       'vendor/WebConsole-reporter/WebConsole.js',
+      'vendor/stacky/lib/parsing.js',
+      'vendor/stacky/lib/formatting.js',
+      'vendor/stacky/lib/normalization.js',
       // Poor-man's dependency management, for now.
       'browser/index.js',
       'browser/util.js',

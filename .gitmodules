@@ -7,3 +7,6 @@
 [submodule "vendor/async"]
 	path = vendor/async
 	url = https://github.com/caolan/async
+[submodule "vendor/stacky"]
+	path = vendor/stacky
+	url = https://github.com/PolymerLabs/stacky

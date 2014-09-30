@@ -63,11 +63,7 @@ function logGroupEnd() {
 }
 
 function logException(error) {
-  if (console.exception) {
-    console.exception(error);
-  } else {
-    log(error.stack || error.message || error, 'stack');
-  }
+  log(error.stack || error.message || error, 'stack');
 }
 
 /**

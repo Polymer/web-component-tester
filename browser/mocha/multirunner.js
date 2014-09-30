@@ -11,6 +11,17 @@
 
 WCT.MultiRunner = MultiRunner;
 
+var STACKY_CONFIG = {
+  indent: '  ',
+  locationStrip: [
+    /^https?:\/\/[^\/]+/,
+    /\?[\d\.]+$/,
+  ],
+  filter: function(line) {
+    return line.location.match(/web-component-tester\/browser.js/);
+  },
+};
+
 // https://github.com/visionmedia/mocha/blob/master/lib/runner.js#L36-46
 var MOCHA_EVENTS = [
   'start',
@@ -145,8 +156,25 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner, var_ar
   } else if (eventName === 'end') {
     this.onRunnerEnd(runner);
   } else {
+    this.cleanEvent(eventName, extraArgs);
     this.emit.apply(this, [eventName].concat(extraArgs));
   }
+};
+
+/**
+ * Cleans or modifies an event if needed.
+ *
+ * @param {string} eventName
+ * @param {!Array.<*>} extraArgs
+ */
+MultiRunner.prototype.cleanEvent = function cleanEvent(eventName, extraArgs) {
+  if (eventName === 'fail') {
+    extraArgs[1] = Stacky.normalize(extraArgs[1], STACKY_CONFIG);
+  }
+  if (extraArgs[0] && extraArgs[0].err) {
+    extraArgs[0].err = Stacky.normalize(extraArgs[0].err, STACKY_CONFIG);
+  }
+
 };
 
 /** @param {!Mocha.runners.Base} runner */

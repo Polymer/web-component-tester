@@ -94,7 +94,7 @@ function runMultiSuite(reporters) {
     suiteRunners.push(function(next) {
       var subSuite = new WCT.SubSuite(file, window);
       subSuite.run(function(error) {
-        if (error) runner.emitOutOfBandTest(title, error);
+        if (error) runner.emitOutOfBandTest(file, error);
         next();
       });
     });
@@ -120,9 +120,20 @@ function runMocha(reporter, done, waited) {
   WCT.util.debug('runMocha', window.location.pathname);
 
   mocha.reporter(reporter);
-  mocha.run(function(error) {
+  var runner = mocha.run(function(error) {
     done();  // We ignore the Mocha failure count.
   });
+
+  // Mocha's default `onerror` handling strips the stack (to support really old
+  // browsers). We upgrade this to get better stacks for async errors.
+  //
+  // TODO(nevir): Can we expand support to other browsers?
+  if (navigator.userAgent.match(/chrome/i)) {
+    window.onerror = null;
+    window.addEventListener('error', function(event) {
+      runner.uncaught(event.error);
+    });
+  }
 }
 
 /**
