@@ -4,66 +4,146 @@ You get a browser-based testing environment, configured out of the box with:
 
 * [Mocha][mocha] as a test framework.
 * [Chai][chai] assertions.
+* [Async][async] to keep your sanity.
 
-Additionally, `web-component-tester` provides integration with `selenium` via
-`gulp` or `grunt`, so that you can easily run your test suites across multiple
-browsers. 
+Additionally, WCT provides integration with `selenium`, so that you can easily 
+run your test suites across multiple browsers. 
 
 
-# Writing Tests
+# Getting Started
 
-All tests are driven by `.html` files. At the top of each test file, you will
-need to load `browser.js`:
+There's a bit of setup necessary.
 
-```html
-<script src="../../web-component-tester/browser.js"></script>
+## Bower
+
+You will need to set up WCT as a dependency of your project. Via bower:
+
+```bash
+bower install web-component-tester --save
 ```
 
-Then, you just need to write your [Mocha][mocha] tests normally (either
-[TDD](http://visionmedia.github.io/mocha/#tdd-interface) or
-[BDD](http://visionmedia.github.io/mocha/#bdd-interface)).
+In the following examples, we assume that you've installed it in `../`, but any
+location will do.
+
+
+## Test Index
+
+WCT will, by default, run tests declared in `test/index.html`. Generally, 
+you'll want to use this to declare all your test suites:
 
 ```html
-<script>
-  suite('<awesome-element>', function() {
-    test('is awesome', function() {
-      assert.isTrue(document.createElement('awesome-element').awesome);
-    });
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../awesome.js"></script>
+  </head>
+  <body>
+    <script>
+      WCT.loadSuites([
+        'awesome-tests.js',
+        'awesomest-tests.html',
+      ]);
+    </script>
+  </body>
+</html>
+```
+
+
+## `.js` Suites
+
+Your test suites can either be `.js` sources, which run in the context of your
+text index. For example, `test/awesome-tests.js`:
+
+```
+suite('AwesomeLib', function() {
+  test('is awesome', function() {
+    assert.isTrue(AwesomeLib.awesome);
   });
-</script>
-```
-
-You can use either the [TDD](http://visionmedia.github.io/mocha/#tdd-interface)
-or [BDD](http://visionmedia.github.io/mocha/#bdd-interface) interfaces.
-
-By default, `web-component-tester` will run `test/index.html`. You can use this
-as your root test, which then loads all your suites:
+});
 
 
-## Suites of Suites
+## `.html` Suites
 
-To run multiple test files together, you can use the `WCT.loadSuites` helper to
-load and concurrently run all your tests:
+Or, you can write tests in separate `.html` documents. For example,
+`test/awesomest-tests.html`:
 
 ```html
-<script>
-  WCT.loadSuites([
-    'awesome-element.html',
-    'awesomesauce.js',
-  ]);
-</script>
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script src="../../web-component-tester/browser.js"></script>
+  <link rel="import" href="../awesome-element.html">
+</head>
+<body>
+  <awesome-element id="fixture"></awesome-element>
+  <script>
+    suite('<awesome-element>', function() {
+      test('is awesomest', function() {
+        assert.isTrue(document.getElementById('fixture').awesomest);
+      });
+    });
+  </script>
+</body>
+</html>
 ```
 
 
-## Test Helpers
+## Running Your Tests
 
-The browser environment is also set up with some helpful additions:
+You can run your tests by hosting them via a web server (sorry, `file://` is
+not supported), or by using the `wct` command line tool:
 
-* [Async.js][async] is made available. Use it!
-* [`platform.js` specific helpers](browser/environment/platform.js).
+```bash
+npm install -g web-component-tester
+```
+
+The `wct` tool will run your tests in multiple browsers at once, either on your
+machine...
+
+```bash
+wct
+```
+
+..or remotely via [Sauce Labs][sauce]:
+
+```bash
+wct --remote
+```
 
 
-# Command Line Interface
+# Nitty Gritty
+
+## Mocha
+
+WCT supports Mocha's [TDD][mocha-tdd] (`suite`/`test`/etc) and [BDD][mocha-bdd]
+(`describe`/`it`/etc) interfaces, and will call `mocha.setup`/`mocha.run` for 
+you. Just write your tests, and you're set.
+
+
+## Chai
+
+Similarly, Chai's [`expect`][chai-bdd] and [`assert`][chai-tdd] interfaces are 
+exposed for your convenience.
+
+
+## Command Line
+
+The `wct` tool, and the [gulp](#gulp) and [grunt](#grunt) integration, support
+several command line flags:
+
+`--remote`: Uses the [default remote browsers](default-browsers.json), and if
+omitted uses the default local browsers.
+
+`--browsers BROWSER,BROWSER`: Override the browsers that will be run.
+
+`--persistent`: Doesn't close the browsers after their first run. Refresh the
+browser windows to re-run tests.
+
+`--expanded`: Lists each test as it passes/fails/pends.
+
 
 ## Gulp
 
@@ -74,37 +154,7 @@ var gulp = require('gulp');
 require('web-component-tester').gulp.init(gulp);
 ```
 
-### gulp test:local
-
-Aliased to `gulp test` for convenience.
-
-Runs tests locally against all [configured browsers](default-browsers.json).
-
-Flags:
-
-`--browsers BROWSER,BROWSER`: Override the browsers that will be run.
-
-`--persistent`: Doesn't close the browsers after their first run. Refresh the
-browser windows to re-run tests.
-
-`--expanded`: Lists each test as it passes/fails/pends.
-
-### gulp test:remote
-
-Runs tests remotely against [configured browsers](default-browsers.json).
-Requires that `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` are set in your 
-environment.
-
-
-### gulp wct:sauce-tunnel
-
-Starts a Sauce Connect tunnel, and keeps it open.
-
-
-<!-- References -->
-[mocha]: http://visionmedia.github.io/mocha/ "Mocha Test Framework"
-[chai]:  http://chaijs.com/                  "Chai Assertion Library"
-[async]: https://github.com/caolan/async     "Async.js"
+Exposes `gulp test:local` and `gulp test:remote`.
 
 
 ## Grunt
@@ -126,13 +176,16 @@ grunt.initConfig({
 grunt.loadNpmTasks('web-component-tester');
 ```
 
-Gives you two grunt tasks: `wct-test:local` and `wct-test:remote` which will
-use the [default browsers](default-browsers.json) for their runs.
-
-The `options` you can use are specified in
-[`runner/config.js`](runner/config.js).
+Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The 
+`options` you can use are specified in [`runner/config.js`](runner/config.js).
 
 
-### wct-sauce-tunnel
-
-Starts a Sauce Connect tunnel, and keeps it open.
+<!-- References -->
+[async]:     https://github.com/caolan/async     "Async.js"
+[chai]:      http://chaijs.com/                  "Chai Assertion Library"
+[chai-bdd]:  http://chaijs.com/api/bdd/
+[chai-tdd]:  http://chaijs.com/api/assert/
+[mocha-bdd]: http://visionmedia.github.io/mocha/#bdd-interface
+[mocha-tdd]: http://visionmedia.github.io/mocha/#tdd-interface
+[mocha]:     http://visionmedia.github.io/mocha/ "Mocha Test Framework"
+[sauce]:     http://saucelabs.com                "Sauce Labs"
