@@ -10,6 +10,7 @@
     "chalk": "^0.5.1",
     "event-stream": "^3.1.7",
     "express": "^4.8.5",
+    "findup": "^0.1.5",
     "freeport": "^1.0.3",
     "http": "0.0.0",
     "lodash": "^2.4.1",

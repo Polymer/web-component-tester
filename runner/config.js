@@ -62,17 +62,21 @@ function fromEnv(env, args) {
     verbose:    argv.verbose,
     expanded:   Boolean(argv.expanded), // override the default of true.
     persistent: argv.persistent,
+    remote:     Boolean(argv.remote),
     sauce: {
       username:  env.SAUCE_USERNAME,
       accessKey: env.SAUCE_ACCESS_KEY,
       tunnelId:  env.SAUCE_TUNNEL_ID,
     }
   };
+
   if (argv.browsers) {
     options.browsers = argv.browsers.split(',').map(function(name) {
       return {browserName: name};
     });
   }
+
+  options.extraArgs = argv._;
 
   return options;
 }

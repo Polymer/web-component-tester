@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+var findup = require('findup');
+var path   = require('path');
+
+var WCT_RELATIVE_LIB = 'node_modules/web-component-tester';
+
+// If the project depends on a particular version of WCT, use that.
+findup(process.cwd(), WCT_RELATIVE_LIB, function(error, dir) {
+  var libPath = 'web-component-tester';
+  if (!error) {
+    libPath = path.resolve(path.join(dir, WCT_RELATIVE_LIB));
+  }
+  var wct = require(libPath);
+  wct.cli.run(process.env, process.argv.slice(2), process.stdout, function(error) {
+    process.exit(error ? 1 : 0);
+  });
+});

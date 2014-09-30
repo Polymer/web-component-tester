@@ -7,10 +7,20 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-module.exports = {
-  cli:    require('./runner/cli'),
-  config: require('./runner/config'),
-  gulp:   require('./runner/gulp'),
-  steps:  require('./runner/steps'),
-  test:   require('./runner/test'),
-};
+var events = require('events');
+
+var CleanKill   = require('./cleankill');
+var CliReporter = require('./clireporter');
+var config      = require('./config');
+var steps       = require('./steps');
+
+module.exports = function test(options, done) {
+  config.mergeDefaults(options);
+  var emitter = new events.EventEmitter();
+  new CliReporter(emitter, options.output, options);
+
+  steps.runTests(options, emitter, function(error) {
+    CleanKill.close(done.bind(null, error));
+  });
+  return emitter;
+}
