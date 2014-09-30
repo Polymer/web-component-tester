@@ -5,29 +5,41 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-#mocha {
-  background: white;
-  box-sizing: border-box;
-  left: 0;
-  margin: 0 !important; /* We convert Mocha's margin to padding */
-  min-height: 100%;
-  padding: 60px 50px;
+html, body {
+  height: 100%;
+  width:  100%;
+}
+
+#mocha, #subsuites {
+  height: 100%;
   position: absolute;
   top: 0;
-  width: 100%;
-  z-index: 100;
+  width: 50%;
+}
+
+#mocha {
+  box-sizing: border-box;
+  margin: 0 !important;
+  overflow-y: auto;
+  padding: 60px 50px;
+  right: 0;
+}
+
+#subsuites {
+  -ms-flex-direction: column;
+  -webkit-flex-direction: column;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  flex-direction: column;
+  left: 0;
+}
+
+#subsuites .subsuite {
+  border: 0;
 }
 
 /* TODO(nevir): Fix grep support */
 #mocha .replay {
   display: none !important;
-}
-
-.subsuite {
-  position: absolute;
-  left: 0;
-  top: 0;
-  /* The size of the iframe directly impacts performance. */
-  height: 400px;
-  width: 250px;
 }

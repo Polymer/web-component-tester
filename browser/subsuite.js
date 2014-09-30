@@ -59,7 +59,14 @@ SubSuite.prototype.run = function(done) {
   this.iframe = document.createElement('iframe');
   this.iframe.src = this.url;
   this.iframe.classList.add('subsuite');
-  document.body.appendChild(this.iframe);
+
+  var container = document.getElementById('subsuites');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'subsuites';
+    document.body.appendChild(container)
+  }
+  container.appendChild(this.iframe);
 
   // let the iframe expand the URL for us.
   this.url = this.iframe.src;
