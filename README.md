@@ -148,7 +148,7 @@ browser windows to re-run tests.
 
 ## Gulp
 
-`gulpfile.js`:
+We also provide Gulp tasks for your use. `gulpfile.js`:
 
 ```js
 var gulp = require('gulp');
@@ -160,7 +160,7 @@ Exposes `gulp test:local` and `gulp test:remote`.
 
 ## Grunt
 
-`gruntfile.js`:
+Or, Grunt tasks, if you prefer. `gruntfile.js`:
 
 ```js
 grunt.initConfig({
