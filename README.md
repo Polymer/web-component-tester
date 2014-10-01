@@ -19,7 +19,7 @@ There's a bit of setup necessary.
 You will need to set up WCT as a dependency of your project. Via bower:
 
 ```sh
-bower install web-component-tester --save
+bower install Polymer/web-component-tester --save
 ```
 
 In the following examples, we assume that you've installed it in `../`, but any
