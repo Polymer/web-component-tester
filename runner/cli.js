@@ -25,7 +25,7 @@ function run(env, args, output, callback) {
     return runTests(options.extraArgs[0], options, done);
   }
 
-  findup(process.cwd(), 'test', function(error, dir) {
+  findup(process.cwd(),  options.webRunner || 'test', function(error, dir) {
     if (error) return done(error);
     runTests(dir, options, done);
   });
