@@ -33,7 +33,7 @@ SubSuite._byUrl = {};
  */
 SubSuite.current = function() {
   return SubSuite.get(window);
-}
+};
 
 /**
  * @param {!Window} target A window to find the SubSuite of.
@@ -44,7 +44,7 @@ SubSuite.get = function(target) {
   if (subSuite || window.parent === window) return subSuite;
   // Otherwise, traverse.
   return window.parent.WCT.SubSuite.get(target);
-}
+};
 
 /**
  * Loads and runs the subsuite.
@@ -64,7 +64,7 @@ SubSuite.prototype.run = function(done) {
   if (!container) {
     container = document.createElement('div');
     container.id = 'subsuites';
-    document.body.appendChild(container)
+    document.body.appendChild(container);
   }
   container.appendChild(this.iframe);
 
@@ -110,6 +110,6 @@ SubSuite.prototype.signalRunComplete = function signalRunComplete(error) {
   this.state = 'complete';
   this.onRunComplete(error);
   this.onRunComplete = null;
-}
+};
 
 })();

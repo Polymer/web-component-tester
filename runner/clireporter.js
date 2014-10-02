@@ -155,7 +155,7 @@ CliReporter.prototype.writeTestError = function(browser, data) {
   if (error.stack) {
     try {
       this.write(stacky.pretty(data.error.stack, STACKY_CONFIG));
-    } catch (error) {
+    } catch (err) {
       // If we couldn't extract a stack (i.e. there was no stack), the message
       // is enough.
     }
@@ -168,12 +168,12 @@ CliReporter.prototype.writeTestError = function(browser, data) {
 CliReporter.prototype.stateIcon = function stateIcon(state) {
   var color = STATE_COLORS[state] || STATE_COLORS.unknown;
   return color(STATE_ICONS[state] || STATE_ICONS.unknown);
-}
+};
 
 CliReporter.prototype.prettyTest = function prettyTest(data) {
   var color = STATE_COLORS[data.state] || STATE_COLORS.unknown;
   return color(data.test.join(' » ') || '<unknown test>');
-}
+};
 
 CliReporter.prototype.prettyBrowser = function prettyBrowser(browser) {
   parts = [];
@@ -190,7 +190,7 @@ CliReporter.prototype.prettyBrowser = function prettyBrowser(browser) {
   }
 
   return chalk.blue(parts.join(' '));
-}
+};
 
 // Yeah, yeah.
 function padRight(string, length) {
@@ -221,7 +221,7 @@ CliReporter.prototype.log = function log(maybeFormat) {
   line = line.replace(/[\s\n\r]+$/, '');
   if (format) line = format(line);
   this.write(line);
-}
+};
 
 CliReporter.prototype.writeWrapped = function writeWrapped(blocks, separator) {
   if (blocks.length === 0) return;

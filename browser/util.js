@@ -20,7 +20,7 @@ WCT.util.whenFrameworksReady = function(callback) {
   var done = function() {
     WCT.util.debug(window.location.pathname, 'WCT.util.whenFrameworksReady done');
     callback();
-  }
+  };
 
   function importsReady() {
     window.removeEventListener('HTMLImportsLoaded', importsReady);
@@ -85,7 +85,7 @@ WCT.util.loadScript = function loadScript(path, done) {
   script.onload = done.bind(null, null);
   script.onerror = done.bind(null, 'Failed to load script ' + script.src);
   document.head.appendChild(script);
-}
+};
 
 /** @return {string} `location` relative to the current window. */
 WCT.util.relativeLocation = function relativeLocation(location) {
@@ -94,14 +94,14 @@ WCT.util.relativeLocation = function relativeLocation(location) {
     path = path.substr(window.location.pathname.length);
   }
   return path;
-}
+};
 
 /**
- *
+ * @param {...*} var_args Logs values to the console when `WCT.debug` is true.
  */
 WCT.util.debug = function debug(var_args) {
   if (!WCT.debug) return;
   console.debug.apply(console, arguments);
-}
+};
 
 })();

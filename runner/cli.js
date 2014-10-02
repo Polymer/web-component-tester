@@ -10,7 +10,6 @@
 var chalk  = require('chalk');
 var findup = require('findup');
 var path   = require('path');
-var yargs  = require('yargs');
 
 var config = require('./config');
 var test   = require('./test');

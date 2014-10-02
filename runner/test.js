@@ -23,4 +23,4 @@ module.exports = function test(options, done) {
     CleanKill.close(done.bind(null, error));
   });
   return emitter;
-}
+};

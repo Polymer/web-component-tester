@@ -54,7 +54,7 @@ function endRun(spin, done) {
     }
 
     CleanKill.close(done.bind(null, error));
-  }
+  };
 }
 
 // Exports

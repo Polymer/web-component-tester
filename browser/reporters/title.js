@@ -59,7 +59,7 @@ function drawFaviconArc(context, total, start, length, color) {
   context.lineWidth   = ARC_WIDTH;
   context.arc(16, 16, 16 - ARC_WIDTH / 2, arcStart, arcEnd);
   context.stroke();
-};
+}
 
 /** Updates the document's favicon w/ a summary of current stats. */
 Title.prototype.updateFavicon = function updateFavicon() {

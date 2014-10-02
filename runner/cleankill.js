@@ -33,7 +33,7 @@ function close(done) {
 var interrupted = false;
 // Behaves as if you sent a SIGINT to the process.
 function interrupt() {
-  if (interruptHandlers.length == 0) return process.exit();
+  if (interruptHandlers.length === 0) return process.exit();
   if (interrupted) {
     console.log('\nKilling process with extreme prejudice');
     return process.exit(1);

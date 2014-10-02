@@ -26,7 +26,7 @@ function HTML(runner) {
   }.bind(this));
 
   Mocha.reporters.HTML.call(this, runner);
-};
+}
 HTML.prototype = Object.create(Mocha.reporters.HTML.prototype);
 
 })();

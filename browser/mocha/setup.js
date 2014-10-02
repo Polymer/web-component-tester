@@ -55,7 +55,7 @@ Object.keys(MOCHA_EXPORTS).forEach(function(ui) {
         throw new Error('Expected mocha.setup to define ' + key);
       }
       window[key].apply(window, arguments);
-    }
+    };
   });
 });
 
@@ -69,6 +69,6 @@ WCT.setupMocha = function setupMocha(ui) {
   }
   mocha.setup({ui: ui, timeout: 5000});  // Note that the reporter is configured in run.js.
   WCT.mochaIsSetup = true;
-}
+};
 
 })();

@@ -10,9 +10,12 @@
 var concat     = require('gulp-concat');
 var gulp       = require('gulp');
 var gulpIf     = require('gulp-if');
+var jshint     = require('gulp-jshint');
 var lazypipe   = require('lazypipe');
+var notify     = require('gulp-notify');
+var plumber    = require('gulp-plumber');
 var sourcemaps = require('gulp-sourcemaps');
-var watch      = require('gulp-watch')
+var watch      = require('gulp-watch');
 var wrap       = require('gulp-wrap');
 
 var CSS_TO_JS =
@@ -21,6 +24,28 @@ var CSS_TO_JS =
     "style.textContent = '<%= contents.replace(/'/g, \"\\\\'\").replace(/\\n/g, '\\\\n') %>';\n" +
     "document.head.appendChild(style);\n" +
     "})();";
+
+// Meta tasks
+
+gulp.task('test', ['test:style']);
+
+gulp.task('watch', function() {
+  watch('browser/**/*', function() {
+    gulp.start('build:browser');
+  });
+
+  var config = {
+    emitOnGlob: false,
+    gaze:       {debounceDelay: 10},
+  };
+  return watch('{runner,browser}/**/*.js', config, function(files) {
+    files
+      .pipe(plumber({errorHandler: notify.onError('<%= error.message %>')}))
+      .pipe(jshintFlow());
+  });
+});
+
+// Specific tasks
 
 gulp.task('build:browser', function() {
   return gulp.src([
@@ -44,8 +69,13 @@ gulp.task('build:browser', function() {
     .pipe(gulp.dest('.'));
 });
 
-gulp.task('watch', function() {
-  watch('browser/**/*', function() {
-    gulp.start('build:browser');
-  });
+gulp.task('test:style', function() {
+  return gulp.src('{browser,runner}/**/*.js').pipe(jshintFlow());
 });
+
+// Flows
+
+var jshintFlow = lazypipe()
+  .pipe(jshint)
+  .pipe(jshint.reporter, 'jshint-stylish')
+  .pipe(jshint.reporter, 'fail');

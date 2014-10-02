@@ -54,7 +54,7 @@ function ensureSauceTunnel(options, emitter, done) {
   // SauceConnectLauncher only supports one tunnel at a time; this allows us to
   // kill it before we've gotten our callback.
   CleanKill.onInterrupt(sauceConnect.kill.bind(sauceConnect));
-};
+}
 
 function startSeleniumServer(options, emitter, done) {
   freeport(function(error, port) {
@@ -82,7 +82,7 @@ function startSeleniumServer(options, emitter, done) {
       done();
     });
   });
-};
+}
 
 function startStaticServer(options, emitter, done) {
   freeport(function(error, port) {
@@ -164,7 +164,7 @@ function assertSauceCredentials(options, done) {
 }
 
 function isLocal(browser) {
-  return !browser.platform
+  return !browser.platform;
 }
 
 function runBrowsers(options, emitter, done) {
@@ -187,7 +187,7 @@ function runBrowsers(options, emitter, done) {
       if (error) errors.push(error);
       numDone = numDone + 1;
       if (numDone === options.browsers.length) {
-        var error = errors.length > 0 ? _.unique(errors).join(', ') : null;
+        error = errors.length > 0 ? _.unique(errors).join(', ') : null;
         emitter.emit('run-end', error);
         done(error);
       }

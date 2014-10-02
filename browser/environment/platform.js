@@ -7,6 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+(function() {
 
 /**
  * It is often useful to trigger a Platform.flush, and perform work on the next
@@ -14,15 +15,15 @@
  *
  * @param {function} callback
  */
-function asyncPlatformFlush(callback) {
+window.asyncPlatformFlush = function asyncPlatformFlush(callback) {
   if (window.Platform && window.Platform.flush) Platform.flush();
   async.nextTick(callback);
-}
+};
 
 /**
  *
  */
-function waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime) {
+window.waitFor = function waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime) {
   timeoutTime = timeoutTime || Date.now() + (timeout || 1000);
   intervalOrMutationEl = intervalOrMutationEl || 32;
   try {
@@ -45,3 +46,5 @@ function waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime) {
   }
   next();
 };
+
+})();

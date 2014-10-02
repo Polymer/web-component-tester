@@ -15,7 +15,7 @@ WCT.reporters.Console = Console;
 // reference to the original one.
 var console = window.console;
 
-var FONT = ';font: normal 13px "Roboto", "Helvetica Neue", "Helvetica", sans-serif;'
+var FONT = ';font: normal 13px "Roboto", "Helvetica Neue", "Helvetica", sans-serif;';
 var STYLES = {
   plain:   FONT,
   suite:   'color: #5c6bc0' + FONT,
@@ -25,7 +25,7 @@ var STYLES = {
   failing: 'color: #c41411' + FONT,
   stack:   'color: #c41411',
   results: FONT + 'font-size: 16px',
-}
+};
 
 // I don't think we can feature detect this one...
 var userAgent = navigator.userAgent.toLowerCase();
@@ -101,7 +101,7 @@ function Console(runner) {
   }.bind(this));
 
   runner.on('end', this.logSummary.bind(this));
-};
+}
 Console.prototype = Object.create(Mocha.reporters.Base.prototype);
 
 /** Prints out a final summary of test results. */

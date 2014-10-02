@@ -30,9 +30,13 @@
     "gulp": "^3.8.8",
     "gulp-concat": "^2.4.0",
     "gulp-if": "^1.2.4",
+    "gulp-jshint": "^1.8.5",
+    "gulp-notify": "^1.8.0",
+    "gulp-plumber": "^0.6.5",
     "gulp-sourcemaps": "^1.1.5",
     "gulp-watch": "^1.0.3",
     "gulp-wrap": "^0.3.0",
+    "jshint-stylish": "^1.0.0",
     "lazypipe": "^0.2.2"
   }
 }

@@ -56,7 +56,7 @@ CLISocket.prototype.observe = function observe(runner) {
   runner.on('end', function() {
     this.emitEvent('browser-end');
   }.bind(this));
-}
+};
 
 /**
  * @param {string} event The name of the event to fire.
@@ -109,7 +109,7 @@ function getTitles(runnable) {
     runnable = runnable.parent;
   }
   return titles;
-};
+}
 
 /**
  * @param {!Mocha.Runnable} runnable
@@ -125,6 +125,6 @@ function getState(runnable) {
   } else {
     return 'unknown';
   }
-};
+}
 
 })();
