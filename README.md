@@ -135,8 +135,8 @@ exposed for your convenience.
 The `wct` tool, and the [gulp](#gulp) and [grunt](#grunt) integration, support
 several command line flags:
 
-`--remote`: Uses the [default remote browsers](default-browsers.json), and if
-omitted uses the default local browsers.
+`--remote`: Uses the [default remote browsers](default-sauce-browsers.json), 
+and if omitted uses the default local browsers.
 
 `--browsers BROWSER,BROWSER`: Override the browsers that will be run.
 
