@@ -16,7 +16,7 @@
     "findup": "^0.1.5",
     "freeport": "^1.0.3",
     "http": "0.0.0",
-    "launchpad": "^0.3.0",
+    "launchpad": "nevir/launchpad#paths",
     "lodash": "^2.4.1",
     "sauce-connect-launcher": "^0.6.1",
     "selenium-standalone": ">=2.43.1-2.9.0-1",
