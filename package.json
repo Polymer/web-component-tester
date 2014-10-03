@@ -19,7 +19,7 @@
     "launchpad": "nevir/launchpad#paths",
     "lodash": "^2.4.1",
     "sauce-connect-launcher": "^0.6.1",
-    "selenium-standalone": ">=2.43.1-2.9.0-1",
+    "selenium-standalone": "nevir/selenium-standalone#ie",
     "serve-static": "^1.5.3",
     "socket.io": "^1.0.6",
     "stacky": "^1.1.1",

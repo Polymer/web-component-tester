@@ -14,6 +14,7 @@ var LAUNCHPAD_TO_SELENIUM = {
   canary:  chrome,
   firefox: firefox,
   aurora:  firefox,
+  ie:      internetExplorer,
   // Until https://code.google.com/p/selenium/issues/detail?id=7933
   // safari:  safari,
 };
@@ -78,6 +79,17 @@ function safari(browser) {
   // SafariDriver doesn't appear to support custom binary paths. Does Safari?
   return {
     'browserName': 'safari',
+    'version':     browser.version,
+  };
+}
+
+/**
+ * @param {!Object} browser A launchpad browser definition.
+ * @return {!Object} A selenium capabilities object.
+ */
+function internetExplorer(browser) {
+  return {
+    'browserName': 'ie',
     'version':     browser.version,
   };
 }
