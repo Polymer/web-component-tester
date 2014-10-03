@@ -17,15 +17,17 @@ var test   = require('./test');
 function run(env, args, output, callback) {
   var done = wrapCallback(output, callback);
 
-  var options = config.fromEnv(env, args);
+  var options = config.mergeDefaults(config.fromEnv(env, args));
   options.output = output;
 
   if (options.extraArgs[0]) {
     return runTests(options.extraArgs[0], options, done);
   }
 
-  findup(process.cwd(), 'test', function(error, dir) {
-    if (error) return done(error);
+  findup(process.cwd(), options.webRunner, function(error, dir) {
+    if (error) {
+      return done('Could not find a valid test root. Searched for "' + options.webRunner + "'.");
+    }
     runTests(dir, options, done);
   });
 }
