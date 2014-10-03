@@ -1,6 +1,6 @@
 {
   "name": "web-component-tester",
-  "version": "0.8.0",
+  "version": "1.0.0",
   "main": "runner.js",
   "keywords": [
     "gruntplugin"
