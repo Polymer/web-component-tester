@@ -26,7 +26,7 @@ function run(env, args, output, callback) {
 
   findup(process.cwd(), options.webRunner, function(error, dir) {
     if (error) {
-      return done('Could not find a valid test root. Searched for "' + options.webRunner + "'.");
+      return done('Could not find a valid test root. Searched for "' + options.webRunner + '".');
     }
     runTests(dir, options, done);
   });
