@@ -101,6 +101,9 @@ not supported), or by using the `wct` command line tool:
 npm install -g web-component-tester
 ```
 
+If you're on windows, make sure that you also have [Java][java] installed and
+available on your `PATH`.
+
 The `wct` tool will run your tests in multiple browsers at once, either on your
 machine...
 
