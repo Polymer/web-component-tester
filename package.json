@@ -18,6 +18,7 @@
     "http": "0.0.0",
     "launchpad": "nevir/launchpad#paths",
     "lodash": "^2.4.1",
+    "resolve": "^1.0.0",
     "sauce-connect-launcher": "^0.6.1",
     "selenium-standalone": "nevir/selenium-standalone#ie",
     "serve-static": "^1.5.3",
