@@ -152,7 +152,7 @@ function determineReporters(socket) {
     });
   }
 
-  if (WCT._suitesToLoad.length > 0) {
+  if (WCT._suitesToLoad.length > 0 || WCT._dependencies.length > 0) {
     reporters.push(WCT.reporters.HTML);
   }
 
