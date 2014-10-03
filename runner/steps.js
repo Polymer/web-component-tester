@@ -18,6 +18,7 @@ var selenium     = require('selenium-standalone');
 var serveStatic  = require('serve-static');
 var socketIO     = require('socket.io');
 var uuid         = require('uuid');
+var which        = require('which');
 
 var BrowserRunner  = require('./browserrunner');
 var CleanKill      = require('./cleankill');
@@ -58,29 +59,32 @@ function ensureSauceTunnel(options, emitter, done) {
 }
 
 function startSeleniumServer(options, emitter, done) {
-  freeport(function(error, port) {
+  checkSeleniumEnvironment(function(error) {
     if (error) return done(error);
+    freeport(function(error, port) {
+      if (error) return done(error);
 
-    var server = selenium({}, ['-port', port]);
-    var badExit = function() { done('Could not start Selenium'); };
-    server.on('exit', badExit);
+      var server = selenium({}, ['-port', port]);
+      var badExit = function() { done('Could not start Selenium'); };
+      server.on('exit', badExit);
 
-    function onOutput(data) {
-      var str = data.toString();
-      emitter.emit('log:debug', str);
+      function onOutput(data) {
+        var str = data.toString();
+        emitter.emit('log:debug', str);
 
-      if (str.indexOf('Started org.openqa.jetty.jetty.Server') > -1) {
-        server.removeListener('exit', badExit);
-        emitter.emit('log:info', 'Selenium server running on port', chalk.yellow(port));
-        done(null, port);
+        if (str.indexOf('Started org.openqa.jetty.jetty.Server') > -1) {
+          server.removeListener('exit', badExit);
+          emitter.emit('log:info', 'Selenium server running on port', chalk.yellow(port));
+          done(null, port);
+        }
       }
-    }
-    server.stdout.on('data', onOutput);
-    server.stderr.on('data', onOutput);
+      server.stdout.on('data', onOutput);
+      server.stderr.on('data', onOutput);
 
-    CleanKill.onInterrupt(function(done) {
-      server.kill();
-      done();
+      CleanKill.onInterrupt(function(done) {
+        server.kill();
+        done();
+      });
     });
   });
 }
@@ -174,6 +178,26 @@ function configureBrowsers(options, emitter, done) {
       options.browsers = browsers;
     }
     done(error);
+  });
+}
+
+function checkSeleniumEnvironment(done) {
+  which('java', function(error) {
+    if (!error) return done();
+
+    var message = 'java is not present on your PATH.';
+    if (process.platform === 'win32') {
+      message = message + '\n\n  Please install it: https://java.com/download/\n\n';
+    } else if (process.platform === 'linux') {
+      try {
+        which.sync('apt-get');
+        message = message + '\n\n  sudo apt-get install default-jre\n\n';
+      } catch (error) {
+        // There's not a clear default package for yum distros.
+      }
+    }
+
+    done(message);
   });
 }
 
