@@ -35,12 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
   WCT.CLISocket.init(function(error, socket) {
     WCT.util.debug('run stage: WCT.CLISocket.init done', error);
     if (error) throw error;
+    var runner = newMultiSuiteRunner(determineReporters(socket));
 
-    loadDependencies(function(error) {
+    loadDependencies(runner, function(error) {
       WCT.util.debug('run stage: loadDependencies done', error);
       if (error) throw error;
 
-      runMultiSuite(determineReporters(socket));
+      runMultiSuite(runner);
     });
   });
 });
@@ -48,16 +49,27 @@ document.addEventListener('DOMContentLoaded', function() {
 /**
  * Loads any dependencies of the _current_ suite (e.g. `.js` sources).
  *
+ * @param {!WCT.MultiRunner} runner The runner where errors should be reported.
  * @param {function} done A node style callback.
  */
-function loadDependencies(done) {
+function loadDependencies(runner, done) {
   WCT.util.debug('loadDependencies:', WCT._dependencies);
+
+  function onError(event) {
+    console.warn(event);
+    runner.emitOutOfBandTest('Test Suite Initialization', event.error);
+  }
+  window.addEventListener('error', onError);
+
   var loaders = WCT._dependencies.map(function(file) {
     // We only support `.js` dependencies for now.
     return WCT.util.loadScript.bind(WCT.util, file);
   });
 
-  async.parallel(loaders, done);
+  async.parallel(loaders, function(error) {
+    window.removeEventListener('error', onError);
+    done(error);
+  });
 }
 
 /**
@@ -76,12 +88,22 @@ function runSubSuite(subSuite) {
 /**
  * @param {!Array.<!Mocha.reporters.Base>} reporters The reporters that should
  *     consume the output of this `MultiRunner`.
+ * @return {!WCT.MultiRunner} The runner for our root suite.
  */
-function runMultiSuite(reporters) {
-  WCT.util.debug('runMultiSuite', window.location.pathname);
-  var rootName = WCT.util.relativeLocation(window.location);
+function newMultiSuiteRunner(reporters) {
+  WCT.util.debug('newMultiSuiteRunner', window.location.pathname);
   var runner   = new WCT.MultiRunner(WCT._suitesToLoad.length + 1, reporters);
   WCT._multiRunner = runner;
+
+  return runner;
+}
+
+/**
+ * @param {!WCT.MultiRunner} The runner built via `newMultiSuiteRunner`.
+ */
+function runMultiSuite(runner) {
+  WCT.util.debug('runMultiSuite', window.location.pathname);
+  var rootName = WCT.util.relativeLocation(window.location);
 
   var suiteRunners = [
     // Run the local tests (if any) first, not stopping on error;
