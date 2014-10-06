@@ -25,4 +25,12 @@ window.addEventListener('message', function(event) {
   subSuite.done();
 });
 
+// Attempt to ensure that we complete a test suite if it is interrupted by a
+// document unload.
+window.addEventListener('unload', function(event) {
+  // Mocha's hook queue is asynchronous; but we want synchronous behavior if
+  // we've gotten to the point of unloading the document.
+  Mocha.Runner.immediately = function(callback) { callback(); };
+});
+
 })();

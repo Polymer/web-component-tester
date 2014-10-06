@@ -56,7 +56,6 @@ function loadDependencies(runner, done) {
   WCT.util.debug('loadDependencies:', WCT._dependencies);
 
   function onError(event) {
-    console.warn(event);
     runner.emitOutOfBandTest('Test Suite Initialization', event.error);
   }
   window.addEventListener('error', onError);
