@@ -152,6 +152,7 @@ function runMocha(reporter, done, waited) {
   if (navigator.userAgent.match(/chrome/i)) {
     window.onerror = null;
     window.addEventListener('error', function(event) {
+      if (error.ignore) return;
       runner.uncaught(event.error);
     });
   }
