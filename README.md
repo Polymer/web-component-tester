@@ -29,7 +29,7 @@ location will do.
 ## Test Index
 
 WCT will, by default, run tests declared in `test/index.html`. Generally, 
-you'll want to use this to declare all your test suites:
+you'll want to use this to load all your test suites:
 
 ```html
 <!doctype html>
@@ -186,9 +186,10 @@ Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
 
 <!-- References -->
 [async]:     https://github.com/caolan/async     "Async.js"
-[chai]:      http://chaijs.com/                  "Chai Assertion Library"
 [chai-bdd]:  http://chaijs.com/api/bdd/          "Chai's BDD Interface"
 [chai-tdd]:  http://chaijs.com/api/assert/       "Chai's TDD Interface"
+[chai]:      http://chaijs.com/                  "Chai Assertion Library"
+[java]:      https://java.com/download           "Java"
 [mocha-bdd]: http://visionmedia.github.io/mocha/#bdd-interface "Mocha's BDD Interface"
 [mocha-tdd]: http://visionmedia.github.io/mocha/#tdd-interface "Mocha's TDD Interface"
 [mocha]:     http://visionmedia.github.io/mocha/ "Mocha Test Framework"
