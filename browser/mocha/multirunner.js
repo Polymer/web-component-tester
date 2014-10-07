@@ -153,6 +153,14 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner, var_ar
     return;
   }
 
+  // This appears to be a Mocha bug: Tests failed by passing an error to their
+  // done function don't set `err` properly.
+  //
+  // TODO(nevir): Track down.
+  if (eventName === 'fail' && !extraArgs[0].err) {
+    extraArgs[0].err = extraArgs[1];
+  }
+
   if (eventName === 'start') {
     this.onRunnerStart(runner);
   } else if (eventName === 'end') {
