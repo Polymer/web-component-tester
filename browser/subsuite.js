@@ -26,7 +26,7 @@ function SubSuite(url, parentScope) {
 WCT.SubSuite = SubSuite;
 
 // SubSuites get a pretty generous load timeout by default.
-SubSuite.loadTimeout = 10000;
+SubSuite.loadTimeout = 30000;
 
 // We can't maintain properties on iframe elements in Firefox/Safari/???, so we
 // track subSuites by URL.
