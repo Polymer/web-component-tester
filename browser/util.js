@@ -123,6 +123,20 @@ WCT.util.getParam = function getParam(param) {
   return params[param] ? params[param][0] : null;
 };
 
+/**
+ * @param {!Object.<string, !Array.<string>>} params
+ * @return {string} `params` encoded as a URI query.
+ */
+WCT.util.paramsToQuery = function paramsToQuery(params) {
+  var pairs = [];
+  _.each(params, function(values, key) {
+    values.forEach(function(value) {
+      pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+    });
+  });
+  return '?' + pairs.join('&');
+};
+
 /** @return {string} `location` relative to the current window. */
 WCT.util.relativeLocation = function relativeLocation(location) {
   var path = location.pathname;

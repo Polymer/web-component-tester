@@ -14,7 +14,11 @@
  * are part of the current context.
  */
 function SubSuite(url, parentScope) {
-  this.url         = url + '?' + Math.random();
+  var params = WCT.util.getParams(parentScope.location.search);
+  delete params.cli_browser_id;
+  params.bust = [Math.random()];
+
+  this.url         = url + WCT.util.paramsToQuery(params);
   this.parentScope = parentScope;
 
   this.state = 'initializing';

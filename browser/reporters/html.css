@@ -40,8 +40,3 @@ html, body {
   width: 100%;
   height: 100%;
 }
-
-/* TODO(nevir): Fix grep support */
-#mocha .replay {
-  display: none !important;
-}

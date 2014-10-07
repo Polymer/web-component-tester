@@ -18,6 +18,9 @@
  */
 (function() {
 
+// We do a bit of our own grep processing to speed things up.
+var grep = WCT.util.getParam('grep');
+
 // Give any scripts on the page a chance to twiddle the environment.
 document.addEventListener('DOMContentLoaded', function() {
   WCT.util.debug('run stage: DOMContentLoaded');
@@ -140,7 +143,13 @@ function runMocha(reporter, done, waited) {
   WCT.util.debug('runMocha', window.location.pathname);
 
   mocha.reporter(reporter);
-  var runner = mocha.run(function(error) {
+  mocha.suite.title = reporter.title;
+  mocha.grep(grep);
+
+  // We can't use `mocha.run` because it bashes over grep, invert, and friends.
+  // See https://github.com/visionmedia/mocha/blob/master/support/tail.js#L137
+  var runner = Mocha.prototype.run.call(mocha, function(error) {
+    Mocha.utils.highlightTags('code');
     done();  // We ignore the Mocha failure count.
   });
 
