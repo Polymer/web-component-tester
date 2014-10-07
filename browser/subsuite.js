@@ -26,7 +26,7 @@ function SubSuite(url, parentScope) {
 WCT.SubSuite = SubSuite;
 
 // SubSuites get a pretty generous load timeout by default.
-SubSuite.loadTimeout = 5000;
+SubSuite.loadTimeout = 10000;
 
 // We can't maintain properties on iframe elements in Firefox/Safari/???, so we
 // track subSuites by URL.
@@ -91,6 +91,7 @@ SubSuite.prototype.run = function(done) {
  * @param {*} error The error that occured, if any.
  */
 SubSuite.prototype.loaded = function(error) {
+  WCT.util.debug('SubSuite#loaded', this.url, error);
   if (this.timeoutId) {
     clearTimeout(this.timeoutId);
   }
