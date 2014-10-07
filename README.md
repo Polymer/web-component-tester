@@ -5,6 +5,7 @@ You get a browser-based testing environment, configured out of the box with:
 * [Mocha][mocha] as a test framework.
 * [Chai][chai] assertions.
 * [Async][async] to keep your sanity.
+* [Lodash][lodash] (3.0) to repeat fewer things.
 
 Additionally, WCT provides integration with `selenium`, so that you can easily 
 run your test suites across multiple browsers. 
@@ -194,3 +195,4 @@ Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
 [mocha-tdd]: http://visionmedia.github.io/mocha/#tdd-interface "Mocha's TDD Interface"
 [mocha]:     http://visionmedia.github.io/mocha/ "Mocha Test Framework"
 [sauce]:     http://saucelabs.com                "Sauce Labs"
+[lodash]:    https://lodash.com/                 "Lo-Dash"

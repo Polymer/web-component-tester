@@ -10,3 +10,6 @@
 [submodule "vendor/stacky"]
 	path = vendor/stacky
 	url = https://github.com/PolymerLabs/stacky
+[submodule "vendor/lodash"]
+	path = vendor/lodash
+	url = https://github.com/lodash/lodash
