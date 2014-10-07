@@ -73,10 +73,12 @@ MultiRunner.prototype.childReporter = function childReporter(name) {
   // The reporter is used as a constructor, so we can't depend on `this` being
   // properly bound.
   var self = this;
-  return function childReporter(runner) {
+  function reporter(runner) {
     runner.name = name;
     self.bindChildRunner(runner);
-  };
+  }
+  reporter.title = name;
+  return reporter;
 };
 
 /** Must be called once all runners have finished. */
@@ -156,7 +158,7 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner, var_ar
   } else if (eventName === 'end') {
     this.onRunnerEnd(runner);
   } else {
-    this.cleanEvent(eventName, extraArgs);
+    this.cleanEvent(eventName, runner, extraArgs);
     this.emit.apply(this, [eventName].concat(extraArgs));
   }
 };
@@ -165,16 +167,40 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner, var_ar
  * Cleans or modifies an event if needed.
  *
  * @param {string} eventName
+ * @param {!Mocha.runners.Base} runner The runner that emitted this event.
  * @param {!Array.<*>} extraArgs
  */
-MultiRunner.prototype.cleanEvent = function cleanEvent(eventName, extraArgs) {
+MultiRunner.prototype.cleanEvent = function cleanEvent(eventName, runner, extraArgs) {
+  // Suite hierarchy
+  if (extraArgs[0]) {
+    extraArgs[0] = this.showRootSuite(extraArgs[0]);
+  }
+
+  // Normalize errors
   if (eventName === 'fail') {
     extraArgs[1] = Stacky.normalize(extraArgs[1], STACKY_CONFIG);
   }
   if (extraArgs[0] && extraArgs[0].err) {
     extraArgs[0].err = Stacky.normalize(extraArgs[0].err, STACKY_CONFIG);
   }
+};
 
+/**
+ * We like to show the root suite's title, which requires a little bit of
+ * trickery in the suite hierarchy.
+ *
+ * @param {!Mocha.Runnable} node
+ */
+MultiRunner.prototype.showRootSuite = function showRootSuite(node) {
+  var leaf = node = Object.create(node);
+  while (node && !node.root) {
+    var wrappedParent = Object.create(node.parent);
+    node.parent = wrappedParent;
+    node = wrappedParent;
+  }
+  node.root = false;
+
+  return leaf;
 };
 
 /** @param {!Mocha.runners.Base} runner */

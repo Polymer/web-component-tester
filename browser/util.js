@@ -94,6 +94,7 @@ WCT.util.getParams = function getParams(opt_query) {
   if (query.slice(-1) === '/') {
     query = query.substring(0, query.length - 1);
   }
+  if (query === '') return {};
 
   var result = {};
   query.split('&').forEach(function(part) {
