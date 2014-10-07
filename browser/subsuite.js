@@ -41,13 +41,24 @@ SubSuite.current = function() {
 
 /**
  * @param {!Window} target A window to find the SubSuite of.
+ * @param {boolean} traversal Whether this is a traversal from a child window.
  * @return {SubSuite} The `SubSuite` that was registered for `target`.
  */
-SubSuite.get = function(target) {
+SubSuite.get = function(target, traversal) {
+  console.log('SubSuite.get', target.location.href, SubSuite._byUrl);
   var subSuite = SubSuite._byUrl[target.location.href];
-  if (subSuite || window.parent === window) return subSuite;
+  if (subSuite) return subSuite;
+  if (window.parent === window) {
+    if (traversal) {
+      // I really hope there's no legit case for this. Infinite reloads are no good.
+      console.warn('Subsuite loaded but was never registered. This most likely is due to wonky history behavior. Reloading...');
+      window.location.reload();
+    } else {
+      return null;
+    }
+  }
   // Otherwise, traverse.
-  return window.parent.WCT.SubSuite.get(target);
+  return window.parent.WCT.SubSuite.get(target, true);
 };
 
 /**
