@@ -54,7 +54,6 @@ gulp.task('build:browser', function() {
       'vendor/chai/chai.js',
       'vendor/async/lib/async.js',
       'vendor/lodash/lodash.js',
-      'vendor/WebConsole-reporter/WebConsole.js',
       'vendor/stacky/lib/parsing.js',
       'vendor/stacky/lib/formatting.js',
       'vendor/stacky/lib/normalization.js',
