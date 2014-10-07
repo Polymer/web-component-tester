@@ -114,6 +114,8 @@ function runMultiSuite(runner) {
 
   // As well as any sub suites. Again, don't stop on error.
   WCT._suitesToLoad.forEach(function(file) {
+    if (grep && !_.startsWith(grep, file)) return;
+
     suiteRunners.push(function(next) {
       var subSuite = new WCT.SubSuite(file, window);
       subSuite.run(function(error) {
