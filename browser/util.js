@@ -60,22 +60,6 @@ WCT.util.pluralizedStat = function pluralizedStat(count, kind) {
 };
 
 /**
- * @param {string} param The param to return a value for.
- * @return {?string} The first value for `param`, if found.
- */
-WCT.util.getParam = function getParam(param) {
-  var query = window.location.search.substring(1);
-  var vars = query.split('&');
-  for (var i=0;i<vars.length;i++) {
-    var pair = vars[i].split('=');
-    if (decodeURIComponent(pair[0]) === param) {
-      return decodeURIComponent(pair[1]);
-    }
-  }
-  return null;
-};
-
-/**
  * @param {string} path The URI of the script to load.
  * @param {function} done
  */
@@ -87,21 +71,66 @@ WCT.util.loadScript = function loadScript(path, done) {
   document.head.appendChild(script);
 };
 
-/** @return {string} `location` relative to the current window. */
-WCT.util.relativeLocation = function relativeLocation(location) {
-  var path = location.pathname;
-  if (path.indexOf(window.location.pathname) === 0) {
-    path = path.substr(window.location.pathname.length);
-  }
-  return path;
-};
-
 /**
  * @param {...*} var_args Logs values to the console when `WCT.debug` is true.
  */
 WCT.util.debug = function debug(var_args) {
   if (!WCT.debug) return;
   console.debug.apply(console, arguments);
+};
+
+// URL Processing
+
+/**
+ * @param {string} opt_query A query string to parse.
+ * @return {!Object.<string, !Array.<string>>} All params on the URL's query.
+ */
+WCT.util.getParams = function getParams(opt_query) {
+  var query = opt_query || window.location.search;
+  if (query.substring(0, 1) === '?') {
+    query = query.substring(1);
+  }
+  // python's SimpleHTTPServer tacks a `/` on the end of query strings :(
+  if (query.slice(-1) === '/') {
+    query = query.substring(0, query.length - 1);
+  }
+
+  var result = {};
+  query.split('&').forEach(function(part) {
+    var pair = part.split('=');
+    if (pair.length !== 2) {
+      console.warn('Invalid URL query part:', part);
+      return;
+    }
+    var key   = decodeURIComponent(pair[0]);
+    var value = decodeURIComponent(pair[1]);
+
+    if (!result[key]) {
+      result[key] = [];
+    }
+    result[key].push(value);
+  });
+
+  return result;
+};
+
+/**
+ * @param {string} param The param to return a value for.
+ * @return {?string} The first value for `param`, if found.
+ */
+WCT.util.getParam = function getParam(param) {
+  var params = WCT.util.getParams();
+  return params[param] ? params[param][0] : null;
+};
+
+/** @return {string} `location` relative to the current window. */
+WCT.util.relativeLocation = function relativeLocation(location) {
+  var path = location.pathname;
+  var basePath = window.location.pathname.match(/^.*\//)[0];
+  if (path.indexOf(basePath) === 0) {
+    path = path.substring(basePath.length);
+  }
+  return path;
 };
 
 })();
