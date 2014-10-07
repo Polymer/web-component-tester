@@ -38,13 +38,18 @@ document.addEventListener('DOMContentLoaded', function() {
   WCT.CLISocket.init(function(error, socket) {
     WCT.util.debug('run stage: WCT.CLISocket.init done', error);
     if (error) throw error;
-    var runner = newMultiSuiteRunner(determineReporters(socket));
+    var subsuites = WCT._suitesToLoad;
+    if (grep) {
+      subsuites = _.filter(subsuites, _.startsWith.bind(null, grep));
+    }
+
+    var runner = newMultiSuiteRunner(subsuites, determineReporters(socket));
 
     loadDependencies(runner, function(error) {
       WCT.util.debug('run stage: loadDependencies done', error);
       if (error) throw error;
 
-      runMultiSuite(runner);
+      runMultiSuite(runner, subsuites);
     });
   });
 });
@@ -88,22 +93,22 @@ function runSubSuite(subSuite) {
 }
 
 /**
+ * @param {!Array.<string>} subsuites The subsuites that will be run.
  * @param {!Array.<!Mocha.reporters.Base>} reporters The reporters that should
  *     consume the output of this `MultiRunner`.
  * @return {!WCT.MultiRunner} The runner for our root suite.
  */
-function newMultiSuiteRunner(reporters) {
+function newMultiSuiteRunner(subsuites, reporters) {
   WCT.util.debug('newMultiSuiteRunner', window.location.pathname);
-  var runner   = new WCT.MultiRunner(WCT._suitesToLoad.length + 1, reporters);
-  WCT._multiRunner = runner;
-
-  return runner;
+  WCT._multiRunner = new WCT.MultiRunner(subsuites.length + 1, reporters);
+  return WCT._multiRunner;
 }
 
 /**
  * @param {!WCT.MultiRunner} The runner built via `newMultiSuiteRunner`.
+ * @param {!Array.<string>} subsuites The subsuites to run.
  */
-function runMultiSuite(runner) {
+function runMultiSuite(runner, subsuites) {
   WCT.util.debug('runMultiSuite', window.location.pathname);
   var rootName = WCT.util.relativeLocation(window.location);
 
@@ -113,9 +118,7 @@ function runMultiSuite(runner) {
   ];
 
   // As well as any sub suites. Again, don't stop on error.
-  WCT._suitesToLoad.forEach(function(file) {
-    if (grep && !_.startsWith(grep, file)) return;
-
+  subsuites.forEach(function(file) {
     suiteRunners.push(function(next) {
       var subSuite = new WCT.SubSuite(file, window);
       subSuite.run(function(error) {
