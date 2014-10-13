@@ -20,7 +20,7 @@ window.addEventListener('message', function(event) {
   var path = WCT.util.relativeLocation(event.source.location);
 
   var parentRunner = subSuite.parentScope.WCT._multiRunner;
-  parentRunner.emitOutOfBandTest(path, event.data.error, true);
+  parentRunner.emitOutOfBandTest('page-wide tests via global done()', event.data.error, path, true);
 
   subSuite.done();
 });

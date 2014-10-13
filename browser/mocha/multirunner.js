@@ -96,11 +96,13 @@ MultiRunner.prototype.done = function done() {
  * @param {string} title The title of the test.
  * @param {*} opt_error An error associated with this test. If falsy, test is
  *     considered to be passing.
+ * @param {string} opt_suiteTitle Title for the suite that's wrapping the test.
  * @param {?boolean} opt_estimated If this test was included in the original
  *     estimate of `numSuites`.
  */
-MultiRunner.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, opt_error, opt_estimated) {
+MultiRunner.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, opt_error, opt_suiteTitle, opt_estimated) {
   var root = new Mocha.Suite();
+  root.title = opt_suiteTitle;
   var test = new Mocha.Test(title, function() {
   });
   test.parent = root;
