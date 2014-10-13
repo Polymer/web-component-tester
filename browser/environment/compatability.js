@@ -18,7 +18,6 @@ window.addEventListener('message', function(event) {
 
   // The name of the suite as exposed to the user.
   var path = WCT.util.relativeLocation(event.source.location);
-
   var parentRunner = subSuite.parentScope.WCT._multiRunner;
   parentRunner.emitOutOfBandTest('page-wide tests via global done()', event.data.error, path, true);
 
