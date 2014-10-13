@@ -45,7 +45,6 @@ SubSuite.current = function() {
  * @return {SubSuite} The `SubSuite` that was registered for `target`.
  */
 SubSuite.get = function(target, traversal) {
-  console.log('SubSuite.get', target.location.href, SubSuite._byUrl);
   var subSuite = SubSuite._byUrl[target.location.href];
   if (subSuite) return subSuite;
   if (window.parent === window) {
