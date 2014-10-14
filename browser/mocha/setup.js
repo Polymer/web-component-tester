@@ -67,7 +67,7 @@ WCT.setupMocha = function setupMocha(ui) {
   if (WCT._mochaUI && WCT._mochaUI !== ui) {
     throw new Error('Mixing ' + WCT._mochaUI + ' and ' + ui + ' Mocha styles is not supported.');
   }
-  mocha.setup({ui: ui, timeout: 5000});  // Note that the reporter is configured in run.js.
+  mocha.setup({ui: ui, timeout: 60 * 1000});  // Note that the reporter is configured in run.js.
   WCT.mochaIsSetup = true;
 };
 
