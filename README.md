@@ -36,7 +36,7 @@ you'll want to use this to load all your test suites:
 <!doctype html>
 <html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <script src="../../web-component-tester/browser.js"></script>
     <script src="../awesome.js"></script>
   </head>
@@ -75,7 +75,8 @@ Or, you can write tests in separate `.html` documents. For example,
 <!doctype html>
 <html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
+  <script src="../../platform/platform.js"></script>
   <script src="../../web-component-tester/browser.js"></script>
   <link rel="import" href="../awesome-element.html">
 </head>
