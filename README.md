@@ -37,6 +37,7 @@ you'll want to use this to load all your test suites:
 <html>
   <head>
     <meta charset="utf-8">
+    <script src="../../platform/platform.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
     <script src="../awesome.js"></script>
   </head>
