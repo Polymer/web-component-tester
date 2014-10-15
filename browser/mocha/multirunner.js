@@ -101,6 +101,7 @@ MultiRunner.prototype.done = function done() {
  *     estimate of `numSuites`.
  */
 MultiRunner.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, opt_error, opt_suiteTitle, opt_estimated) {
+  WCT.util.debug('MultiRunner#emitOutOfBandTest(', arguments, ')');
   var root = new Mocha.Suite();
   root.title = opt_suiteTitle;
   var test = new Mocha.Test(title, function() {
@@ -154,6 +155,7 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner, var_ar
     this.pendingEvents.push(arguments);
     return;
   }
+  WCT.util.debug('MultiRunner#proxyEvent(', arguments, ')');
 
   // This appears to be a Mocha bug: Tests failed by passing an error to their
   // done function don't set `err` properly.
