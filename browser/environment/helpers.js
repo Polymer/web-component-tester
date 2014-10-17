@@ -24,7 +24,7 @@ window.safeStep = function safeStep(callback, stepFn) {
     err = error;
   }
   callback(err);
-}
+};
 
 /**
  * Runs your test at declaration time (before Mocha has begun tests). Handy for
@@ -53,7 +53,7 @@ window.testImmediate = function testImmediate(name, testFn) {
   test(name, function(done) {
     done(err);
   });
-}
+};
 
 /**
  * An async-only variant of `testImmediate`.
@@ -81,7 +81,7 @@ window.testImmediateAsync = function testImmediateAsync(name, testFn) {
   } catch (error) {
     err = error;
   }
-}
+};
 
 /**
  * It is often useful to trigger a Platform.flush, and perform work on the next
