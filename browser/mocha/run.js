@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (subSuite) {
     WCT.util.debug('run stage: subsuite');
     // Give the subsuite time to complete its load (see `SubSuite.load`).
-    async.nextTick(runSubSuite.bind(null, subSuite));
+    setTimeout(runSubSuite.bind(null, subSuite), 0);
     return;
   }
 

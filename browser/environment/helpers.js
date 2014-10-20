@@ -24,7 +24,7 @@ window.safeStep = function safeStep(callback, stepFn) {
     err = error;
   }
   callback(err);
-}
+};
 
 /**
  * Runs your test at declaration time (before Mocha has begun tests). Handy for
@@ -53,7 +53,7 @@ window.testImmediate = function testImmediate(name, testFn) {
   test(name, function(done) {
     done(err);
   });
-}
+};
 
 /**
  * An async-only variant of `testImmediate`.
@@ -81,17 +81,52 @@ window.testImmediateAsync = function testImmediateAsync(name, testFn) {
   } catch (error) {
     err = error;
   }
-}
+};
 
 /**
- * It is often useful to trigger a Platform.flush, and perform work on the next
- * run loop tick.
+ * Triggers a flush of any pending events, observations, etc and calls you back
+ * after they have been processed.
  *
+ * @param {function()} callback
+ */
+window.flush = function flush(callback) {
+  // Ideally, this function would be a call to Polymer.flush, but that doesn't
+  // support a callback yet (https://github.com/Polymer/polymer-dev/issues/115),
+  // ...and there's cross-browser flakiness to deal with.
+
+  // Make sure that we're invoking the callback with no arguments so that the
+  // caller can pass Mocha callbacks, etc.
+  var done = function done() { callback(); };
+
+  // Because endOfMicrotask is flaky for IE, we perform microtask checkpoints
+  // ourselves (https://github.com/Polymer/polymer-dev/issues/114):
+  var isIE = navigator.appName == 'Microsoft Internet Explorer';
+  if (isIE && window.Platform && window.Platform.performMicrotaskCheckpoint) {
+    var reallyDone = done;
+    done = function doneIE() {
+      Platform.performMicrotaskCheckpoint();
+      setTimeout(reallyDone, 0);
+    };
+  }
+
+  // Everyone else gets a regular flush.
+  var scope = window.Polymer || window.WebComponents;
+  if (scope && scope.flush) {
+    scope.flush();
+  }
+
+  // Ensure that we are creating a new _task_ to allow all active microtasks to
+  // finish (the code you're testing may be using endOfMicrotask, too).
+  setTimeout(done, 0);
+};
+
+/**
+ * DEPRECATED: Use `flush`.
  * @param {function} callback
  */
 window.asyncPlatformFlush = function asyncPlatformFlush(callback) {
-  if (window.Platform && window.Platform.flush) Platform.flush();
-  async.nextTick(callback);
+  console.warn('asyncPlatformFlush is deprecated in favor of the more terse flush()');
+  return window.flush(callback);
 };
 
 /**
