@@ -24,7 +24,7 @@ var WCT = window.WCT = {
 WCT.waitForFrameworks = true;
 
 /** How many `.html` suites that can be concurrently loaded & run. */
-WCT.numConcurrentSuites = 8;
+WCT.numConcurrentSuites = 1;
 
 // Helpers
 
