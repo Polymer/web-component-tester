@@ -7,8 +7,7 @@ You get a browser-based testing environment, configured out of the box with:
 * [Async][async] to keep your sanity.
 * [Lodash][lodash] (3.0) to repeat fewer things.
 
-Additionally, WCT provides integration with `selenium`, so that you can easily 
-run your test suites across multiple browsers. 
+WCT will [run your tests](#running-your-tests) against whatever browsers you have locally installed, or remotely via Sauce Labs.
 
 
 # Getting Started
