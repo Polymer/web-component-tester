@@ -22,11 +22,9 @@ var temp         = require('temp');
 var uuid         = require('uuid');
 var which        = require('which');
 
-var BrowserRunner  = require('./browserrunner');
-var CleanKill      = require('./cleankill');
-var detectBrowsers = require('./detectbrowsers');
-
-var DEFAULT_SAUCE_BROWSERS = require('../default-sauce-browsers.json');
+var BrowserRunner = require('./browserrunner');
+var CleanKill     = require('./cleankill');
+var browsers      = require('./browsers');
 
 // Steps
 
@@ -129,8 +127,9 @@ function startStaticServer(options, emitter, done) {
 }
 
 function runTests(options, emitter, done) {
-  configureBrowsers(options, emitter, function(error) {
+  browsers.expand(options.browsers, options.remote, function(error, browsers) {
     if (error) return done(error);
+    options.browsers = browsers;
 
     var jobs = {
       http: startStaticServer.bind(null, options, emitter),
@@ -173,24 +172,6 @@ function runTests(options, emitter, done) {
 }
 
 // Helpers
-
-function configureBrowsers(options, emitter, done) {
-  if (options.browsers.length > 0) {
-    return done();
-  }
-
-  if (options.remote) {
-    options.browsers = DEFAULT_SAUCE_BROWSERS;
-    return done();
-  }
-
-  detectBrowsers(emitter, function(error, browsers) {
-    if (!error) {
-      options.browsers = browsers;
-    }
-    done(error);
-  });
-}
 
 function checkSeleniumEnvironment(done) {
   which('java', function(error) {
