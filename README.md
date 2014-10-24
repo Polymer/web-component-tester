@@ -143,6 +143,14 @@ several command line flags:
 `--remote`: Uses the [default remote browsers](default-sauce-browsers.json), 
 and if omitted uses the default local browsers.
 
+Note that you will need a [valid Sauce Labs account](opensauce) for this. Let
+WCT know your credentials via envrionment variables:
+
+```sh
+export SAUCE_USERNAME=username
+export SAUCE_ACCESS_KEY=abcdef01-abcd-abcd-abcd-abcdef012345
+```
+
 `--browsers BROWSER,BROWSER`: Override the browsers that will be run. Browsers
 can be specified via local names such as `chrome`, `canary`, `firefox`,
 `aurora`, `ie`, etc. Remote browsers can be specified via
@@ -202,4 +210,5 @@ Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
 [mocha-tdd]: http://visionmedia.github.io/mocha/#tdd-interface "Mocha's TDD Interface"
 [mocha]:     http://visionmedia.github.io/mocha/ "Mocha Test Framework"
 [sauce]:     http://saucelabs.com                "Sauce Labs"
+[opensauce]: https://saucelabs.com/opensauce     "Open Sauce Testing"
 [lodash]:    https://lodash.com/                 "Lo-Dash"
