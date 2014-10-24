@@ -143,7 +143,10 @@ several command line flags:
 `--remote`: Uses the [default remote browsers](default-sauce-browsers.json), 
 and if omitted uses the default local browsers.
 
-`--browsers BROWSER,BROWSER`: Override the browsers that will be run.
+`--browsers BROWSER,BROWSER`: Override the browsers that will be run. Browsers
+can be specified via local names such as `chrome`, `canary`, `firefox`,
+`aurora`, `ie`, etc. Remote browsers can be specified via
+`<PLATFORM>/<BROWSER>[@<VERSION>]`.
 
 `--persistent`: Doesn't close the browsers after their first run. Refresh the
 browser windows to re-run tests.
@@ -175,6 +178,9 @@ grunt.initConfig({
     },
     remote: {
       options: {remote: true},
+    },
+    chrome: {
+      options: {browsers: ['chrome']},
     },
   },
 });

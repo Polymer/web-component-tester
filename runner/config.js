@@ -7,9 +7,11 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _     = require('lodash');
-var path  = require('path');
-var yargs = require('yargs');
+var _         = require('lodash');
+var chalk     = require('chalk');
+var launchpad = require('launchpad');
+var path      = require('path');
+var yargs     = require('yargs');
 
 // The full set of options, as a reference.
 function defaults() {
@@ -29,7 +31,9 @@ function defaults() {
     root:        path.resolve('..'),
     // The component being tested. Must be a directory under `root`.
     component:   path.basename(process.cwd()),
-    // The browsers that tests will be run on.
+    // The browsers that tests will be run on. Accepts capabilities objects,
+    // local browser names ("chrome" etc), or remote browsers of the form
+    // "<PLATFORM>/<BROWSER>[@<VERSION>]".
     browsers:    [],
     // The file (mounted under `<root>/<component>`) that runs the tests.
     webRunner:   'test/index.html',
@@ -54,8 +58,60 @@ function defaults() {
   };
 }
 
+function parseArgs(args) {
+  var knownBrowsers = Object.keys(launchpad.local.platform);
+  var defaultValues = defaults();
+
+  return yargs(args)
+      .showHelpOnFail(false)
+      .wrap(80)
+      .usage(
+        '\n' + // Even margin.
+        'Run tests for web components across local or remote browsers.\n' +
+        'Usage: ' + chalk.blue('$0 ' + chalk.dim('[PROJECT_DIR]')) + '\n' +
+        '\n' +
+        'If PROJECT_DIR is not specified, wct will search up from the current directory\n' +
+        'to find your project root (first directory containing a webRunner)\n' +
+        '\n' +
+        'Specific browsers can be tested via the --browsers flag.\n' +
+        '\n' +
+        'Local browsers are specified via short names:\n' +
+        knownBrowsers.join(', ') + '\n' +
+        '\n' +
+        'Remote browsers can be specified via "<PLATFORM>/<BROWSER>[@<VERSION>]". For an\n' +
+        'up to date list, see https://saucelabs.com/platforms'
+      )
+      .help('help', 'Yer lookin\' at it!')
+      .alias('h', 'help')
+      .options({
+        'remote': {
+          description: 'Use default remote browsers (instead of local).',
+          alias: 'r',
+        },
+        'browsers': {
+          description: 'Run specific browsers, rather than the defaults.',
+          alias: 'b',
+        },
+        'webRunner': {
+          description: 'The entry point to your test suite.',
+          default: defaultValues.webRunner,
+        },
+        'persistent': {
+          description: 'Keep browsers active (refresh to rerun tests).',
+          alias: 'p',
+        },
+        'expanded': {
+          description: 'Log a status line for each test run.',
+        },
+        'verbose': {
+          description: 'Log all the things.',
+        },
+      })
+      .argv;
+}
+
 function fromEnv(env, args) {
-  var argv = yargs(args).argv;
+  var argv = parseArgs(args);
 
   var options = {
     webRunner:  argv.webRunner,
@@ -71,9 +127,9 @@ function fromEnv(env, args) {
   };
 
   if (argv.browsers) {
-    options.browsers = argv.browsers.split(',').map(function(name) {
-      return {browserName: name};
-    });
+    var browsers = _.isArray(argv.browsers) ? argv.browsers : [argv.browsers];
+    // We also support comma separated browser identifiers for convenience.
+    options.browsers = browsers.join(',').split(',');
   }
 
   options.extraArgs = argv._;
@@ -95,7 +151,7 @@ function mergeDefaults(options) {
 }
 
 module.exports = {
-  defaults: defaults,
-  fromEnv: fromEnv,
+  defaults:      defaults,
+  fromEnv:       fromEnv,
   mergeDefaults: mergeDefaults,
 };
