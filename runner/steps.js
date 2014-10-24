@@ -13,10 +13,12 @@ var chalk        = require('chalk');
 var express      = require('express');
 var freeport     = require('freeport');
 var http         = require('http');
+var path         = require('path');
 var sauceConnect = require('sauce-connect-launcher');
 var selenium     = require('selenium-standalone');
 var serveStatic  = require('serve-static');
 var socketIO     = require('socket.io');
+var temp         = require('temp');
 var uuid         = require('uuid');
 var which        = require('which');
 
@@ -32,30 +34,39 @@ function ensureSauceTunnel(options, emitter, done) {
   if (options.sauce.tunnelId) {
     return done(null, options.sauce.tunnelId);
   }
-
   if (!assertSauceCredentials(options, done)) return;
-  var connectOptions = {
-    username:         options.sauce.username,
-    accessKey:        options.sauce.accessKey,
-    tunnelIdentifier: options.sauce.tunnelId || uuid.v4(),
-    logger:           emitter.emit.bind(emitter, 'log:debug'),
-  };
-  _.assign(connectOptions, options.sauce.tunnelOptions);
-  var tunnelId = connectOptions.tunnelIdentifier;
 
-  emitter.emit('log:info', 'Creating Sauce Connect tunnel');
-  emitter.emit('log:debug', 'sauce-connect-launcher options', connectOptions);
-  sauceConnect(connectOptions, function(error, tunnel) {
-    if (error) {
-      emitter.emit('log:error', 'Sauce tunnel failed:', error);
-    } else {
-      emitter.emit('log:info', 'Sauce tunnel active:', chalk.yellow(tunnelId));
-    }
-    done(error, tunnelId);
+  // If anything goes wrong, sc tends to have a bit more detail in its log, so
+  // let's make that easy(ish) to get at:
+  temp.mkdir('wct', function(error, logDir) {
+    if (error) return done(error);
+    var logPath = path.join(logDir, 'sc.log');
+
+    var connectOptions = {
+      username:         options.sauce.username,
+      accessKey:        options.sauce.accessKey,
+      tunnelIdentifier: options.sauce.tunnelId || uuid.v4(),
+      logger:           emitter.emit.bind(emitter, 'log:debug'),
+      logfile:          logPath,
+    };
+    _.assign(connectOptions, options.sauce.tunnelOptions);
+    var tunnelId = connectOptions.tunnelIdentifier;
+
+    emitter.emit('log:info', 'Creating Sauce Connect tunnel');
+    emitter.emit('log:info', 'Sauce Connect log:', chalk.magenta(logPath));
+    emitter.emit('log:debug', 'sauce-connect-launcher options', connectOptions);
+    sauceConnect(connectOptions, function(error, tunnel) {
+      if (error) {
+        emitter.emit('log:error', 'Sauce tunnel failed:');
+      } else {
+        emitter.emit('log:info', 'Sauce tunnel active:', chalk.yellow(tunnelId));
+      }
+      done(error, tunnelId);
+    });
+    // SauceConnectLauncher only supports one tunnel at a time; this allows us to
+    // kill it before we've gotten our callback.
+    CleanKill.onInterrupt(sauceConnect.kill.bind(sauceConnect));
   });
-  // SauceConnectLauncher only supports one tunnel at a time; this allows us to
-  // kill it before we've gotten our callback.
-  CleanKill.onInterrupt(sauceConnect.kill.bind(sauceConnect));
 }
 
 function startSeleniumServer(options, emitter, done) {
