@@ -140,6 +140,7 @@ exposed for your convenience.
 The `wct` tool, and the [gulp](#gulp) and [grunt](#grunt) integration, support
 several command line flags:
 
+
 `--remote`: Uses the [default remote browsers](default-sauce-browsers.json), 
 and if omitted uses the default local browsers.
 
@@ -151,15 +152,15 @@ export SAUCE_USERNAME=username
 export SAUCE_ACCESS_KEY=abcdef01-abcd-abcd-abcd-abcdef012345
 ```
 
+
 `--browsers BROWSER,BROWSER`: Override the browsers that will be run. Browsers
 can be specified via local names such as `chrome`, `canary`, `firefox`,
 `aurora`, `ie`, etc. Remote browsers can be specified via
 `<PLATFORM>/<BROWSER>[@<VERSION>]`.
 
+
 `--persistent`: Doesn't close the browsers after their first run. Refresh the
 browser windows to re-run tests.
-
-`--expanded`: Lists each test as it passes/fails/pends.
 
 
 ## Gulp
