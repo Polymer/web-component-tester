@@ -19,7 +19,7 @@ var LAUNCHPAD_TO_SELENIUM = {
   aurora:  firefox,
   ie:      internetExplorer,
   // Until https://code.google.com/p/selenium/issues/detail?id=7933
-  // safari:  safari,
+  safari:  safari,
 };
 
 var REMOTE_BROWSER = /^([^\/@]+)\/([^\/@]+)(?:@(.*))?$/;
@@ -160,6 +160,10 @@ function safari(browser) {
   return {
     'browserName': 'safari',
     'version':     browser.version,
+    // TODO(nevir): TEMPORARY. https://github.com/Polymer/web-component-tester/issues/51
+    'safari.options': {
+      'skipExtensionInstallation': true,
+    },
   };
 }
 

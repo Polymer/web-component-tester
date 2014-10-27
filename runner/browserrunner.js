@@ -63,6 +63,22 @@ function BrowserRunner(emitter, local, def, options, doneCallback) {
   this.browser.init(capabilities, function(error, sessionId, result) {
     if (!this.browser) return; // When interrupted.
     if (error) {
+      // TODO(nevir): BEGIN TEMPORARY CHECK. https://github.com/Polymer/web-component-tester/issues/51
+      if (def.browserName === 'safari' && error.data) {
+        // debugger;
+        try {
+          var data = JSON.parse(error.data);
+          console.log(data.value.message);
+          if (data.value && data.value.message && /Failed to connect to SafariDriver/i.test(data.value.message)) {
+            error = 'Until Selenium\'s SafariDriver supports Safari 6.2+, 7.1+, & 8.0+, you must\n' +
+                    'manually install it. Follow the steps at:\n' +
+                    'https://code.google.com/p/selenium/issues/detail?id=7933#c23';
+          }
+        } catch (error) {
+          // Show the original error.
+        }
+      }
+      // END TEMPORARY CHECK
       this.done(error.data || error);
     } else {
       this.sessionId = sessionId;
