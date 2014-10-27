@@ -7,11 +7,12 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _         = require('lodash');
-var chalk     = require('chalk');
-var launchpad = require('launchpad');
-var path      = require('path');
-var yargs     = require('yargs');
+var _     = require('lodash');
+var chalk = require('chalk');
+var path  = require('path');
+var yargs = require('yargs');
+
+var browsers = require('./browsers');
 
 // The full set of options, as a reference.
 function defaults() {
@@ -59,7 +60,6 @@ function defaults() {
 }
 
 function parseArgs(args) {
-  var knownBrowsers = Object.keys(launchpad.local.platform);
   var defaultValues = defaults();
 
   return yargs(args)
@@ -76,7 +76,7 @@ function parseArgs(args) {
         'Specific browsers can be tested via the --browsers flag.\n' +
         '\n' +
         'Local browsers are specified via short names:\n' +
-        knownBrowsers.join(', ') + '\n' +
+        browsers.present().join(', ') + '\n' +
         '\n' +
         'Remote browsers can be specified via "<PLATFORM>/<BROWSER>[@<VERSION>]". For an\n' +
         'up to date list, see https://saucelabs.com/platforms'

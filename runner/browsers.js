@@ -113,6 +113,16 @@ function detect(callback) {
   });
 }
 
+/**
+ * @return {!Array.<string>} A list of local browser names that are present in
+ *     the current environment.
+ */
+function present() {
+  var allKnown  = _.keys(launchpad.local.platform);
+  var supported = _.keys(LAUNCHPAD_TO_SELENIUM);
+  return _.intersection(allKnown, supported);
+}
+
 // Launchpad -> Selenium
 
 /**
@@ -165,6 +175,7 @@ function internetExplorer(browser) {
 }
 
 module.exports = {
-  detect: detect,
-  expand: expand,
+  detect:  detect,
+  expand:  expand,
+  present: present,
 };
