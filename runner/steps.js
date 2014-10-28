@@ -121,7 +121,6 @@ function startStaticServer(options, emitter, done) {
 
     _.each(SERVE_STATIC, function(file, url) {
       app.get(url, function(request, response) {
-        console.log(url, file);
         send(request, file).pipe(response);
       });
     });

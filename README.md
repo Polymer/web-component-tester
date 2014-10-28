@@ -15,6 +15,7 @@ WCT will [run your tests](#running-your-tests) against whatever browsers you hav
 
 There's a _wee bit_ of setup necessary.
 
+
 ## Test Index
 
 WCT will, by default, run tests declared in `test/index.html`. Generally, 
@@ -114,6 +115,28 @@ order to go this route. The recommended approach is to depend on WCT via Bower:
 ```sh
 bower install Polymer/web-component-tester --save
 ```
+
+
+# Configuration
+
+The `wct` command line tool will pick up custom configuration from a
+`wct.conf.js` file located in the root of your project. It should export the 
+custom configuration:
+
+```js
+module.exports = {
+  verbose: true,
+  sauce: {
+    username 'boo',
+  },
+};
+```
+
+See [`runner/config.js`](runner/config.js) for the canonical reference of 
+configuration properties.
+
+You can also specify global defaults (such as `sauce.username`, etc) via a
+config file located at `~/wct.conf.js`.
 
 
 # Nitty Gritty

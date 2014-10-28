@@ -17,7 +17,7 @@ var steps       = require('./steps');
 
 function init(gulp) {
   var emitter = new events.EventEmitter();
-  var options = config.mergeDefaults(config.fromEnv(process.env, process.argv));
+  var options = config.fromEnv(process.env, process.argv, process.stdout);
   new CliReporter(emitter, options.output, options);
 
   var spinRun  = endRun.bind(null, true);

@@ -17,7 +17,7 @@ var steps       = require('../runner/steps');
 
 module.exports = function(grunt) {
   grunt.registerMultiTask('wct-test', 'Runs tests via web-component-tester', function() {
-    var options = config.mergeDefaults(this.options(config.fromEnv(process.env, process.argv)));
+    var options = config.fromEnv(process.env, process.argv, process.stdout);
     var emitter = new events.EventEmitter();
     new CliReporter(emitter, options.output, options);
 

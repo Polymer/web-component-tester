@@ -7,6 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+var _      = require('lodash');
 var events = require('events');
 
 var CleanKill   = require('./cleankill');
@@ -15,9 +16,12 @@ var config      = require('./config');
 var steps       = require('./steps');
 
 module.exports = function test(options, done) {
-  config.mergeDefaults(options);
+  options = _.merge(config.defaults(), options);
   var emitter = new events.EventEmitter();
   new CliReporter(emitter, options.output, options);
+
+  var cleanOptions = _.omit(options, 'output');
+  emitter.emit('log:debug', 'Configuration:', cleanOptions);
 
   steps.runTests(options, emitter, function(error) {
     CleanKill.close(done.bind(null, error));
