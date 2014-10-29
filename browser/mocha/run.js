@@ -40,9 +40,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (error) throw error;
     var subsuites = WCT._suitesToLoad;
     if (grep) {
-      subsuites = _.filter(subsuites, function(file) {
-        return _.startsWith(grep, file);
-      });
+      var cleanSubsuites = [];
+      for (var i = 0, subsuite; subsuite = subsuites[i]; i++) {
+        if (subsuite.indexOf(grep) === 0) {
+          cleanSubsuites.push(subsuite);
+        }
+      }
+      subsuites = cleanSubsuites;
     }
 
     var runner = newMultiSuiteRunner(subsuites, determineReporters(socket));

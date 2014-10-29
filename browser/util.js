@@ -130,8 +130,8 @@ WCT.util.getParam = function getParam(param) {
  */
 WCT.util.paramsToQuery = function paramsToQuery(params) {
   var pairs = [];
-  _.each(params, function(values, key) {
-    values.forEach(function(value) {
+  Object.keys(params).forEach(function(key) {
+    params[key].forEach(function(value) {
       pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
     });
   });
