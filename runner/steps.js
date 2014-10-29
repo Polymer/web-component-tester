@@ -26,6 +26,8 @@ var BrowserRunner = require('./browserrunner');
 var CleanKill     = require('./cleankill');
 var browsers      = require('./browsers');
 
+var serveInstrumented = require('./coverage/middleware');
+
 // Steps
 
 function ensureSauceTunnel(options, emitter, done) {
@@ -109,6 +111,9 @@ function startStaticServer(options, emitter, done) {
       emitter.emit('log:debug', chalk.magenta(request.method), request.url);
       next();
     });
+    if (options.coverage) {
+      app.use(serveInstrumented(options.root, options.coverage));
+    }
     app.use(serveStatic(options.root, {'index': ['index.html', 'index.htm']}));
 
     server.listen(port);
