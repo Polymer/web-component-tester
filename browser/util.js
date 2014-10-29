@@ -148,4 +148,49 @@ WCT.util.relativeLocation = function relativeLocation(location) {
   return path;
 };
 
+/**
+ * Like `async.parallelLimit`, but our own so that we don't force a dependency
+ * on downstream code.
+ *
+ * @param {!Array.<function(function(*))>} runners Runners that call their given
+ *     Node-style callback when done.
+ * @param {number|function(*)} limit Maximum number of concurrent runners.
+ *     (optional).
+ * @param {?function(*)} done Callback that should be triggered once all runners
+ *     have completed, or encountered an error.
+ */
+WCT.util.parallel = function parallel(runners, limit, done) {
+  if (typeof limit !== 'number') {
+    done  = limit;
+    limit = 0;
+  }
+  if (!runners.length) return done();
+
+  var called    = false;
+  var total     = runners.length;
+  var numActive = 0;
+  var numDone   = 0;
+
+  function runnerDone(error) {
+    if (called) return;
+    numDone = numDone + 1;
+    numActive = numActive - 1;
+
+    if (error || numDone >= total) {
+      called = true;
+      done(error);
+    } else {
+      runOne();
+    }
+  }
+
+  function runOne() {
+    if (limit && numActive >= limit) return;
+    if (!runners.length) return;
+    numActive = numActive + 1;
+    runners.shift()(runnerDone);
+  }
+  runners.forEach(runOne);
+};
+
 })();

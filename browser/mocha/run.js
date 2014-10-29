@@ -75,7 +75,7 @@ function loadDependencies(runner, done) {
     return WCT.util.loadScript.bind(WCT.util, file);
   });
 
-  async.parallel(loaders, function(error) {
+  WCT.util.parallel(loaders, function(error) {
     window.removeEventListener('error', onError);
     done(error);
   });
@@ -130,7 +130,7 @@ function runMultiSuite(runner, subsuites) {
     });
   });
 
-  async.parallelLimit(suiteRunners, WCT.numConcurrentSuites, function(error) {
+  WCT.util.parallel(suiteRunners, WCT.numConcurrentSuites, function(error) {
     WCT.util.debug('runMultiSuite done', error);
     runner.done();
   });
