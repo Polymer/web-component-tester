@@ -46,6 +46,7 @@ CLISocket.prototype.observe = function observe(runner) {
 
   runner.on('test end', function(test) {
     this.emitEvent('test-end', {
+      context:  window.frames[0].WCT,
       state:    getState(test),
       test:     getTitles(test),
       duration: test.duration,

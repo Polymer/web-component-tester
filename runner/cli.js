@@ -17,7 +17,13 @@ var test   = require('./test');
 function run(env, args, output, callback) {
   var done = wrapCallback(output, callback);
 
-  var options = config.mergeDefaults(config.fromEnv(env, args));
+  var options = config.fromEnv(env, args);
+  options = config.mergeDefaults(options);
+  options = config.mergeConfigFile(options);
+
+  // merge defaults after config file to prevent surprising breaks
+  options = config.mergeDefaults(options);
+
   options.output = output;
 
   if (options.extraArgs[0]) {

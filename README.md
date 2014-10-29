@@ -25,6 +25,24 @@ bower install Polymer/web-component-tester --save
 In the following examples, we assume that you've installed it in `../`, but any
 location will do.
 
+## Configuration
+
+You can configure wct via the command line, environment variables, or a
+config file located at `./wct.conf.js`.
+
+### Config File
+
+Config Files should be written in the following format:
+
+```js
+module.exports = function(options) {
+  // options.verbose = true;
+  // options.sauce.username = 'boo';
+  // ...
+
+  return options;
+}
+```
 
 ## Test Index
 

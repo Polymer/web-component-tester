@@ -13,11 +13,15 @@ var CleanKill   = require('./cleankill');
 var CliReporter = require('./clireporter');
 var config      = require('./config');
 var steps       = require('./steps');
+var CoverageReporter = require('./coverage/reporter');
 
 module.exports = function test(options, done) {
   config.mergeDefaults(options);
   var emitter = new events.EventEmitter();
   new CliReporter(emitter, options.output, options);
+  if (options.coverage) {
+    new CoverageReporter(emitter, options.output, options.coverage);
+  }
 
   steps.runTests(options, emitter, function(error) {
     CleanKill.close(done.bind(null, error));

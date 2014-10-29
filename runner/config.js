@@ -10,6 +10,7 @@
 var _     = require('lodash');
 var chalk = require('chalk');
 var path  = require('path');
+var fs    = require('fs');
 var yargs = require('yargs');
 
 var browsers = require('./browsers');
@@ -150,8 +151,34 @@ function mergeDefaults(options) {
   return options;
 }
 
+/**
+ * Overrides configuration options via a module function
+ * defined in a config file located at `./wtc.conf.js` and returns
+ * the overridden result.
+ *
+ * @example: overriding the `foo` option
+ *
+ * module.exports = function(options) {
+ *   options.foo = 'boo';
+ *   return options;
+ * }
+ *
+ */
+function mergeConfigFile(options) {
+  var cwd = process.cwd();
+  var configFile = 'wct.conf.js';
+  var configFilePath = path.resolve(cwd, configFile);
+
+  if ( fs.existsSync(configFilePath) ) {
+    return require(configFilePath)(options);
+  } else {
+    return options;
+  }
+}
+
 module.exports = {
   defaults:      defaults,
   fromEnv:       fromEnv,
   mergeDefaults: mergeDefaults,
+  mergeConfigFile: mergeConfigFile
 };
