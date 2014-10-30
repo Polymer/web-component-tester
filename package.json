@@ -6,7 +6,8 @@
     "gruntplugin"
   ],
   "bin": {
-    "wct": "./bin/wct"
+    "wct": "./bin/wct",
+    "wct-st": "./bin/wct-st"
   },
   "dependencies": {
     "async": "^0.9.0",

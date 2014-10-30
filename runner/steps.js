@@ -66,6 +66,7 @@ function ensureSauceTunnel(options, emitter, done) {
         emitter.emit('log:error', 'Sauce tunnel failed:');
       } else {
         emitter.emit('log:info', 'Sauce tunnel active:', chalk.yellow(tunnelId));
+        emitter.emit('sauce:tunnel-active', tunnelId);
       }
       done(error, tunnelId);
     });

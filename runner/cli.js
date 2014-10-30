@@ -8,11 +8,14 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 var chalk  = require('chalk');
+var events = require('events');
 var findup = require('findup');
 var path   = require('path');
 
-var config = require('./config');
-var test   = require('./test');
+var CliReporter = require('./clireporter');
+var config      = require('./config');
+var steps       = require('./steps');
+var test        = require('./test');
 
 function run(env, args, output, callback) {
   var done = wrapCallback(output, callback);
@@ -29,6 +32,23 @@ function run(env, args, output, callback) {
       return done('Could not find a valid test root. Searched for "' + options.webRunner + '".');
     }
     runTests(dir, options, done);
+  });
+}
+
+function runSauceTunnel(env, args, output, callback) {
+  var done = wrapCallback(output, callback);
+
+  var options = config.mergeDefaults(config.fromEnv(env, args));
+  var emitter = new events.EventEmitter();
+  new CliReporter(emitter, output, options);
+
+  steps.ensureSauceTunnel(options, emitter, function(error, tunnelId) {
+    if (error) return done(error);
+    output.write('\n');
+    output.write('The tunnel will remain active while this process is running.\n');
+    output.write('To use this tunnel for other WCT runs, export the following:\n');
+    output.write('\n');
+    output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
   });
 }
 
@@ -55,5 +75,6 @@ function runTests(workingDir, options, done) {
 }
 
 module.exports = {
-  run: run,
+  run:            run,
+  runSauceTunnel: runSauceTunnel,
 };
