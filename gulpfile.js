@@ -76,6 +76,7 @@ gulp.task('build:environment', function() {
       'vendor/async/lib/async.js',
       'vendor/chai/chai.js',
       'vendor/lodash/lodash.js',
+      'vendor/sinon/sinon.js',
       'environment/**/*.{js,css}',
     ])
     .pipe(sourcemaps.init())
