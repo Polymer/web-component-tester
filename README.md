@@ -6,6 +6,7 @@ You get a browser-based testing environment, configured out of the box with:
 * [Chai][chai] assertions.
 * [Async][async] to keep your sanity.
 * [Lodash][lodash] (3.0) to repeat fewer things.
+* [Sinon][sinon] and [sinon-chai][sinon-chai] to test just your things.
 
 WCT will [run your tests](#running-your-tests) against whatever browsers you have locally installed, or remotely via Sauce Labs.
 
@@ -212,14 +213,16 @@ Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
 
 
 <!-- References -->
-[async]:     https://github.com/caolan/async     "Async.js"
-[chai-bdd]:  http://chaijs.com/api/bdd/          "Chai's BDD Interface"
-[chai-tdd]:  http://chaijs.com/api/assert/       "Chai's TDD Interface"
-[chai]:      http://chaijs.com/                  "Chai Assertion Library"
-[java]:      https://java.com/download           "Java"
-[mocha-bdd]: http://visionmedia.github.io/mocha/#bdd-interface "Mocha's BDD Interface"
-[mocha-tdd]: http://visionmedia.github.io/mocha/#tdd-interface "Mocha's TDD Interface"
-[mocha]:     http://visionmedia.github.io/mocha/ "Mocha Test Framework"
-[sauce]:     http://saucelabs.com                "Sauce Labs"
-[opensauce]: https://saucelabs.com/opensauce     "Open Sauce Testing"
-[lodash]:    https://lodash.com/                 "Lo-Dash"
+[async]:      https://github.com/caolan/async       "Async.js"
+[chai-bdd]:   http://chaijs.com/api/bdd/            "Chai's BDD Interface"
+[chai-tdd]:   http://chaijs.com/api/assert/         "Chai's TDD Interface"
+[chai]:       http://chaijs.com/                    "Chai Assertion Library"
+[java]:       https://java.com/download             "Java"
+[mocha-bdd]:  http://visionmedia.github.io/mocha/#bdd-interface "Mocha's BDD Interface"
+[mocha-tdd]:  http://visionmedia.github.io/mocha/#tdd-interface "Mocha's TDD Interface"
+[mocha]:      http://visionmedia.github.io/mocha/   "Mocha Test Framework"
+[sauce]:      http://saucelabs.com                  "Sauce Labs"
+[opensauce]:  https://saucelabs.com/opensauce       "Open Sauce Testing"
+[lodash]:     https://lodash.com/                   "Lo-Dash"
+[sinon]:      http://sinonjs.org/                   "Sinon.JS"
+[sinon-chai]: https://github.com/domenic/sinon-chai "Chai assertions for Sinon"
