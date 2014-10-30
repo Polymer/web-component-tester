@@ -8,8 +8,8 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-// window.assert = chai.assert;
-// window.expect = chai.expect;
+window.assert = chai.assert;
+window.expect = chai.expect;
 
 // // We prefer to get as much stack information as possible.
-// chai.config.includeStack = true;
+chai.config.includeStack = true;

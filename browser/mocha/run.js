@@ -21,6 +21,26 @@
 // We do a bit of our own grep processing to speed things up.
 var grep = WCT.util.getParam('grep');
 
+// environment.js is optional; we need to take a look at our script's URL in
+// order to determine how (or not) to load it.
+var prefix  = window.WCTPrefix;
+var loadEnv = !window.WCTSkipEnvironment;
+
+var scripts = document.querySelectorAll('script[src*="browser.js"]');
+if (scripts.length !== 1 && !prefix) {
+  throw new Error('Unable to detect root URL for WCT. Please set WCTPrefix before including browser.js');
+}
+if (scripts[0]) {
+  var thisScript = scripts[0].src;
+  prefix  = thisScript.substring(0, thisScript.indexOf('browser.js'));
+  // You can tack ?skipEnv onto the browser URL to skip the default environment.
+  loadEnv = thisScript.indexOf('skipEnv') === -1;
+}
+if (loadEnv) {
+  // Synchronous load so that we can guarantee it is set up for early tests.
+  document.write('<script src="' + prefix + 'environment.js"></script>'); // jshint ignore:line
+}
+
 // Give any scripts on the page a chance to twiddle the environment.
 document.addEventListener('DOMContentLoaded', function() {
   WCT.util.debug('run stage: DOMContentLoaded');

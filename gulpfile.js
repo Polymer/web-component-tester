@@ -27,18 +27,23 @@ var CSS_TO_JS =
 
 // Meta tasks
 
-gulp.task('test', ['test:style']);
+gulp.task('test',  ['test:style']);
+gulp.task('build', ['build:browser', 'build:environment']);
 
 gulp.task('watch', function() {
   watch('browser/**/*', function() {
     gulp.start('build:browser');
   });
 
+  watch('environment/**/*', function() {
+    gulp.start('build:environment');
+  });
+
   var config = {
     emitOnGlob: false,
     gaze:       {debounceDelay: 10},
   };
-  return watch('{runner,browser}/**/*.js', config, function(files) {
+  return watch('{runner,browser,environment}/**/*.js', config, function(files) {
     files
       .pipe(plumber({errorHandler: notify.onError('<%= error.message %>')}))
       .pipe(jshintFlow());
@@ -51,9 +56,6 @@ gulp.task('build:browser', function() {
   return gulp.src([
       'vendor/mocha/mocha.js',
       'vendor/mocha/mocha.css',
-      'vendor/chai/chai.js',
-      'vendor/async/lib/async.js',
-      'vendor/lodash/lodash.js',
       'vendor/stacky/lib/parsing.js',
       'vendor/stacky/lib/formatting.js',
       'vendor/stacky/lib/normalization.js',
@@ -69,8 +71,22 @@ gulp.task('build:browser', function() {
     .pipe(gulp.dest('.'));
 });
 
+gulp.task('build:environment', function() {
+  return gulp.src([
+      'vendor/async/lib/async.js',
+      'vendor/chai/chai.js',
+      'vendor/lodash/lodash.js',
+      'environment/**/*.{js,css}',
+    ])
+    .pipe(sourcemaps.init())
+    .pipe(gulpIf(/\.css$/, wrap(CSS_TO_JS)))
+    .pipe(concat('environment.js'))
+    .pipe(sourcemaps.write())
+    .pipe(gulp.dest('.'));
+});
+
 gulp.task('test:style', function() {
-  return gulp.src('{browser,runner}/**/*.js').pipe(jshintFlow());
+  return gulp.src('{browser,runner,environment}/**/*.js').pipe(jshintFlow());
 });
 
 // Flows

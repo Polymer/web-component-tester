@@ -163,6 +163,16 @@ can be specified via local names such as `chrome`, `canary`, `firefox`,
 browser windows to re-run tests.
 
 
+## Custom Environments
+
+If you would rather not load WCT's shared environment (everything but Mocha is
+optional), you've got a couple options: Set the `WCTSkipEnvironment = true` before loading `browser.js`. Or...
+
+```html
+<script src="../../web-component-tester/browser.js?skipEnv"></script>
+```
+
+
 ## Gulp
 
 We also provide Gulp tasks for your use. `gulpfile.js`:
