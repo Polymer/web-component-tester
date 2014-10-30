@@ -13,3 +13,6 @@
 [submodule "vendor/lodash"]
 	path = vendor/lodash
 	url = https://github.com/lodash/lodash
+[submodule "vendor/sinon-chai"]
+	path = vendor/sinon-chai
+	url = https://github.com/domenic/sinon-chai
