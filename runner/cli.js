@@ -7,10 +7,8 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _      = require('lodash');
 var chalk  = require('chalk');
 var events = require('events');
-var findup = require('findup-sync');
 var path   = require('path');
 
 var CliReporter = require('./clireporter');

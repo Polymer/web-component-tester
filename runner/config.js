@@ -164,10 +164,6 @@ function fromDisk() {
   return options;
 }
 
-function fromFile(configPath) {
-  return require(configPath);
-}
-
 module.exports = {
   defaults: defaults,
   fromEnv:  fromEnv,
