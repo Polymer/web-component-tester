@@ -16,6 +16,7 @@ var http         = require('http');
 var path         = require('path');
 var sauceConnect = require('sauce-connect-launcher');
 var selenium     = require('selenium-standalone');
+var send         = require('send');
 var serveStatic  = require('serve-static');
 var socketIO     = require('socket.io');
 var temp         = require('temp');
@@ -25,6 +26,13 @@ var which        = require('which');
 var BrowserRunner = require('./browserrunner');
 var CleanKill     = require('./cleankill');
 var browsers      = require('./browsers');
+
+// We prefer serving local assets over bower assets.
+var PACKAGE_ROOT = path.resolve(__dirname, '..');
+var SERVE_STATIC = {
+  '/web-component-tester/browser.js':     path.join(PACKAGE_ROOT, 'browser.js'),
+  '/web-component-tester/environment.js': path.join(PACKAGE_ROOT, 'environment.js'),
+};
 
 // Steps
 
@@ -109,6 +117,14 @@ function startStaticServer(options, emitter, done) {
       emitter.emit('log:debug', chalk.magenta(request.method), request.url);
       next();
     });
+
+    _.each(SERVE_STATIC, function(file, url) {
+      app.get(url, function(request, response) {
+        console.log(url, file);
+        send(request, file).pipe(response);
+      });
+    });
+
     app.use(serveStatic(options.root, {'index': ['index.html', 'index.htm']}));
 
     server.listen(port);

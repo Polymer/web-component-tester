@@ -13,19 +13,7 @@ WCT will [run your tests](#running-your-tests) against whatever browsers you hav
 
 # Getting Started
 
-There's a bit of setup necessary.
-
-## Bower
-
-You will need to set up WCT as a dependency of your project. Via bower:
-
-```sh
-bower install Polymer/web-component-tester --save
-```
-
-In the following examples, we assume that you've installed it in `../`, but any
-location will do.
-
+There's a _wee bit_ of setup necessary.
 
 ## Test Index
 
@@ -97,27 +85,34 @@ Or, you can write tests in separate `.html` documents. For example,
 
 ## Running Your Tests
 
-You can run your tests by hosting them via a web server (sorry, `file://` is
-not supported), or by using the `wct` command line tool:
+### `wct`
+
+The easiest way to run your tests is via the `wct` command line tool. Install
+it globally via:
 
 ```sh
 npm install -g web-component-tester
 ```
 
-If you're on windows, make sure that you also have [Java][java] installed and
-available on your `PATH`.
+Make sure that you also have [Java][java] installed and available on your
+`PATH`.
 
-The `wct` tool will run your tests in multiple browsers at once, either on your
-machine...
+The `wct` tool will run your tests in all the browsers you have installed. Just
+run it:
 
 ```sh
 wct
 ```
 
-..or remotely via [Sauce Labs][sauce]:
+
+### Web Server
+
+Alternatively, you can run your tests directly by hosting them via a web server
+(sorry, `file://` is not supported). You'll need to save WCT's `browser.js` in
+order to go this route. The recommended approach is to depend on WCT via Bower:
 
 ```sh
-wct --remote
+bower install Polymer/web-component-tester --save
 ```
 
 
