@@ -1,10 +1,30 @@
 {
   "name": "web-component-tester",
   "version": "1.4.1",
-  "main": "runner.js",
+  "description": "web-component-tester makes testing your web components a breeze!",
   "keywords": [
-    "gruntplugin"
+    "browser",
+    "grunt",
+    "gruntplugin",
+    "gulp",
+    "polymer",
+    "test",
+    "testing",
+    "web component",
+    "web"
   ],
+  "homepage": "https://github.com/Polymer/web-component-tester",
+  "bugs": "https://github.com/Polymer/web-component-tester/issues",
+  "license": "BSD-3-Clause",
+  "contributors": [
+    "Ian MacLeod <imac@google.com>",
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Polymer/web-component-tester.git"
+  },
+
+  "main": "runner.js",
   "bin": {
     "wct": "./bin/wct",
     "wct-st": "./bin/wct-st"
