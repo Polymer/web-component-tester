@@ -16,6 +16,12 @@ var config      = require('./config');
 var steps       = require('./steps');
 var test        = require('./test');
 
+var PACKAGE_INFO   = require('../package.json');
+var updateNotifier = require('update-notifier')({
+  packageName:    PACKAGE_INFO.name,
+  packageVersion: PACKAGE_INFO.version,
+});
+
 function run(env, args, output, callback) {
   var done    = wrapCallback(output, callback);
   var options = config.fromEnv(env, args, output);
@@ -55,6 +61,8 @@ function runSauceTunnel(env, args, output, callback) {
 
 function wrapCallback(output, done) {
   return function(error) {
+    updateNotifier.notify({defer: false});
+
     if (error) {
       output.write('\n');
       output.write(chalk.red(error) + '\n');
