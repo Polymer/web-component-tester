@@ -15,7 +15,10 @@
   ],
   "homepage": "https://github.com/Polymer/web-component-tester",
   "bugs": "https://github.com/Polymer/web-component-tester/issues",
-  "license": "BSD-3-Clause",
+  "license": {
+    "type": "BSD-3-Clause",
+    "url": "http://polymer.github.io/LICENSE.txt"
+  },
   "contributors": [
     "Ian MacLeod <imac@google.com>",
   ],

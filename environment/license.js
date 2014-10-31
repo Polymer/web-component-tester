@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -7,14 +6,15 @@
  * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ *
+ * This project also redistributes the following without modification (as part
+ * of environment.js):
+ *
+ *  * https://github.com/caolan/async (MIT License)
+ *  * https://github.com/mochajs/mocha (MIT License)
+ *  * https://github.com/chaijs/chai (MIT License)
+ *  * https://github.com/PolymerLabs/stacky (BSD 3-Clause License)
+ *  * https://github.com/lodash/lodash (MIT License)
+ *  * https://github.com/cjohansen/Sinon.JS (BSD 3-Clause License)
+ *  * https://github.com/domenic/sinon-chai (WTFPL)
  */
-var resolve = require('resolve');
-
-process.title = 'wct';
-
-resolve('web-component-tester', {basedir: process.cwd()}, function(error, path) {
-  var wct = path ? require(path) : require('..');
-  wct.cli.run(process.env, process.argv.slice(2), process.stdout, function(error) {
-    process.exit(error ? 1 : 0);
-  });
-})
