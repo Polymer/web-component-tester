@@ -145,7 +145,7 @@ function fromEnv(env, args, output) {
 
   options.extraArgs = argv._;
 
-  var options = _.merge(defaults(), fromDisk(), options);
+  options = _.merge(defaults(), fromDisk(), options);
   // Now that we have a fully specified set of options, project root:
   if (!options.projectRoot) {
     var webRunnerPath = findup(options.webRunner);
