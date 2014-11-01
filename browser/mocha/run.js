@@ -148,6 +148,7 @@ function runMultiSuite(runner, subsuites) {
     suiteRunners.push(function(next) {
       var subSuite = new WCT.SubSuite(file, window);
       subSuite.run(function(error) {
+        runner.emit('subSuite end', subSuite);
         if (error) runner.emitOutOfBandTest(file, error);
         next();
       });

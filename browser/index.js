@@ -31,6 +31,10 @@ WCT.numConcurrentSuites = 1;
 // Evaluated in mocha/run.js.
 WCT._suitesToLoad = [];
 WCT._dependencies = [];
+
+// Used to share data between subSuites on client and reporters on server
+WCT.share = {};
+
 /**
  * Loads suites of tests, supporting `.js` as well as `.html` files.
  *

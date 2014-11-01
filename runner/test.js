@@ -18,7 +18,15 @@ var steps       = require('./steps');
 module.exports = function test(options, done) {
   options = _.merge(config.defaults(), options);
   var emitter = new events.EventEmitter();
+
   new CliReporter(emitter, options.output, options);
+
+  // Add plugin reporters
+  _.values(options.plugins).forEach(function(plugin) {
+    if (plugin.reporter) {
+        new plugin.reporter(emitter, options.output, plugin);
+    }
+  });
 
   var cleanOptions = _.omit(options, 'output');
   emitter.emit('log:debug', 'Configuration:', cleanOptions);

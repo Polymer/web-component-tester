@@ -9,6 +9,12 @@
  */
 (function() {
 
+// TODO(thedeeno): Consider renaming subsuite. IIRC, subSuite is entirely
+// distinct from mocha suite, which tripped me up badly when trying to add
+// plugin support. Perhaps something like 'batch', or 'bundle'. Something that
+// has no mocha correlate. This may also eliminate the need for root/non-root
+// suite distinctions.
+
 /**
  * A Mocha suite (or suites) run within a child iframe, but reported as if they
  * are part of the current context.
@@ -114,6 +120,13 @@ SubSuite.prototype.loaded = function(error) {
 /** Called when the sub suite's tests are complete, so that it can clean up. */
 SubSuite.prototype.done = function done() {
   WCT.util.debug('SubSuite#done', this.url, arguments);
+
+  // TODO(thedeeno): This could probably be moved to a more
+  // obvious place, but since the iframe is destroyed right after
+  // this done callback, perhaps this is currently the most
+  // appropriate place.
+  this.share = this.iframe.contentWindow.WCT.share;
+
   this.signalRunComplete();
 
   if (!this.iframe) return;
