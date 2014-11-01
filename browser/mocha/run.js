@@ -148,7 +148,9 @@ function runMultiSuite(runner, subsuites) {
     suiteRunners.push(function(next) {
       var subSuite = new WCT.SubSuite(file, window);
       subSuite.run(function(error) {
+        // emit custom event so reporters can access the subSuite state
         runner.emit('subSuite end', subSuite);
+
         if (error) runner.emitOutOfBandTest(file, error);
         next();
       });
