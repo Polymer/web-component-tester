@@ -21,10 +21,10 @@ module.exports = function test(options, done) {
 
   new CliReporter(emitter, options.output, options);
 
-  // Add plugin reporters
+  // Add plugin event listeners
   _.values(options.plugins).forEach(function(plugin) {
-    if (plugin.reporter) {
-        new plugin.reporter(emitter, options.output, plugin);
+    if (plugin.listener) {
+        new plugin.listener(emitter, options.output, plugin);
     }
   });
 
