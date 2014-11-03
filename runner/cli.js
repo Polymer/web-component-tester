@@ -26,13 +26,13 @@ function run(env, args, output, callback) {
   var done    = wrapCallback(output, callback);
   var options = config.fromEnv(env, args, output);
   if (options.extraArgs[0]) {
-    options.projectRoot = options.extraArgs[0];
+    options.root = options.extraArgs[0];
   }
-  if (!options.projectRoot) {
+  if (!options.root) {
     return done('Could not find the project root. Please run wct from your web component\'s directory, or pass the path as an argument to wct.');
   }
 
-  var root = path.resolve(options.projectRoot);
+  var root = path.resolve(options.root);
   try {
     process.chdir(root);
   } catch (error) {

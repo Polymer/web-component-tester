@@ -147,10 +147,10 @@ function fromEnv(env, args, output) {
 
   options = _.merge(defaults(), fromDisk(), options);
   // Now that we have a fully specified set of options, project root:
-  if (!options.projectRoot) {
+  if (!options.root) {
     var webRunnerPath = findup(options.webRunner);
     if (webRunnerPath) {
-      options.projectRoot = webRunnerPath.slice(0, -options.webRunner.length);
+      options.root = webRunnerPath.slice(0, -options.webRunner.length);
     }
   }
 
@@ -167,7 +167,7 @@ function fromDisk() {
   var options = _.merge.apply(_, [{}].concat(configs));
 
   if (projectFile && projectFile !== globalFile) {
-    options.projectRoot = projectFile.slice(0, -CONFIG_NAME.length);
+    options.root = projectFile.slice(0, -CONFIG_NAME.length);
   }
 
   return options;
