@@ -73,10 +73,10 @@ function parseArgs(args) {
       .usage(
         '\n' + // Even margin.
         'Run tests for web components across local or remote browsers.\n' +
-        'Usage: ' + chalk.blue('$0 ' + chalk.dim('[PROJECT_DIR]')) + '\n' +
+        'Usage: ' + chalk.blue('$0') + '\n' +
         '\n' +
-        'If PROJECT_DIR is not specified, wct will search up from the current directory\n' +
-        'to find your project root (first directory containing a webRunner)\n' +
+        'wct will search up from the current directory to find your project root (first\n' +
+        'directory containing a webRunner or wct.conf.js)\n' +
         '\n' +
         'Specific browsers can be tested via the --browsers flag.\n' +
         '\n' +
