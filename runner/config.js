@@ -32,7 +32,7 @@ function defaults() {
     // Display test results in expanded form. Verbose implies expanded.
     expanded:    true,
     // Whether the default set of local (or remote) browsers should be targeted.
-    remote:      true,
+    remote:      false,
     // The on-disk path where tests & static files should be served from.
     root:        path.resolve('..'),
     // The component being tested. Must be a directory under `root`.
