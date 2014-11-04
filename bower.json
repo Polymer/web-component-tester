@@ -4,5 +4,8 @@
   "dependencies": {
     "chai": "chai#1.9.1",
     "mocha": "mocha#^1.21.4"
+  },
+  "devDependencies": {
+    "webcomponentsjs": "Polymer/webcomponentsjs#^0.4.2"
   }
 }

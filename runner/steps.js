@@ -144,7 +144,9 @@ function startStaticServer(options, emitter, done) {
 
 function runTests(options, emitter, done) {
   browsers.expand(options.browsers, options.remote, function(error, browsers) {
+
     if (error) return done(error);
+    emitter.emit('log:debug', 'Expanded browsers:', options.browsers);
     options.browsers = browsers;
 
     var jobs = {
