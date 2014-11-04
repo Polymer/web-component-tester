@@ -115,6 +115,10 @@ function parseArgs(args) {
           description: 'Log all the things.',
           boolean: true,
         },
+        'simpleOutput': {
+          description: 'Avoid fancy terminal tricks (pinned status)',
+          boolean: true,
+        },
       })
       .argv;
 }
@@ -129,7 +133,7 @@ function fromEnv(env, args, output) {
     persistent: argv.persistent,
     remote:     Boolean(argv.remote),
     output:     output,
-    ttyOutput:  output.isTTY,
+    ttyOutput:  output.isTTY && !argv.simpleOutput,
     sauce: {
       username:  env.SAUCE_USERNAME,
       accessKey: env.SAUCE_ACCESS_KEY,
