@@ -113,6 +113,8 @@ function runSubSuite(subSuite) {
   WCT.util.debug('runSubSuite', window.location.pathname);
   // Not very pretty.
   var parentWCT = subSuite.parentScope.WCT;
+  subSuite.prepare(WCT);
+
   var suiteName = parentWCT.util.relativeLocation(window.location);
   var reporter  = parentWCT._multiRunner.childReporter(suiteName);
   runMocha(reporter, subSuite.done.bind(subSuite));
@@ -147,8 +149,8 @@ function runMultiSuite(runner, subsuites) {
   subsuites.forEach(function(file) {
     suiteRunners.push(function(next) {
       var subSuite = new WCT.SubSuite(file, window);
+      runner.emit('subSuite start', subSuite);
       subSuite.run(function(error) {
-        // emit custom event so reporters can access the subSuite state
         runner.emit('subSuite end', subSuite);
 
         if (error) runner.emitOutOfBandTest(file, error);

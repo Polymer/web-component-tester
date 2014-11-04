@@ -67,6 +67,20 @@ SubSuite.get = function(target, traversal) {
 };
 
 /**
+ * Hangs a reference to the SubSuite's iframe-local wct object
+ *
+ * TODO(thedeeno): This method is odd to document so the achitecture might need
+ * a little rework here. Maybe another named concept? Seeing WCT everywhere is
+ * pretty confusing. Also, I don't think we need the parentScope.WCT; to limit
+ * confusion I didn't include it.
+ *
+ * @param {object} wct The SubSuite's iframe-local wct object
+ */
+SubSuite.prototype.prepare = function(wct) {
+  this.share = wct.share;
+};
+
+/**
  * Loads and runs the subsuite.
  *
  * @param {function} done Node-style callback.
@@ -120,12 +134,6 @@ SubSuite.prototype.loaded = function(error) {
 /** Called when the sub suite's tests are complete, so that it can clean up. */
 SubSuite.prototype.done = function done() {
   WCT.util.debug('SubSuite#done', this.url, arguments);
-
-  // TODO(thedeeno): This could probably be moved to a more
-  // obvious place, but since the iframe is destroyed right after
-  // this done callback, perhaps this is currently the most
-  // appropriate place.
-  this.share = this.iframe.contentWindow.WCT.share;
 
   this.signalRunComplete();
 
