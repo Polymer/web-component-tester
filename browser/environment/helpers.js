@@ -122,13 +122,17 @@ window.flush = function flush(callback) {
 
 /**
  * Advances a single animation frame.
+ *
+ * Calls `flush`, `requestAnimationFrame`, `flush`, and `callback` sequentially
  * @param {function()} callback
  */
 window.animationFrameFlush = function animationFrameFlush(callback) {
-  requestAnimationFrame(function() {
-    flush(callback);
+  flush(function() {
+    requestAnimationFrame(function() {
+      flush(callback);
+    });
   });
-}
+};
 
 /**
  * DEPRECATED: Use `flush`.
