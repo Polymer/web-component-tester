@@ -158,6 +158,50 @@ function fromEnv(env, args, output) {
     }
   }
 
+  options = mergePlugins(options);
+
+  return options;
+}
+
+
+/**
+ * Mix plugins into configuration
+ *
+ * Loads the plugin module for every key in `options.plugins` and merges it
+ * with the user-supplied configuration.
+ *
+ * In other words, given:
+ *
+ *   # my-plugin.js
+ *   module.exports = {
+ *     "reporter": function(..)
+ *   }
+ *
+ *   # wct.js
+ *   module.exports = {
+ *     plugins: {
+ *       "my-plugin": {
+ *         "foo": "bar"
+ *       }
+ *     }
+ *   }
+ *
+ * mergePlugin(options) produces an object like this:
+ *
+ *   plugins: {
+ *     "my-plugin": {
+ *       "foo": "bar",
+ *       "reporter": function(..)
+ *     }
+ *   }
+ *
+ */
+function mergePlugins(options) {
+  _(options.plugins).forOwn(function( userConfig, pluginName ) {
+      var moduleConfig = require(pluginName);
+      options.plugins[pluginName] = _.merge(moduleConfig, userConfig);
+  });
+
   return options;
 }
 

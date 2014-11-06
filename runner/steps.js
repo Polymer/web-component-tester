@@ -35,7 +35,6 @@ var SERVE_STATIC = {
 };
 
 // Steps
-
 function ensureSauceTunnel(options, emitter, done) {
   if (options.sauce.tunnelId) {
     return done(null, options.sauce.tunnelId);
@@ -123,6 +122,13 @@ function startStaticServer(options, emitter, done) {
       app.get(url, function(request, response) {
         send(request, file).pipe(response);
       });
+    });
+
+    // Add plugin middleware
+    _.values(options.plugins).forEach(function(plugin) {
+      if (plugin.middleware) {
+        app.use(plugin.middleware(options.root, plugin, emitter));
+      }
     });
 
     app.use(serveStatic(options.root, {'index': ['index.html', 'index.htm']}));

@@ -53,6 +53,14 @@ CLISocket.prototype.observe = function observe(runner) {
     });
   }.bind(this));
 
+  runner.on('subSuite start', function(subSuite) {
+    this.emitEvent('sub-suite-start', subSuite.share);
+  }.bind(this));
+
+  runner.on('subSuite end', function(subSuite) {
+    this.emitEvent('sub-suite-end', subSuite.share);
+  }.bind(this));
+
   runner.on('end', function() {
     this.emitEvent('browser-end');
   }.bind(this));
