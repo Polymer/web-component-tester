@@ -57,6 +57,7 @@
   },
   "devDependencies": {
     "chai": "^1.9.2",
+    "grunt": "^0.4.5",
     "gulp": "^3.8.8",
     "gulp-concat": "^2.4.0",
     "gulp-if": "^1.2.4",
@@ -68,6 +69,8 @@
     "gulp-wrap": "^0.3.0",
     "jshint-stylish": "^1.0.0",
     "lazypipe": "^0.2.2",
-    "mocha": "^2.0.1"
+    "mocha": "^2.0.1",
+    "sinon": "^1.11.1",
+    "sinon-chai": "^2.6.0"
   }
 }

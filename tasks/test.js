@@ -7,6 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+var _      = require('lodash');
 var chalk  = require('chalk');
 var events = require('events');
 
@@ -17,7 +18,7 @@ var steps       = require('../runner/steps');
 
 module.exports = function(grunt) {
   grunt.registerMultiTask('wct-test', 'Runs tests via web-component-tester', function() {
-    var options = config.fromEnv(process.env, process.argv, process.stdout);
+    var options = _.merge(config.fromEnv(process.env, process.argv, process.stdout), this.options());
     var emitter = new events.EventEmitter();
     new CliReporter(emitter, options.output, options);
 
