@@ -1,11 +1,28 @@
 {
   "name": "web-component-tester",
-  "private": true,
-  "dependencies": {
-    "chai": "chai#1.9.1",
-    "mocha": "mocha#^1.21.4"
-  },
+  "description": "web-component-tester makes testing your web components a breeze!",
+  "main": [
+    "browser.js",
+    "environment.js",
+  ],
+  "license": "http://polymer.github.io/LICENSE.txt",
+  "ignore": [
+    "*",
+    "!/browser.js",
+    "!/environment.js",
+  ],
+  "keywords": [
+    "browser",
+    "grunt",
+    "gruntplugin",
+    "gulp",
+    "polymer",
+    "test",
+    "testing",
+    "web component",
+    "web"
+  ],
   "devDependencies": {
-    "webcomponentsjs": "Polymer/webcomponentsjs#^0.4.2"
+    "webcomponentsjs": "Polymer/webcomponentsjs#^0.5.0"
   }
 }
