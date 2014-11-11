@@ -3,13 +3,13 @@
   "description": "web-component-tester makes testing your web components a breeze!",
   "main": [
     "browser.js",
-    "environment.js",
+    "environment.js"
   ],
   "license": "http://polymer.github.io/LICENSE.txt",
   "ignore": [
     "*",
     "!/browser.js",
-    "!/environment.js",
+    "!/environment.js"
   ],
   "keywords": [
     "browser",
