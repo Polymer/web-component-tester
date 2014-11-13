@@ -1,4 +1,4 @@
-[![NPM version](http://img.shields.io/npm/v/stacky.svg)](https://npmjs.org/package/web-component-tester)
+[![NPM version](http://img.shields.io/npm/v/web-component-tester.svg)](https://npmjs.org/package/web-component-tester)
 [![Build Status](http://img.shields.io/travis/Polymer/web-component-tester.svg)](https://travis-ci.org/Polymer/web-component-tester)
 
 `web-component-tester` makes testing your web components a breeze!
