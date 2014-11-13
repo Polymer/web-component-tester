@@ -65,8 +65,6 @@ function defaults() {
 }
 
 function parseArgs(args) {
-  var defaultValues = defaults();
-
   return yargs(args)
       .showHelpOnFail(false)
       .wrap(80)
@@ -100,7 +98,6 @@ function parseArgs(args) {
         },
         'webRunner': {
           description: 'The entry point to your test suite.',
-          default: defaultValues.webRunner,
         },
         'persistent': {
           description: 'Keep browsers active (refresh to rerun tests).',
