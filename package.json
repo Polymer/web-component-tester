@@ -42,7 +42,7 @@
     "launchpad": "nevir/launchpad#paths",
     "lodash": "^2.4.1",
     "resolve": "^1.0.0",
-    "sauce-connect-launcher": "nevir/sauce-connect-launcher#npm-bug",
+    "sauce-connect-launcher": "^0.8.1",
     "selenium-standalone": "^2.43.1-5",
     "send": "^0.10.1",
     "serve-static": "^1.5.3",
