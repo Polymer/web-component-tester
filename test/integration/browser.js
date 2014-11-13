@@ -314,8 +314,8 @@ function runsIntegrationSuite(suiteName, contextFunction) {
       this.reporter = new CLIReporter(emitter, stream, {verbose: true, ttyOutput: false});
 
       var options = _.merge(config.defaults(), {
-        root:      path.resolve(__dirname, '../..'),
-        webRunner: path.join('test', 'fixtures', 'Integration', suiteName, 'index.html'),
+        root:      path.resolve(__dirname, '../../..'),
+        webRunner: path.join('test', 'fixtures', 'integration', suiteName, 'index.html'),
         remote:    currentEnv.remote,
         sauce:     baseOptions.sauce,
         // Roughly matches CI Runner statuses.
