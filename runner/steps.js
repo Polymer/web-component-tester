@@ -149,8 +149,9 @@ function startStaticServer(options, emitter, done) {
 }
 
 function runTests(options, emitter, done) {
-  browsers.expand(options.browsers, options.remote, function(error, browsers) {
+  if (!validateOptions(options, done)) return;
 
+  browsers.expand(options.browsers, options.remote, function(error, browsers) {
     if (error) return done(error);
     emitter.emit('log:debug', 'Expanded browsers:', options.browsers);
     options.browsers = browsers;
@@ -196,6 +197,14 @@ function runTests(options, emitter, done) {
 }
 
 // Helpers
+
+function validateOptions(options, done) {
+  if (options.webRunner) {
+    done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
+    return false;
+  }
+  return true;
+}
 
 function checkSeleniumEnvironment(done) {
   which('java', function(error) {

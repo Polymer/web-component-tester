@@ -22,6 +22,8 @@ var CONFIG_NAME = 'wct.conf.js';
 // The full set of options, as a reference.
 function defaults() {
   return {
+    // The test suites that should be run.
+    suites:      ['test/'],
     // Output stream to write log messages to.
     output:      process.stdout,
     // Whether the output stream should be treated as a TTY (and be given more
@@ -41,8 +43,6 @@ function defaults() {
     // local browser names ("chrome" etc), or remote browsers of the form
     // "<PLATFORM>/<BROWSER>[@<VERSION>]".
     browsers:    [],
-    // The file (mounted under `<root>/<component>`) that runs the tests.
-    webRunner:   'test/index.html',
     // Idle timeout for tests.
     testTimeout: 90 * 1000,
     // Whether the browser should be closed after the tests run.
@@ -65,22 +65,16 @@ function defaults() {
 }
 
 function parseArgs(args) {
-  // DO NOT provide these via `default`, as it will end up screwing up our
-  // configuration merge ordering. Just note it in the description.
-  var defaultValues = defaults();
-
   return yargs(args)
       .showHelpOnFail(false)
       .wrap(80)
       .usage(
         '\n' + // Even margin.
         'Run tests for web components across local or remote browsers.\n' +
-        'Usage: ' + chalk.blue('$0') + '\n' +
+        'Usage: ' + chalk.blue('$0' + chalk.dim(' <options> [dirs or paths/to/test ...]')) + '\n' +
         '\n' +
         'wct will search up from the current directory to find your project root (first\n' +
-        'directory containing a webRunner or wct.conf.js)\n' +
-        '\n' +
-        'Specific browsers can be tested via the --browsers flag.\n' +
+        'directory containing a wct.conf.js - or current directory if not found.)\n' +
         '\n' +
         'Local browsers are specified via short names:\n' +
         browsers.present().join(', ') + '\n' +
@@ -99,10 +93,6 @@ function parseArgs(args) {
         'browsers': {
           description: 'Run specific browsers, rather than the defaults.',
           alias: 'b',
-        },
-        'webRunner': {
-          description: 'The entry point to your test suite.\n' +
-                       'Default: ' + defaultValues.webRunner,
         },
         'persistent': {
           description: 'Keep browsers active (refresh to rerun tests).',
@@ -129,7 +119,7 @@ function fromEnv(env, args, output) {
   var argv = parseArgs(args);
 
   var options = {
-    webRunner:  argv.webRunner,
+    webRunner:  argv.webRunner, // TODO(nevir): Remove after deprecation period
     verbose:    argv.verbose,
     expanded:   Boolean(argv.expanded), // override the default of true.
     persistent: argv.persistent,
@@ -152,22 +142,13 @@ function fromEnv(env, args, output) {
   options.extraArgs = argv._;
 
   options = _.merge(defaults(), fromDisk(), options);
-  // Now that we have a fully specified set of options, project root:
-  if (!options.root) {
-    var webRunnerPath = findup(options.webRunner);
-    if (webRunnerPath) {
-      options.root = webRunnerPath.slice(0, -options.webRunner.length);
-    }
-  }
-
   options = mergePlugins(options);
 
   return options;
 }
 
-
 /**
- * Mix plugins into configuration
+ * Mix plugins into configuration.
  *
  * Loads the plugin module for every key in `options.plugins` and merges it
  * with the user-supplied configuration.
