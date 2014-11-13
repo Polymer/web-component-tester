@@ -65,6 +65,8 @@ function defaults() {
 }
 
 function parseArgs(args) {
+  // DO NOT provide these via `default`, as it will end up screwing up our
+  // configuration merge ordering. Just note it in the description.
   var defaultValues = defaults();
 
   return yargs(args)
@@ -99,8 +101,8 @@ function parseArgs(args) {
           alias: 'b',
         },
         'webRunner': {
-          description: 'The entry point to your test suite.',
-          default: defaultValues.webRunner,
+          description: 'The entry point to your test suite.\n' +
+                       'Default: ' + defaultValues.webRunner,
         },
         'persistent': {
           description: 'Keep browsers active (refresh to rerun tests).',
