@@ -29,9 +29,9 @@ var browsers      = require('./browsers');
 
 // We prefer serving local assets over bower assets.
 var PACKAGE_ROOT = path.resolve(__dirname, '..');
-var SERVE_STATIC = {
-  '/web-component-tester/browser.js':     path.join(PACKAGE_ROOT, 'browser.js'),
-  '/web-component-tester/environment.js': path.join(PACKAGE_ROOT, 'environment.js'),
+var SERVE_STATIC = {  // Keys are regexps.
+  '^.*\/web-component-tester\/browser\.js$':     path.join(PACKAGE_ROOT, 'browser.js'),
+  '^.*\/web-component-tester\/environment\.js$': path.join(PACKAGE_ROOT, 'environment.js'),
 };
 
 // Steps
@@ -119,7 +119,7 @@ function startStaticServer(options, emitter, done) {
     });
 
     _.each(SERVE_STATIC, function(file, url) {
-      app.get(url, function(request, response) {
+      app.get(new RegExp(url), function(request, response) {
         send(request, file).pipe(response);
       });
     });
