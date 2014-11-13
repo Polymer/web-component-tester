@@ -1,3 +1,4 @@
+var _     = require('lodash');
 var chai  = require('chai');
 var grunt = require('grunt');
 var path  = require('path');
@@ -9,6 +10,20 @@ var expect = chai.expect;
 chai.use(require('sinon-chai'));
 
 describe('grunt' ,function() {
+
+  // Sinon doesn't stub process.env very well.
+  var origEnv, origArgv;
+  beforeEach(function() {
+    origEnv  = _.clone(process.env);
+    origArgv = process.argv;
+  });
+  afterEach(function() {
+    _.assign(process.env, origEnv);
+    _.difference(_.keys(process.env), _.keys(origEnv)).forEach(function(key) {
+      delete process.env[key];
+    });
+    process.argv = origArgv;
+  });
 
   before(function() {
     grunt.initConfig({
@@ -66,11 +81,11 @@ describe('grunt' ,function() {
     });
 
     it('picks up CLI flags', function(done) {
-      process.env.argv = ['grunt', 'wct-test:passthrough', '--persistent'];
+      process.argv = ['grunt', 'wct-test:passthrough', '--persistent'];
 
       runTask('passthrough', function(error, call) {
         expect(error).to.not.be.ok;
-        expect(call.args[0].sauce).to.include({username: '--fake-sauce--'});
+        expect(call.args[0]).to.include({persistent: true});
         done();
       });
     });
