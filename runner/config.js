@@ -34,7 +34,7 @@ function defaults() {
     // Whether the default set of local (or remote) browsers should be targeted.
     remote:      false,
     // The on-disk path where tests & static files should be served from.
-    root:        path.resolve('..'),
+    root:        path.resolve('.'),
     // The component being tested. Must be a directory under `root`.
     component:   path.basename(process.cwd()),
     // The browsers that tests will be run on. Accepts capabilities objects,
