@@ -68,7 +68,9 @@ module.exports = function test(options, done) {
   options = _.merge(config.defaults(), options);
 
   var emitter = new events.EventEmitter();
-  new CliReporter(emitter, options.output, options);
+  if (options.output) {
+    new CliReporter(emitter, options.output, options);
+  }
 
   // Add plugin event listeners
   _.values(options.plugins).forEach(function(plugin) {
