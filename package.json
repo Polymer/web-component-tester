@@ -29,7 +29,7 @@
     "wct-st": "./bin/wct-st"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "gulp test"
   },
   "dependencies": {
     "async": "^0.9.0",
@@ -62,6 +62,7 @@
     "gulp-concat": "^2.4.0",
     "gulp-if": "^1.2.4",
     "gulp-jshint": "^1.8.5",
+    "gulp-mocha": "^1.1.1",
     "gulp-notify": "^1.8.0",
     "gulp-plumber": "^0.6.5",
     "gulp-sourcemaps": "^1.1.5",
@@ -70,6 +71,7 @@
     "jshint-stylish": "^1.0.0",
     "lazypipe": "^0.2.2",
     "mocha": "^2.0.1",
+    "run-sequence": "^1.0.1",
     "sinon": "^1.11.1",
     "sinon-chai": "^2.6.0"
   }

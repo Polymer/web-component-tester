@@ -3,9 +3,9 @@ var EventEmitter = require('events').EventEmitter;
 var expect       = require('chai').expect;
 var path         = require('path');
 
-var CLIReporter = require('../runner/clireporter');
-var config      = require('../runner/config');
-var steps       = require('../runner/steps');
+var CLIReporter = require('../../runner/clireporter');
+var config      = require('../../runner/config');
+var steps       = require('../../runner/steps');
 
 /** Assert that all browsers passed. */
 function assertPassed(context) {

@@ -7,16 +7,18 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var concat     = require('gulp-concat');
-var gulp       = require('gulp');
-var gulpIf     = require('gulp-if');
-var jshint     = require('gulp-jshint');
-var lazypipe   = require('lazypipe');
-var notify     = require('gulp-notify');
-var plumber    = require('gulp-plumber');
-var sourcemaps = require('gulp-sourcemaps');
-var watch      = require('gulp-watch');
-var wrap       = require('gulp-wrap');
+var concat      = require('gulp-concat');
+var gulp        = require('gulp');
+var gulpIf      = require('gulp-if');
+var jshint      = require('gulp-jshint');
+var lazypipe    = require('lazypipe');
+var mocha       = require('gulp-mocha');
+var notify      = require('gulp-notify');
+var plumber     = require('gulp-plumber');
+var runSequence = require('run-sequence');
+var sourcemaps  = require('gulp-sourcemaps');
+var watch       = require('gulp-watch');
+var wrap        = require('gulp-wrap');
 
 var CSS_TO_JS =
     "(function() {\n" +
@@ -27,7 +29,14 @@ var CSS_TO_JS =
 
 // Meta tasks
 
-gulp.task('test',  ['test:style']);
+gulp.task('default', ['test']);
+
+gulp.task('test', function(done) {
+  runSequence('test:style', 'test:unit', done);
+});
+gulp.task('test:all', function(done) {
+  runSequence('test:style', 'test:unit', 'test:integration', done);
+});
 gulp.task('build', ['build:browser', 'build:environment']);
 
 gulp.task('watch', function() {
@@ -89,6 +98,16 @@ gulp.task('build:environment', function() {
 
 gulp.task('test:style', function() {
   return gulp.src('{browser,runner,environment}/**/*.js').pipe(jshintFlow());
+});
+
+gulp.task('test:unit', function() {
+  return gulp.src('test/unit/*.js', {read: false})
+      .pipe(mocha({reporter: 'spec'}));
+});
+
+gulp.task('test:integration', function() {
+  return gulp.src('test/integration/*.js', {read: false})
+      .pipe(mocha({reporter: 'spec'}));
 });
 
 // Flows

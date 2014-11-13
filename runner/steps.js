@@ -30,8 +30,8 @@ var browsers      = require('./browsers');
 // We prefer serving local assets over bower assets.
 var PACKAGE_ROOT = path.resolve(__dirname, '..');
 var SERVE_STATIC = {  // Keys are regexps.
-  '^.*\/web-component-tester\/browser\.js$':     path.join(PACKAGE_ROOT, 'browser.js'),
-  '^.*\/web-component-tester\/environment\.js$': path.join(PACKAGE_ROOT, 'environment.js'),
+  '^.*/web-component-tester/browser\\.js$':     path.join(PACKAGE_ROOT, 'browser.js'),
+  '^.*/web-component-tester/environment\\.js$': path.join(PACKAGE_ROOT, 'environment.js'),
 };
 
 // Steps

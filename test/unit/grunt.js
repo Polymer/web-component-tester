@@ -3,7 +3,7 @@ var grunt = require('grunt');
 var path  = require('path');
 var sinon = require('sinon');
 
-var steps = require('../runner/steps');
+var steps = require('../../runner/steps');
 
 var expect = chai.expect;
 chai.use(require('sinon-chai'));
@@ -21,7 +21,7 @@ describe('grunt' ,function() {
         },
       },
     });
-    grunt.loadTasks(path.resolve(__dirname, '..', 'tasks'));
+    grunt.loadTasks(path.resolve(__dirname, '..', '..', 'tasks'));
   });
 
   describe('wct-test', function() {
