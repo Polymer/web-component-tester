@@ -3,9 +3,13 @@ var EventEmitter = require('events').EventEmitter;
 var expect       = require('chai').expect;
 var path         = require('path');
 
+var CleanKill   = require('../../runner/cleankill');
 var CLIReporter = require('../../runner/clireporter');
 var config      = require('../../runner/config');
 var steps       = require('../../runner/steps');
+var test        = require('../../runner/test');
+
+var PROJECT_ROOT = path.resolve(__dirname, '../..');
 
 /** Assert that all browsers passed. */
 function assertPassed(context) {
@@ -263,7 +267,7 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
       currentEnv.remote = true;
 
       var emitter = new EventEmitter();
-      new CLIReporter(emitter, process.stdout, {});
+      new CLIReporter(emitter, process.stdout, {verbose: true});
 
       steps.ensureSauceTunnel(baseOptions, emitter, function(error, tunnelId) {
         baseOptions.sauce.tunnelId = tunnelId;
@@ -272,6 +276,11 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
     });
 
     runsAllIntegrationSuites();
+  });
+
+  after(function(done) {
+    this.timeout(120 * 1000);
+    CleanKill.close(done);
   });
 }
 
@@ -309,21 +318,21 @@ function runsIntegrationSuite(suiteName, contextFunction) {
     before(function(done) {
       this.timeout(120 * 1000);
 
-      var emitter = new EventEmitter();
-      var stream  = {write: log.push.bind(log)};
-      this.reporter = new CLIReporter(emitter, stream, {verbose: true, ttyOutput: false});
-
       var options = _.merge(config.defaults(), {
-        root:      path.resolve(__dirname, '../../..'),
-        webRunner: path.join('test', 'fixtures', 'integration', suiteName, 'index.html'),
-        remote:    currentEnv.remote,
-        sauce:     baseOptions.sauce,
+        output:      {write: log.push.bind(log)},
+        ttyOutput:   false,
+        skipCleanup: true,  // We do it manually at the end of all suites.
+        root:        PROJECT_ROOT,
+        suites:      [path.join('test/fixtures/integration', suiteName)],
+        remote:      currentEnv.remote,
+        sauce:       baseOptions.sauce,
         // Roughly matches CI Runner statuses.
         browserOptions: {
           name: 'web-component-tester',
           tags: ['org:Polymer', 'repo:web-component-tester'],
         },
       });
+      var emitter = test(options, done);
 
       this.tests = {};
       emitter.on('test-end', function(browserInfo, data, stats) {
@@ -349,8 +358,6 @@ function runsIntegrationSuite(suiteName, contextFunction) {
       emitter.on('run-end', function(error) {
         this.runError = error;
       }.bind(this));
-
-      steps.runTests(options, emitter, done);
     });
 
     afterEach(function() {

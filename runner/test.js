@@ -85,7 +85,11 @@ module.exports = function test(options, done) {
     });
 
     steps.runTests(options, emitter, function(error) {
-      CleanKill.close(done.bind(null, error));
+      if (options.skipCleanup) {
+        done(error);
+      } else {
+        CleanKill.close(done.bind(null, error));
+      }
     });
   });
 
