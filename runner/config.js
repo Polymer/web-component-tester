@@ -114,7 +114,7 @@ function parseArgs(args) {
           boolean: true,
         },
         'simpleOutput': {
-          description: 'Avoid fancy terminal tricks (pinned status)',
+          description: 'Avoid fancy terminal tricks.',
           boolean: true,
         },
       })
@@ -251,7 +251,6 @@ function validate(options, done) {
     done(null);
   }
 }
-
 
 module.exports = {
   defaults: defaults,
