@@ -25,7 +25,6 @@ var which        = require('which');
 
 var BrowserRunner = require('./browserrunner');
 var CleanKill     = require('./cleankill');
-var browsers      = require('./browsers');
 
 // We prefer serving local assets over bower assets.
 var PACKAGE_ROOT = path.resolve(__dirname, '..');
@@ -149,62 +148,46 @@ function startStaticServer(options, emitter, done) {
 }
 
 function runTests(options, emitter, done) {
-  if (!validateOptions(options, done)) return;
+  var jobs = {
+    http: startStaticServer.bind(null, options, emitter),
+  };
+  if (_.any(options.browsers, isLocal)) {
+    jobs.selenium = startSeleniumServer.bind(null, options, emitter);
+  }
+  if (!_.every(options.browsers, isLocal)) {
+    if (!assertSauceCredentials(options, done)) return; // Assert for the runners.
+    jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
+  }
 
-  browsers.expand(options.browsers, options.remote, function(error, browsers) {
+  async.parallel(jobs, function(error, results) {
     if (error) return done(error);
-    emitter.emit('log:debug', 'Expanded browsers:', options.browsers);
-    options.browsers = browsers;
 
-    var jobs = {
-      http: startStaticServer.bind(null, options, emitter),
-    };
-    if (_.any(options.browsers, isLocal)) {
-      jobs.selenium = startSeleniumServer.bind(null, options, emitter);
-    }
-    if (!_.every(options.browsers, isLocal)) {
-      if (!assertSauceCredentials(options, done)) return; // Assert for the runners.
-      jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
+    // TODO(nevir): Clean up hackish semi-private options.
+    options._seleniumPort = results.selenium;
+    options._httpPort     = results.http.port;
+    if (results.sauceTunnel) {
+      options.browserOptions['tunnel-identifier'] = results.sauceTunnel;
     }
 
-    async.parallel(jobs, function(error, results) {
-      if (error) return done(error);
-
-      // TODO(nevir): Clean up hackish semi-private options.
-      options._seleniumPort = results.selenium;
-      options._httpPort     = results.http.port;
-      if (results.sauceTunnel) {
-        options.browserOptions['tunnel-identifier'] = results.sauceTunnel;
+    var failed = false;
+    var runners = runBrowsers(options, emitter, function(error) {
+      if (error) {
+        done(error);
+      } else {
+        done(failed ? 'Had failed tests' : null);
       }
+    });
 
-      var failed = false;
-      var runners = runBrowsers(options, emitter, function(error) {
-        if (error) {
-          done(error);
-        } else {
-          done(failed ? 'Had failed tests' : null);
-        }
-      });
-
-      socketIO(results.http).on('connection', function(socket) {
-        emitter.emit('log:debug', 'Test client opened sideband socket');
-        socket.on('client-event', function(data) {
-          runners[data.browserId].onEvent(data.event, data.data);
-        });
+    socketIO(results.http).on('connection', function(socket) {
+      emitter.emit('log:debug', 'Test client opened sideband socket');
+      socket.on('client-event', function(data) {
+        runners[data.browserId].onEvent(data.event, data.data);
       });
     });
   });
 }
 
 // Helpers
-
-function validateOptions(options, done) {
-  if (options.webRunner) {
-    done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
-    return false;
-  }
-  return true;
-}
 
 function checkSeleniumEnvironment(done) {
   which('java', function(error) {

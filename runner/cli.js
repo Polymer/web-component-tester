@@ -9,7 +9,6 @@
  */
 var chalk  = require('chalk');
 var events = require('events');
-var path   = require('path');
 
 var CliReporter = require('./clireporter');
 var config      = require('./config');
@@ -25,18 +24,9 @@ var updateNotifier = require('update-notifier')({
 function run(env, args, output, callback) {
   var done    = wrapCallback(output, callback);
   var options = config.fromEnv(env, args, output);
-  if (options.extraArgs[0]) {
-    options.root = options.extraArgs[0];
-  }
-  if (!options.root) {
-    return done('Could not find the project root. Please run wct from your web component\'s directory, or pass the path as an argument to wct.');
-  }
 
-  var root = path.resolve(options.root);
-  try {
-    process.chdir(root);
-  } catch (error) {
-    return done('Unable to run tests within "' + root + '": ' + error);
+  if (options.extraArgs) {
+    options.suites = options.extraArgs;
   }
 
   test(options, done);

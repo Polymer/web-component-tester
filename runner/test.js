@@ -63,27 +63,31 @@ var steps       = require('./steps');
  * @return {!events.EventEmitter}
  */
 module.exports = function test(options, done) {
+  var emitter = new events.EventEmitter();
+
   // All of our internal entry points already have defaults merged, but we also
   // want to expose this as the public API to web-component-tester.
   options = _.merge(config.defaults(), options);
+  config.expand(options, process.cwd(), function(error, options) {
+    if (error) return done(error);
 
-  var emitter = new events.EventEmitter();
-  if (options.output) {
-    new CliReporter(emitter, options.output, options);
-  }
-
-  // Add plugin event listeners
-  _.values(options.plugins).forEach(function(plugin) {
-    if (plugin.listener) {
-      new plugin.listener(emitter, options.output, plugin);
+    if (options.output) {
+      new CliReporter(emitter, options.output, options);
     }
+    var cleanOptions = _.omit(options, 'output');
+    emitter.emit('log:debug', 'Configuration:', cleanOptions);
+
+    // Add plugin event listeners
+    _.values(options.plugins).forEach(function(plugin) {
+      if (plugin.listener) {
+        new plugin.listener(emitter, options.output, plugin);
+      }
+    });
+
+    steps.runTests(options, emitter, function(error) {
+      CleanKill.close(done.bind(null, error));
+    });
   });
 
-  var cleanOptions = _.omit(options, 'output');
-  emitter.emit('log:debug', 'Configuration:', cleanOptions);
-
-  steps.runTests(options, emitter, function(error) {
-    CleanKill.close(done.bind(null, error));
-  });
   return emitter;
 };

@@ -15,6 +15,7 @@ var path   = require('path');
 var yargs  = require('yargs');
 
 var browsers = require('./browsers');
+var paths    = require('./paths');
 
 var HOME_DIR    = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
 var CONFIG_NAME = 'wct.conf.js';
@@ -35,8 +36,10 @@ function defaults() {
     expanded:    true,
     // Whether the default set of local (or remote) browsers should be targeted.
     remote:      false,
-    // The on-disk path where tests & static files should be served from.
-    root:        path.resolve('..'),
+    // The on-disk path where tests & static files should be served from. By
+    // default, this is the directory above the current project (so that
+    // element repos can be easily tested with their dependencies).
+    root:        undefined,
     // The component being tested. Must be a directory under `root`.
     component:   path.basename(process.cwd()),
     // The browsers that tests will be run on. Accepts capabilities objects,
@@ -99,6 +102,9 @@ function parseArgs(args) {
           alias: 'p',
           boolean: true,
         },
+        'root': {
+          description: 'The root directory to serve tests from.',
+        },
         'expanded': {
           description: 'Log a status line for each test run.',
           boolean: true,
@@ -118,12 +124,7 @@ function parseArgs(args) {
 function fromEnv(env, args, output) {
   var argv = parseArgs(args);
 
-  var options = {
-    webRunner:  argv.webRunner, // TODO(nevir): Remove after deprecation period
-    verbose:    argv.verbose,
-    expanded:   Boolean(argv.expanded), // override the default of true.
-    persistent: argv.persistent,
-    remote:     Boolean(argv.remote),
+  var options = _.merge(argv, {
     output:     output,
     ttyOutput:  output.isTTY && !argv.simpleOutput,
     sauce: {
@@ -131,7 +132,7 @@ function fromEnv(env, args, output) {
       accessKey: env.SAUCE_ACCESS_KEY,
       tunnelId:  env.SAUCE_TUNNEL_ID,
     }
-  };
+  });
 
   if (argv.browsers) {
     var browsers = _.isArray(argv.browsers) ? argv.browsers : [argv.browsers];
@@ -204,8 +205,57 @@ function fromDisk() {
   return options;
 }
 
+/**
+ * Expands values within the configuration based on the current environment.
+ *
+ * @param {!Object} options The configuration to expand.
+ * @param {string} baseDir The directory paths should be relative to.
+ * @param {function(*, options)} Callback given the expanded options on success.
+ */
+function expand(options, baseDir, done) {
+  var root = options.root || baseDir;
+
+  browsers.expand(options.browsers, options.remote, function(error, browsers) {
+    if (error) return done(error);
+    options.browsers = browsers;
+
+    paths.expand(root, options.suites, function(error, suites) {
+      if (error) return done(error);
+
+      // Serve from the parent directory so that we can reference element deps.
+      if (!options.root) {
+        options.root = path.dirname(root);
+
+        var basename = path.basename(root);
+        suites = _.map(suites, function(file) {
+          return path.join(basename, file);
+        });
+      }
+      options.suites = suites;
+
+      validate(options, function(error) {
+        done(error, options);
+      });
+    });
+  });
+}
+
+/**
+ * @param {!Object} options The configuration to validate.
+ * @param {function(*)} Callback indicating whether the configuration is valid.
+ */
+function validate(options, done) {
+  if (options.webRunner) {
+    done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
+  } else {
+    done(null);
+  }
+}
+
+
 module.exports = {
   defaults: defaults,
   fromEnv:  fromEnv,
   fromDisk: fromDisk,
+  expand:   expand,
 };
