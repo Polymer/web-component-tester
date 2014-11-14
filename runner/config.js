@@ -246,10 +246,14 @@ function expand(options, baseDir, done) {
  */
 function validate(options, done) {
   if (options.webRunner) {
-    done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
-  } else {
-    done(null);
+    return done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
   }
+
+  if (options.suites.length === 0) {
+    return done('No test suites were found matching your configuration');
+  }
+
+  done(null);
 }
 
 module.exports = {

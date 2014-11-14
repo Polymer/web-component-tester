@@ -36,7 +36,7 @@ describe('grunt' ,function() {
         },
       },
     });
-    grunt.loadTasks(path.resolve(__dirname, '..', '..', 'tasks'));
+    grunt.loadTasks(path.resolve(__dirname, '../../tasks'));
   });
 
   describe('wct-test', function() {
@@ -45,6 +45,8 @@ describe('grunt' ,function() {
     beforeEach(function() {
       sandbox = sinon.sandbox.create();
       sandbox.stub(steps, 'runTests', function(options, emitter, done) { done(); });
+
+      process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
     });
 
     afterEach(function() {

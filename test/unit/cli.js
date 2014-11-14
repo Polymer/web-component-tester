@@ -101,6 +101,13 @@ describe('cli', function() {
       });
     });
 
+    it('throws an error if no suites could be found', function(done) {
+      cli.run({}, ['404'], {write: function() {}}, function(error) {
+        expect(error).to.match(/no.*suites.*found/i);
+        done();
+      });
+    });
+
     // TODO(nevir): Remove after deprecation period.
     it('throws an error when --webRunner is set', function(done) {
       cli.run({}, ['--webRunner', 'foo'], {write: function() {}}, function(error) {
@@ -109,6 +116,7 @@ describe('cli', function() {
         done();
       });
     });
+
   });
 
 });

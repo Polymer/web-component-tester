@@ -39,7 +39,7 @@ function expand(baseDir, patterns, done) {
  */
 function unglob(baseDir, patterns, done) {
   async.map(patterns, function(pattern, next) {
-    glob(pattern, {
+    glob(String(pattern), {
       cwd:  baseDir,
       root: baseDir,
     }, next);
