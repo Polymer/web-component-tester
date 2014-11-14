@@ -40,8 +40,6 @@ function defaults() {
     // default, this is the directory above the current project (so that
     // element repos can be easily tested with their dependencies).
     root:        undefined,
-    // The component being tested. Must be a directory under `root`.
-    component:   path.basename(process.cwd()),
     // The browsers that tests will be run on. Accepts capabilities objects,
     // local browser names ("chrome" etc), or remote browsers of the form
     // "<PLATFORM>/<BROWSER>[@<VERSION>]".
@@ -50,6 +48,8 @@ function defaults() {
     testTimeout: 90 * 1000,
     // Whether the browser should be closed after the tests run.
     persistent:  false,
+    // Additional .js files to include in *generated* test indexes.
+    extraScripts: [],
     // Extra capabilities to pass to wd when building a client.
     //
     // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
@@ -247,6 +247,9 @@ function expand(options, baseDir, done) {
 function validate(options, done) {
   if (options.webRunner) {
     return done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
+  }
+  if (options.component) {
+    return done('component is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
   }
 
   if (options.suites.length === 0) {

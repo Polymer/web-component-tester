@@ -12,6 +12,7 @@ var async        = require('async');
 var chalk        = require('chalk');
 var express      = require('express');
 var freeport     = require('freeport');
+var fs           = require('fs');
 var http         = require('http');
 var path         = require('path');
 var sauceConnect = require('sauce-connect-launcher');
@@ -32,6 +33,10 @@ var SERVE_STATIC = {  // Keys are regexps.
   '^.*/web-component-tester/browser\\.js$':     path.join(PACKAGE_ROOT, 'browser.js'),
   '^.*/web-component-tester/environment\\.js$': path.join(PACKAGE_ROOT, 'environment.js'),
 };
+
+var INDEX_TEMPLATE = _.template(fs.readFileSync(
+  path.resolve(__dirname, '../data/index.html'), {encoding: 'utf-8'}
+));
 
 // Steps
 function ensureSauceTunnel(options, emitter, done) {
@@ -123,6 +128,12 @@ function startStaticServer(options, emitter, done) {
       });
     });
 
+    if (options._webRunnerContent) {
+      app.get(options._webRunner, function(request, response) {
+        response.send(options._webRunnerContent);
+      });
+    }
+
     // Add plugin middleware
     _.values(options.plugins).forEach(function(plugin) {
       if (plugin.middleware) {
@@ -148,6 +159,8 @@ function startStaticServer(options, emitter, done) {
 }
 
 function runTests(options, emitter, done) {
+  injectWebRunner(options);
+
   var jobs = {
     http: startStaticServer.bind(null, options, emitter),
   };
@@ -188,6 +201,19 @@ function runTests(options, emitter, done) {
 }
 
 // Helpers
+
+function injectWebRunner(options) {
+  // Short circuit if we have only one .html suite to run: Run it directly.
+  if (options.suites.length === 1 && options.suites[0].slice(-5) === '.html') {
+    options._webRunner = '/' + options.suites[0];
+  } else {
+    options._webRunner = '/generated-index.html';
+    options._webRunnerContent = INDEX_TEMPLATE({
+      extraScripts: options.extraScripts,
+      suites:       options.suites,
+    });
+  }
+}
 
 function checkSeleniumEnvironment(done) {
   which('java', function(error) {
