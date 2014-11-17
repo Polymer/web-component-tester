@@ -16,6 +16,7 @@ var mocha       = require('gulp-mocha');
 var notify      = require('gulp-notify');
 var plumber     = require('gulp-plumber');
 var runSequence = require('run-sequence');
+var runTask     = require('orchestrator/lib/runTask');
 var sourcemaps  = require('gulp-sourcemaps');
 var watch       = require('gulp-watch');
 var wrap        = require('gulp-wrap');
@@ -40,18 +41,19 @@ gulp.task('test:all', function(done) {
 gulp.task('build', ['build:browser', 'build:environment']);
 
 gulp.task('watch', function() {
-  watch('browser/**/*', function() {
-    gulp.start('build:browser');
-  });
-
-  watch('environment/**/*', function() {
-    gulp.start('build:environment');
-  });
-
   var config = {
     emitOnGlob: false,
     gaze:       {debounceDelay: 10},
   };
+
+  watch('browser/**/*', config, function(files, done) {
+    runTask(gulp.tasks['build:browser'].fn.bind(gulp), done);
+  });
+
+  watch('environment/**/*', config, function(events, done) {
+    runTask(gulp.tasks['build:environment'].fn.bind(gulp), done);
+  });
+
   return watch('{runner,browser,environment}/**/*.js', config, function(files) {
     files
       .pipe(plumber({errorHandler: notify.onError('<%= error.message %>')}))

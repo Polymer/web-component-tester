@@ -72,6 +72,7 @@
     "jshint-stylish": "^1.0.0",
     "lazypipe": "^0.2.2",
     "mocha": "^2.0.1",
+    "orchestrator": "^0.3.7",
     "run-sequence": "^1.0.1",
     "sinon": "^1.11.1",
     "sinon-chai": "^2.6.0"
