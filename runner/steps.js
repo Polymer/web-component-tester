@@ -208,10 +208,7 @@ function injectWebRunner(options) {
     options._webRunner = '/' + options.suites[0];
   } else {
     options._webRunner = '/generated-index.html';
-    options._webRunnerContent = INDEX_TEMPLATE({
-      extraScripts: options.extraScripts,
-      suites:       options.suites,
-    });
+    options._webRunnerContent = INDEX_TEMPLATE(options);
   }
 }
 

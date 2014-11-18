@@ -6,7 +6,8 @@
 <% extraScripts.forEach(function(script) { %>    <script src="<%- script %>"></script>
 <% }); %>  </head>
   <body>
-    <script>
+    <script><% if (verbose) { %>
+      WCT.debug = true;<% } %>
       WCT.loadSuites(<%= JSON.stringify(suites) %>);
     </script>
   </body>
