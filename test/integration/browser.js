@@ -183,6 +183,40 @@ function runsAllIntegrationSuites() {
 
   });
 
+  runsIntegrationSuite('nested', function() {
+
+    it('passes', function() {
+      assertPassed(this);
+      assertStats(this, 4, 0, 0, 'complete');
+    });
+
+    it('runs the correct tests', function() {
+      assertTests(this, {
+        "index.html": {
+          "js test": {
+            "state": "passing"
+          },
+        },
+        "one/tests.html": {
+          "test": {
+            "state": "passing"
+          },
+        },
+        "two/": {
+          "inline test": {
+            "state": "passing"
+          },
+        },
+        "leaf.html": {
+          "test": {
+            "state": "passing"
+          },
+        },
+      });
+    });
+
+  });
+
   runsIntegrationSuite('no-tests', function() {
 
     it('passes', function() {
@@ -263,7 +297,7 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
     // Boot up a sauce tunnel w/ whatever the environment gives us.
 
     before(function(done) {
-      this.timeout(120 * 1000);
+      this.timeout(300 * 1000);
       currentEnv.remote = true;
 
       var emitter = new EventEmitter();
