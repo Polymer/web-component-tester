@@ -50,7 +50,7 @@ ChildRunner.current = function() {
  * @param {boolean} traversal Whether this is a traversal from a child window.
  * @return {ChildRunner} The `ChildRunner` that was registered for `target`.
  */
-ChildRunner.get = function(target, traversal) { ;
+ChildRunner.get = function(target, traversal) {
   var childRunner = ChildRunner._byUrl[target.location.href];
   if (childRunner) return childRunner;
   if (window.parent === window) {  // Top window.
