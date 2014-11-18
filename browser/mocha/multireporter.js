@@ -18,7 +18,7 @@ var STACKY_CONFIG = {
     /\?[\d\.]+$/,
   ],
   filter: function(line) {
-    return line.location.match(/web-component-tester\/browser.js/);
+    return line.location.match(/web-component-tester\//);
   },
 };
 
