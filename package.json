@@ -29,7 +29,7 @@
     "wct-st": "./bin/wct-st"
   },
   "scripts": {
-    "test": "gulp test:all"
+    "test": "gulp test"
   },
   "dependencies": {
     "async": "^0.9.0",

@@ -2,8 +2,3 @@ language: node_js
 node_js:
   - "0.11"
   - "0.10"
-env:
-  global:
-    - SKIP_LOCAL_BROWSERS=yes
-    - secure: Gh0tXB5GjAaK66j4QA4T7NAswHf6UxGxM6pjNKhgMqKE/hjI0gNbqiezzYSbGGZCkCI1/ELcVCyirOaJmJItHNTXlTyFSw9v1+j4+WEUHJrmZjvJKNjwSBIOR8hbMry8AoJlDzQzTxhdBGg9GH6w6kFaW2j3mlolJtsJ8L7qsC0=
-    - secure: HZ2pA8eV5PEORPa+i2ZGrhJ0tDgwG4xZxn0nVl5vObjvXj6N2Fs5ucolTYdtZbM9mMMjdI2ArjoysnGLgeBT/D0M+dQ3FTB/W/NuEegh0bRR3IzX++Z00XEX/2jPIJXuLBUtjOCCaYX+2uF7RJ0TQCBhCy+f3zpbgAi6Cz4rJlw=
