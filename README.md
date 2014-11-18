@@ -16,49 +16,6 @@ WCT will [run your tests](#running-your-tests) against whatever browsers you hav
 
 # Getting Started
 
-There's a _wee bit_ of setup necessary.
-
-
-## Test Index
-
-WCT will, by default, run tests declared in `test/index.html`. Generally, 
-you'll want to use this to load all your test suites:
-
-```html
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <script src="../../webcomponentsjs/webcomponents.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
-    <script src="../awesome.js"></script>
-  </head>
-  <body>
-    <script>
-      WCT.loadSuites([
-        'awesome-tests.js',
-        'awesomest-tests.html',
-      ]);
-    </script>
-  </body>
-</html>
-```
-
-
-## `.js` Suites
-
-Your test suites can either be `.js` sources, which run in the context of your
-text index. For example, `test/awesome-tests.js`:
-
-```js
-suite('AwesomeLib', function() {
-  test('is awesome', function() {
-    assert.isTrue(AwesomeLib.awesome);
-  });
-});
-```
-
-
 ## `.html` Suites
 
 Or, you can write tests in separate `.html` documents. For example,
@@ -87,6 +44,20 @@ Or, you can write tests in separate `.html` documents. For example,
 ```
 
 
+## `.js` Suites
+
+Your test suites can either be `.js` sources, which run in the context of your
+text index. For example, `test/awesome-tests.js`:
+
+```js
+suite('AwesomeLib', function() {
+  test('is awesome', function() {
+    assert.isTrue(AwesomeLib.awesome);
+  });
+});
+```
+
+
 ## Running Your Tests
 
 ### `wct`
@@ -108,6 +79,10 @@ run it:
 wct
 ```
 
+By default, any tests under `test/` will be run. You can run particular files
+(or globs of files) via `wct path/to/files`.
+
+
 
 ### Web Server
 
@@ -117,6 +92,31 @@ order to go this route. The recommended approach is to depend on WCT via Bower:
 
 ```sh
 bower install Polymer/web-component-tester --save
+```
+
+#### Nested Suites
+
+To help support this case, you can also directly define an index that will load
+any desired tests:
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../webcomponentsjs/webcomponents.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../awesome.js"></script>
+  </head>
+  <body>
+    <script>
+      WCT.loadSuites([
+        'awesome-tests.js',
+        'awesomest-tests.html',
+      ]);
+    </script>
+  </body>
+</html>
 ```
 
 
