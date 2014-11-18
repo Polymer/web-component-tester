@@ -16,81 +16,85 @@
  * If `WCT.waitForFrameworks` is true (the default), we will also wait for any
  * present web component frameworks to have fully initialized as well.
  */
-(function() {
 
-// We do a bit of our own grep processing to speed things up.
-var grep = WCT.util.getParam('grep');
+// We process grep ourselves to avoid loading suites that will be filtered.
+var GREP = WCT.util.getParam('grep');
 
-// environment.js is optional; we need to take a look at our script's URL in
-// order to determine how (or not) to load it.
-var prefix  = window.WCTPrefix;
-var loadEnv = !window.WCTSkipEnvironment;
+// The actual startup process.
 
-var scripts = document.querySelectorAll('script[src*="browser.js"]');
-if (scripts.length !== 1 && !prefix) {
-  throw new Error('Unable to detect root URL for WCT. Please set WCTPrefix before including browser.js');
-}
-if (scripts[0]) {
-  var thisScript = scripts[0].src;
-  prefix  = thisScript.substring(0, thisScript.indexOf('browser.js'));
-  // You can tack ?skipEnv onto the browser URL to skip the default environment.
-  loadEnv = thisScript.indexOf('skipEnv') === -1;
-}
-if (loadEnv) {
-  // Synchronous load so that we can guarantee it is set up for early tests.
-  document.write('<script src="' + prefix + 'environment.js"></script>'); // jshint ignore:line
-}
+loadEnvironmentSync();
 
 // Give any scripts on the page a chance to twiddle the environment.
 document.addEventListener('DOMContentLoaded', function() {
-  WCT.util.debug('run stage: DOMContentLoaded');
-  var subSuite = WCT.SubSuite.current();
-  if (subSuite) {
-    WCT.util.debug('run stage: subsuite');
-    // Give the subsuite time to complete its load (see `SubSuite.load`).
-    setTimeout(runSubSuite.bind(null, subSuite), 0);
-    return;
-  }
+  WCT.util.debug('DOMContentLoaded');
 
-  // Before anything else, we need to ensure our communication channel with the
-  // CLI runner is established (if we're running in that context). Less
-  // buffering to deal with.
+  // We need the socket built prior to building its reporter.
   WCT.CLISocket.init(function(error, socket) {
-    WCT.util.debug('run stage: WCT.CLISocket.init done', error);
     if (error) throw error;
-    var subsuites = WCT._suitesToLoad;
-    if (grep) {
-      var cleanSubsuites = [];
-      for (var i = 0, subsuite; subsuite = subsuites[i]; i++) {
-        if (subsuite.indexOf(grep) === 0) {
-          cleanSubsuites.push(subsuite);
-        }
-      }
-      subsuites = cleanSubsuites;
-    }
 
-    var runner = newMultiSuiteRunner(subsuites, determineReporters(socket));
+    // Are we a child of another run?
+    var current = WCT.ChildRunner.current();
+    var parent  = current && current.parentScope.WCT._reporter;
+    WCT.util.debug('parentReporter:', parent);
 
-    loadDependencies(runner, function(error) {
-      WCT.util.debug('run stage: loadDependencies done', error);
+    var childSuites = activeChildSuites();
+    var reporters   = determineReporters(socket, parent);
+    // +1 for any local tests.
+    var reporter = new WCT.MultiReporter(childSuites.length + 1, reporters, parent);
+    WCT._reporter = reporter;
+
+    // We need the reporter so that we can report errors during load.
+    loadDependencies(reporter, function(error) {
       if (error) throw error;
-
-      runMultiSuite(runner, subsuites);
+      runTests(reporter, childSuites, function(error) {
+        // Make sure to let our parent know that we're done.
+        if (current) current.done();
+        if (error) throw error;
+      });
     });
   });
 });
 
+
+// Run Steps
+
+/**
+ * We _synchronously_ load environment.js so that it is immediately ready for
+ * the user's document(s), and available for inline scripts.
+ */
+function loadEnvironmentSync() {
+  // environment.js is optional; we need to take a look at our script's URL in
+  // order to determine how (or not) to load it.
+  var prefix  = window.WCTPrefix;
+  var loadEnv = !window.WCTSkipEnvironment;
+
+  var scripts = document.querySelectorAll('script[src*="browser.js"]');
+  if (scripts.length !== 1 && !prefix) {
+    throw new Error('Unable to detect root URL for WCT. Please set WCTPrefix before including browser.js');
+  }
+  if (scripts[0]) {
+    var thisScript = scripts[0].src;
+    prefix  = thisScript.substring(0, thisScript.indexOf('browser.js'));
+    // You can tack ?skipEnv onto the browser URL to skip the default environment.
+    loadEnv = thisScript.indexOf('skipEnv') === -1;
+  }
+  if (loadEnv) {
+    // Synchronous load.
+    document.write('<script src="' + prefix + 'environment.js"></script>'); // jshint ignore:line
+  }
+}
+
 /**
  * Loads any dependencies of the _current_ suite (e.g. `.js` sources).
  *
- * @param {!WCT.MultiRunner} runner The runner where errors should be reported.
- * @param {function} done A node style callback.
+ * @param {!WCT.MultiReporter} reporter
+ * @param {function} done
  */
-function loadDependencies(runner, done) {
-  WCT.util.debug('loadDependencies:', WCT._dependencies);
+function loadDependencies(reporter, done) {
+  WCT.util.debug('loadDependencies', WCT._dependencies);
 
   function onError(event) {
-    runner.emitOutOfBandTest('Test Suite Initialization', event.error);
+    reporter.emitOutOfBandTest('Test Suite Initialization', event.error);
   }
   window.addEventListener('error', onError);
 
@@ -106,69 +110,41 @@ function loadDependencies(runner, done) {
 }
 
 /**
- * @param {!WCT.SubSuite} subSuite The `SubSuite` for this frame, that `mocha`
- *     should be run for.
+ * @param {!WCT.MultiReporter} reporter
+ * @param {!Array.<string>} childSuites
+ * @param {function} done
  */
-function runSubSuite(subSuite) {
-  WCT.util.debug('runSubSuite', window.location.pathname);
-  // Not very pretty.
-  var parentWCT = subSuite.parentScope.WCT;
-  subSuite.prepare(WCT);
-
-  var suiteName = parentWCT.util.relativeLocation(window.location);
-  var reporter  = parentWCT._multiRunner.childReporter(suiteName);
-  runMocha(reporter, subSuite.done.bind(subSuite));
-}
-
-/**
- * @param {!Array.<string>} subsuites The subsuites that will be run.
- * @param {!Array.<!Mocha.reporters.Base>} reporters The reporters that should
- *     consume the output of this `MultiRunner`.
- * @return {!WCT.MultiRunner} The runner for our root suite.
- */
-function newMultiSuiteRunner(subsuites, reporters) {
-  WCT.util.debug('newMultiSuiteRunner', window.location.pathname);
-  WCT._multiRunner = new WCT.MultiRunner(subsuites.length + 1, reporters);
-  return WCT._multiRunner;
-}
-
-/**
- * @param {!WCT.MultiRunner} The runner built via `newMultiSuiteRunner`.
- * @param {!Array.<string>} subsuites The subsuites to run.
- */
-function runMultiSuite(runner, subsuites) {
-  WCT.util.debug('runMultiSuite', window.location.pathname);
-  var rootName = WCT.util.relativeLocation(window.location);
+function runTests(reporter, childSuites, done) {
+  WCT.util.debug('runTests');
 
   var suiteRunners = [
     // Run the local tests (if any) first, not stopping on error;
-    runMocha.bind(null, runner.childReporter(rootName)),
+    runMocha.bind(null, reporter),
   ];
 
   // As well as any sub suites. Again, don't stop on error.
-  subsuites.forEach(function(file) {
+  childSuites.forEach(function(file) {
     suiteRunners.push(function(next) {
-      var subSuite = new WCT.SubSuite(file, window);
-      runner.emit('subSuite start', subSuite);
-      subSuite.run(function(error) {
-        runner.emit('subSuite end', subSuite);
-
-        if (error) runner.emitOutOfBandTest(file, error);
+      var childRunner = new WCT.ChildRunner(file, window);
+      reporter.emit('childRunner start', childRunner);
+      childRunner.run(function(error) {
+        reporter.emit('childRunner end', childRunner);
+        if (error) reporter.emitOutOfBandTest(file, error);
         next();
       });
     });
   });
 
   WCT.util.parallel(suiteRunners, WCT.numConcurrentSuites, function(error) {
-    WCT.util.debug('runMultiSuite done', error);
-    runner.done();
+    reporter.done();
+    done(error);
   });
 }
 
 /**
  * Kicks off a mocha run, waiting for frameworks to load if necessary.
  *
- * @param {!Mocha.reporters.Base} reporter The reporter to pass to `mocha.run`.
+ * @param {!WCT.MultiReporter} reporter Where to send Mocha's events.
  * @param {function} done A callback fired, _no error is passed_.
  */
 function runMocha(reporter, done, waited) {
@@ -176,11 +152,11 @@ function runMocha(reporter, done, waited) {
     WCT.util.whenFrameworksReady(runMocha.bind(null, reporter, done, true));
     return;
   }
-  WCT.util.debug('runMocha', window.location.pathname);
+  WCT.util.debug('runMocha');
 
-  mocha.reporter(reporter);
-  mocha.suite.title = reporter.title;
-  mocha.grep(grep);
+  mocha.reporter(reporter.childReporter(window.location));
+  mocha.suite.title = reporter.suiteTitle(window.location);
+  mocha.grep(GREP);
 
   // We can't use `mocha.run` because it bashes over grep, invert, and friends.
   // See https://github.com/visionmedia/mocha/blob/master/support/tail.js#L137
@@ -203,12 +179,38 @@ function runMocha(reporter, done, waited) {
   }
 }
 
+// Helpers
+
 /**
- * Figure out which reporters should be used for the current `window`.
- *
- * @param {WCT.CLISocket} socket The CLI socket, if present.
+ * @return {!Array.<string>} The child suites that should be loaded, ignoring
+ *     those that would not match `GREP`.
  */
-function determineReporters(socket) {
+function activeChildSuites() {
+  var subsuites = WCT._suitesToLoad;
+  if (GREP) {
+    var cleanSubsuites = [];
+    for (var i = 0, subsuite; subsuite = subsuites[i]; i++) {
+      if (GREP.indexOf(WCT.util.cleanLocation(subsuite)) !== -1) {
+        cleanSubsuites.push(subsuite);
+      }
+    }
+    subsuites = cleanSubsuites;
+  }
+  return subsuites;
+}
+
+/**
+ * @param {WCT.CLISocket} socket The CLI socket, if present.
+ * @param {WCT.MultiReporter} parent The parent reporter, if present.
+ * @return {!Array.<!Mocha.reporters.Base} The reporters that should be used.
+ */
+function determineReporters(socket, parent) {
+  // Parents are greedy.
+  if (parent) {
+    return [parent.childReporter(window.location)];
+  }
+
+  // Otherwise, we get to run wild without any parental supervision!
   var reporters = [
     WCT.reporters.Title,
     WCT.reporters.Console,
@@ -226,5 +228,3 @@ function determineReporters(socket) {
 
   return reporters;
 }
-
-})();

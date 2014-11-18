@@ -9,7 +9,7 @@
  */
 (function() {
 
-WCT.MultiRunner = MultiRunner;
+WCT.MultiReporter = MultiReporter;
 
 var STACKY_CONFIG = {
   indent: '  ',
@@ -41,17 +41,21 @@ var MOCHA_EVENTS = [
 var ESTIMATED_TESTS_PER_SUITE = 3;
 
 /**
- * A Mocha-like runner that combines the output of multiple Mocha suites.
+ * A Mocha-like reporter that combines the output of multiple Mocha suites.
  *
  * @param {number} numSuites The number of suites that will be run, in order to
  *     estimate the total number of tests that will be performed.
  * @param {!Array.<!Mocha.reporters.Base>} reporters The set of reporters that
  *     should receive the unified event stream.
+ * @param {WCT.MultiReporter} parent The parent reporter, if present.
  */
-function MultiRunner(numSuites, reporters) {
+function MultiReporter(numSuites, reporters, parent) {
   this.reporters = reporters.map(function(reporter) {
     return new reporter(this);
   }.bind(this));
+
+  this.parent = parent;
+  this.basePath = parent && parent.basePath || WCT.util.basePath(window.location);
 
   this.total = numSuites * ESTIMATED_TESTS_PER_SUITE;
   // Mocha reporters assume a stream of events, so we have to be careful to only
@@ -63,13 +67,15 @@ function MultiRunner(numSuites, reporters) {
   this.emit('start');
 }
 // Mocha doesn't expose its `EventEmitter` shim directly, so:
-MultiRunner.prototype = Object.create(Object.getPrototypeOf(Mocha.Runner.prototype));
+MultiReporter.prototype = Object.create(Object.getPrototypeOf(Mocha.Runner.prototype));
 
 /**
+ * @param {!Location|string} location The location this reporter represents.
  * @return {!Mocha.reporters.Base} A reporter-like "class" for each child suite
  *     that should be passed to `mocha.run`.
  */
-MultiRunner.prototype.childReporter = function childReporter(name) {
+MultiReporter.prototype.childReporter = function childReporter(location) {
+  var name = this.suiteTitle(location);
   // The reporter is used as a constructor, so we can't depend on `this` being
   // properly bound.
   var self = this;
@@ -82,14 +88,14 @@ MultiRunner.prototype.childReporter = function childReporter(name) {
 };
 
 /** Must be called once all runners have finished. */
-MultiRunner.prototype.done = function done() {
+MultiReporter.prototype.done = function done() {
   this.complete = true;
-  this.emit('end');
   this.flushPendingEvents();
+  this.emit('end');
 };
 
 /**
- * Emit a top level test that is not part of any suite managed by this runner.
+ * Emit a top level test that is not part of any suite managed by this reporter.
  *
  * Helpful for reporting on global errors, loading issues, etc.
  *
@@ -100,8 +106,8 @@ MultiRunner.prototype.done = function done() {
  * @param {?boolean} opt_estimated If this test was included in the original
  *     estimate of `numSuites`.
  */
-MultiRunner.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, opt_error, opt_suiteTitle, opt_estimated) {
-  WCT.util.debug('MultiRunner#emitOutOfBandTest(', arguments, ')');
+MultiReporter.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, opt_error, opt_suiteTitle, opt_estimated) {
+  WCT.util.debug('MultiReporter#emitOutOfBandTest(', arguments, ')');
   var root = new Mocha.Suite();
   root.title = opt_suiteTitle;
   var test = new Mocha.Test(title, function() {
@@ -128,10 +134,20 @@ MultiRunner.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, opt_
   this.proxyEvent('end', runner);
 };
 
+/**
+ * @param {!Location|string} location
+ * @return {string}
+ */
+MultiReporter.prototype.suiteTitle = function suiteTitle(location) {
+  var path = WCT.util.relativeLocation(location, this.basePath);
+  path = WCT.util.cleanLocation(path);
+  return path;
+};
+
 // Internal Interface
 
 /** @param {!Mocha.runners.Base} runner The runner to listen to events for. */
-MultiRunner.prototype.bindChildRunner = function bindChildRunner(runner) {
+MultiReporter.prototype.bindChildRunner = function bindChildRunner(runner) {
   MOCHA_EVENTS.forEach(function(eventName) {
     runner.on(eventName, this.proxyEvent.bind(this, eventName, runner));
   }.bind(this));
@@ -144,7 +160,7 @@ MultiRunner.prototype.bindChildRunner = function bindChildRunner(runner) {
  * @param {!Mocha.runners.Base} runner The runner that emitted this event.
  * @param {...*} var_args Any additional data passed as part of the event.
  */
-MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner, var_args) {
+MultiReporter.prototype.proxyEvent = function proxyEvent(eventName, runner, var_args) {
   var extraArgs = Array.prototype.slice.call(arguments, 2);
   if (this.complete) {
     console.warn('out of order Mocha event for ' + runner.name + ':', eventName, extraArgs);
@@ -155,7 +171,7 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner, var_ar
     this.pendingEvents.push(arguments);
     return;
   }
-  WCT.util.debug('MultiRunner#proxyEvent(', arguments, ')');
+  WCT.util.debug('MultiReporter#proxyEvent(', arguments, ')');
 
   // This appears to be a Mocha bug: Tests failed by passing an error to their
   // done function don't set `err` properly.
@@ -182,7 +198,7 @@ MultiRunner.prototype.proxyEvent = function proxyEvent(eventName, runner, var_ar
  * @param {!Mocha.runners.Base} runner The runner that emitted this event.
  * @param {!Array.<*>} extraArgs
  */
-MultiRunner.prototype.cleanEvent = function cleanEvent(eventName, runner, extraArgs) {
+MultiReporter.prototype.cleanEvent = function cleanEvent(eventName, runner, extraArgs) {
   // Suite hierarchy
   if (extraArgs[0]) {
     extraArgs[0] = this.showRootSuite(extraArgs[0]);
@@ -203,9 +219,9 @@ MultiRunner.prototype.cleanEvent = function cleanEvent(eventName, runner, extraA
  *
  * @param {!Mocha.Runnable} node
  */
-MultiRunner.prototype.showRootSuite = function showRootSuite(node) {
+MultiReporter.prototype.showRootSuite = function showRootSuite(node) {
   var leaf = node = Object.create(node);
-  while (node && !node.root) {
+  while (node && node.parent) {
     var wrappedParent = Object.create(node.parent);
     node.parent = wrappedParent;
     node = wrappedParent;
@@ -216,15 +232,15 @@ MultiRunner.prototype.showRootSuite = function showRootSuite(node) {
 };
 
 /** @param {!Mocha.runners.Base} runner */
-MultiRunner.prototype.onRunnerStart = function onRunnerStart(runner) {
-  WCT.util.debug('MultiRunner#onRunnerStart:', runner.name);
+MultiReporter.prototype.onRunnerStart = function onRunnerStart(runner) {
+  WCT.util.debug('MultiReporter#onRunnerStart:', runner.name);
   this.total = this.total - ESTIMATED_TESTS_PER_SUITE + runner.total;
   this.currentRunner = runner;
 };
 
 /** @param {!Mocha.runners.Base} runner */
-MultiRunner.prototype.onRunnerEnd = function onRunnerEnd(runner) {
-  WCT.util.debug('MultiRunner#onRunnerEnd:', runner.name);
+MultiReporter.prototype.onRunnerEnd = function onRunnerEnd(runner) {
+  WCT.util.debug('MultiReporter#onRunnerEnd:', runner.name);
   this.currentRunner = null;
   this.flushPendingEvents();
 };
@@ -234,7 +250,7 @@ MultiRunner.prototype.onRunnerEnd = function onRunnerEnd(runner) {
  * loop until all buffered runners are complete, or we have run out of buffered
  * events.
  */
-MultiRunner.prototype.flushPendingEvents = function flushPendingEvents() {
+MultiReporter.prototype.flushPendingEvents = function flushPendingEvents() {
   var events = this.pendingEvents;
   this.pendingEvents = [];
   events.forEach(function(eventArgs) {

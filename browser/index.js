@@ -32,7 +32,7 @@ WCT.numConcurrentSuites = 1;
 WCT._suitesToLoad = [];
 WCT._dependencies = [];
 
-// Used to share data between subSuites on client and reporters on server
+// Used to share data between childRunners on client and reporters on server
 WCT.share = {};
 
 /**

@@ -16,19 +16,19 @@ WCT.util = {};
  *     frameworks have loaded.
  */
 WCT.util.whenFrameworksReady = function(callback) {
-  WCT.util.debug(window.location.pathname, 'WCT.util.whenFrameworksReady');
+  WCT.util.debug('WCT.util.whenFrameworksReady');
   var done = function() {
-    WCT.util.debug(window.location.pathname, 'WCT.util.whenFrameworksReady done');
+    WCT.util.debug('WCT.util.whenFrameworksReady done');
     callback();
   };
 
   function importsReady() {
     window.removeEventListener('HTMLImportsLoaded', importsReady);
-    WCT.util.debug(window.location.pathname, 'HTMLImportsLoaded');
+    WCT.util.debug('HTMLImportsLoaded');
 
     if (window.Polymer && Polymer.whenReady) {
       Polymer.whenReady(function() {
-        WCT.util.debug(window.location.pathname, 'polymer-ready');
+        WCT.util.debug('polymer-ready');
         done();
       });
     } else {
@@ -76,7 +76,9 @@ WCT.util.loadScript = function loadScript(path, done) {
  */
 WCT.util.debug = function debug(var_args) {
   if (!WCT.debug) return;
-  console.debug.apply(console, arguments);
+  var args = [window.location.pathname];
+  args.push.apply(args, arguments);
+  console.debug.apply(console, args);
 };
 
 // URL Processing
@@ -138,12 +140,35 @@ WCT.util.paramsToQuery = function paramsToQuery(params) {
   return '?' + pairs.join('&');
 };
 
-/** @return {string} `location` relative to the current window. */
-WCT.util.relativeLocation = function relativeLocation(location) {
-  var path = location.pathname;
-  var basePath = window.location.pathname.match(/^.*\//)[0];
+/**
+ * @param {!Location|string} location
+ * @return {string}
+ */
+WCT.util.basePath = function basePath(location) {
+  return (location.pathname || location).match(/^.*\//)[0];
+};
+
+/**
+ * @param {!Location|string} location
+ * @param {string} basePath
+ * @return {string}
+ */
+WCT.util.relativeLocation = function relativeLocation(location, basePath) {
+  var path = location.pathname || location;
   if (path.indexOf(basePath) === 0) {
     path = path.substring(basePath.length);
+  }
+  return path;
+};
+
+/**
+ * @param {!Location|string} location
+ * @return {string}
+ */
+WCT.util.cleanLocation = function cleanLocation(location) {
+  var path = location.pathname || location;
+  if (path.slice(-11) === '/index.html') {
+    path = path.slice(0, path.length - 10);
   }
   return path;
 };

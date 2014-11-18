@@ -13,15 +13,15 @@
 // expected to call `done()`, which posts a message to the parent window.
 window.addEventListener('message', function(event) {
   if (!event.data || (event.data !== 'ok' && !event.data.error)) return;
-  var subSuite = WCT.SubSuite.get(event.source);
-  if (!subSuite) return;
+  var childRunner = WCT.ChildRunner.get(event.source);
+  if (!childRunner) return;
 
   // The name of the suite as exposed to the user.
-  var path = WCT.util.relativeLocation(event.source.location);
-  var parentRunner = subSuite.parentScope.WCT._multiRunner;
-  parentRunner.emitOutOfBandTest('page-wide tests via global done()', event.data.error, path, true);
+  var reporter = childRunner.parentScope.WCT._reporter;
+  var title    = reporter.suiteTitle(event.source.location);
+  reporter.emitOutOfBandTest('page-wide tests via global done()', event.data.error, title, true);
 
-  subSuite.done();
+  childRunner.done();
 });
 
 // Attempt to ensure that we complete a test suite if it is interrupted by a
