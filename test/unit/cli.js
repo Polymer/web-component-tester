@@ -3,8 +3,9 @@ var expect = require('chai').expect;
 var sinon  = require('sinon');
 var path   = require('path');
 
-var cli   = require('../../runner/cli');
-var steps = require('../../runner/steps');
+var browsers = require('../../runner/browsers');
+var cli      = require('../../runner/cli');
+var steps    = require('../../runner/steps');
 
 var FIXTURES = path.resolve(__dirname, '../fixtures/integration');
 
@@ -14,6 +15,9 @@ describe('cli', function() {
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     sandbox.stub(steps, 'runTests', function(options, emitter, done) { done(); });
+    sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
+      callback(null, [{browserName: 'test', version: '1.2'}]);
+    });
   });
 
   afterEach(function() {
