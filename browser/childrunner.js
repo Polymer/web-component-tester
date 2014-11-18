@@ -120,6 +120,20 @@ ChildRunner.prototype.run = function(done) {
  */
 ChildRunner.prototype.loaded = function(error) {
   WCT.util.debug('ChildRunner#loaded', this.url, error);
+  if (error) {
+    this.signalRunComplete(error);
+    this.done();
+  }
+};
+
+/**
+ * Called in mocha/run.js when all dependencies have loaded, and the child is
+ * ready to start running tests
+ *
+ * @param {*} error The error that occured, if any.
+ */
+ChildRunner.prototype.ready = function(error) {
+  WCT.util.debug('ChildRunner#ready', this.url, error);
   if (this.timeoutId) {
     clearTimeout(this.timeoutId);
   }

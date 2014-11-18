@@ -109,7 +109,7 @@ MultiReporter.prototype.done = function done() {
 MultiReporter.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, opt_error, opt_suiteTitle, opt_estimated) {
   WCT.util.debug('MultiReporter#emitOutOfBandTest(', arguments, ')');
   var root = new Mocha.Suite();
-  root.title = opt_suiteTitle;
+  root.title = opt_suiteTitle || '';
   var test = new Mocha.Test(title, function() {
   });
   test.parent = root;

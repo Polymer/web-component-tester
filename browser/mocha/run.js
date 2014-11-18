@@ -45,7 +45,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // We need the reporter so that we can report errors during load.
     loadDependencies(reporter, function(error) {
+      // Let our parent know that we're about to start the tests.
+      if (current) current.ready(error);
       if (error) throw error;
+
       runTests(reporter, childSuites, function(error) {
         // Make sure to let our parent know that we're done.
         if (current) current.done();

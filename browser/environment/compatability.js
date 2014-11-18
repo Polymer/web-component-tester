@@ -16,6 +16,7 @@ window.addEventListener('message', function(event) {
   var childRunner = WCT.ChildRunner.get(event.source);
   if (!childRunner) return;
 
+  childRunner.ready();
   // The name of the suite as exposed to the user.
   var reporter = childRunner.parentScope.WCT._reporter;
   var title    = reporter.suiteTitle(event.source.location);
