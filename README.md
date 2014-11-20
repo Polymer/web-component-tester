@@ -26,7 +26,7 @@ Or, you can write tests in separate `.html` documents. For example,
 <html>
 <head>
   <meta charset="utf-8">
-  <script src="../../webcomponentsjs/webcomponents.js"></script>
+  <script src="../../webcomponentsjs/webcomponents.min.js"></script>
   <script src="../../web-component-tester/browser.js"></script>
   <link rel="import" href="../awesome-element.html">
 </head>
@@ -104,7 +104,7 @@ any desired tests:
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="../../webcomponentsjs/webcomponents.js"></script>
+    <script src="../../webcomponentsjs/webcomponents.min.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
     <script src="../awesome.js"></script>
   </head>
