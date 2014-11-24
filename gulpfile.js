@@ -75,10 +75,8 @@ gulp.task('build:browser', function() {
       'browser/util.js',
       'browser/**/*.{js,css}',
     ])
-    .pipe(sourcemaps.init())
     .pipe(gulpIf(/\.css$/, wrap(CSS_TO_JS)))
     .pipe(concat('browser.js'))
-    .pipe(sourcemaps.write())
     .pipe(gulp.dest('.'));
 });
 
@@ -91,10 +89,8 @@ gulp.task('build:environment', function() {
       'vendor/sinon-chai/lib/sinon-chai.js',
       'environment/**/*.{js,css}',
     ])
-    .pipe(sourcemaps.init())
     .pipe(gulpIf(/\.css$/, wrap(CSS_TO_JS)))
     .pipe(concat('environment.js'))
-    .pipe(sourcemaps.write())
     .pipe(gulp.dest('.'));
 });
 
