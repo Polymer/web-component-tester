@@ -40,70 +40,98 @@ describe('grunt' ,function() {
     grunt.loadTasks(path.resolve(__dirname, '../../tasks'));
   });
 
-  describe('wct-test', function() {
-
-    var sandbox;
-    beforeEach(function() {
-      sandbox = sinon.sandbox.create();
-      sandbox.stub(steps, 'runTests', function(options, emitter, done) { done(); });
-      sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
-        callback(null, [{browserName: 'test', version: '1.2'}]);
-      });
-
-      process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
-    });
-
-    afterEach(function() {
-      sandbox.restore();
-    });
-
-    function runTask(task, done) {
-      grunt.task.options({
-        error: done,
-        done: function(error) {
-          expect(steps.runTests).to.have.been.calledOnce;
-          done(null, steps.runTests.getCall(0));
-        },
-      });
-      grunt.task.run('wct-test:' + task).start();
+  function runTask(task, done) {
+    function handleCallback(error) {
+      if (!done) return;
+      // We shouldn't error before hitting it.
+      expect(steps.runTests).to.have.been.calledOnce;
+      done(error, steps.runTests.getCall(0));
+      done = null;
     }
 
-    it('passes configuration through', function(done) {
-      runTask('passthrough', function(error, call) {
-        expect(error).to.not.be.ok;
-        expect(call.args[0]).to.include({foo: 1, bar: 'asdf'});
-        done();
+    grunt.task.options({error: handleCallback, done: handleCallback});
+    grunt.task.run('wct-test:' + task).start();
+  }
+
+  describe('wct-test', function() {
+
+    describe('with a passing suite', function() {
+
+      var sandbox;
+      beforeEach(function() {
+        sandbox = sinon.sandbox.create();
+        sandbox.stub(steps, 'runTests', function(options, emitter, done) { done(); });
+        sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
+          callback(null, [{browserName: 'test', version: '1.2'}]);
+        });
+
+        process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
       });
+
+      afterEach(function() {
+        sandbox.restore();
+      });
+
+      it('passes configuration through', function(done) {
+        runTask('passthrough', function(error, call) {
+          expect(error).to.not.be.ok;
+          expect(call.args[0]).to.include({foo: 1, bar: 'asdf'});
+          done();
+        });
+      });
+
+      it('picks up ENV-based configuration', function(done) {
+        process.env.SAUCE_USERNAME = '--fake-sauce--';
+
+        runTask('passthrough', function(error, call) {
+          expect(error).to.not.be.ok;
+          expect(call.args[0].sauce).to.include({username: '--fake-sauce--'});
+          done();
+        });
+      });
+
+      it('picks up CLI flags', function(done) {
+        process.argv = ['grunt', 'wct-test:passthrough', '--persistent'];
+
+        runTask('passthrough', function(error, call) {
+          expect(error).to.not.be.ok;
+          expect(call.args[0]).to.include({persistent: true});
+          done();
+        });
+      });
+
+      it('prefers direct configuration over ENV', function(done) {
+        process.env.SAUCE_USERNAME = '--fake-sauce--';
+
+        runTask('override', function(error, call) {
+          expect(error).to.not.be.ok;
+          expect(call.args[0].sauce).to.include({username: '--real-sauce--'});
+          done();
+        });
+      });
+
     });
 
-    it('picks up ENV-based configuration', function(done) {
-      process.env.SAUCE_USERNAME = '--fake-sauce--';
+    describe('with a failing suite', function() {
 
-      runTask('passthrough', function(error, call) {
-        expect(error).to.not.be.ok;
-        expect(call.args[0].sauce).to.include({username: '--fake-sauce--'});
-        done();
+      var sandbox;
+      beforeEach(function() {
+        sandbox = sinon.sandbox.create();
+        sandbox.stub(steps, 'runTests', function(options, emitter, done) { done('failures'); });
+        sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
+          callback(null, [{browserName: 'test', version: '1.2'}]);
+        });
+
+        process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
       });
-    });
 
-    it('picks up CLI flags', function(done) {
-      process.argv = ['grunt', 'wct-test:passthrough', '--persistent'];
-
-      runTask('passthrough', function(error, call) {
-        expect(error).to.not.be.ok;
-        expect(call.args[0]).to.include({persistent: true});
-        done();
+      it.only('passes errors out', function(done) {
+        runTask('override', function(error, call) {
+          expect(error).to.be.ok;
+          done();
+        });
       });
-    });
 
-    it('prefers direct configuration over ENV', function(done) {
-      process.env.SAUCE_USERNAME = '--fake-sauce--';
-
-      runTask('override', function(error, call) {
-        expect(error).to.not.be.ok;
-        expect(call.args[0].sauce).to.include({username: '--real-sauce--'});
-        done();
-      });
     });
 
   });
