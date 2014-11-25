@@ -40,7 +40,7 @@
     "freeport": "^1.0.3",
     "glob": "^4.0.6",
     "http": "0.0.0",
-    "launchpad": "nevir/launchpad#paths",
+    "launchpad": "^0.4.3",
     "lodash": "^2.4.1",
     "resolve": "^1.0.0",
     "sauce-connect-launcher": "nevir/sauce-connect-launcher#npm-bug",
