@@ -41,12 +41,13 @@ describe('grunt' ,function() {
   });
 
   function runTask(task, done) {
+    var called = false;
     function handleCallback(error) {
-      if (!done) return;
+      if (called) return;
+      called = true;
       // We shouldn't error before hitting it.
       expect(steps.runTests).to.have.been.calledOnce;
       done(error, steps.runTests.getCall(0));
-      done = null;
     }
 
     grunt.task.options({error: handleCallback, done: handleCallback});
@@ -125,8 +126,12 @@ describe('grunt' ,function() {
         process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
       });
 
-      it.only('passes errors out', function(done) {
-        runTask('override', function(error, call) {
+      afterEach(function() {
+        sandbox.restore();
+      });
+
+      it('passes errors out', function(done) {
+        runTask('passthrough', function(error, call) {
           expect(error).to.be.ok;
           done();
         });

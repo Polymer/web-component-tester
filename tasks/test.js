@@ -24,9 +24,11 @@ module.exports = function(grunt) {
     test(options, function(error) {
       if (error) {
         console.log(chalk.red(error));
+        // Grunt only errors on `false` and instances of `Error`.
+        done(new Error(error));
+      } else {
+        done();
       }
-      // Grunt only errors on `false` and instances of `Error`.
-      done(new Error(error));
     });
   });
 };

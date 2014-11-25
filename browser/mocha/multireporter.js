@@ -15,10 +15,10 @@ var STACKY_CONFIG = {
   indent: '  ',
   locationStrip: [
     /^https?:\/\/[^\/]+/,
-    /\?[\d\.]+$/,
+    /\?.*$/,
   ],
   filter: function(line) {
-    return line.location.match(/web-component-tester\//);
+    return line.location.match(/\/web-component-tester\/[^\/]+(\?.*)?$/);
   },
 };
 
