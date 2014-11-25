@@ -25,7 +25,7 @@ function run(env, args, output, callback) {
   var done    = wrapCallback(output, callback);
   var options = config.fromEnv(env, args, output);
 
-  if (options.extraArgs) {
+  if (options.extraArgs && options.extraArgs.length) {
     options.suites = options.extraArgs;
   }
 

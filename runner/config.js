@@ -198,8 +198,8 @@ function fromDisk() {
   var configs = _.filter(paths, fs.existsSync).map(require);
   var options = _.merge.apply(_, [{}].concat(configs));
 
-  if (projectFile && projectFile !== globalFile) {
-    options.root = projectFile.slice(0, -CONFIG_NAME.length);
+  if (!options.root && projectFile && projectFile !== globalFile) {
+    process.chdir(path.dirname(projectFile));
   }
 
   return options;
@@ -222,16 +222,11 @@ function expand(options, baseDir, done) {
     paths.expand(root, options.suites, function(error, suites) {
       if (error) return done(error);
 
+      options.suites = suites;
       // Serve from the parent directory so that we can reference element deps.
       if (!options.root) {
-        options.root = path.dirname(root);
-
-        var basename = path.basename(root);
-        suites = _.map(suites, function(file) {
-          return path.join(basename, file);
-        });
+        serveFromParent(root, options);
       }
-      options.suites = suites;
 
       validate(options, function(error) {
         done(error, options);
@@ -260,6 +255,23 @@ function validate(options, done) {
   }
 
   done(null);
+}
+
+
+/**
+ * Sets options.root to the parent directory of `baseDir`, and adjusts all
+ * suites relative to it.
+ *
+ * @param {string} baseDir
+ * @param {!Object} options
+ */
+function serveFromParent(baseDir, options) {
+  options.root = path.dirname(baseDir);
+
+  var basename = path.basename(baseDir);
+  options.suites = _.map(options.suites || [], function(file) {
+    return path.join(basename, file);
+  });
 }
 
 module.exports = {

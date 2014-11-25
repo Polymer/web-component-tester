@@ -33,6 +33,7 @@ describe('cli', function() {
       cli.run(env, args, stream, function(error) {
         if (error) {
           log.forEach(function(line) { process.stderr.write(line); });
+          expect(error).to.not.be.ok;
         }
         done(steps.runTests.getCall(0));
       });
@@ -119,6 +120,56 @@ describe('cli', function() {
         expect(error).to.include('suites');
         done();
       });
+    });
+
+    describe('with wct.conf.js', function() {
+      var ROOT = path.join(FIXTURES, 'conf');
+
+      it('serves from parent', function(done) {
+        process.chdir(ROOT);
+
+        expectRun({}, [], function(call) {
+          expect(call.args[0].suites).to.have.members([
+            'conf/test/foo.js',
+          ]);
+          expect(call.args[0].root).to.equal(FIXTURES);
+          done();
+        });
+      });
+
+      it('walks the ancestry', function(done) {
+        process.chdir(path.join(ROOT, 'branch/leaf'));
+
+        expectRun({}, [], function(call) {
+          expect(call.args[0].suites).to.have.members([
+            'conf/test/foo.js',
+          ]);
+          expect(call.args[0].root).to.equal(FIXTURES);
+          done();
+        });
+      });
+
+      it('honors specified values', function(done) {
+        process.chdir(ROOT);
+
+        expectRun({}, [], function(call) {
+          expect(call.args[0].sauce.username).to.eq('abc123');
+          done();
+        });
+      });
+
+      it('honors root', function(done) {
+        process.chdir(path.join(ROOT, 'rooted'));
+
+        expectRun({}, [], function(call) {
+          expect(call.args[0].suites).to.have.members([
+            'integration/conf/test/foo.js',
+          ]);
+          expect(call.args[0].root).to.equal(path.dirname(FIXTURES));
+          done();
+        });
+      });
+
     });
 
   });
