@@ -6712,8 +6712,11 @@ ChildRunner.prototype.done = function done() {
 
   this.signalRunComplete();
 
-  if (!this.iframe) return;
-  this.iframe.parentNode.removeChild(this.iframe);
+  if (!this.iframe) return; 
+  var iframe = this.iframe;
+  window.setTimeout( function() {
+    iframe.parentNode.removeChild(iframe);
+  }, 1);
 };
 
 ChildRunner.prototype.signalRunComplete = function signalRunComplete(error) {
