@@ -18,7 +18,7 @@ WCT will [run your tests](#running-your-tests) against whatever browsers you hav
 
 ## `.html` Suites
 
-Or, you can write tests in separate `.html` documents. For example,
+Your test suites can be `.html` documents. For example,
 `test/awesomest-tests.html`:
 
 ```html
@@ -46,8 +46,8 @@ Or, you can write tests in separate `.html` documents. For example,
 
 ## `.js` Suites
 
-Your test suites can either be `.js` sources, which run in the context of your
-text index. For example, `test/awesome-tests.js`:
+Or, you can write tests in separate `.js` sources, which run in the context of
+your text index. For example, `test/awesome-tests.js`:.
 
 ```js
 suite('AwesomeLib', function() {
