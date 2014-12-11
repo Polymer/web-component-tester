@@ -29,6 +29,7 @@
     "wct-st": "./bin/wct-st"
   },
   "scripts": {
+    "postinstall": "node scripts/postinstall.js",
     "test": "gulp test"
   },
   "dependencies": {
@@ -43,7 +44,7 @@
     "launchpad": "^0.4.3",
     "lodash": "^2.4.1",
     "resolve": "^1.0.0",
-    "sauce-connect-launcher": "nevir/sauce-connect-launcher#npm-bug",
+    "sauce-connect-launcher": "nevir/sauce-connect-launcher#no-default-download",
     "selenium-standalone": "^2.43.1-5",
     "send": "^0.10.1",
     "serve-static": "^1.5.3",
