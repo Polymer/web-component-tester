@@ -39,6 +39,7 @@ var MOCHA_EXPORTS = {
     'xcontext',
     'it',
     'xit',
+    'specify',
     'xspecify',
   ],
 };
