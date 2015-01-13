@@ -80,6 +80,7 @@ window.testImmediateAsync = function testImmediateAsync(name, testFn) {
     });
   } catch (error) {
     err = error;
+    testComplete = true;
   }
 };
 
