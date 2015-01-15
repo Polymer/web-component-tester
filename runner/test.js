@@ -7,19 +7,19 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _      = require('lodash');
-var events = require('events');
+var _ = require('lodash');
 
 var CleanKill   = require('./cleankill');
 var CliReporter = require('./clireporter');
 var config      = require('./config');
+var Context     = require('./context');
 var steps       = require('./steps');
 
 /**
  * Runs a suite of web component tests.
  *
- * The returned EventEmitter fires various events to allow you to track the
- * progress of the tests:
+ * The returned Context (a kind of EventEmitter) fires various events to allow
+ * you to track the progress of the tests:
  *
  * Lifecycle Events:
  *
@@ -60,10 +60,10 @@ var steps       = require('./steps');
  *
  * @param {!Object} options The configuration, as specified in ./config.js.
  * @param {function(*)} done callback indicating error or success.
- * @return {!events.EventEmitter}
+ * @return {!Context}
  */
 module.exports = function test(options, done) {
-  var emitter = new events.EventEmitter();
+  var emitter = new Context();
 
   // All of our internal entry points already have defaults merged, but we also
   // want to expose this as the public API to web-component-tester.

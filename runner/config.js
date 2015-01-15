@@ -34,23 +34,27 @@ function defaults() {
     verbose:     false,
     // Display test results in expanded form. Verbose implies expanded.
     expanded:    true,
-    // Whether the default set of local (or remote) browsers should be targeted.
-    remote:      false,
     // The on-disk path where tests & static files should be served from. By
     // default, this is the directory above the current project (so that
     // element repos can be easily tested with their dependencies).
     root:        undefined,
-    // The browsers that tests will be run on. Accepts capabilities objects,
-    // local browser names ("chrome" etc), or remote browsers of the form
-    // "<PLATFORM>/<BROWSER>[@<VERSION>]".
-    browsers:    [],
     // Idle timeout for tests.
     testTimeout: 90 * 1000,
     // Whether the browser should be closed after the tests run.
     persistent:  false,
     // Additional .js files to include in *generated* test indexes.
     extraScripts: [],
-    // Extra capabilities to pass to wd when building a client.
+    // Webdriver capabilities objects for each browser that should be run.
+    //
+    // Capabilities can also contain a `url` value which is either a string URL
+    // for the webdriver endpoint, or {hostname:, port:, user:, pwd:}.
+    //
+    // Most of the time you will want to rely on the WCT browser plugins to fill
+    // this in for you (e.g. via `--local`, `--sauce`, etc).
+    activeBrowsers: [],
+    // Default capabilities to use when constructing webdriver connections (for
+    // each browser specified in `activeBrowsers`). A handy place to hang common
+    // configuration.
     //
     // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
     // Sauce:    https://docs.saucelabs.com/reference/test-configuration/
@@ -64,12 +68,22 @@ function defaults() {
       // https://github.com/bermi/sauce-connect-launcher#advanced-usage
       tunnelOptions: {},
     },
+
+    // DEPRECATED OPTIONS
+
+    // Whether the default set of local (or remote) browsers should be targeted.
+    remote:   false,
+    // The browsers that tests will be run on. Accepts capabilities objects,
+    // local browser names ("chrome" etc), or remote browsers of the form
+    // "<PLATFORM>/<BROWSER>[@<VERSION>]".
+    browsers: [],
   };
 }
 
 function parseArgs(args) {
   return yargs(args)
       .showHelpOnFail(false)
+      .strict()
       .wrap(80)
       .usage(
         '\n' + // Even margin.
@@ -181,7 +195,7 @@ function fromEnv(env, args, output) {
  *
  */
 function mergePlugins(options) {
-  _(options.plugins).forOwn(function( userConfig, pluginName ) {
+  _.forOwn(options.plugins, function(userConfig, pluginName) {
       var moduleConfig = require(pluginName);
       options.plugins[pluginName] = _.merge(moduleConfig, userConfig);
   });

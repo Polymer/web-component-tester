@@ -39,6 +39,7 @@ var INDEX_TEMPLATE = _.template(fs.readFileSync(
 ));
 
 // Steps
+
 function ensureSauceTunnel(options, emitter, done) {
   if (options.sauce.tunnelId) {
     return done(null, options.sauce.tunnelId);

@@ -1,12 +1,12 @@
-var _            = require('lodash');
-var EventEmitter = require('events').EventEmitter;
-var expect       = require('chai').expect;
-var path         = require('path');
-var util         = require('util');
+var _      = require('lodash');
+var expect = require('chai').expect;
+var path   = require('path');
+var util   = require('util');
 
 var CleanKill   = require('../../runner/cleankill');
 var CLIReporter = require('../../runner/clireporter');
 var config      = require('../../runner/config');
+var Context     = require('../../runner/context');
 var steps       = require('../../runner/steps');
 var test        = require('../../runner/test');
 
@@ -397,7 +397,7 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
       this.timeout(300 * 1000);
       currentEnv.remote = true;
 
-      var emitter = new EventEmitter();
+      var emitter = new Context();
       new CLIReporter(emitter, process.stdout, {verbose: true});
 
       steps.ensureSauceTunnel(baseOptions, emitter, function(error, tunnelId) {
