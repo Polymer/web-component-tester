@@ -26,6 +26,7 @@ var which        = require('which');
 
 var BrowserRunner = require('./browserrunner');
 var CleanKill     = require('./cleankill');
+var config        = require('./config');
 
 // We prefer serving local assets over bower assets.
 var PACKAGE_ROOT = path.resolve(__dirname, '..');
@@ -38,9 +39,25 @@ var INDEX_TEMPLATE = _.template(fs.readFileSync(
   path.resolve(__dirname, '../data/index.html'), {encoding: 'utf-8'}
 ));
 
-// Steps
+// Steps (& Hooks)
 
-function ensureSauceTunnel(options, emitter, done) {
+function configure(context, done) {
+  context.emit('log:debug', 'step: configure');
+  var options = context.options;
+  _.defaults(options, config.defaults());
+
+  config.expand(options, process.cwd(), function(error) {
+    if (error) return done(error);
+
+    // Note that we trigger the configure hook _after_ filling in the `options`
+    // object.
+    //
+    // If you want to modify options prior to this; do it during plugin init.
+    context.emitHook('configure', done);
+  });
+}
+
+function ensureSauceTunnel(options, context, done) {
   if (options.sauce.tunnelId) {
     return done(null, options.sauce.tunnelId);
   }
@@ -56,21 +73,21 @@ function ensureSauceTunnel(options, emitter, done) {
       username:         options.sauce.username,
       accessKey:        options.sauce.accessKey,
       tunnelIdentifier: options.sauce.tunnelId || uuid.v4(),
-      logger:           emitter.emit.bind(emitter, 'log:debug'),
+      logger:           context.emit.bind(context, 'log:debug'),
       logfile:          logPath,
     };
     _.assign(connectOptions, options.sauce.tunnelOptions);
     var tunnelId = connectOptions.tunnelIdentifier;
 
-    emitter.emit('log:info', 'Creating Sauce Connect tunnel');
-    emitter.emit('log:info', 'Sauce Connect log:', chalk.magenta(logPath));
-    emitter.emit('log:debug', 'sauce-connect-launcher options', connectOptions);
+    context.emit('log:info', 'Creating Sauce Connect tunnel');
+    context.emit('log:info', 'Sauce Connect log:', chalk.magenta(logPath));
+    context.emit('log:debug', 'sauce-connect-launcher options', connectOptions);
     sauceConnect(connectOptions, function(error, tunnel) {
       if (error) {
-        emitter.emit('log:error', 'Sauce tunnel failed:');
+        context.emit('log:error', 'Sauce tunnel failed:');
       } else {
-        emitter.emit('log:info', 'Sauce tunnel active:', chalk.yellow(tunnelId));
-        emitter.emit('sauce:tunnel-active', tunnelId);
+        context.emit('log:info', 'Sauce tunnel active:', chalk.yellow(tunnelId));
+        context.emit('sauce:tunnel-active', tunnelId);
       }
       done(error, tunnelId);
     });
@@ -80,7 +97,7 @@ function ensureSauceTunnel(options, emitter, done) {
   });
 }
 
-function startSeleniumServer(options, emitter, done) {
+function startSeleniumServer(options, context, done) {
   checkSeleniumEnvironment(function(error) {
     if (error) return done(error);
     freeport(function(error, port) {
@@ -92,11 +109,11 @@ function startSeleniumServer(options, emitter, done) {
 
       function onOutput(data) {
         var str = data.toString();
-        emitter.emit('log:debug', str);
+        context.emit('log:debug', str);
 
         if (str.indexOf('Started org.openqa.jetty.jetty.Server') > -1) {
           server.removeListener('exit', badExit);
-          emitter.emit('log:info', 'Selenium server running on port', chalk.yellow(port));
+          context.emit('log:info', 'Selenium server running on port', chalk.yellow(port));
           done(null, port);
         }
       }
@@ -111,7 +128,7 @@ function startSeleniumServer(options, emitter, done) {
   });
 }
 
-function startStaticServer(options, emitter, done) {
+function startStaticServer(options, context, done) {
   freeport(function(error, port) {
     if (error) return done(error);
 
@@ -119,7 +136,7 @@ function startStaticServer(options, emitter, done) {
     var server = http.createServer(app);
 
     app.use(function(request, response, next) {
-      emitter.emit('log:debug', chalk.magenta(request.method), request.url);
+      context.emit('log:debug', chalk.magenta(request.method), request.url);
       next();
     });
 
@@ -138,7 +155,7 @@ function startStaticServer(options, emitter, done) {
     // Add plugin middleware
     _.values(options.plugins).forEach(function(plugin) {
       if (plugin.middleware) {
-        app.use(plugin.middleware(options.root, plugin, emitter));
+        app.use(plugin.middleware(options.root, plugin, context));
       }
     });
 
@@ -151,7 +168,7 @@ function startStaticServer(options, emitter, done) {
       done();
     });
 
-    emitter.emit('log:info',
+    context.emit('log:info',
       'Web server running on port', chalk.yellow(port),
       'and serving from', chalk.magenta(options.root)
     );
@@ -159,18 +176,20 @@ function startStaticServer(options, emitter, done) {
   });
 }
 
-function runTests(options, emitter, done) {
+function runTests(context, done) {
+  context.emit('log:warn', 'step: runTests');
+  var options = context.options;
   injectWebRunner(options);
 
   var jobs = {
-    http: startStaticServer.bind(null, options, emitter),
+    http: startStaticServer.bind(null, options, context),
   };
   if (_.any(options.browsers, isLocal)) {
-    jobs.selenium = startSeleniumServer.bind(null, options, emitter);
+    jobs.selenium = startSeleniumServer.bind(null, options, context);
   }
   if (!_.every(options.browsers, isLocal)) {
     if (!assertSauceCredentials(options, done)) return; // Assert for the runners.
-    jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
+    jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, context);
   }
 
   async.parallel(jobs, function(error, results) {
@@ -184,7 +203,7 @@ function runTests(options, emitter, done) {
     }
 
     var failed = false;
-    var runners = runBrowsers(options, emitter, function(error) {
+    var runners = runBrowsers(options, context, function(error) {
       if (error) {
         done(error);
       } else {
@@ -193,7 +212,7 @@ function runTests(options, emitter, done) {
     });
 
     socketIO(results.http).on('connection', function(socket) {
-      emitter.emit('log:debug', 'Test client opened sideband socket');
+      context.emit('log:debug', 'Test client opened sideband socket');
       socket.on('client-event', function(data) {
         runners[data.browserId].onEvent(data.event, data.data);
       });
@@ -242,7 +261,7 @@ function isLocal(browser) {
   return !browser.platform;
 }
 
-function runBrowsers(options, emitter, done) {
+function runBrowsers(options, context, done) {
   if (options.browsers.length === 0) {
     throw new Error('No browsers configured to run');
   }
@@ -251,19 +270,19 @@ function runBrowsers(options, emitter, done) {
   // TODO(nevir): We should be queueing the browsers above some limit too.
   http.globalAgent.maxSockets = Math.max(http.globalAgent.maxSockets, options.browsers.length * 2);
 
-  emitter.emit('run-start', options);
+  context.emit('run-start', options);
 
   var errors  = [];
   var numDone = 0;
   return options.browsers.map(function(browser, id) {
     browser.id = id;
-    return new BrowserRunner(emitter, isLocal(browser), browser, options, function(error) {
-      emitter.emit('log:debug', browser, 'BrowserRunner complete');
+    return new BrowserRunner(context, isLocal(browser), browser, options, function(error) {
+      context.emit('log:debug', browser, 'BrowserRunner complete');
       if (error) errors.push(error);
       numDone = numDone + 1;
       if (numDone === options.browsers.length) {
         error = errors.length > 0 ? _.unique(errors).join(', ') : null;
-        emitter.emit('run-end', error);
+        context.emit('run-end', error);
         done(error);
       }
     });
@@ -271,6 +290,7 @@ function runBrowsers(options, emitter, done) {
 }
 
 module.exports = {
+  configure:           configure,
   ensureSauceTunnel:   ensureSauceTunnel,
   startSeleniumServer: startSeleniumServer,
   startStaticServer:   startStaticServer,

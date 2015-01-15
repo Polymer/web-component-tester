@@ -7,11 +7,11 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _ = require('lodash');
+var _     = require('lodash');
+var async = require('async');
 
 var CleanKill   = require('./cleankill');
 var CliReporter = require('./clireporter');
-var config      = require('./config');
 var Context     = require('./context');
 var steps       = require('./steps');
 
@@ -63,35 +63,43 @@ var steps       = require('./steps');
  * @return {!Context}
  */
 module.exports = function test(options, done) {
-  var emitter = new Context();
+  var context = new Context(options);
 
-  // All of our internal entry points already have defaults merged, but we also
-  // want to expose this as the public API to web-component-tester.
-  options = _.merge(config.defaults(), options);
-  config.expand(options, process.cwd(), function(error, options) {
-    if (error) return done(error);
+  // We assume that any options related to logging are passed in via the initial
+  // `options`.
+  if (options.output) {
+    new CliReporter(context, options.output, options);
+  }
 
-    if (options.output) {
-      new CliReporter(emitter, options.output, options);
+  async.series([
+
+    steps.configure.bind(steps, context),
+
+    function(done) {
+      var cleanOptions = _.omit(options, 'output');
+      context.emit('log:debug', 'Configuration:', cleanOptions);
+      done();
+    },
+
+    function(done) {
+      // Add plugin event listeners
+      _.values(options.plugins).forEach(function(plugin) {
+        if (plugin.listener) {
+          new plugin.listener(context, options.output, plugin);
+        }
+      });
+      done();
+    },
+
+    steps.runTests.bind(steps, context),
+
+  ], function(error) {
+    if (options.skipCleanup) {
+      done(error);
+    } else {
+      CleanKill.close(done.bind(null, error));
     }
-    var cleanOptions = _.omit(options, 'output');
-    emitter.emit('log:debug', 'Configuration:', cleanOptions);
-
-    // Add plugin event listeners
-    _.values(options.plugins).forEach(function(plugin) {
-      if (plugin.listener) {
-        new plugin.listener(emitter, options.output, plugin);
-      }
-    });
-
-    steps.runTests(options, emitter, function(error) {
-      if (options.skipCleanup) {
-        done(error);
-      } else {
-        CleanKill.close(done.bind(null, error));
-      }
-    });
   });
 
-  return emitter;
+  return context;
 };

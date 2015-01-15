@@ -14,7 +14,7 @@ describe('cli', function() {
   var sandbox;
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'runTests', function(options, emitter, done) { done(); });
+    sandbox.stub(steps, 'runTests', function(context, done) { done(); });
     sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
       callback(null, [{browserName: 'test', version: '1.2'}]);
     });
@@ -43,11 +43,11 @@ describe('cli', function() {
       process.chdir(path.join(FIXTURES, 'standard'));
 
       expectRun({}, [], function(call) {
-        expect(call.args[0].suites).to.have.members([
+        expect(call.args[0].options.suites).to.have.members([
           'standard/test/a.html',
           'standard/test/b.js',
         ]);
-        expect(call.args[0].root).to.equal(FIXTURES);
+        expect(call.args[0].options.root).to.equal(FIXTURES);
         done();
       });
     });
@@ -56,11 +56,11 @@ describe('cli', function() {
       process.chdir(path.join(FIXTURES, 'standard'));
 
       expectRun({}, ['**/*.html'], function(call) {
-        expect(call.args[0].suites).to.have.members([
+        expect(call.args[0].options.suites).to.have.members([
           'standard/test/a.html',
           'standard/x-foo.html',
         ]);
-        expect(call.args[0].root).to.equal(FIXTURES);
+        expect(call.args[0].options.root).to.equal(FIXTURES);
         done();
       });
     });
@@ -69,11 +69,11 @@ describe('cli', function() {
       process.chdir(path.join(FIXTURES, 'standard'));
 
       expectRun({}, ['test/b.js', 'x-foo.html'], function(call) {
-        expect(call.args[0].suites).to.have.members([
+        expect(call.args[0].options.suites).to.have.members([
           'standard/test/b.js',
           'standard/x-foo.html',
         ]);
-        expect(call.args[0].root).to.equal(FIXTURES);
+        expect(call.args[0].options.root).to.equal(FIXTURES);
         done();
       });
     });
@@ -83,11 +83,11 @@ describe('cli', function() {
 
       var root = path.join(FIXTURES, 'standard');
       expectRun({}, ['--root', root], function(call) {
-        expect(call.args[0].suites).to.have.members([
+        expect(call.args[0].options.suites).to.have.members([
           'test/a.html',
           'test/b.js',
         ]);
-        expect(call.args[0].root).to.equal(root);
+        expect(call.args[0].options.root).to.equal(root);
         done();
       });
     });
@@ -97,11 +97,11 @@ describe('cli', function() {
 
       var root = path.join(FIXTURES, 'standard');
       expectRun({}, ['--root', root, '**/*.html'], function(call) {
-        expect(call.args[0].suites).to.have.members([
+        expect(call.args[0].options.suites).to.have.members([
           'test/a.html',
           'x-foo.html',
         ]);
-        expect(call.args[0].root).to.equal(root);
+        expect(call.args[0].options.root).to.equal(root);
         done();
       });
     });
@@ -129,10 +129,10 @@ describe('cli', function() {
         process.chdir(ROOT);
 
         expectRun({}, [], function(call) {
-          expect(call.args[0].suites).to.have.members([
+          expect(call.args[0].options.suites).to.have.members([
             'conf/test/foo.js',
           ]);
-          expect(call.args[0].root).to.equal(FIXTURES);
+          expect(call.args[0].options.root).to.equal(FIXTURES);
           done();
         });
       });
@@ -141,10 +141,10 @@ describe('cli', function() {
         process.chdir(path.join(ROOT, 'branch/leaf'));
 
         expectRun({}, [], function(call) {
-          expect(call.args[0].suites).to.have.members([
+          expect(call.args[0].options.suites).to.have.members([
             'conf/test/foo.js',
           ]);
-          expect(call.args[0].root).to.equal(FIXTURES);
+          expect(call.args[0].options.root).to.equal(FIXTURES);
           done();
         });
       });
@@ -153,7 +153,7 @@ describe('cli', function() {
         process.chdir(ROOT);
 
         expectRun({}, [], function(call) {
-          expect(call.args[0].sauce.username).to.eq('abc123');
+          expect(call.args[0].options.sauce.username).to.eq('abc123');
           done();
         });
       });
@@ -162,10 +162,10 @@ describe('cli', function() {
         process.chdir(path.join(ROOT, 'rooted'));
 
         expectRun({}, [], function(call) {
-          expect(call.args[0].suites).to.have.members([
+          expect(call.args[0].options.suites).to.have.members([
             'integration/conf/test/foo.js',
           ]);
-          expect(call.args[0].root).to.equal(path.dirname(FIXTURES));
+          expect(call.args[0].options.root).to.equal(path.dirname(FIXTURES));
           done();
         });
       });

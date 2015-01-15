@@ -15,11 +15,11 @@ var util   = require('util');
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
  * downstream to listen to.
  *
- * This is effectively an `EventEmitter` on steroids.
+ * @param {Object} options Any initially specified options.
  */
-function Context() {
+function Context(options) {
   /** The configuration for the current WCT run. */
-  this.options = {};
+  this.options = options || {};
 
   /** @type {!Object<string, !Array<function>>} */
   this._hookHandlers = {};
@@ -43,6 +43,18 @@ util.inherits(Context, events.EventEmitter);
  */
 Context.prototype.hook = function hook(name, handler) {
   this._hookHandlers[name] = this._hookHandlers[name] || [];
+  this._hookHandlers[name].unshift(handler.bind(null, this.options));
+};
+
+/**
+ * Registers a handler that will run after any handlers registered by `hook`.
+ *
+ * @param {string} name
+ * @param {function(!Object, function(*))} handler
+ * @return {!Context}
+ */
+Context.prototype.hookLate = function hookLate(name, handler) {
+  this._hookHandlers[name] = this._hookHandlers[name] || [];
   this._hookHandlers[name].push(handler.bind(null, this.options));
 };
 
@@ -61,9 +73,13 @@ Context.prototype.emitHook = function emitHook(name, done) {
   // We execute the handlers _sequentially_. This may be slower, but it gives us
   // a lighter cognitive load and more obvious logs.
   async.series(this._hookHandlers[name] || [], function(error) {
-    this.emit('log:debug', 'hook done:', name, error);
+    if (error) {
+      this.emit('log:debug', 'hook done:', name, 'with error:', error);
+    } else {
+      this.emit('log:debug', 'hook done:', name);
+    }
     done(error);
-  });
+  }.bind(this));
 
   return this;
 };

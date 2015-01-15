@@ -223,7 +223,7 @@ function fromDisk() {
  *
  * @param {!Object} options The configuration to expand.
  * @param {string} baseDir The directory paths should be relative to.
- * @param {function(*, options)} Callback given the expanded options on success.
+ * @param {function(*)} done
  */
 function expand(options, baseDir, done) {
   var root = options.root || baseDir;
@@ -242,7 +242,7 @@ function expand(options, baseDir, done) {
       }
 
       validate(options, function(error) {
-        done(error, options);
+        done(error);
       });
     });
   });

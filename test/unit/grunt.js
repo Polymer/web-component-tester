@@ -61,7 +61,7 @@ describe('grunt' ,function() {
       var sandbox;
       beforeEach(function() {
         sandbox = sinon.sandbox.create();
-        sandbox.stub(steps, 'runTests', function(options, emitter, done) { done(); });
+        sandbox.stub(steps, 'runTests', function(context, done) { done(); });
         sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
           callback(null, [{browserName: 'test', version: '1.2'}]);
         });
@@ -76,7 +76,7 @@ describe('grunt' ,function() {
       it('passes configuration through', function(done) {
         runTask('passthrough', function(error, call) {
           expect(error).to.not.be.ok;
-          expect(call.args[0]).to.include({foo: 1, bar: 'asdf'});
+          expect(call.args[0].options).to.include({foo: 1, bar: 'asdf'});
           done();
         });
       });
@@ -86,7 +86,7 @@ describe('grunt' ,function() {
 
         runTask('passthrough', function(error, call) {
           expect(error).to.not.be.ok;
-          expect(call.args[0].sauce).to.include({username: '--fake-sauce--'});
+          expect(call.args[0].options.sauce).to.include({username: '--fake-sauce--'});
           done();
         });
       });
@@ -96,7 +96,7 @@ describe('grunt' ,function() {
 
         runTask('passthrough', function(error, call) {
           expect(error).to.not.be.ok;
-          expect(call.args[0]).to.include({persistent: true});
+          expect(call.args[0].options).to.include({persistent: true});
           done();
         });
       });
@@ -106,7 +106,7 @@ describe('grunt' ,function() {
 
         runTask('override', function(error, call) {
           expect(error).to.not.be.ok;
-          expect(call.args[0].sauce).to.include({username: '--real-sauce--'});
+          expect(call.args[0].options.sauce).to.include({username: '--real-sauce--'});
           done();
         });
       });
@@ -118,7 +118,7 @@ describe('grunt' ,function() {
       var sandbox;
       beforeEach(function() {
         sandbox = sinon.sandbox.create();
-        sandbox.stub(steps, 'runTests', function(options, emitter, done) { done('failures'); });
+        sandbox.stub(steps, 'runTests', function(context, done) { done('failures'); });
         sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
           callback(null, [{browserName: 'test', version: '1.2'}]);
         });
