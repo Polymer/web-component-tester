@@ -83,7 +83,6 @@ function defaults() {
 function parseArgs(args) {
   return yargs(args)
       .showHelpOnFail(false)
-      .strict()
       .wrap(80)
       .usage(
         '\n' + // Even margin.
