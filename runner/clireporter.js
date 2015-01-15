@@ -211,7 +211,7 @@ CliReporter.prototype.log = function log(maybeFormat) {
     values = values.slice(1);
     format = maybeFormat;
   }
-  if (values[0].browserName) {
+  if (values[0] && values[0].browserName) {
     values[0] = padRight(this.prettyBrowser(values[0]), BROWSER_PAD);
   }
 
