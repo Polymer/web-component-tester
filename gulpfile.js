@@ -95,7 +95,7 @@ gulp.task('build:environment', function() {
 });
 
 gulp.task('test:style', function() {
-  return gulp.src('{browser,runner,environment}/**/*.js').pipe(jshintFlow());
+  return gulp.src('{browser,runner,environment,tasks}/**/*.js').pipe(jshintFlow());
 });
 
 gulp.task('test:unit', function() {
