@@ -32,9 +32,11 @@ function defaults() {
     verbose:     false,
     // Display test results in expanded form. Verbose implies expanded.
     expanded:    true,
-    // The on-disk path where tests & static files should be served from. By
-    // default, this is the directory above the current project (so that
-    // element repos can be easily tested with their dependencies).
+    // The on-disk path where tests & static files should be served from. Paths
+    // (such as `suites`) are evaluated relative to this.
+    //
+    // By default, this is set to the directory above the current directory (so
+    // that element repos can easily be tested with their dependencies).
     root:        undefined,
     // Idle timeout for tests.
     testTimeout: 90 * 1000,
@@ -116,9 +118,8 @@ function fromDisk() {
   var configs = _.filter(paths, fs.existsSync).map(require);
   var options = merge.apply(null, configs);
 
-  if (!options.projectRoot && projectFile && projectFile !== globalFile) {
-    options.projectRoot = path.dirname(projectFile);
-    process.chdir(options.projectRoot);
+  if (!options.root && projectFile && projectFile !== globalFile) {
+    process.chdir(path.dirname(projectFile));
   }
 
   return options;
@@ -159,7 +160,9 @@ function parseArgs(context, args, done) {
 
     _.values(plugins).forEach(_configurePluginOptions.bind(null, parser));
     var options = _expandOptionPaths(normalize(parser.parse(args)));
-    options.suites = options._;
+    if (options._ && options._.length > 0) {
+      options.suites = options._;
+    }
 
     context.options = merge(context.options, options);
     done();
@@ -223,12 +226,11 @@ function normalize(config) {
  * Expands values within the configuration based on the current environment.
  *
  * @param {!Context} context The context for the current run.
- * @param {string} baseDir The directory paths should be relative to.
  * @param {function(*)} done
  */
-function expand(context, baseDir, done) {
+function expand(context, done) {
   var options = context.options;
-  var root    = options.root || baseDir;
+  var root    = context.options.root || process.cwd();
 
   expandDeprecated(context, function(error) {
     if (error) return done(error);

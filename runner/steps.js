@@ -41,7 +41,7 @@ function configure(context, done) {
   var options = context.options;
   _.defaults(options, config.defaults());
 
-  config.expand(context, process.cwd(), function(error) {
+  config.expand(context, function(error) {
     if (error) return done(error);
 
     // Note that we trigger the configure hook _after_ filling in the `options`
