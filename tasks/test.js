@@ -9,19 +9,13 @@
  */
 var _      = require('lodash');
 var chalk  = require('chalk');
-var events = require('events');
 
-var CleanKill   = require('../runner/cleankill');
-var CliReporter = require('../runner/clireporter');
-var config      = require('../runner/config');
-var test        = require('../runner/test');
+var test = require('../runner/test');
 
 module.exports = function(grunt) {
   grunt.registerMultiTask('wct-test', 'Runs tests via web-component-tester', function() {
-    var options = _.merge(config.fromEnv(process.env, process.argv, process.stdout), this.options());
-
     var done = this.async();
-    test(options, function(error) {
+    test(this.options(), function(error) {
       if (error) {
         console.log(chalk.red(error));
         // Grunt only errors on `false` and instances of `Error`.

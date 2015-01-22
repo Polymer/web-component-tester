@@ -4,8 +4,7 @@ var grunt = require('grunt');
 var path  = require('path');
 var sinon = require('sinon');
 
-var browsers = require('../../runner/browsers');
-var steps    = require('../../runner/steps');
+var steps = require('../../runner/steps');
 
 var expect = chai.expect;
 chai.use(require('sinon-chai'));
@@ -61,10 +60,8 @@ describe('grunt' ,function() {
       var sandbox;
       beforeEach(function() {
         sandbox = sinon.sandbox.create();
+        sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
         sandbox.stub(steps, 'runTests', function(context, done) { done(); });
-        sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
-          callback(null, [{browserName: 'test', version: '1.2'}]);
-        });
 
         process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
       });
@@ -81,36 +78,6 @@ describe('grunt' ,function() {
         });
       });
 
-      it('picks up ENV-based configuration', function(done) {
-        process.env.SAUCE_USERNAME = '--fake-sauce--';
-
-        runTask('passthrough', function(error, call) {
-          expect(error).to.not.be.ok;
-          expect(call.args[0].options.sauce).to.include({username: '--fake-sauce--'});
-          done();
-        });
-      });
-
-      it('picks up CLI flags', function(done) {
-        process.argv = ['grunt', 'wct-test:passthrough', '--persistent'];
-
-        runTask('passthrough', function(error, call) {
-          expect(error).to.not.be.ok;
-          expect(call.args[0].options).to.include({persistent: true});
-          done();
-        });
-      });
-
-      it('prefers direct configuration over ENV', function(done) {
-        process.env.SAUCE_USERNAME = '--fake-sauce--';
-
-        runTask('override', function(error, call) {
-          expect(error).to.not.be.ok;
-          expect(call.args[0].options.sauce).to.include({username: '--real-sauce--'});
-          done();
-        });
-      });
-
     });
 
     describe('with a failing suite', function() {
@@ -118,10 +85,8 @@ describe('grunt' ,function() {
       var sandbox;
       beforeEach(function() {
         sandbox = sinon.sandbox.create();
+        sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
         sandbox.stub(steps, 'runTests', function(context, done) { done('failures'); });
-        sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
-          callback(null, [{browserName: 'test', version: '1.2'}]);
-        });
 
         process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
       });
