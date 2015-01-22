@@ -1,3 +1,4 @@
+var _      = require('lodash');
 var async  = require('async');
 var expect = require('chai').expect;
 var sinon  = require('sinon');
@@ -34,6 +35,8 @@ describe('cli', function() {
         }
         done(steps.runTests.getCall(0));
       });
+
+      return log;
     }
 
     it('expands test/ by default, and serves from the parent', function(done) {
@@ -165,6 +168,48 @@ describe('cli', function() {
           expect(call.args[0].options.root).to.equal(path.dirname(FIXTURES));
           done();
         });
+      });
+
+    });
+
+    describe('deprecated flags', function() {
+
+      beforeEach(function() {
+        process.chdir(path.join(FIXTURES, 'standard'));
+      });
+
+      describe('--browsers', function() {
+
+        it('warns when used', function(done) {
+          var log = expectRun({}, ['--browsers', 'firefox'], function(call) {
+            var hasWarning = _.any(log, function(l) { return /--browsers.*deprecated/i.test(l); });
+            expect(hasWarning).to.eq(true, 'Expected a warning that --browsers is deprecated');
+            done();
+          });
+        });
+
+        // Semi-integration test; this also checks that wct-local (mostly) works.
+        it('supports local browsers', function(done) {
+          var log = expectRun({}, ['--browsers', 'firefox', '-b', 'chrome'], function(call) {
+            var names = _.map(call.args[0].options.activeBrowsers, function(browser) {
+              return browser.browserName;
+            });
+            expect(names).to.have.members(['firefox', 'chrome']);
+            done();
+          });
+        });
+
+        // Semi-integration test; this also checks that wct-sauce (mostly) works.
+        it('supports local browsers', function(done) {
+          var log = expectRun({}, ['--browsers', 'linux/firefox', '-b', 'linux/chrome'], function(call) {
+            var names = _.map(call.args[0].options.activeBrowsers, function(browser) {
+              return browser.browserName;
+            });
+            expect(names).to.have.members(['firefox', 'chrome']);
+            done();
+          });
+        });
+
       });
 
     });

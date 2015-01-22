@@ -98,6 +98,14 @@ var ARG_CONFIG = {
     help:      'Avoid fancy terminal output.',
     flag:      true,
   },
+
+  // Deprecated
+
+  browsers: {
+    abbr:   'b',
+    hidden: true,
+    list:   true,
+  }
 };
 
 // Values that should be extracted when pre-parsing args.
@@ -279,17 +287,13 @@ function expandDeprecated(context, done) {
   browsers = _.compact(browsers);
   if (browsers.length > 0) {
     context.emit('log:warn', 'The --browsers flag/option is deprecated. Please use --local and --sauce instead.');
-    var fragment = {sauce: {}, local: {}};
+    var fragment = {plugins: {sauce: {}, local: {}}};
     fragments.push(fragment);
 
     for (var i = 0, browser; browser = browsers[i]; i++) {
-      if (browser.indexOf('/') !== -1) {
-        fragment.sauce.browsers = fragment.sauce.browsers || [];
-        fragment.sauce.browsers.push(browser);
-      } else {
-        fragment.local.browsers = fragment.local.browsers || [];
-        fragment.local.browsers.push(browser);
-      }
+      var plugin = browser.indexOf('/') !== -1 ? 'sauce' : 'local';
+      fragment.plugins[plugin].browsers = fragment.plugins[plugin].browsers || [];
+      fragment.plugins[plugin].browsers.push(browser);
     }
 
     delete options.browsers;
@@ -312,7 +316,8 @@ function expandDeprecated(context, done) {
   }
 
   if (fragments.length > 0) {
-    context.options = merge.apply(null, [context.options].concat(fragments));
+    // We are careful to modify context.options in place.
+    _.merge(context.options, merge.apply(null, fragments));
   }
 
   done();
