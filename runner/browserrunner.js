@@ -7,27 +7,24 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _     = require('lodash');
-var chalk = require('chalk');
-var wd    = require('wd');
-
-var CleanKill = require('./cleankill');
+var _         = require('lodash');
+var chalk     = require('chalk');
+var cleankill = require('cleankill');
+var wd        = require('wd');
 
 // Browser abstraction, responsible for spinning up a browser instance via wd.js and
 // executing runner.html test files passed in options.files
-function BrowserRunner(emitter, local, def, options, doneCallback) {
+function BrowserRunner(emitter, capabilities, options, doneCallback) {
   this.timeout = options.testTimeout;
   this.emitter = emitter;
   this.options = options;
-  this.def = def;
+  this.def     = capabilities;
   this.doneCallback = doneCallback;
 
-  this.stats = {status: 'initializing'};
+  this.stats   = {status: 'initializing'};
+  this.browser = wd.remote(this.def.url);
 
-  var capabilities = _.defaults(_.clone(def), options.browserOptions);
-  delete capabilities.id;
-
-  CleanKill.onInterrupt(function(done) {
+  cleankill.onInterrupt(function(done) {
     if (!this.browser) return done();
 
     var origDoneCallback = this.doneCallback;
@@ -38,33 +35,30 @@ function BrowserRunner(emitter, local, def, options, doneCallback) {
     this.done('Interrupting');
   }.bind(this));
 
-  // Create wd browser instance
-  if (local) {
-    this.browser = wd.remote('localhost', options._seleniumPort);
-  } else {
-    var username  = options.sauce.username;
-    var accessKey = options.sauce.accessKey;
-    this.browser = wd.remote('ondemand.saucelabs.com', 80, username, accessKey);
-  }
-
   this.browser.on('command', function(method, context) {
-    emitter.emit('log:debug', def, chalk.cyan(method), context);
+    emitter.emit('log:debug', this.def, chalk.cyan(method), context);
   });
   this.browser.on('http', function(method, path, data) {
-    emitter.emit('log:debug', def, chalk.magenta(method), chalk.cyan(path), data);
+    emitter.emit('log:debug', this.def, chalk.magenta(method), chalk.cyan(path), data);
   });
   this.browser.on('connection', function(code, message, error) {
-    emitter.emit('log:warn', def, 'Error code ' + code + ':', message, error);
+    emitter.emit('log:warn', this.def, 'Error code ' + code + ':', message, error);
   });
 
   this.emitter.emit('browser-init', this.def, this.stats);
 
+  // Make sure that we are passing a pristine capabilities object to webdriver.
+  // None of our screwy custom properties!
+  var webdriverCapabilities = _.clone(this.def);
+  delete webdriverCapabilities.id;
+  delete webdriverCapabilities.url;
+
   // Initialize the browser, then start tests
-  this.browser.init(capabilities, function(error, sessionId, result) {
+  this.browser.init(webdriverCapabilities, function(error, sessionId, result) {
     if (!this.browser) return; // When interrupted.
     if (error) {
       // TODO(nevir): BEGIN TEMPORARY CHECK. https://github.com/Polymer/web-component-tester/issues/51
-      if (def.browserName === 'safari' && error.data) {
+      if (this.def.browserName === 'safari' && error.data) {
         // debugger;
         try {
           var data = JSON.parse(error.data);
@@ -89,8 +83,8 @@ function BrowserRunner(emitter, local, def, options, doneCallback) {
 }
 
 BrowserRunner.prototype.startTest = function startTest() {
-  var host  = 'http://localhost:' + this.options._httpPort;
-  var path  = this.options._webRunner;
+  var host  = 'http://localhost:' + this.options.webserver.port;
+  var path  = this.options.webserver.webRunnerPath;
   var extra = (path.indexOf('?') === -1 ? '?' : '&') + 'cli_browser_id=' + this.def.id;
   this.browser.get(host + path + extra, function(error) {
     if (error) {

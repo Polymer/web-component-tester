@@ -20,8 +20,8 @@ var INDEX = 'index.html';
  * files that represent those patterns.
  *
  * @param {string} baseDir The directory that patterns are relative to.
- * @param {!Array.<string>} patterns The patterns to expand.
- * @param {function(*, Array.<string>)} done Callback given the expanded paths.
+ * @param {!Array<string>} patterns The patterns to expand.
+ * @param {function(*, Array<string>)} done Callback given the expanded paths.
  */
 function expand(baseDir, patterns, done) {
   async.waterfall([
@@ -34,8 +34,8 @@ function expand(baseDir, patterns, done) {
  * Expands any glob expressions in `patterns`.
  *
  * @param {string} baseDir
- * @param {!Array.<string>} patterns
- * @param {function(*, Array.<string>)} done
+ * @param {!Array<string>} patterns
+ * @param {function(*, Array<string>)} done
  */
 function unglob(baseDir, patterns, done) {
   async.map(patterns, function(pattern, next) {
@@ -57,8 +57,8 @@ function unglob(baseDir, patterns, done) {
  * it expands into its children (recursively).
  *
  * @param {string} baseDir
- * @param {!Array.<string>} patterns
- * @param {function(*, Array.<string>)} done
+ * @param {!Array<string>} patterns
+ * @param {function(*, Array<string>)} done
  */
 function expandDirectories(baseDir, paths, done) {
   async.map(paths, function(aPath, next) {

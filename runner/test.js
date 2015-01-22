@@ -7,10 +7,9 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _     = require('lodash');
-var async = require('async');
+var async     = require('async');
+var cleankill = require('cleankill');
 
-var CleanKill   = require('./cleankill');
 var CliReporter = require('./clireporter');
 var Context     = require('./context');
 var steps       = require('./steps');
@@ -58,46 +57,30 @@ var steps       = require('./steps');
  *  * log:warn
  *  * log:error
  *
- * @param {!Object} options The configuration, as specified in ./config.js.
+ * @param {!Object|!Context} options The configuration, as specified in,
+ *     `./config.js` or an already formed `Context` object.
  * @param {function(*)} done callback indicating error or success.
  * @return {!Context}
  */
 module.exports = function test(options, done) {
-  var context = new Context(options);
+  var context = (options instanceof Context) ? options : new Context(options);
 
   // We assume that any options related to logging are passed in via the initial
   // `options`.
-  if (options.output) {
-    new CliReporter(context, options.output, options);
+  if (context.options.output) {
+    new CliReporter(context, context.options.output, context.options);
   }
 
   async.series([
-
+    steps.loadPlugins.bind(steps, context),
     steps.configure.bind(steps, context),
-
-    function(done) {
-      var cleanOptions = _.omit(options, 'output');
-      context.emit('log:debug', 'Configuration:', cleanOptions);
-      done();
-    },
-
-    function(done) {
-      // Add plugin event listeners
-      _.values(options.plugins).forEach(function(plugin) {
-        if (plugin.listener) {
-          new plugin.listener(context, options.output, plugin);
-        }
-      });
-      done();
-    },
-
+    steps.prepare.bind(steps, context),
     steps.runTests.bind(steps, context),
-
   ], function(error) {
     if (options.skipCleanup) {
       done(error);
     } else {
-      CleanKill.close(done.bind(null, error));
+      cleankill.close(done.bind(null, error));
     }
   });
 

@@ -9,11 +9,9 @@
  */
 var chalk = require('chalk');
 
-var CliReporter = require('./clireporter');
-var config      = require('./config');
-var Context     = require('./context');
-var steps       = require('./steps');
-var test        = require('./test');
+var config  = require('./config');
+var Context = require('./context');
+var test    = require('./test');
 
 var PACKAGE_INFO   = require('../package.json');
 var updateNotifier = require('update-notifier')({
@@ -22,30 +20,22 @@ var updateNotifier = require('update-notifier')({
 });
 
 function run(env, args, output, callback) {
-  var done    = wrapCallback(output, callback);
-  var options = config.fromEnv(env, args, output);
-
-  if (options.extraArgs && options.extraArgs.length) {
-    options.suites = options.extraArgs;
-  }
-
-  test(options, done);
-}
-
-function runSauceTunnel(env, args, output, callback) {
   var done = wrapCallback(output, callback);
 
-  var options = config.fromEnv(env, args, output);
-  var emitter = new Context();
-  new CliReporter(emitter, output, options);
+  // Options parsing is a two phase affair. First, we need an initial set of
+  // configuration so that we know which plugins to load, etc:
+  var options = config.merge(config.fromDisk(), config.preparseArgs(args));
+  // Depends on values from the initial merge:
+  options = config.merge(options, {
+    output:    output,
+    ttyOutput: output.isTTY && !options.simpleOutput,
+  });
+  var context = new Context(options);
 
-  steps.ensureSauceTunnel(options, emitter, function(error, tunnelId) {
+  // `parseArgs` merges any new configuration into `context.options`.
+  config.parseArgs(context, args, function(error) {
     if (error) return done(error);
-    output.write('\n');
-    output.write('The tunnel will remain active while this process is running.\n');
-    output.write('To use this tunnel for other WCT runs, export the following:\n');
-    output.write('\n');
-    output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
+    test(context, done);
   });
 }
 
@@ -63,6 +53,5 @@ function wrapCallback(output, done) {
 }
 
 module.exports = {
-  run:            run,
-  runSauceTunnel: runSauceTunnel,
+  run: run,
 };
