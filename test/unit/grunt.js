@@ -9,7 +9,7 @@ var steps = require('../../runner/steps');
 var expect = chai.expect;
 chai.use(require('sinon-chai'));
 
-describe('grunt' ,function() {
+describe('grunt', function() {
 
   // Sinon doesn't stub process.env very well.
   var origEnv, origArgv;
