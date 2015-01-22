@@ -1,5 +1,7 @@
 module.exports = {
-  sauce: {
-    username: 'abc123',
+  plugins: {
+    sauce: {
+      username: 'abc123',
+    },
   },
 };

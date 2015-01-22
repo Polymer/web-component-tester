@@ -150,7 +150,7 @@ describe('cli', function() {
         process.chdir(ROOT);
 
         expectRun({}, [], function(call) {
-          expect(call.args[0].options.sauce.username).to.eq('abc123');
+          expect(call.args[0].options.plugins.sauce.username).to.eq('abc123');
           done();
         });
       });
