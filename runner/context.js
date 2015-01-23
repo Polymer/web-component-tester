@@ -45,9 +45,6 @@ util.inherits(Context, events.EventEmitter);
  * Registers a handler for a particular hook. Hooks are typically configured to
  * run _before_ a particular behavior.
  *
- * As a convenience, the handler is provided the `options` object as its first
- * argument. The second is a done callback.
- *
  * @param {string} name
  * @param {function(!Object, function(*))} handler
  * @return {!Context}
@@ -76,7 +73,7 @@ Context.prototype.hookLate = function hookLate(name, handler) {
  * the hook.
  *
  * Any additional arguments passed between `name` and `done` will be passed to
- * hooks (between `options` and before the callback).
+ * hooks (before the callback).
  *
  * @param {string} name
  * @param {function(*)} done
@@ -85,15 +82,14 @@ Context.prototype.hookLate = function hookLate(name, handler) {
 Context.prototype.emitHook = function emitHook(name, done) {
   this.emit('log:debug', 'hook:', name);
 
-  var hookArgs = [null, this.options];  // Passed to `Function#bind`.
+  var hooks = (this._hookHandlers[name] || []);
   if (arguments.length > 2) {
-    hookArgs = hookArgs.concat(Array.prototype.slice(1, arguments.length - 1));
-    done = arguments[arguments.length - 1];
+    done     = arguments[arguments.length - 1];
+    var hookArgs = [null].concat(Array.prototype.slice(1, arguments.length - 1));
+    hooks = hooks.map(function(hook) {
+      return hook.bind.apply(hook, hookArgs);
+    });
   }
-
-  var hooks = (this._hookHandlers[name] || []).map(function(hook) {
-    return hook.bind.apply(hook, hookArgs);
-  });
 
   // We execute the handlers _sequentially_. This may be slower, but it gives us
   // a lighter cognitive load and more obvious logs.

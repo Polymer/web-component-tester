@@ -38,8 +38,9 @@ var SERVE_STATIC = {  // Keys are regexps.
  * `browser.js`/`environment.js`.
  */
 module.exports = function(wct) {
+  var options = wct.options;
 
-  wct.hook('configure', function(options, done) {
+  wct.hook('configure', function(done) {
     // For now, you should treat all these options as an implementation detail
     // of WCT. They may be opened up for public configuration, but we need to
     // spend some time rationalizing interactions with external webservers.
@@ -66,7 +67,7 @@ module.exports = function(wct) {
     done();
   });
 
-  wct.hook('prepare', function(options, done) {
+  wct.hook('prepare', function(done) {
     var wsOptions = options.webserver;
 
     freeport(function(error, port) {
