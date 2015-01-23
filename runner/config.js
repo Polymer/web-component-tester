@@ -181,6 +181,10 @@ function _configurePluginOptions(parser, plugin) {
   var argConfig = plugin.metadata['cli-options'];
   if (!argConfig || argConfig.length === 0) return;
 
+  // Group options per plugin. It'd be nice to also have a header, but that ends
+  // up shifting all the options over.
+  parser.option('plugins.' + plugin.name + '.', {string: ' '});
+
   _.each(argConfig, function(config, key) {
     // Make sure that we don't expose the name prefixes.
     if (!config.full) {
