@@ -14,6 +14,7 @@ var path   = require('path');
 var util   = require('util');
 
 var config = require('./config');
+var Plugin = require('./plugin');
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -27,9 +28,6 @@ function Context(options) {
 
   /** @type {!Object<string, !Array<function>>} */
   this._hookHandlers = {};
-
-  /** @type {!Object<string, {handler: function, metadata: !Object}>} */
-  this._plugins = {};
 }
 util.inherits(Context, events.EventEmitter);
 
@@ -106,66 +104,12 @@ Context.prototype.emitHook = function emitHook(name, done) {
   return this;
 };
 
-// Plugin Loading
-
-// When loading modules, we try to load them with the following prefixes first.
-var PREFIX_ORDER = [
-  'web-component-tester-',
-  'wct-',
-];
-
 /**
- * Loads and returns handler and metadata for the plugins requested via
- * `options.plugins`.
- *
- * @param {function(*, !Object<string, {handler: function, metadata: !Object}>)}
+ * @param {function(*, Array<!Plugin>)} done Asynchronously loads the plugins
+ *     requested by `options.plugins`.
  */
-Context.prototype.discoverPlugins = function discoverPlugins(done) {
-  var missing = _.difference(_.keys(this.options.plugins), _.keys(this._plugins));
-  for (var i = 0, name; name = missing[i]; i++) {
-    var plugin = _loadPlugin(name);
-    if (!plugin) {
-      return done('Unknown WCT plugin "' + name + '". Did you forget to npm install wct-' + name + '?');
-    }
-    this._plugins[name] = plugin;
-  }
-
-  done(null, this._plugins);
-};
-
-function _loadPlugin(name) {
-  // Is the name already prefixed?
-  var prefixed = _.any(PREFIX_ORDER, function(p) { return name.indexOf(p) === 0 });
-  if (!prefixed) {
-    for (var i = 0, prefix; prefix = PREFIX_ORDER[i]; i++) {
-      var plugin = _loadPlugin(prefix + name);
-      if (plugin) {
-        plugin.name = name;
-        return plugin;
-      }
-    }
-  }
-
-  // We either have a prefixed plugin, or failed to load one.
-  var package;
-  try {
-    package = require(path.join(name, 'package.json'));
-  } catch (error) {
-    if (error.code !== 'MODULE_NOT_FOUND') {
-      console.log(error);
-    }
-    return null;
-  }
-
-  // Plugins must have a wct-plugin field.
-  if (!package['wct-plugin']) return null;
-
-  return {
-    name:     name,
-    fullName: name,
-    metadata: package['wct-plugin'],
-    handler:  require(name),
-  };
+Context.prototype.plugins = function(done) {
+  async.map(_.keys(this.options.plugins), Plugin.get, done);
 }
 
 module.exports = Context;

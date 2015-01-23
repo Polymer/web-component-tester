@@ -24,8 +24,7 @@ function loadPlugins(context, done) {
     // built in quasi-plugin.
     require('./webserver')(context);
     // Actual plugins.
-    var keys = _.keys(plugins);
-    for (var i = 0, plugin; plugin = plugins[keys[i]]; i++) {
+    for (var i = 0, plugin; plugin = plugins[i]; i++) {
       try {
         plugin.handler(context);
       } catch (error) {

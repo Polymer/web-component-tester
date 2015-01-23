@@ -163,10 +163,10 @@ function parseArgs(context, args, done) {
   var parser = nomnom();
   parser.options(ARG_CONFIG);
 
-  context.discoverPlugins(function(error, plugins) {
+  context.plugins(function(error, plugins) {
     if (error) return done(error);
 
-    _.values(plugins).forEach(_configurePluginOptions.bind(null, parser));
+    plugins.forEach(_configurePluginOptions.bind(null, parser));
     var options = _expandOptionPaths(normalize(parser.parse(args)));
     if (options._ && options._.length > 0) {
       options.suites = options._;
@@ -178,14 +178,13 @@ function parseArgs(context, args, done) {
 }
 
 function _configurePluginOptions(parser, plugin) {
-  var argConfig = plugin.metadata['cli-options'];
-  if (!argConfig || argConfig.length === 0) return;
+  if (!plugin.cliConfig || plugin.cliConfig.length === 0) return;
 
   // Group options per plugin. It'd be nice to also have a header, but that ends
   // up shifting all the options over.
   parser.option('plugins.' + plugin.name + '.', {string: ' '});
 
-  _.each(argConfig, function(config, key) {
+  _.each(plugin.cliConfig, function(config, key) {
     // Make sure that we don't expose the name prefixes.
     if (!config.full) {
       config.full = key;
