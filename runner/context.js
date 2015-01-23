@@ -151,6 +151,9 @@ function _loadPlugin(name) {
   try {
     package = require(path.join(name, 'package.json'));
   } catch (error) {
+    if (error.code !== 'MODULE_NOT_FOUND') {
+      console.log(error);
+    }
     return null;
   }
 
