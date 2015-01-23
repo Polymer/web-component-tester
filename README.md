@@ -144,6 +144,13 @@ config file located at `~/wct.conf.js`.
 
 # Nitty Gritty
 
+## Polymer
+
+By default, WCT will defer tests until `polymer-ready` has fired. This saves you from having to wait for elements to upgrade and all that yourself.
+
+If you need to test something that occurs before that event, the [`testImmediate` helper](https://github.com/Polymer/web-component-tester/blob/master/browser/environment/helpers.js#L29-41) can be used. Or, if you just want tests to run as soon as possible, you can disable the delay by setting `WCT.waitForFrameworks = false` (though, they are still async due to Mocha).
+
+
 ## Mocha
 
 WCT supports Mocha's [TDD][mocha-tdd] (`suite`/`test`/etc) and [BDD][mocha-bdd]
