@@ -31,7 +31,7 @@ function defaults() {
     // Spew all sorts of debugging messages.
     verbose:     false,
     // Display test results in expanded form. Verbose implies expanded.
-    expanded:    true,
+    expanded:    false,
     // The on-disk path where tests & static files should be served from. Paths
     // (such as `suites`) are evaluated relative to this.
     //
