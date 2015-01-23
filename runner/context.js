@@ -10,7 +10,6 @@
 var _      = require('lodash');
 var async  = require('async');
 var events = require('events');
-var path   = require('path');
 var util   = require('util');
 
 var config = require('./config');

@@ -67,7 +67,7 @@ Plugin.get = function get(name, done) {
   } else {
     done(null, loaded[0]);
   }
-}
+};
 
 /**
  * @param {string} name
@@ -80,7 +80,7 @@ Plugin.shortName = function(name) {
     }
   }
   return name;
-}
+};
 
 /**
  * @param {string} packageName Attempts to load a package as a WCT plugin.
