@@ -8,6 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 var _        = require('lodash');
+var async    = require('async');
 var http     = require('http');
 var socketIO = require('socket.io');
 
@@ -19,19 +20,14 @@ var config        = require('./config');
 // TODO(nevir): autodiscover plugins (similar to yeoman).
 function loadPlugins(context, done) {
   context.emit('log:debug', 'step: loadPlugins');
-  context.discoverPlugins(function(error, plugins) {
+  context.plugins(function(error, plugins) {
     if (error) return done(error);
     // built in quasi-plugin.
     require('./webserver')(context);
     // Actual plugins.
-    for (var i = 0, plugin; plugin = plugins[i]; i++) {
-      try {
-        plugin.handler(context);
-      } catch (error) {
-        return done('Failed to load plugin "' + plugin.name + '": ' + error);
-      }
-    }
-    done();
+    async.map(plugins, function(plugin, pluginDone) {
+      return plugin.execute(context, pluginDone);
+    }, done);
   });
 }
 

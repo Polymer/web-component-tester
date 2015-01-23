@@ -23,7 +23,12 @@ var Plugin = require('./plugin');
  * @param {Object} options Any initially specified options.
  */
 function Context(options) {
-  /** The configuration for the current WCT run. */
+  /**
+   * The configuration for the current WCT run.
+   *
+   * We guarantee that this object is never replaced (e.g. you are free to hold
+   * a reference to it, and make changes to it).
+   */
   this.options = config.merge(config.defaults(), options || {});
 
   /** @type {!Object<string, !Array<function>>} */
@@ -108,8 +113,16 @@ Context.prototype.emitHook = function emitHook(name, done) {
  * @param {function(*, Array<!Plugin>)} done Asynchronously loads the plugins
  *     requested by `options.plugins`.
  */
-Context.prototype.plugins = function(done) {
+Context.prototype.plugins = function plugins(done) {
   async.map(_.keys(this.options.plugins), Plugin.get, done);
-}
+};
+
+/**
+ * @param {string} name
+ * @return {!Object}
+ */
+Context.prototype.pluginOptions = function pluginOptions(name) {
+  return this.options.plugins[Plugin.shortName(name)];
+};
 
 module.exports = Context;

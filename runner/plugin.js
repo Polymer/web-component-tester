@@ -20,14 +20,27 @@ var PREFIXES = [
  * A WCT plugin. This constructor is private. Plugins can be retrieved via
  * `Plugin.get`.
  */
-function Plugin(packageName, handler, metadata) {
+function Plugin(packageName, metadata) {
   this.name        = Plugin.shortName(packageName);
   this.packageName = packageName;
-  this.handler     = handler;
   this.metadata    = metadata;
 
   this.cliConfig = this.metadata['cli-options'] || {};
 }
+
+/**
+ * @param {!Context} context The context that this plugin should be evaluated
+ *     within.
+ * @param {function(*)} done
+ */
+Plugin.prototype.execute = function execute(context, done) {
+  try {
+    require(this.packageName)(context, context.pluginOptions(this.name), this);
+  } catch (error) {
+    return done('Failed to load plugin "' + this.name + '": ' + error);
+  }
+  done();
+};
 
 // Plugin Loading
 
@@ -89,15 +102,7 @@ function _tryLoadPluginPackage(packageName) {
   // Allow {"wct-plugin": true} as a shorthand.
   var metadata = _.isObject(packageInfo['wct-plugin']) ? packageInfo['wct-plugin'] : {};
 
-  var handler;
-  try {
-    handler = require(packageName);
-  } catch (error) {
-    console.log('Attempted to load WCT plugin "' + packageName + '": ' + error);
-    return null;
-  }
-
-  return new Plugin(packageName, handler, metadata);
+  return new Plugin(packageName, metadata);
 }
 
 // Looks like Plugin, but not really.
