@@ -25,7 +25,8 @@
   },
   "main": "runner.js",
   "bin": {
-    "wct": "./bin/wct"
+    "wct":    "./bin/wct",
+    "wct-st": "./bin/wct-st"
   },
   "scripts": {
     "postinstall": "node scripts/postinstall.js",

@@ -166,6 +166,7 @@ function preparseArgs(args) {
  */
 function parseArgs(context, args, done) {
   var parser = nomnom();
+  parser.script('wct');
   parser.options(ARG_CONFIG);
 
   context.plugins(function(error, plugins) {
