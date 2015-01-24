@@ -6,6 +6,14 @@ var sinon = require('sinon');
 
 var steps = require('../../runner/steps');
 
+var wctLocalBrowsers = require('wct-local/lib/browsers');
+var LOCAL_BROWSERS = {
+  aurora:  {browserName: 'aurora',  version: '1'},
+  canary:  {browserName: 'canary',  version: '2'},
+  chrome:  {browserName: 'chrome',  version: '3'},
+  firefox: {browserName: 'firefox', version: '4'},
+};
+
 var expect = chai.expect;
 chai.use(require('sinon-chai'));
 
@@ -55,19 +63,29 @@ describe('grunt', function() {
 
   describe('wct-test', function() {
 
-    describe('with a passing suite', function() {
+    var sandbox;
+    beforeEach(function() {
+      sandbox = sinon.sandbox.create();
+      sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
 
-      var sandbox;
-      beforeEach(function() {
-        sandbox = sinon.sandbox.create();
-        sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
-        sandbox.stub(steps, 'runTests', function(context, done) { done(); });
-
-        process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
+      sandbox.stub(wctLocalBrowsers, 'detect', function(done) {
+        done(null, LOCAL_BROWSERS);
+      });
+      sandbox.stub(wctLocalBrowsers, 'supported', function() {
+        return _.keys(LOCAL_BROWSERS);
       });
 
-      afterEach(function() {
-        sandbox.restore();
+      process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
+    });
+
+    afterEach(function() {
+      sandbox.restore();
+    });
+
+    describe('with a passing suite', function() {
+
+      beforeEach(function() {
+        sandbox.stub(steps, 'runTests', function(context, done) { done(); });
       });
 
       it('passes configuration through', function(done) {
@@ -82,17 +100,8 @@ describe('grunt', function() {
 
     describe('with a failing suite', function() {
 
-      var sandbox;
       beforeEach(function() {
-        sandbox = sinon.sandbox.create();
-        sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
         sandbox.stub(steps, 'runTests', function(context, done) { done('failures'); });
-
-        process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
-      });
-
-      afterEach(function() {
-        sandbox.restore();
       });
 
       it('passes errors out', function(done) {
