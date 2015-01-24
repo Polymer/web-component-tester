@@ -8,14 +8,12 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 var _      = require('lodash');
-var chalk  = require('chalk');
 var findup = require('findup-sync');
 var fs     = require('fs');
+var nomnom = require('nomnom');
 var path   = require('path');
-var yargs  = require('yargs');
 
-var browsers = require('./browsers');
-var paths    = require('./paths');
+var paths = require('./paths');
 
 var HOME_DIR    = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
 var CONFIG_NAME = 'wct.conf.js';
@@ -33,162 +31,97 @@ function defaults() {
     // Spew all sorts of debugging messages.
     verbose:     false,
     // Display test results in expanded form. Verbose implies expanded.
-    expanded:    true,
-    // Whether the default set of local (or remote) browsers should be targeted.
-    remote:      false,
-    // The on-disk path where tests & static files should be served from. By
-    // default, this is the directory above the current project (so that
-    // element repos can be easily tested with their dependencies).
+    expanded:    false,
+    // The on-disk path where tests & static files should be served from. Paths
+    // (such as `suites`) are evaluated relative to this.
+    //
+    // By default, this is set to the directory above the current directory (so
+    // that element repos can easily be tested with their dependencies).
     root:        undefined,
-    // The browsers that tests will be run on. Accepts capabilities objects,
-    // local browser names ("chrome" etc), or remote browsers of the form
-    // "<PLATFORM>/<BROWSER>[@<VERSION>]".
-    browsers:    [],
     // Idle timeout for tests.
     testTimeout: 90 * 1000,
     // Whether the browser should be closed after the tests run.
     persistent:  false,
     // Additional .js files to include in *generated* test indexes.
     extraScripts: [],
-    // Extra capabilities to pass to wd when building a client.
+    // Webdriver capabilities objects for each browser that should be run.
+    //
+    // Capabilities can also contain a `url` value which is either a string URL
+    // for the webdriver endpoint, or {hostname:, port:, user:, pwd:}.
+    //
+    // Most of the time you will want to rely on the WCT browser plugins to fill
+    // this in for you (e.g. via `--local`, `--sauce`, etc).
+    activeBrowsers: [],
+    // Default capabilities to use when constructing webdriver connections (for
+    // each browser specified in `activeBrowsers`). A handy place to hang common
+    // configuration.
     //
     // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
     // Sauce:    https://docs.saucelabs.com/reference/test-configuration/
     browserOptions: {},
-    // Sauce Labs configuration.
-    sauce: {
-      username:  undefined,
-      accessKey: undefined,
-      // An ID of a sauce connect tunnel to reuse.
-      tunnelId:  undefined,
-      // https://github.com/bermi/sauce-connect-launcher#advanced-usage
-      tunnelOptions: {},
-    },
+    //
+    plugins: ['local', 'sauce'],
   };
 }
 
-function parseArgs(args) {
-  return yargs(args)
-      .showHelpOnFail(false)
-      .wrap(80)
-      .usage(
-        '\n' + // Even margin.
-        'Run tests for web components across local or remote browsers.\n' +
-        'Usage: ' + chalk.blue('$0' + chalk.dim(' <options> [dirs or paths/to/test ...]')) + '\n' +
-        '\n' +
-        'wct will search up from the current directory to find your project root (first\n' +
-        'directory containing a wct.conf.js - or current directory if not found.)\n' +
-        '\n' +
-        'Local browsers are specified via short names:\n' +
-        browsers.present().join(', ') + '\n' +
-        '\n' +
-        'Remote browsers can be specified via "<PLATFORM>/<BROWSER>[@<VERSION>]". For an\n' +
-        'up to date list, see https://saucelabs.com/platforms'
-      )
-      .help('help', 'Yer lookin\' at it!')
-      .alias('h', 'help')
-      .options({
-        'remote': {
-          description: 'Use default remote browsers (instead of local).',
-          alias: 'r',
-          boolean: true,
-        },
-        'browsers': {
-          description: 'Run specific browsers, rather than the defaults.',
-          alias: 'b',
-        },
-        'persistent': {
-          description: 'Keep browsers active (refresh to rerun tests).',
-          alias: 'p',
-          boolean: true,
-        },
-        'root': {
-          description: 'The root directory to serve tests from.',
-        },
-        'expanded': {
-          description: 'Log a status line for each test run.',
-          boolean: true,
-        },
-        'verbose': {
-          description: 'Log all the things.',
-          boolean: true,
-        },
-        'simpleOutput': {
-          description: 'Avoid fancy terminal tricks.',
-          boolean: true,
-        },
-      })
-      .argv;
-}
+/** nomnom configuration for command line arguments.
+ *
+ * This might feel like duplication with `defaults()`, and out of place (why not
+ * in `cli.js`?). But, not every option matches a configurable value, and it is
+ * best to keep the configuration for these together to help keep them in sync.
+ */
+var ARG_CONFIG = {
+  persistent: {
+    help:      'Keep browsers active (refresh to rerun tests).',
+    abbr:      'p',
+    flag:      true,
+  },
+  root: {
+    help:      'The root directory to serve tests from.',
+    transform: path.resolve,
+  },
+  plugins: {
+    help:      'Plugins that should be loaded.',
+    metavar:   'NAME',
+    full:      'plugin',
+    list:       true,
+  },
+  expanded: {
+    help:      'Log a status line for each test run.',
+    flag:      true,
+  },
+  verbose: {
+    help:      'Log all the things.',
+    flag:      true,
+  },
+  simpleOutput: {
+    help:      'Avoid fancy terminal output.',
+    flag:      true,
+  },
 
-function fromEnv(env, args, output) {
-  var argv = parseArgs(args);
+  // Deprecated
 
-  var options = _.merge(argv, {
-    output:     output,
-    ttyOutput:  output.isTTY && !argv.simpleOutput,
-    sauce: {
-      username:  env.SAUCE_USERNAME,
-      accessKey: env.SAUCE_ACCESS_KEY,
-      tunnelId:  env.SAUCE_TUNNEL_ID,
-    }
-  });
-
-  if (argv.browsers) {
-    var browsers = _.isArray(argv.browsers) ? argv.browsers : [argv.browsers];
-    // We also support comma separated browser identifiers for convenience.
-    options.browsers = browsers.join(',').split(',');
+  browsers: {
+    abbr:   'b',
+    hidden: true,
+    list:   true,
+  },
+  remote: {
+    abbr:   'r',
+    hidden: true,
+    flag:   true,
   }
+};
 
-  options.extraArgs = argv._;
-
-  options = _.merge(defaults(), fromDisk(), options);
-  options = mergePlugins(options);
-
-  return options;
-}
+// Values that should be extracted when pre-parsing args.
+var PREPARSE_ARGS = ['plugins', 'simpleOutput'];
 
 /**
- * Mix plugins into configuration.
+ * Discovers appropriate config files (global, and for the project), merging
+ * them, and returning them.
  *
- * Loads the plugin module for every key in `options.plugins` and merges it
- * with the user-supplied configuration.
- *
- * In other words, given:
- *
- *   # my-plugin.js
- *   module.exports = {
- *     "reporter": function(..)
- *   }
- *
- *   # wct.js
- *   module.exports = {
- *     plugins: {
- *       "my-plugin": {
- *         "foo": "bar"
- *       }
- *     }
- *   }
- *
- * mergePlugin(options) produces an object like this:
- *
- *   plugins: {
- *     "my-plugin": {
- *       "foo": "bar",
- *       "reporter": function(..)
- *     }
- *   }
- *
+ * @return {!Object} The merged configuration.
  */
-function mergePlugins(options) {
-  _(options.plugins).forOwn(function( userConfig, pluginName ) {
-      var moduleConfig = require(pluginName);
-      options.plugins[pluginName] = _.merge(moduleConfig, userConfig);
-  });
-
-  return options;
-}
-
 function fromDisk() {
   var globalFile  = path.join(HOME_DIR, CONFIG_NAME);
   var projectFile = findup(CONFIG_NAME, {nocase: true});
@@ -196,7 +129,7 @@ function fromDisk() {
   // try the project-specific path (starting at the current working directory).
   var paths   = _.unique([globalFile, projectFile]);
   var configs = _.filter(paths, fs.existsSync).map(require);
-  var options = _.merge.apply(_, [{}].concat(configs));
+  var options = merge.apply(null, configs);
 
   if (!options.root && projectFile && projectFile !== globalFile) {
     process.chdir(path.dirname(projectFile));
@@ -206,18 +139,118 @@ function fromDisk() {
 }
 
 /**
+ * Runs a simplified options parse over the command line arguments, extracting
+ * any values that are necessary for a full parse.
+ *
+ * At the moment, the only values extracted are `--plugin` and `--simpleOutput`.
+ *
+ * @param {!Array<string>} args
+ * @return {!Object}
+ */
+function preparseArgs(args) {
+  var parser = nomnom();
+  parser.options(ARG_CONFIG);
+  parser.printer(function() {});  // No-op output & errors.
+  var options = parser.parse(args);
+
+  return _.pick(options, PREPARSE_ARGS);
+}
+
+/**
+ * Runs a complete options parse over the args, respecting plugin options.
+ *
+ * @param {!Context} context The context, containing plugin state and any base
+ *     options to merge into.
+ * @param {!Array<string>} args The args to parse.
+ * @param {function(*)} done
+ */
+function parseArgs(context, args, done) {
+  var parser = nomnom();
+  parser.script('wct');
+  parser.options(ARG_CONFIG);
+
+  context.plugins(function(error, plugins) {
+    if (error) return done(error);
+
+    plugins.forEach(_configurePluginOptions.bind(null, parser));
+    var options = _expandOptionPaths(normalize(parser.parse(args)));
+    if (options._ && options._.length > 0) {
+      options.suites = options._;
+    }
+
+    context.options = merge(context.options, options);
+    done();
+  });
+}
+
+function _configurePluginOptions(parser, plugin) {
+  if (!plugin.cliConfig || plugin.cliConfig.length === 0) return;
+
+  // Group options per plugin. It'd be nice to also have a header, but that ends
+  // up shifting all the options over.
+  parser.option('plugins.' + plugin.name + '.', {string: ' '});
+
+  _.each(plugin.cliConfig, function(config, key) {
+    // Make sure that we don't expose the name prefixes.
+    if (!config.full) {
+      config.full = key;
+    }
+    parser.option('plugins.' + plugin.name + '.' + key, config);
+  });
+}
+
+function _expandOptionPaths(options) {
+  var result = {};
+  _.each(options, function(value, key) {
+    var target = result;
+    var parts  = key.split('.');
+    for (var i = 0; i < parts.length - 1; i++) {
+      target = target[parts[i]] = target[parts[i]] || {};
+    }
+    target[_.last(parts)] = value;
+  });
+  return result;
+}
+
+/**
+ * @param {!Object...} configs Configuration objects to merge.
+ * @return {!Object} The merged configuration, where configuration objects
+ *     specified later in the arguments list are given precedence.
+ */
+function merge() {
+  var result  = {};
+  var configs = Array.prototype.map.call(arguments, normalize);
+  return _.merge.apply(_, [result].concat(configs));
+}
+
+/**
+ * @param {!Object} config Configuration object to normalize.
+ * @return {!Object} `config`.
+ */
+function normalize(config) {
+  if (_.isArray(config.plugins)) {
+    var pluginConfigs = {};
+    for (var i = 0, name; name = config.plugins[i]; i++) {
+      pluginConfigs[name] = {};
+    }
+    config.plugins = pluginConfigs;
+  }
+
+  return config;
+}
+
+/**
  * Expands values within the configuration based on the current environment.
  *
- * @param {!Object} options The configuration to expand.
- * @param {string} baseDir The directory paths should be relative to.
- * @param {function(*, options)} Callback given the expanded options on success.
+ * @param {!Context} context The context for the current run.
+ * @param {function(*)} done
  */
-function expand(options, baseDir, done) {
-  var root = options.root || baseDir;
+function expand(context, done) {
+  var options = context.options;
+  var root    = context.options.root || process.cwd();
 
-  browsers.expand(options.browsers, options.remote, function(error, browsers) {
+  expandDeprecated(context, function(error) {
     if (error) return done(error);
-    options.browsers = browsers;
 
     paths.expand(root, options.suites, function(error, suites) {
       if (error) return done(error);
@@ -225,14 +258,78 @@ function expand(options, baseDir, done) {
       options.suites = suites;
       // Serve from the parent directory so that we can reference element deps.
       if (!options.root) {
-        serveFromParent(root, options);
+        _serveFromParent(root, options);
       }
 
-      validate(options, function(error) {
-        done(error, options);
-      });
+      done();
     });
   });
+}
+
+/**
+ * Sets options.root to the parent directory of `baseDir`, and adjusts all
+ * suites relative to it.
+ *
+ * @param {string} baseDir
+ * @param {!Object} options
+ */
+function _serveFromParent(baseDir, options) {
+  options.root = path.dirname(baseDir);
+
+  var basename = path.basename(baseDir);
+  options.suites = _.map(options.suites || [], function(file) {
+    return path.join(basename, file);
+  });
+}
+
+/**
+ * Expands any options that have been deprecated, and warns about it.
+ *
+ * @param {!Context} context The context for the current run.
+ */
+function expandDeprecated(context, done) {
+  var options = context.options;
+  // We collect configuration fragments to be merged into the options object.
+  var fragments = [];
+
+  var browsers = _.isArray(options.browsers) ? options.browsers : [options.browsers];
+  browsers = _.compact(browsers);
+  if (browsers.length > 0) {
+    context.emit('log:warn', 'The --browsers flag/option is deprecated. Please use --local and --sauce instead.');
+    var fragment = {plugins: {sauce: {}, local: {}}};
+    fragments.push(fragment);
+
+    for (var i = 0, browser; browser = browsers[i]; i++) {
+      var plugin = browser.indexOf('/') !== -1 ? 'sauce' : 'local';
+      fragment.plugins[plugin].browsers = fragment.plugins[plugin].browsers || [];
+      fragment.plugins[plugin].browsers.push(browser);
+    }
+
+    delete options.browsers;
+  }
+
+  if (options.sauce) {
+    context.emit('log:warn', 'The sauce configuration key is deprecated. Please use plugins.sauce instead.');
+    fragments.push({
+      plugins: {sauce: options.sauce},
+    });
+    delete options.sauce;
+  }
+
+  if (options.remote) {
+    context.emit('log:warn', 'The --remote flag is deprecated. Please use --sauce default instead.');
+    fragments.push({
+      plugins: {sauce: {browsers: ['default']}},
+    });
+    delete options.remote;
+  }
+
+  if (fragments.length > 0) {
+    // We are careful to modify context.options in place.
+    _.merge(context.options, merge.apply(null, fragments));
+  }
+
+  done();
 }
 
 /**
@@ -247,7 +344,7 @@ function validate(options, done) {
     return done('component is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
   }
 
-  if (options.browsers.length === 0) {
+  if (options.activeBrowsers.length === 0) {
     return done('No browsers configured to run');
   }
   if (options.suites.length === 0) {
@@ -257,26 +354,13 @@ function validate(options, done) {
   done(null);
 }
 
-
-/**
- * Sets options.root to the parent directory of `baseDir`, and adjusts all
- * suites relative to it.
- *
- * @param {string} baseDir
- * @param {!Object} options
- */
-function serveFromParent(baseDir, options) {
-  options.root = path.dirname(baseDir);
-
-  var basename = path.basename(baseDir);
-  options.suites = _.map(options.suites || [], function(file) {
-    return path.join(basename, file);
-  });
-}
-
 module.exports = {
-  defaults: defaults,
-  fromEnv:  fromEnv,
-  fromDisk: fromDisk,
-  expand:   expand,
+  defaults:     defaults,
+  fromDisk:     fromDisk,
+  preparseArgs: preparseArgs,
+  parseArgs:    parseArgs,
+  merge:        merge,
+  normalize:    normalize,
+  expand:       expand,
+  validate:     validate,
 };

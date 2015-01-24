@@ -4,13 +4,20 @@ var grunt = require('grunt');
 var path  = require('path');
 var sinon = require('sinon');
 
-var browsers = require('../../runner/browsers');
-var steps    = require('../../runner/steps');
+var steps = require('../../runner/steps');
+
+var wctLocalBrowsers = require('wct-local/lib/browsers');
+var LOCAL_BROWSERS = {
+  aurora:  {browserName: 'aurora',  version: '1'},
+  canary:  {browserName: 'canary',  version: '2'},
+  chrome:  {browserName: 'chrome',  version: '3'},
+  firefox: {browserName: 'firefox', version: '4'},
+};
 
 var expect = chai.expect;
 chai.use(require('sinon-chai'));
 
-describe('grunt' ,function() {
+describe('grunt', function() {
 
   // Sinon doesn't stub process.env very well.
   var origEnv, origArgv;
@@ -56,57 +63,35 @@ describe('grunt' ,function() {
 
   describe('wct-test', function() {
 
-    describe('with a passing suite', function() {
+    var sandbox;
+    beforeEach(function() {
+      sandbox = sinon.sandbox.create();
+      sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
 
-      var sandbox;
-      beforeEach(function() {
-        sandbox = sinon.sandbox.create();
-        sandbox.stub(steps, 'runTests', function(options, emitter, done) { done(); });
-        sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
-          callback(null, [{browserName: 'test', version: '1.2'}]);
-        });
-
-        process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
+      sandbox.stub(wctLocalBrowsers, 'detect', function(done) {
+        done(null, LOCAL_BROWSERS);
+      });
+      sandbox.stub(wctLocalBrowsers, 'supported', function() {
+        return _.keys(LOCAL_BROWSERS);
       });
 
-      afterEach(function() {
-        sandbox.restore();
+      process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
+    });
+
+    afterEach(function() {
+      sandbox.restore();
+    });
+
+    describe('with a passing suite', function() {
+
+      beforeEach(function() {
+        sandbox.stub(steps, 'runTests', function(context, done) { done(); });
       });
 
       it('passes configuration through', function(done) {
         runTask('passthrough', function(error, call) {
           expect(error).to.not.be.ok;
-          expect(call.args[0]).to.include({foo: 1, bar: 'asdf'});
-          done();
-        });
-      });
-
-      it('picks up ENV-based configuration', function(done) {
-        process.env.SAUCE_USERNAME = '--fake-sauce--';
-
-        runTask('passthrough', function(error, call) {
-          expect(error).to.not.be.ok;
-          expect(call.args[0].sauce).to.include({username: '--fake-sauce--'});
-          done();
-        });
-      });
-
-      it('picks up CLI flags', function(done) {
-        process.argv = ['grunt', 'wct-test:passthrough', '--persistent'];
-
-        runTask('passthrough', function(error, call) {
-          expect(error).to.not.be.ok;
-          expect(call.args[0]).to.include({persistent: true});
-          done();
-        });
-      });
-
-      it('prefers direct configuration over ENV', function(done) {
-        process.env.SAUCE_USERNAME = '--fake-sauce--';
-
-        runTask('override', function(error, call) {
-          expect(error).to.not.be.ok;
-          expect(call.args[0].sauce).to.include({username: '--real-sauce--'});
+          expect(call.args[0].options).to.include({foo: 1, bar: 'asdf'});
           done();
         });
       });
@@ -115,19 +100,8 @@ describe('grunt' ,function() {
 
     describe('with a failing suite', function() {
 
-      var sandbox;
       beforeEach(function() {
-        sandbox = sinon.sandbox.create();
-        sandbox.stub(steps, 'runTests', function(options, emitter, done) { done('failures'); });
-        sandbox.stub(browsers, 'expand', function(browsers, remote, callback) {
-          callback(null, [{browserName: 'test', version: '1.2'}]);
-        });
-
-        process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
-      });
-
-      afterEach(function() {
-        sandbox.restore();
+        sandbox.stub(steps, 'runTests', function(context, done) { done('failures'); });
       });
 
       it('passes errors out', function(done) {

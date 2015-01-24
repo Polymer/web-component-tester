@@ -7,11 +7,11 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var chalk  = require('chalk');
-var events = require('events');
+var chalk = require('chalk');
 
 var CliReporter = require('./clireporter');
 var config      = require('./config');
+var Context     = require('./context');
 var steps       = require('./steps');
 var test        = require('./test');
 
@@ -19,7 +19,7 @@ function init(gulp) {
   var options = config.fromEnv(process.env, process.argv, process.stdout);
 
   gulp.task('wct:sauce-tunnel', function(done) {
-    var emitter = new events.EventEmitter();
+    var emitter = new Context();
     new CliReporter(emitter, options.output, options);
     steps.ensureSauceTunnel(options, emitter, function(error) {
       if (error) return cleanDone(done)(error);

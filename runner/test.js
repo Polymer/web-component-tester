@@ -7,19 +7,18 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _      = require('lodash');
-var events = require('events');
+var async     = require('async');
+var cleankill = require('cleankill');
 
-var CleanKill   = require('./cleankill');
 var CliReporter = require('./clireporter');
-var config      = require('./config');
+var Context     = require('./context');
 var steps       = require('./steps');
 
 /**
  * Runs a suite of web component tests.
  *
- * The returned EventEmitter fires various events to allow you to track the
- * progress of the tests:
+ * The returned Context (a kind of EventEmitter) fires various events to allow
+ * you to track the progress of the tests:
  *
  * Lifecycle Events:
  *
@@ -58,40 +57,32 @@ var steps       = require('./steps');
  *  * log:warn
  *  * log:error
  *
- * @param {!Object} options The configuration, as specified in ./config.js.
+ * @param {!Object|!Context} options The configuration, as specified in,
+ *     `./config.js` or an already formed `Context` object.
  * @param {function(*)} done callback indicating error or success.
- * @return {!events.EventEmitter}
+ * @return {!Context}
  */
 module.exports = function test(options, done) {
-  var emitter = new events.EventEmitter();
+  var context = (options instanceof Context) ? options : new Context(options);
 
-  // All of our internal entry points already have defaults merged, but we also
-  // want to expose this as the public API to web-component-tester.
-  options = _.merge(config.defaults(), options);
-  config.expand(options, process.cwd(), function(error, options) {
-    if (error) return done(error);
+  // We assume that any options related to logging are passed in via the initial
+  // `options`.
+  if (context.options.output) {
+    new CliReporter(context, context.options.output, context.options);
+  }
 
-    if (options.output) {
-      new CliReporter(emitter, options.output, options);
+  async.series([
+    steps.loadPlugins.bind(steps, context),
+    steps.configure.bind(steps, context),
+    steps.prepare.bind(steps, context),
+    steps.runTests.bind(steps, context),
+  ], function(error) {
+    if (options.skipCleanup) {
+      done(error);
+    } else {
+      cleankill.close(done.bind(null, error));
     }
-    var cleanOptions = _.omit(options, 'output');
-    emitter.emit('log:debug', 'Configuration:', cleanOptions);
-
-    // Add plugin event listeners
-    _.values(options.plugins).forEach(function(plugin) {
-      if (plugin.listener) {
-        new plugin.listener(emitter, options.output, plugin);
-      }
-    });
-
-    steps.runTests(options, emitter, function(error) {
-      if (options.skipCleanup) {
-        done(error);
-      } else {
-        CleanKill.close(done.bind(null, error));
-      }
-    });
   });
 
-  return emitter;
+  return context;
 };

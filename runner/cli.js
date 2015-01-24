@@ -7,12 +7,14 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+var _      = require('lodash');
 var chalk  = require('chalk');
 var events = require('events');
 
 var CliReporter = require('./clireporter');
 var config      = require('./config');
-var steps       = require('./steps');
+var Context     = require('./context');
+var Plugin      = require('./plugin');
 var test        = require('./test');
 
 var PACKAGE_INFO   = require('../package.json');
@@ -22,30 +24,55 @@ var updateNotifier = require('update-notifier')({
 });
 
 function run(env, args, output, callback) {
-  var done    = wrapCallback(output, callback);
-  var options = config.fromEnv(env, args, output);
+  var done = wrapCallback(output, callback);
 
-  if (options.extraArgs && options.extraArgs.length) {
-    options.suites = options.extraArgs;
-  }
+  // Options parsing is a two phase affair. First, we need an initial set of
+  // configuration so that we know which plugins to load, etc:
+  var options = config.merge(config.fromDisk(), config.preparseArgs(args));
+  // Depends on values from the initial merge:
+  options = config.merge(options, {
+    output:    output,
+    ttyOutput: output.isTTY && !options.simpleOutput,
+  });
+  var context = new Context(options);
 
-  test(options, done);
+  // `parseArgs` merges any new configuration into `context.options`.
+  config.parseArgs(context, args, function(error) {
+    if (error) return done(error);
+    test(context, done);
+  });
 }
 
+// Note that we're cheating horribly here. Ideally all of this logic is within
+// wct-sauce. The trouble is that we also want WCT's configuration lookup logic,
+// and that's not (yet) cleanly exposed.
 function runSauceTunnel(env, args, output, callback) {
   var done = wrapCallback(output, callback);
 
-  var options = config.fromEnv(env, args, output);
-  var emitter = new events.EventEmitter();
-  new CliReporter(emitter, output, options);
+  var diskOptions = config.fromDisk();
+  var baseOptions = diskOptions.plugins && diskOptions.plugins.sauce || diskOptions.sauce || {};
 
-  steps.ensureSauceTunnel(options, emitter, function(error, tunnelId) {
+  Plugin.get('sauce', function(error, plugin) {
     if (error) return done(error);
-    output.write('\n');
-    output.write('The tunnel will remain active while this process is running.\n');
-    output.write('To use this tunnel for other WCT runs, export the following:\n');
-    output.write('\n');
-    output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
+
+    var parser = require('nomnom');
+    parser.script('wct-st');
+    parser.options(_.omit(plugin.cliConfig, 'browsers', 'tunnelId'));
+    var options = _.merge(baseOptions, parser.parse(args));
+
+    var wctSauce = require('wct-sauce');
+    wctSauce.expandOptions(options);
+
+    var emitter = new events.EventEmitter();
+    new CliReporter(emitter, output, {});
+    wctSauce.startTunnel(options, emitter, function(error, tunnelId) {
+      if (error) return done(error); // Otherwise, we keep at it.
+      output.write('\n');
+      output.write('The tunnel will remain active while this process is running.\n');
+      output.write('To use this tunnel for other WCT runs, export the following:\n');
+      output.write('\n');
+      output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
+    });
   });
 }
 

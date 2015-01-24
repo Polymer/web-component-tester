@@ -7,12 +7,11 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _      = require('lodash');
-var chalk  = require('chalk');
-var stacky = require('stacky');
-var util   = require('util');
-
-var CleanKill = require('./cleankill');
+var _         = require('lodash');
+var chalk     = require('chalk');
+var cleankill = require('cleankill');
+var stacky    = require('stacky');
+var util      = require('util');
 
 var STACKY_CONFIG = {
   indent: '    ',
@@ -55,7 +54,7 @@ function CliReporter(emitter, stream, options) {
   this.prettyBrowsers = {};
   this.browserStats   = {};
 
-  CleanKill.onInterrupt(function(done) {
+  cleankill.onInterrupt(function(done) {
     this.flush();
     done();
   }.bind(this));
@@ -211,7 +210,7 @@ CliReporter.prototype.log = function log(maybeFormat) {
     values = values.slice(1);
     format = maybeFormat;
   }
-  if (values[0].browserName) {
+  if (values[0] && values[0].browserName) {
     values[0] = padRight(this.prettyBrowser(values[0]), BROWSER_PAD);
   }
 

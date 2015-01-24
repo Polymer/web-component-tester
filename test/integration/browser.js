@@ -1,12 +1,12 @@
-var _            = require('lodash');
-var EventEmitter = require('events').EventEmitter;
-var expect       = require('chai').expect;
-var path         = require('path');
-var util         = require('util');
+var _         = require('lodash');
+var cleankill = require('cleankill');
+var expect    = require('chai').expect;
+var path      = require('path');
+var util      = require('util');
 
-var CleanKill   = require('../../runner/cleankill');
 var CLIReporter = require('../../runner/clireporter');
 var config      = require('../../runner/config');
+var Context     = require('../../runner/context');
 var steps       = require('../../runner/steps');
 var test        = require('../../runner/test');
 
@@ -376,8 +376,7 @@ function runsAllIntegrationSuites() {
 // Environments
 
 // Hacktastic state used in environments & helpers.
-var currentEnv  = {};
-var baseOptions = config.fromEnv(process.env, [], process.stderr);
+var currentEnv = {};
 
 if (!process.env.SKIP_LOCAL_BROWSERS) {
   describe('Local Browsers', function() {
@@ -389,6 +388,8 @@ if (!process.env.SKIP_LOCAL_BROWSERS) {
   });
 }
 
+// TODO(nevir): Re-enable support for integration in sauce.
+/*
 if (!process.env.SKIP_REMOTE_BROWSERS) {
   describe('Remote Browsers', function() {
     // Boot up a sauce tunnel w/ whatever the environment gives us.
@@ -397,7 +398,7 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
       this.timeout(300 * 1000);
       currentEnv.remote = true;
 
-      var emitter = new EventEmitter();
+      var emitter = new Context();
       new CLIReporter(emitter, process.stdout, {verbose: true});
 
       steps.ensureSauceTunnel(baseOptions, emitter, function(error, tunnelId) {
@@ -411,9 +412,10 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
 
   after(function(done) {
     this.timeout(120 * 1000);
-    CleanKill.close(done);
+    cleankill.close(done);
   });
 }
+*/
 
 // Helpers
 
@@ -449,14 +451,14 @@ function runsIntegrationSuite(suiteName, contextFunction) {
     before(function(done) {
       this.timeout(120 * 1000);
 
-      var options = _.merge(config.defaults(), {
+      var options = _.merge({
         output:      {write: log.push.bind(log)},
         ttyOutput:   false,
         skipCleanup: true,  // We do it manually at the end of all suites.
         root:        path.resolve(PROJECT_ROOT, '..'),
         suites:      [path.join(path.basename(PROJECT_ROOT), 'test/fixtures/integration', suiteName)],
-        remote:      currentEnv.remote,
-        sauce:       baseOptions.sauce,
+        // TODO(nevir): Migrate
+        // remote:      currentEnv.remote,
         // Roughly matches CI Runner statuses.
         browserOptions: {
           name: 'web-component-tester',

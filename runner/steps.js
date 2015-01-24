@@ -7,262 +7,113 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _            = require('lodash');
-var async        = require('async');
-var chalk        = require('chalk');
-var express      = require('express');
-var freeport     = require('freeport');
-var fs           = require('fs');
-var http         = require('http');
-var path         = require('path');
-var sauceConnect = require('sauce-connect-launcher');
-var selenium     = require('selenium-standalone');
-var send         = require('send');
-var serveStatic  = require('serve-static');
-var socketIO     = require('socket.io');
-var temp         = require('temp');
-var uuid         = require('uuid');
-var which        = require('which');
+var _        = require('lodash');
+var async    = require('async');
+var http     = require('http');
+var socketIO = require('socket.io');
 
 var BrowserRunner = require('./browserrunner');
-var CleanKill     = require('./cleankill');
+var config        = require('./config');
 
-// We prefer serving local assets over bower assets.
-var PACKAGE_ROOT = path.resolve(__dirname, '..');
-var SERVE_STATIC = {  // Keys are regexps.
-  '^.*/web-component-tester/browser\\.js$':     path.join(PACKAGE_ROOT, 'browser.js'),
-  '^.*/web-component-tester/environment\\.js$': path.join(PACKAGE_ROOT, 'environment.js'),
-};
+// Steps (& Hooks)
 
-var INDEX_TEMPLATE = _.template(fs.readFileSync(
-  path.resolve(__dirname, '../data/index.html'), {encoding: 'utf-8'}
-));
-
-// Steps
-function ensureSauceTunnel(options, emitter, done) {
-  if (options.sauce.tunnelId) {
-    return done(null, options.sauce.tunnelId);
-  }
-  if (!assertSauceCredentials(options, done)) return;
-
-  // If anything goes wrong, sc tends to have a bit more detail in its log, so
-  // let's make that easy(ish) to get at:
-  temp.mkdir('wct', function(error, logDir) {
+function loadPlugins(context, done) {
+  context.emit('log:debug', 'step: loadPlugins');
+  context.plugins(function(error, plugins) {
     if (error) return done(error);
-    var logPath = path.join(logDir, 'sc.log');
-
-    var connectOptions = {
-      username:         options.sauce.username,
-      accessKey:        options.sauce.accessKey,
-      tunnelIdentifier: options.sauce.tunnelId || uuid.v4(),
-      logger:           emitter.emit.bind(emitter, 'log:debug'),
-      logfile:          logPath,
-    };
-    _.assign(connectOptions, options.sauce.tunnelOptions);
-    var tunnelId = connectOptions.tunnelIdentifier;
-
-    emitter.emit('log:info', 'Creating Sauce Connect tunnel');
-    emitter.emit('log:info', 'Sauce Connect log:', chalk.magenta(logPath));
-    emitter.emit('log:debug', 'sauce-connect-launcher options', connectOptions);
-    sauceConnect(connectOptions, function(error, tunnel) {
-      if (error) {
-        emitter.emit('log:error', 'Sauce tunnel failed:');
-      } else {
-        emitter.emit('log:info', 'Sauce tunnel active:', chalk.yellow(tunnelId));
-        emitter.emit('sauce:tunnel-active', tunnelId);
-      }
-      done(error, tunnelId);
-    });
-    // SauceConnectLauncher only supports one tunnel at a time; this allows us to
-    // kill it before we've gotten our callback.
-    CleanKill.onInterrupt(sauceConnect.kill.bind(sauceConnect));
+    // built in quasi-plugin.
+    require('./webserver')(context);
+    // Actual plugins.
+    async.map(plugins, function(plugin, pluginDone) {
+      return plugin.execute(context, pluginDone);
+    }, done);
   });
 }
 
-function startSeleniumServer(options, emitter, done) {
-  checkSeleniumEnvironment(function(error) {
+function configure(context, done) {
+  context.emit('log:debug', 'step: configure');
+  var options = context.options;
+  _.defaults(options, config.defaults());
+
+  config.expand(context, function(error) {
     if (error) return done(error);
-    freeport(function(error, port) {
+
+    // Note that we trigger the configure hook _after_ filling in the `options`
+    // object.
+    //
+    // If you want to modify options prior to this; do it during plugin init.
+    context.emitHook('configure', function(error) {
       if (error) return done(error);
+      // Even if the options don't validate; useful debugging info.
+      var cleanOptions = _.omit(options, 'output');
+      context.emit('log:debug', 'configuration:', cleanOptions);
 
-      var server = selenium({}, ['-port', port]);
-      var badExit = function() { done('Could not start Selenium'); };
-      server.on('exit', badExit);
-
-      function onOutput(data) {
-        var str = data.toString();
-        emitter.emit('log:debug', str);
-
-        if (str.indexOf('Started org.openqa.jetty.jetty.Server') > -1) {
-          server.removeListener('exit', badExit);
-          emitter.emit('log:info', 'Selenium server running on port', chalk.yellow(port));
-          done(null, port);
-        }
-      }
-      server.stdout.on('data', onOutput);
-      server.stderr.on('data', onOutput);
-
-      CleanKill.onInterrupt(function(done) {
-        server.kill();
-        done();
-      });
+      config.validate(options, done);
     });
   });
 }
 
-function startStaticServer(options, emitter, done) {
-  freeport(function(error, port) {
-    if (error) return done(error);
-
-    var app    = express();
-    var server = http.createServer(app);
-
-    app.use(function(request, response, next) {
-      emitter.emit('log:debug', chalk.magenta(request.method), request.url);
-      next();
-    });
-
-    _.each(SERVE_STATIC, function(file, url) {
-      app.get(new RegExp(url), function(request, response) {
-        send(request, file).pipe(response);
-      });
-    });
-
-    if (options._webRunnerContent) {
-      app.get(options._webRunner, function(request, response) {
-        response.send(options._webRunnerContent);
-      });
-    }
-
-    // Add plugin middleware
-    _.values(options.plugins).forEach(function(plugin) {
-      if (plugin.middleware) {
-        app.use(plugin.middleware(options.root, plugin, emitter));
-      }
-    });
-
-    app.use(serveStatic(options.root, {'index': ['index.html', 'index.htm']}));
-
-    server.listen(port);
-    server.port = port;
-    CleanKill.onInterrupt(function(done) {
-      server.close();
-      done();
-    });
-
-    emitter.emit('log:info',
-      'Web server running on port', chalk.yellow(port),
-      'and serving from', chalk.magenta(options.root)
-    );
-    done(null, server);
-  });
+/**
+ * The prepare step is where a lot of the runner's initialization occurs. This
+ * is also typically where a plugin will want to spin up any long-running
+ * process it requires.
+ *
+ * Note that some "plugins" are also built directly into WCT (webserver).
+ */
+function prepare(context, done) {
+  context.emitHook('prepare', done);
 }
 
-function runTests(options, emitter, done) {
-  injectWebRunner(options);
-
-  var jobs = {
-    http: startStaticServer.bind(null, options, emitter),
-  };
-  if (_.any(options.browsers, isLocal)) {
-    jobs.selenium = startSeleniumServer.bind(null, options, emitter);
-  }
-  if (!_.every(options.browsers, isLocal)) {
-    if (!assertSauceCredentials(options, done)) return; // Assert for the runners.
-    jobs.sauceTunnel = ensureSauceTunnel.bind(null, options, emitter);
-  }
-
-  async.parallel(jobs, function(error, results) {
-    if (error) return done(error);
-
-    // TODO(nevir): Clean up hackish semi-private options.
-    options._seleniumPort = results.selenium;
-    options._httpPort     = results.http.port;
-    if (results.sauceTunnel) {
-      options.browserOptions['tunnel-identifier'] = results.sauceTunnel;
+function runTests(context, done) {
+  context.emit('log:debug', 'step: runTests');
+  var failed = false;
+  var runners = runBrowsers(context, function(error) {
+    if (error) {
+      done(error);
+    } else {
+      done(failed ? 'Had failed tests' : null);
     }
+  });
 
-    var failed = false;
-    var runners = runBrowsers(options, emitter, function(error) {
-      if (error) {
-        done(error);
-      } else {
-        done(failed ? 'Had failed tests' : null);
-      }
-    });
-
-    socketIO(results.http).on('connection', function(socket) {
-      emitter.emit('log:debug', 'Test client opened sideband socket');
-      socket.on('client-event', function(data) {
-        runners[data.browserId].onEvent(data.event, data.data);
-      });
+  socketIO(context._httpServer).on('connection', function(socket) {
+    context.emit('log:debug', 'Test client opened sideband socket');
+    socket.on('client-event', function(data) {
+      runners[data.browserId].onEvent(data.event, data.data);
     });
   });
 }
 
 // Helpers
 
-function injectWebRunner(options) {
-  // Short circuit if we have only one .html suite to run: Run it directly.
-  if (options.suites.length === 1 && options.suites[0].slice(-5) === '.html') {
-    options._webRunner = '/' + options.suites[0];
-  } else {
-    options._webRunner = '/generated-index.html';
-    options._webRunnerContent = INDEX_TEMPLATE(options);
-  }
-}
-
-function checkSeleniumEnvironment(done) {
-  which('java', function(error) {
-    if (!error) return done();
-
-    var message = 'java is not present on your PATH.';
-    if (process.platform === 'win32') {
-      message = message + '\n\n  Please install it: https://java.com/download/\n\n';
-    } else if (process.platform === 'linux') {
-      try {
-        which.sync('apt-get');
-        message = message + '\n\n  sudo apt-get install default-jre\n\n';
-      } catch (error) {
-        // There's not a clear default package for yum distros.
-      }
-    }
-
-    done(message);
-  });
-}
-
-function assertSauceCredentials(options, done) {
-  if (options.sauce.username && options.sauce.accessKey) return true;
-  done('Missing Sauce credentials. Did you forget to set SAUCE_USERNAME and/or SAUCE_ACCESS_KEY?');
-}
-
-function isLocal(browser) {
-  return !browser.platform;
-}
-
-function runBrowsers(options, emitter, done) {
-  if (options.browsers.length === 0) {
+function runBrowsers(context, done) {
+  var options = context.options;
+  var numActiveBrowsers = options.activeBrowsers.length;
+  if (numActiveBrowsers === 0) {
     throw new Error('No browsers configured to run');
   }
 
+  // TODO(nevir): validate browser definitions.
+
   // Up the socket limit so that we can maintain more active requests.
   // TODO(nevir): We should be queueing the browsers above some limit too.
-  http.globalAgent.maxSockets = Math.max(http.globalAgent.maxSockets, options.browsers.length * 2);
+  http.globalAgent.maxSockets = Math.max(http.globalAgent.maxSockets, numActiveBrowsers * 2);
 
-  emitter.emit('run-start', options);
+  context.emit('run-start', options);
 
   var errors  = [];
   var numDone = 0;
-  return options.browsers.map(function(browser, id) {
+  return options.activeBrowsers.map(function(browser, id) {
+    // Needed by both `BrowserRunner` and `CliReporter`.
     browser.id = id;
-    return new BrowserRunner(emitter, isLocal(browser), browser, options, function(error) {
-      emitter.emit('log:debug', browser, 'BrowserRunner complete');
+    _.defaults(browser, options.browserOptions);
+
+    return new BrowserRunner(context, browser, options, function(error) {
+      context.emit('log:debug', browser, 'BrowserRunner complete');
       if (error) errors.push(error);
       numDone = numDone + 1;
-      if (numDone === options.browsers.length) {
+      if (numDone === numActiveBrowsers) {
         error = errors.length > 0 ? _.unique(errors).join(', ') : null;
-        emitter.emit('run-end', error);
+        context.emit('run-end', error);
         done(error);
       }
     });
@@ -270,8 +121,8 @@ function runBrowsers(options, emitter, done) {
 }
 
 module.exports = {
-  ensureSauceTunnel:   ensureSauceTunnel,
-  startSeleniumServer: startSeleniumServer,
-  startStaticServer:   startStaticServer,
-  runTests:            runTests,
+  loadPlugins:    loadPlugins,
+  configure:      configure,
+  prepare:        prepare,
+  runTests:       runTests,
 };

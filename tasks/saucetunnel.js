@@ -7,19 +7,19 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _      = require('lodash');
-var chalk  = require('chalk');
-var events = require('events');
+var chalk     = require('chalk');
+var cleankill = require('cleankill');
 
-var CleanKill   = require('../runner/cleankill');
 var CliReporter = require('../runner/clireporter');
 var config      = require('../runner/config');
+var Context     = require('../runner/context');
 var steps       = require('../runner/steps');
 
+// TODO(nevir): Call into wct-sauce.
 module.exports = function(grunt) {
   grunt.registerMultiTask('wct-sauce-tunnel', 'Spins up a persistent Sauce Labs tunnel', function() {
     var options = config.mergeDefaults(this.options(config.fromEnv(process.env, process.argv)));
-    var emitter = new events.EventEmitter();
+    var emitter = new Context();
     new CliReporter(emitter, options.output, options);
 
     var done = this.async();
@@ -27,7 +27,7 @@ module.exports = function(grunt) {
       // Only stop on error.
       if (error) {
         console.log(chalk.red(error));
-        CleanKill.close(done.bind(null, false));
+        cleankill.close(done.bind(null, false));
       }
     });
   });
