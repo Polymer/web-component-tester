@@ -108,7 +108,6 @@ var ARG_CONFIG = {
     hidden: true,
     list:   true,
   },
-  // TODO(nevir): Make work!
   remote: {
     abbr:   'r',
     hidden: true,
