@@ -233,6 +233,38 @@ Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
 `options` you can use are specified in [`runner/config.js`](runner/config.js).
 
 
+# Plugins
+
+WCT also supports plugins. A plugin is a node module that can hook into various
+steps of WCT's flow.
+
+A plugin looks like this:
+
+`package.json`:
+```json
+{
+  ...
+  "wct-plugin": {
+    "cli-options": {
+      ... option configuration (nomnom)
+    }
+  }
+}
+```
+
+`plugin.js` (the plugin's main module)
+```js
+module.exports = function(context, pluginOptions, plugin) {
+  // ...
+};
+```
+
+The plugin can subscribe to hooks via the [`Context`](runner/context.js)
+object. Any options (via wct.conf.js or command line) are merged into 
+`pluginOptions`. And, `plugin` is the instance of [`Plugin`](runner/plugin.js)
+for the plugin.
+
+
 <!-- References -->
 [async]:      https://github.com/caolan/async       "Async.js"
 [chai-bdd]:   http://chaijs.com/api/bdd/            "Chai's BDD Interface"
