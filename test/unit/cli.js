@@ -7,7 +7,16 @@ var path   = require('path');
 var cli   = require('../../runner/cli');
 var steps = require('../../runner/steps');
 
+var wctLocalBrowsers = require('wct-local/lib/browsers');
+
 var FIXTURES = path.resolve(__dirname, '../fixtures/integration');
+
+var LOCAL_BROWSERS = {
+  aurora:  {browserName: 'aurora',  version: '1'},
+  canary:  {browserName: 'canary',  version: '2'},
+  chrome:  {browserName: 'chrome',  version: '3'},
+  firefox: {browserName: 'firefox', version: '4'},
+};
 
 describe('cli', function() {
 
@@ -16,6 +25,14 @@ describe('cli', function() {
     sandbox = sinon.sandbox.create();
     sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
     sandbox.stub(steps, 'runTests', function(context, done) { done(); });
+
+
+    sandbox.stub(wctLocalBrowsers, 'detect', function(done) {
+      done(null, LOCAL_BROWSERS);
+    });
+    sandbox.stub(wctLocalBrowsers, 'supported', function() {
+      return _.keys(LOCAL_BROWSERS);
+    });
   });
 
   afterEach(function() {
