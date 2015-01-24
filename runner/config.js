@@ -56,8 +56,6 @@ function defaults() {
     // each browser specified in `activeBrowsers`). A handy place to hang common
     // configuration.
     //
-    // TODO(nevir): Make sure this still works!
-    //
     // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
     // Sauce:    https://docs.saucelabs.com/reference/test-configuration/
     browserOptions: {},

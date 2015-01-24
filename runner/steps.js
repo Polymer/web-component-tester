@@ -17,7 +17,6 @@ var config        = require('./config');
 
 // Steps (& Hooks)
 
-// TODO(nevir): autodiscover plugins (similar to yeoman).
 function loadPlugins(context, done) {
   context.emit('log:debug', 'step: loadPlugins');
   context.plugins(function(error, plugins) {
