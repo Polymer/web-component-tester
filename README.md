@@ -264,6 +264,10 @@ object. Any options (via wct.conf.js or command line) are merged into
 `pluginOptions`. And, `plugin` is the instance of [`Plugin`](runner/plugin.js)
 for the plugin.
 
+[wct-local](https://github.com/Polymer/wct-local) and
+[wct-sauce](https://github.com/Polymer/wct-sauce) are example plugins you can
+follow.
+
 
 <!-- References -->
 [async]:      https://github.com/caolan/async       "Async.js"
