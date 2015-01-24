@@ -190,7 +190,7 @@ describe('cli', function() {
 
         // Semi-integration test; this also checks that wct-local (mostly) works.
         it('supports local browsers', function(done) {
-          var log = expectRun({}, ['--browsers', 'firefox', '-b', 'chrome'], function(call) {
+          expectRun({}, ['--browsers', 'firefox', '-b', 'chrome'], function(call) {
             var names = _.map(call.args[0].options.activeBrowsers, function(browser) {
               return browser.browserName;
             });
@@ -200,8 +200,8 @@ describe('cli', function() {
         });
 
         // Semi-integration test; this also checks that wct-sauce (mostly) works.
-        it('supports local browsers', function(done) {
-          var log = expectRun({}, ['--browsers', 'linux/firefox', '-b', 'linux/chrome'], function(call) {
+        it('supports sauce browsers', function(done) {
+          expectRun({}, ['--browsers', 'linux/firefox', '-b', 'linux/chrome'], function(call) {
             var names = _.map(call.args[0].options.activeBrowsers, function(browser) {
               return browser.browserName;
             });
@@ -209,6 +209,30 @@ describe('cli', function() {
             done();
           });
         });
+
+      });
+
+      describe('--remote', function() {
+
+        it('warns when used', function(done) {
+          var log = expectRun({}, ['--remote'], function(call) {
+            var hasWarning = _.any(log, function(l) { return /--remote.*--sauce/.test(l); });
+            expect(hasWarning).to.eq(true, 'Expected a warning that --remote is deprecated');
+            done();
+          });
+        });
+
+        // Semi-integration test; this also checks that wct-sauce (mostly) works.
+        it('sets up default sauce browsers', function(done) {
+          expectRun({}, ['--remote'], function(call) {
+            var platforms = call.args[0].options.activeBrowsers.map(function(browser) {
+              return browser.platform;
+            });
+            expect(_.compact(platforms).length).to.be.gt(0);
+            done();
+          });
+        });
+
 
       });
 

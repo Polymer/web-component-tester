@@ -321,7 +321,7 @@ function expandDeprecated(context, done) {
   if (options.remote) {
     context.emit('log:warn', 'The --remote flag is deprecated. Please use --sauce default instead.');
     fragments.push({
-      plugins: {sauce: {browsers: ['default']}}
+      plugins: {sauce: {browsers: ['default']}},
     });
     delete options.remote;
   }
