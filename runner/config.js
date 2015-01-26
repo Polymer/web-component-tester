@@ -220,7 +220,18 @@ function _expandOptionPaths(options) {
 function merge() {
   var result  = {};
   var configs = Array.prototype.map.call(arguments, normalize);
-  return _.merge.apply(_, [result].concat(configs));
+  _.merge.apply(_, [result].concat(configs));
+
+  // false plugin configs are preserved.
+  configs.forEach(function(config) {
+    _.each(config.plugins, function(value, key) {
+      if (value === false) {
+        result.plugins[key] = false;
+      }
+    });
+  });
+
+  return result;
 }
 
 /**

@@ -109,7 +109,10 @@ Context.prototype.emitHook = function emitHook(name, done) {
  *     requested by `options.plugins`.
  */
 Context.prototype.plugins = function plugins(done) {
-  async.map(_.keys(this.options.plugins), Plugin.get, done);
+  // Plugins with falsy configuration are _not_ loaded.
+  var pairs = _.filter(_.pairs(this.options.plugins), function(p) { return p[1] });
+  var keys  = _.map(pairs, function(p) { return p[0] });
+  async.map(keys, Plugin.get, done);
 };
 
 /**
