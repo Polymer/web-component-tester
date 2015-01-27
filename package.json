@@ -1,6 +1,6 @@
 {
   "name": "web-component-tester",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "web-component-tester makes testing your web components a breeze!",
   "keywords": [
     "browser",
@@ -48,8 +48,8 @@
     "socket.io": "^1.0.6",
     "stacky": "^1.2.0",
     "update-notifier": "^0.2.2",
-    "wct-local": "^1.0.0",
-    "wct-sauce": "^1.0.0",
+    "wct-local": "^1.0.1",
+    "wct-sauce": "^1.0.1",
     "wd": "^0.3.8"
   },
   "devDependencies": {
