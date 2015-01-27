@@ -29,7 +29,6 @@
     "wct-st": "./bin/wct-st"
   },
   "scripts": {
-    "postinstall": "node scripts/postinstall.js",
     "test": "gulp test"
   },
   "dependencies": {
