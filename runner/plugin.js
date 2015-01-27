@@ -106,7 +106,4 @@ function _tryLoadPluginPackage(packageName) {
 }
 
 // Looks like Plugin, but not really.
-module.exports = {
-  get:       Plugin.get,
-  shortName: Plugin.shortName,
-};
+module.exports = Plugin;
