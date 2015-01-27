@@ -9,11 +9,7 @@
  */
 var chalk = require('chalk');
 
-var CliReporter = require('./clireporter');
-var config      = require('./config');
-var Context     = require('./context');
-var steps       = require('./steps');
-var test        = require('./test');
+var test = require('./test');
 
 function init(gulp) {
   // TODO(nevir): Migrate fully to wct:local/etc.
