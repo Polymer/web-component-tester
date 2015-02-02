@@ -306,7 +306,7 @@ function expandDeprecated(context, done) {
   var browsers = _.isArray(options.browsers) ? options.browsers : [options.browsers];
   browsers = _.compact(browsers);
   if (browsers.length > 0) {
-    context.emit('log:warn', 'The --browsers flag/option is deprecated. Please use --local and --sauce instead.');
+    context.emit('log:warn', 'The --browsers flag/option is deprecated. Please use --local and --sauce instead, or configure via plugins.[local|sauce].browsers.');
     var fragment = {plugins: {sauce: {}, local: {}}};
     fragments.push(fragment);
 
