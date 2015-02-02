@@ -18,16 +18,15 @@ var notify      = require('gulp-notify');
 var plumber     = require('gulp-plumber');
 var runSequence = require('run-sequence');
 var runTask     = require('orchestrator/lib/runTask');
-var sourcemaps  = require('gulp-sourcemaps');
 var watch       = require('gulp-watch');
 var wrap        = require('gulp-wrap');
 
 var CSS_TO_JS =
-    "(function() {\n" +
-    "var style = document.createElement('style');\n" +
-    "style.textContent = '<%= contents.replace(/'/g, \"\\\\'\").replace(/\\n/g, '\\\\n') %>';\n" +
-    "document.head.appendChild(style);\n" +
-    "})();";
+    '(function() {\n' +
+    'var style = document.createElement(\'style\');\n' +
+    'style.textContent = \'<%= String(contents).replace(/\\n/g, "\\\\n").replace(/\'/g, "\\\\\'") %>\';\n' +
+    'document.head.appendChild(style);\n' +
+    '})();';
 
 // Meta tasks
 
@@ -96,7 +95,10 @@ gulp.task('build:environment', function() {
 });
 
 gulp.task('test:style', function() {
-  return gulp.src('{browser,runner,environment,tasks}/**/*.js').pipe(jshintFlow());
+  return gulp.src([
+    '{browser,runner,environment,tasks}/**/*.js',
+    'gulpfile.js',
+  ]).pipe(jshintFlow());
 });
 
 gulp.task('test:dependencies', function() {
