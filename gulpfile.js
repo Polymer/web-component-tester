@@ -8,6 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 var concat      = require('gulp-concat');
+var david       = require('gulp-david');
 var gulp        = require('gulp');
 var gulpIf      = require('gulp-if');
 var jshint      = require('gulp-jshint');
@@ -33,10 +34,10 @@ var CSS_TO_JS =
 gulp.task('default', ['test']);
 
 gulp.task('test', function(done) {
-  runSequence('test:style', 'test:unit', done);
+  runSequence('test:style', 'test:dependencies', 'test:unit', done);
 });
 gulp.task('test:all', function(done) {
-  runSequence('test:style', 'test:unit', 'test:integration', done);
+  runSequence('test:style', 'test:dependencies', 'test:unit', 'test:integration', done);
 });
 gulp.task('build', ['build:browser', 'build:environment']);
 
@@ -96,6 +97,21 @@ gulp.task('build:environment', function() {
 
 gulp.task('test:style', function() {
   return gulp.src('{browser,runner,environment,tasks}/**/*.js').pipe(jshintFlow());
+});
+
+gulp.task('test:dependencies', function() {
+  return gulp.src('package.json')
+    .pipe(david({error404: true}))
+    .pipe(david.reporter)
+    .on('data', function(file) {
+      if (Object.keys(file.david.dependencies).length         > 0 ||
+          Object.keys(file.david.optionalDependencies).length > 0 ||
+          Object.keys(file.david.devDependencies).length      > 0) {
+        var error = new Error('Dependencies are out of date');
+        error.showStack = false;
+        this.emit('error', error);
+      }
+    });
 });
 
 gulp.task('test:unit', function() {
