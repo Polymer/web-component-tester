@@ -250,12 +250,12 @@ steps of WCT's flow.
 A plugin looks like this:
 
 `package.json`:
-```json
+```js
 {
-  ...
+  // ...
   "wct-plugin": {
     "cli-options": {
-      ... option configuration (nomnom)
+      // ... option configuration (nomnom)
     }
   }
 }
