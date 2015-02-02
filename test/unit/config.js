@@ -1,22 +1,11 @@
-var chai      = require('chai');
-var sinon     = require('sinon');
-var sinonChai = require('sinon-chai');
+var chai = require('chai');
 
 var expect = chai.expect;
-chai.use(sinonChai);
 
-var config = require('../../runner/config');
+var config  = require('../../runner/config');
+var Context = require('../../runner/context');
 
 describe('config', function() {
-
-  var sandbox;
-  beforeEach(function() {
-    sandbox = sinon.sandbox.create();
-  });
-
-  afterEach(function() {
-    sandbox.restore();
-  });
 
   describe('.merge', function() {
 
@@ -39,6 +28,49 @@ describe('config', function() {
       );
 
       expect(merged).to.deep.equal({plugins: {foo: false, bar: {}}});
+    });
+
+  });
+
+  describe('.expand', function() {
+
+    describe('deprecated options', function() {
+
+      it('expands local string browsers', function(done) {
+        var context = new Context({browsers: ['chrome']});
+        config.expand(context, function(error) {
+          expect(error).to.not.be.ok;
+          expect(context.options.plugins.local.browsers).to.have.members(['chrome']);
+          done();
+        });
+      });
+
+      it('expands sauce string browsers', function(done) {
+        var context = new Context({browsers: ['linux/firefox']});
+        config.expand(context, function(error) {
+          expect(error).to.not.be.ok;
+          expect(context.options.plugins.sauce.browsers).to.have.members(['linux/firefox']);
+          done();
+        });
+      });
+
+      it('expands local object browsers', function(done) {
+        var context = new Context({browsers: [{browserName: 'firefox'}]});
+        config.expand(context, function(error) {
+          expect(error).to.not.be.ok;
+          expect(context.options.plugins.local.browsers).to.deep.have.members([{browserName: 'firefox'}]);
+          done();
+        });
+      });
+
+      it('expands sauce object browsers', function(done) {
+        var context = new Context({browsers: [{browserName: 'safari', platform: 'OS X'}]});
+        config.expand(context, function(error) {
+          expect(error).to.not.be.ok;
+          expect(context.options.plugins.sauce.browsers).to.deep.have.members([{browserName: 'safari', platform: 'OS X'}]);
+          done();
+        });
+      });
     });
 
   });

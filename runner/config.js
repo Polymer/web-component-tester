@@ -311,7 +311,8 @@ function expandDeprecated(context, done) {
     fragments.push(fragment);
 
     for (var i = 0, browser; browser = browsers[i]; i++) {
-      var plugin = browser.indexOf('/') !== -1 ? 'sauce' : 'local';
+      var name   = browser.browserName || browser;
+      var plugin = browser.platform || name.indexOf('/') !== -1 ? 'sauce' : 'local';
       fragment.plugins[plugin].browsers = fragment.plugins[plugin].browsers || [];
       fragment.plugins[plugin].browsers.push(browser);
     }
