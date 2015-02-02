@@ -83,7 +83,7 @@ Context.prototype.emitHook = function emitHook(name, done) {
 
   var hooks = (this._hookHandlers[name] || []);
   if (arguments.length > 2) {
-    done     = arguments[arguments.length - 1];
+    done = arguments[arguments.length - 1];
     var hookArgs = [null].concat(Array.prototype.slice(1, arguments.length - 1));
     hooks = hooks.map(function(hook) {
       return hook.bind.apply(hook, hookArgs);
@@ -109,8 +109,8 @@ Context.prototype.emitHook = function emitHook(name, done) {
  *     requested by `options.plugins`.
  */
 Context.prototype.plugins = function plugins(done) {
-  // Plugins with falsy configuration are _not_ loaded.
-  var pairs = _.filter(_.pairs(this.options.plugins), function(p) { return p[1] });
+  // Plugins with falsy configuration or disabled: true are _not_ loaded.
+  var pairs = _.reject(_.pairs(this.options.plugins), function(p) { return !p[1] || p[1].disabled });
   var keys  = _.map(pairs, function(p) { return p[0] });
   async.map(keys, Plugin.get, done);
 };

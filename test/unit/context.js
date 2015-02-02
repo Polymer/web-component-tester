@@ -32,7 +32,21 @@ describe('Context', function() {
         expect(stub).to.have.been.calledOnce;
         expect(stub).to.have.been.calledWith('sauce', sinon.match.func);
         expect(plugins).to.have.members(['sauce']);
+        done();
+      });
+    });
 
+    it('excludes plugins disabled: true', function(done) {
+      var context = new Context({plugins: {local: {}, sauce: {disabled: true}}});
+      var stub = sandbox.stub(Plugin, 'get', function(name, callback) {
+        callback(null, name);
+      });
+
+      context.plugins(function(error, plugins) {
+        expect(error).to.not.be.ok;
+        expect(stub).to.have.been.calledOnce;
+        expect(stub).to.have.been.calledWith('local', sinon.match.func);
+        expect(plugins).to.have.members(['local']);
         done();
       });
     });

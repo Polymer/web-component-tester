@@ -131,8 +131,10 @@ custom configuration:
 ```js
 module.exports = {
   verbose: true,
-  sauce: {
-    username 'boo',
+  plugins: {
+    local: {
+      browsers: ['chrome', 'firefox']
+    }
   },
 };
 ```
@@ -142,6 +144,26 @@ configuration properties.
 
 You can also specify global defaults (such as `sauce.username`, etc) via a
 config file located at `~/wct.conf.js`.
+
+## Plugins
+
+Note that by specifying a plugin's configuration, you are letting WCT know that
+it should load that plugin. If you wish to provide default configuration for a
+plugin, but not enable it, you can have it default to disabled:
+
+```js
+module.exports = {
+  plugins: {
+    sauce: {
+      disabled: true,
+      browsers: ['chrome', 'firefox']
+    }
+  },
+};
+```
+
+Requesting that plugin via `--plugin` on the command line (or overriding the
+plugin's configuration to `disabled: false`) will cause the plugin to kick in.
 
 
 # Nitty Gritty

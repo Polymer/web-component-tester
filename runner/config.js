@@ -242,7 +242,8 @@ function normalize(config) {
   if (_.isArray(config.plugins)) {
     var pluginConfigs = {};
     for (var i = 0, name; name = config.plugins[i]; i++) {
-      pluginConfigs[name] = {};
+      // A named plugin is explicitly enabled (e.g. --plugin foo).
+      pluginConfigs[name] = {disabled: false};
     }
     config.plugins = pluginConfigs;
   }
