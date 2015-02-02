@@ -28,7 +28,7 @@ function Context(options) {
    * We guarantee that this object is never replaced (e.g. you are free to hold
    * a reference to it, and make changes to it).
    */
-  this.options = config.merge(config.defaults(), options || {});
+  this.options = config.merge(config.defaults(), config.fromDisk(), options || {});
 
   /** @type {!Object<string, !Array<function>>} */
   this._hookHandlers = {};

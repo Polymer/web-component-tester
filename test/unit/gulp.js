@@ -1,5 +1,6 @@
 var chai  = require('chai');
 var gulp  = require('gulp');
+var path  = require('path');
 var sinon = require('sinon');
 
 var Plugin  = require('../../runner/plugin');
@@ -9,18 +10,24 @@ var wctGulp = require('../../runner/gulp');
 var expect = chai.expect;
 chai.use(require('sinon-chai'));
 
+var FIXTURES = path.resolve(__dirname, '../fixtures/integration');
+
 describe('gulp', function() {
 
   var pluginsCalled;
   var sandbox;
   var orch;
+  var options;
   beforeEach(function() {
     orch = new gulp.Gulp();
     wctGulp.init(orch);
 
     sandbox = sinon.sandbox.create();
     sandbox.stub(steps, 'prepare',  function(context, done) { done() });
-    sandbox.stub(steps, 'runTests', function(context, done) { done() });
+    sandbox.stub(steps, 'runTests', function(context, done) {
+      options = context.options;
+      done();
+    });
 
     pluginsCalled = [];
     sandbox.stub(Plugin.prototype, 'execute', function(context, done) {
@@ -32,6 +39,15 @@ describe('gulp', function() {
 
   afterEach(function() {
     sandbox.restore();
+  });
+
+  it('honors wcf.conf.js', function(done) {
+    process.chdir(path.join(FIXTURES, 'conf'));
+    orch.start('wct:sauce', function(error) {
+      expect(error).to.not.be.ok;
+      expect(options.plugins.sauce.username).to.eq('abc123');
+      done();
+    });
   });
 
   describe('wct:local', function() {

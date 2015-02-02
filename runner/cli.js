@@ -28,7 +28,7 @@ function run(env, args, output, callback) {
 
   // Options parsing is a two phase affair. First, we need an initial set of
   // configuration so that we know which plugins to load, etc:
-  var options = config.merge(config.fromDisk(), config.preparseArgs(args));
+  var options = config.preparseArgs(args);
   // Depends on values from the initial merge:
   options = config.merge(options, {
     output:    output,
