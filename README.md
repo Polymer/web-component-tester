@@ -1,6 +1,7 @@
-[![NPM version](http://img.shields.io/npm/v/web-component-tester.svg)](https://npmjs.org/package/web-component-tester)
-[![Build Status](http://img.shields.io/travis/Polymer/web-component-tester.svg)](https://travis-ci.org/Polymer/web-component-tester)
-[![Dependency Status](https://david-dm.org/Polymer/web-component-tester.svg)](https://david-dm.org/Polymer/web-component-tester)
+[![NPM version](http://img.shields.io/npm/v/web-component-tester.svg?style=flat)](https://npmjs.org/package/web-component-tester)
+[![Build Status](http://img.shields.io/travis/Polymer/web-component-tester.svg?style=flat)](https://travis-ci.org/Polymer/web-component-tester)
+[![Dependency Status](http://img.shields.io/david/Polymer/web-component-tester.svg?style=flat)](https://david-dm.org/Polymer/web-component-tester)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Polymer/web-component-tester)
 
 `web-component-tester` makes testing your web components a breeze!
 
