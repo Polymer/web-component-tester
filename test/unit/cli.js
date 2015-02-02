@@ -27,7 +27,7 @@ describe('cli', function() {
     sandbox.stub(steps, 'runTests', function(context, done) { done(); });
 
     sandbox.stub(wctLocalBrowsers, 'detect', function(done) {
-      done(null, LOCAL_BROWSERS);
+      done(null, _.omit(LOCAL_BROWSERS, 'aurora'));
     });
     sandbox.stub(wctLocalBrowsers, 'supported', function() {
       return _.keys(LOCAL_BROWSERS);
