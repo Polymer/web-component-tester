@@ -1,5 +1,6 @@
 [![NPM version](http://img.shields.io/npm/v/web-component-tester.svg)](https://npmjs.org/package/web-component-tester)
 [![Build Status](http://img.shields.io/travis/Polymer/web-component-tester.svg)](https://travis-ci.org/Polymer/web-component-tester)
+[![Dependency Status](https://david-dm.org/Polymer/web-component-tester.svg)](https://david-dm.org/Polymer/web-component-tester)
 
 `web-component-tester` makes testing your web components a breeze!
 
@@ -123,7 +124,7 @@ any desired tests:
 # Configuration
 
 The `wct` command line tool will pick up custom configuration from a
-`wct.conf.js` file located in the root of your project. It should export the 
+`wct.conf.js` file located in the root of your project. It should export the
 custom configuration:
 
 ```js
@@ -135,7 +136,7 @@ module.exports = {
 };
 ```
 
-See [`runner/config.js`](runner/config.js) for the canonical reference of 
+See [`runner/config.js`](runner/config.js) for the canonical reference of
 configuration properties.
 
 You can also specify global defaults (such as `sauce.username`, etc) via a
@@ -154,13 +155,13 @@ If you need to test something that occurs before that event, the [`testImmediate
 ## Mocha
 
 WCT supports Mocha's [TDD][mocha-tdd] (`suite`/`test`/etc) and [BDD][mocha-bdd]
-(`describe`/`it`/etc) interfaces, and will call `mocha.setup`/`mocha.run` for 
+(`describe`/`it`/etc) interfaces, and will call `mocha.setup`/`mocha.run` for
 you. Just write your tests, and you're set.
 
 
 ## Chai
 
-Similarly, Chai's [`expect`][chai-bdd] and [`assert`][chai-tdd] interfaces are 
+Similarly, Chai's [`expect`][chai-bdd] and [`assert`][chai-tdd] interfaces are
 exposed for your convenience.
 
 
@@ -170,7 +171,7 @@ The `wct` tool, and the [gulp](#gulp) and [grunt](#grunt) integration, support
 several command line flags:
 
 
-`--remote`: Uses the [default remote browsers](default-sauce-browsers.json), 
+`--remote`: Uses the [default remote browsers](default-sauce-browsers.json),
 and if omitted uses the default local browsers.
 
 Note that you will need a [valid Sauce Labs account](opensauce) for this. Let
@@ -236,7 +237,7 @@ grunt.initConfig({
 grunt.loadNpmTasks('web-component-tester');
 ```
 
-Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The 
+Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
 `options` you can use are specified in [`runner/config.js`](runner/config.js).
 
 
@@ -267,7 +268,7 @@ module.exports = function(context, pluginOptions, plugin) {
 ```
 
 The plugin can subscribe to hooks via the [`Context`](runner/context.js)
-object. Any options (via wct.conf.js or command line) are merged into 
+object. Any options (via wct.conf.js or command line) are merged into
 `pluginOptions`. And, `plugin` is the instance of [`Plugin`](runner/plugin.js)
 for the plugin.
 
