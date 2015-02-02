@@ -18,10 +18,14 @@ var Plugin      = require('./plugin');
 var test        = require('./test');
 
 var PACKAGE_INFO   = require('../package.json');
-var updateNotifier = require('update-notifier')({
-  packageName:    PACKAGE_INFO.name,
-  packageVersion: PACKAGE_INFO.version,
-});
+try {
+  var updateNotifier = require('update-notifier')({
+    packageName:    PACKAGE_INFO.name,
+    packageVersion: PACKAGE_INFO.version,
+  });
+} catch (error) {
+  // S'ok if we don't have update-notifier. It's optional.
+}
 
 function run(env, args, output, callback) {
   var done = wrapCallback(output, callback);
@@ -78,7 +82,7 @@ function runSauceTunnel(env, args, output, callback) {
 
 function wrapCallback(output, done) {
   return function(error) {
-    updateNotifier.notify({defer: false});
+    updateNotifier && updateNotifier.notify({defer: false});
 
     if (error) {
       output.write('\n');
