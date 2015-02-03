@@ -253,9 +253,10 @@ function merge() {
  * @return {!Object} `config`.
  */
 function normalize(config) {
+  var i, name;
   if (_.isArray(config.plugins)) {
     var pluginConfigs = {};
-    for (var i = 0, name; name = config.plugins[i]; i++) {
+    for (i = 0, name; name = config.plugins[i]; i++) {
       // A named plugin is explicitly enabled (e.g. --plugin foo).
       pluginConfigs[name] = {disabled: false};
     }
@@ -265,7 +266,7 @@ function normalize(config) {
   // Always wins.
   if (config.skipPlugins) {
     config.plugins = config.plugins || {};
-    for (var i = 0, name; name = config.skipPlugins[i]; i++) {
+    for (i = 0, name; name = config.skipPlugins[i]; i++) {
       config.plugins[name] = false;
     }
   }
