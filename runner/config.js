@@ -100,6 +100,7 @@ var ARG_CONFIG = {
   },
   skipUpdateCheck: {
     help:      'Don\'t check for updates.',
+    full:      'skip-update-check',
     flag:      true,
   },
 
