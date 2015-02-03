@@ -6712,11 +6712,13 @@ ChildRunner.prototype.done = function done() {
 
   this.signalRunComplete();
 
-  if (!this.iframe) return; 
-  var iframe = this.iframe;
-  window.setTimeout( function() {
-    iframe.parentNode.removeChild(iframe);
-  }, 1);
+  if (!this.iframe) return;
+  // Be safe and avoid potential browser crashes when logic attempts to interact
+  // with the removed iframe.
+  setTimeout(function() {
+    this.iframe.parentNode.removeChild(this.iframe);
+    this.iframe = null;
+  }.bind(this), 1);
 };
 
 ChildRunner.prototype.signalRunComplete = function signalRunComplete(error) {
