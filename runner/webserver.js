@@ -58,7 +58,7 @@ module.exports = function(wct) {
 
     // If we have only one HTML suite to run, we can skip the generated index.
     if (options.suites.length === 1 && options.suites[0].slice(-5) === '.html') {
-      options.webserver.webRunnerPath = '/' + options.suites[0];
+      options.webserver.webRunnerPath = '/' + options.suites[0].replace(/\\/g, '/');
     } else {
       options.webserver.webRunnerPath = '/generated-index.html';
       options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
