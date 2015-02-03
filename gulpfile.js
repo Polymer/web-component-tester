@@ -82,6 +82,7 @@ gulp.task('build:browser', function() {
 
 gulp.task('build:environment', function() {
   return gulp.src([
+      'environment/license.js',
       'vendor/async/lib/async.js',
       'vendor/chai/chai.js',
       'vendor/lodash/lodash.js',
