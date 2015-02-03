@@ -40,6 +40,10 @@ function run(env, args, output, callback) {
   });
   var context = new Context(options);
 
+  if (options.skipUpdateCheck) {
+    updateNotifier = true;
+  }
+
   // `parseArgs` merges any new configuration into `context.options`.
   config.parseArgs(context, args, function(error) {
     if (error) return done(error);

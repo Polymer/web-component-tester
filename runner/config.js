@@ -98,6 +98,10 @@ var ARG_CONFIG = {
     help:      'Avoid fancy terminal output.',
     flag:      true,
   },
+  skipUpdateCheck: {
+    help:      'Don\'t check for updates.',
+    flag:      true,
+  },
 
   // Deprecated
 
@@ -114,7 +118,7 @@ var ARG_CONFIG = {
 };
 
 // Values that should be extracted when pre-parsing args.
-var PREPARSE_ARGS = ['plugins', 'simpleOutput'];
+var PREPARSE_ARGS = ['plugins', 'simpleOutput', 'skipUpdateCheck'];
 
 /**
  * Discovers appropriate config files (global, and for the project), merging
