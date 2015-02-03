@@ -129,6 +129,24 @@ describe('cli', function() {
       });
     });
 
+    it('loads the local and sauce plugins by default', function(done) {
+      process.chdir(path.join(FIXTURES, 'standard'));
+
+      expectRun({}, [], function(call) {
+        expect(call.args[0].enabledPlugins()).to.have.members(['local', 'sauce']);
+        done();
+      });
+    });
+
+    it('allows plugins to be diabled via --skip-plugin', function(done) {
+      process.chdir(path.join(FIXTURES, 'standard'));
+
+      expectRun({}, ['--skip-plugin', 'sauce'], function(call) {
+        expect(call.args[0].enabledPlugins()).to.have.members(['local']);
+        done();
+      });
+    });
+
     // TODO(nevir): Remove after deprecation period.
     it('throws an error when --webRunner is set', function(done) {
       cli.run({}, ['--webRunner', 'foo'], {write: function() {}}, function(error) {

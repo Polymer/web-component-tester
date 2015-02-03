@@ -86,6 +86,12 @@ var ARG_CONFIG = {
     full:      'plugin',
     list:       true,
   },
+  skipPlugins: {
+    help:      'Configured plugins that should _not_ be loaded.',
+    metavar:   'NAME',
+    full:      'skip-plugin',
+    list:      true,
+  },
   expanded: {
     help:      'Log a status line for each test run.',
     flag:      true,
@@ -119,7 +125,7 @@ var ARG_CONFIG = {
 };
 
 // Values that should be extracted when pre-parsing args.
-var PREPARSE_ARGS = ['plugins', 'simpleOutput', 'skipUpdateCheck'];
+var PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
 
 /**
  * Discovers appropriate config files (global, and for the project), merging
@@ -153,6 +159,9 @@ function fromDisk() {
  * @return {!Object}
  */
 function preparseArgs(args) {
+  // Don't let it short circuit on help.
+  args = _.difference(args, ['--help', '-h']);
+
   var parser = nomnom();
   parser.options(ARG_CONFIG);
   parser.printer(function() {});  // No-op output & errors.
@@ -251,6 +260,14 @@ function normalize(config) {
       pluginConfigs[name] = {disabled: false};
     }
     config.plugins = pluginConfigs;
+  }
+
+  // Always wins.
+  if (config.skipPlugins) {
+    config.plugins = config.plugins || {};
+    for (var i = 0, name; name = config.skipPlugins[i]; i++) {
+      config.plugins[name] = false;
+    }
   }
 
   return config;

@@ -109,11 +109,17 @@ Context.prototype.emitHook = function emitHook(name, done) {
  *     requested by `options.plugins`.
  */
 Context.prototype.plugins = function plugins(done) {
+  async.map(this.enabledPlugins(), Plugin.get, done);
+};
+
+/**
+ * @return {!Array<string>} The names of enabled plugins.
+ */
+Context.prototype.enabledPlugins = function enabledPlugins() {
   // Plugins with falsy configuration or disabled: true are _not_ loaded.
   var pairs = _.reject(_.pairs(this.options.plugins), function(p) { return !p[1] || p[1].disabled });
-  var keys  = _.map(pairs, function(p) { return p[0] });
-  async.map(keys, Plugin.get, done);
-};
+  return _.map(pairs, function(p) { return p[0] });
+}
 
 /**
  * @param {string} name
