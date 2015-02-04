@@ -83,10 +83,10 @@ Context.prototype.emitHook = function emitHook(name, done) {
 
   var hooks = (this._hookHandlers[name] || []);
   if (arguments.length > 2) {
-    done = arguments[arguments.length - 1];
-    var hookArgs = [null].concat(Array.prototype.slice(1, arguments.length - 1));
+    var hookArgs = Array.prototype.slice.call(arguments, 1, arguments.length - 1);
+    done = arguments[arguments.length - 1];  // mutates arguments in loose mode!
     hooks = hooks.map(function(hook) {
-      return hook.bind.apply(hook, hookArgs);
+      return hook.bind.apply(hook, [null].concat(hookArgs));
     });
   }
 
