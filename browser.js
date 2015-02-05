@@ -700,28 +700,28 @@ Progress.prototype.draw = function(ctx){
       , y = half
       , rad = half - 1
       , fontSize = this._fontSize;
-
+  
     ctx.font = fontSize + 'px ' + this._font;
-
+  
     var angle = Math.PI * 2 * (percent / 100);
     ctx.clearRect(0, 0, size, size);
-
+  
     // outer circle
     ctx.strokeStyle = '#9f9f9f';
     ctx.beginPath();
     ctx.arc(x, y, rad, 0, angle, false);
     ctx.stroke();
-
+  
     // inner circle
     ctx.strokeStyle = '#eee';
     ctx.beginPath();
     ctx.arc(x, y, rad - 1, 0, angle, true);
     ctx.stroke();
-
+  
     // text
     var text = this._text || (percent | 0) + '%'
       , w = ctx.measureText(text).width;
-
+  
     ctx.fillText(
         text
       , x - w / 2 + 1
@@ -4947,7 +4947,7 @@ Runner.prototype.uncaught = function(err){
     debug('uncaught undefined exception');
     err = new Error('Catched undefined error, did you throw without specifying what?');
   }
-
+  
   var runnable = this.currentRunnable;
   if (!runnable || 'failed' == runnable.state) return;
   runnable.clearTimeout();
@@ -6669,7 +6669,7 @@ ChildRunner.prototype.run = function(done) {
  */
 ChildRunner.prototype.loaded = function(error) {
   WCT.util.debug('ChildRunner#loaded', this.url, error);
-
+  
   this.share = this.iframe.contentWindow.WCT.share;
   if (error) {
     this.signalRunComplete(error);
