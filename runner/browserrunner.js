@@ -52,35 +52,44 @@ function BrowserRunner(emitter, capabilities, options, doneCallback) {
   var webdriverCapabilities = _.clone(this.def);
   delete webdriverCapabilities.id;
   delete webdriverCapabilities.url;
+  delete webdriverCapabilities.sessionId;
 
-  // Initialize the browser, then start tests
-  this.browser.init(webdriverCapabilities, function(error, sessionId, result) {
-    if (!this.browser) return; // When interrupted.
-    if (error) {
-      // TODO(nevir): BEGIN TEMPORARY CHECK. https://github.com/Polymer/web-component-tester/issues/51
-      if (this.def.browserName === 'safari' && error.data) {
-        // debugger;
-        try {
-          var data = JSON.parse(error.data);
-          console.log(data.value.message);
-          if (data.value && data.value.message && /Failed to connect to SafariDriver/i.test(data.value.message)) {
-            error = 'Until Selenium\'s SafariDriver supports Safari 6.2+, 7.1+, & 8.0+, you must\n' +
-                    'manually install it. Follow the steps at:\n' +
-                    'https://code.google.com/p/selenium/issues/detail?id=7933#c23';
-          }
-        } catch (error) {
-          // Show the original error.
-        }
-      }
-      // END TEMPORARY CHECK
-      this.done(error.data || error);
-    } else {
-      this.sessionId = sessionId;
-      this.startTest();
-      this.extendTimeout();
-    }
-  }.bind(this));
+  // Reusing a session?
+  if (this.def.sessionId) {
+    this.browser.attach(sessionId, function(error) {
+      this._init(error, this.def.sessionId);
+    }.bind(this));
+  } else {
+    this.browser.init(webdriverCapabilities, this._init.bind(this));
+  }
 }
+
+BrowserRunner.prototype._init = function _init(error, sessionId) {
+  if (!this.browser) return; // When interrupted.
+  if (error) {
+    // TODO(nevir): BEGIN TEMPORARY CHECK. https://github.com/Polymer/web-component-tester/issues/51
+    if (this.def.browserName === 'safari' && error.data) {
+      // debugger;
+      try {
+        var data = JSON.parse(error.data);
+        console.log(data.value.message);
+        if (data.value && data.value.message && /Failed to connect to SafariDriver/i.test(data.value.message)) {
+          error = 'Until Selenium\'s SafariDriver supports Safari 6.2+, 7.1+, & 8.0+, you must\n' +
+                  'manually install it. Follow the steps at:\n' +
+                  'https://code.google.com/p/selenium/issues/detail?id=7933#c23';
+        }
+      } catch (error) {
+        // Show the original error.
+      }
+    }
+    // END TEMPORARY CHECK
+    this.done(error.data || error);
+  } else {
+    this.sessionId = sessionId;
+    this.startTest();
+    this.extendTimeout();
+  }
+};
 
 BrowserRunner.prototype.startTest = function startTest() {
   var host  = 'http://localhost:' + this.options.webserver.port;
