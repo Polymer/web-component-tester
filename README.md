@@ -49,7 +49,7 @@ Your test suites can be `.html` documents. For example,
 ## `.js` Suites
 
 Or, you can write tests in separate `.js` sources, which run in the context of
-your text index. For example, `test/awesome-tests.js`:.
+your text index. For example, `test/awesome-tests.js`:
 
 ```js
 suite('AwesomeLib', function() {
