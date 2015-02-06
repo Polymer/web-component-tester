@@ -56,7 +56,7 @@ function BrowserRunner(emitter, capabilities, options, doneCallback) {
 
   // Reusing a session?
   if (this.def.sessionId) {
-    this.browser.attach(sessionId, function(error) {
+    this.browser.attach(this.def.sessionId, function(error) {
       this._init(error, this.def.sessionId);
     }.bind(this));
   } else {
