@@ -137,6 +137,8 @@ var ARG_CONFIG = {
     full:      'webserver-hostname',
     hidden:    true,
   },
+  // Managed by supports-color; let's not freak out if we see it.
+  color: {flag: true},
 
   // Deprecated
 
