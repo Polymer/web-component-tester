@@ -59,8 +59,20 @@ function defaults() {
     // Selenium: https://code.google.com/p/selenium/wiki/DesiredCapabilities
     // Sauce:    https://docs.saucelabs.com/reference/test-configuration/
     browserOptions: {},
+    // The plugins that should be loaded, and their configuration.
+    //
+    // When an array, the named plugins will be loaded with their default
+    // configuration. When an object, each key maps to a plugin, and values are
+    // configuration values to be merged.
+    //
+    //   plugins: {
+    //     local: {browsers: ['firefox', 'chrome']},
+    //   }
     //
     plugins: ['local', 'sauce'],
+    // Use this port for the local webserver, rather than attempting to find an
+    // available port.
+    webserverPort: 0,
   };
 }
 
@@ -108,6 +120,10 @@ var ARG_CONFIG = {
     help:      'Don\'t check for updates.',
     full:      'skip-update-check',
     flag:      true,
+  },
+  webserverPort: {
+    help:      'A port to use for the test webserver.',
+    full:      'webserver-port',
   },
 
   // Deprecated

@@ -70,7 +70,7 @@ module.exports = function(wct) {
   wct.hook('prepare', function(done) {
     var wsOptions = options.webserver;
 
-    freeport(function(error, port) {
+    getPort(function(error, port) {
       if (error) return done(error);
       // `port` (and `webRunnerPath`) is read down the line by `BrowserRunner`.
       wsOptions.port = port;
@@ -123,5 +123,13 @@ module.exports = function(wct) {
       });
     });
   });
+
+  function getPort(done) {
+    if (options.webserverPort) {
+      done(null, options.webserverPort);
+    } else {
+      freeport(done);
+    }
+  }
 
 };
