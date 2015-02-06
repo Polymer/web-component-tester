@@ -70,9 +70,17 @@ function defaults() {
     //   }
     //
     plugins: ['local', 'sauce'],
-    // Use this port for the local webserver, rather than attempting to find an
-    // available port.
-    webserverPort: 0,
+    // Configuration options for the webserver that serves up your test files
+    // and dependencies.
+    //
+    // Typically, you will not need to modify these values.
+    webserver: {
+      // The port that the webserver should run on. A port will be determined at
+      // runtime if none is provided.
+      port: undefined,
+      // The hostname used when generating URLs for the webdriver client.
+      hostname: 'localhost',
+    },
   };
 }
 
@@ -121,9 +129,13 @@ var ARG_CONFIG = {
     full:      'skip-update-check',
     flag:      true,
   },
-  webserverPort: {
+  'webserver.port': {
     help:      'A port to use for the test webserver.',
     full:      'webserver-port',
+  },
+  'webserver.hostname': {
+    full:      'webserver-hostname',
+    hidden:    true,
   },
 
   // Deprecated
@@ -183,7 +195,7 @@ function preparseArgs(args) {
   parser.printer(function() {});  // No-op output & errors.
   var options = parser.parse(args);
 
-  return _.pick(options, PREPARSE_ARGS);
+  return _expandOptionPaths(_.pick(options, PREPARSE_ARGS));
 }
 
 /**

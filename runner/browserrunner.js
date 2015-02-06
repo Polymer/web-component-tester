@@ -92,7 +92,7 @@ BrowserRunner.prototype._init = function _init(error, sessionId) {
 };
 
 BrowserRunner.prototype.startTest = function startTest() {
-  var host  = 'http://localhost:' + this.options.webserver.port;
+  var host  = 'http://' + this.options.webserver.hostname + ':' + this.options.webserver.port;
   var path  = this.options.webserver.webRunnerPath;
   var extra = (path.indexOf('?') === -1 ? '?' : '&') + 'cli_browser_id=' + this.def.id;
   this.browser.get(host + path + extra, function(error) {

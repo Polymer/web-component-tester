@@ -44,9 +44,7 @@ module.exports = function(wct) {
     // For now, you should treat all these options as an implementation detail
     // of WCT. They may be opened up for public configuration, but we need to
     // spend some time rationalizing interactions with external webservers.
-    options.webserver = {
-      // The port that the webserver should run on. Determined at runtime.
-      port: undefined,
+    options.webserver = _.merge(options.webserver, {
       // The URL path that each test run should target.
       webRunnerPath: undefined,
       // If present, HTML content that should be served at `webRunner`.
@@ -54,7 +52,7 @@ module.exports = function(wct) {
       // Map of route expressions (regular expressions) to local file paths that
       // should be served by the webserver.
       staticContent: SERVE_STATIC,
-    };
+    });
 
     // If we have only one HTML suite to run, we can skip the generated index.
     if (options.suites.length === 1 && options.suites[0].slice(-5) === '.html') {
@@ -125,8 +123,8 @@ module.exports = function(wct) {
   });
 
   function getPort(done) {
-    if (options.webserverPort) {
-      done(null, options.webserverPort);
+    if (options.webserver.port) {
+      done(null, options.webserver.port);
     } else {
       freeport(done);
     }
