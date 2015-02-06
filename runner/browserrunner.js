@@ -37,13 +37,19 @@ function BrowserRunner(emitter, capabilities, options, doneCallback) {
 
   this.browser.on('command', function(method, context) {
     emitter.emit('log:debug', this.def, chalk.cyan(method), context);
-  });
+  }.bind(this));
+
   this.browser.on('http', function(method, path, data) {
-    emitter.emit('log:debug', this.def, chalk.magenta(method), chalk.cyan(path), data);
-  });
+    if (data) {
+      emitter.emit('log:debug', this.def, chalk.magenta(method), chalk.cyan(path), data);
+    } else {
+      emitter.emit('log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
+    }
+  }.bind(this));
+
   this.browser.on('connection', function(code, message, error) {
     emitter.emit('log:warn', this.def, 'Error code ' + code + ':', message, error);
-  });
+  }.bind(this));
 
   this.emitter.emit('browser-init', this.def, this.stats);
 
