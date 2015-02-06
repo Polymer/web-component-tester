@@ -106,6 +106,13 @@ module.exports = function(wct) {
         // The static root is the lowest priority middleware.
         app.use(serveStatic(options.root, {'index': ['index.html', 'index.htm']}));
 
+        app.use(function(request, response, next) {
+          if (request.url !== '/favicon.ico') {
+            wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
+          }
+          next();
+        });
+
         server.listen(port);
         server.port = port;
         cleankill.onInterrupt(function(done) {
