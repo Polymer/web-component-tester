@@ -114,7 +114,10 @@ function runBrowsers(context, done) {
       if (numDone === numActiveBrowsers) {
         error = errors.length > 0 ? _.unique(errors).join(', ') : null;
         context.emit('run-end', error);
-        done(error);
+        // TODO(nevir): Better rationalize run-end and hook.
+        context.emitHook('cleanup', function() {
+          done(error);
+        });
       }
     });
   });
