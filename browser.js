@@ -6669,8 +6669,12 @@ ChildRunner.prototype.run = function(done) {
  */
 ChildRunner.prototype.loaded = function(error) {
   WCT.util.debug('ChildRunner#loaded', this.url, error);
-  
-  this.share = this.iframe.contentWindow.WCT.share;
+
+  // Not all targets have WCT loaded (compatiblity mode)
+  if (this.iframe.contentWindow.WCT) {
+    this.share = this.iframe.contentWindow.WCT.share;
+  }
+
   if (error) {
     this.signalRunComplete(error);
     this.done();
