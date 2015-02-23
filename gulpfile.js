@@ -108,14 +108,13 @@ gulp.task('test:dependencies', function() {
     .pipe(david.reporter)
     .on('data', function(file) {
       // TODO(nevir): Bring back
-      return;
-      if (Object.keys(file.david.dependencies).length         > 0 ||
-          Object.keys(file.david.optionalDependencies).length > 0 ||
-          Object.keys(file.david.devDependencies).length      > 0) {
-        var error = new Error('Dependencies are out of date');
-        error.showStack = false;
-        this.emit('error', error);
-      }
+      // if (Object.keys(file.david.dependencies).length         > 0 ||
+      //     Object.keys(file.david.optionalDependencies).length > 0 ||
+      //     Object.keys(file.david.devDependencies).length      > 0) {
+      //   var error = new Error('Dependencies are out of date');
+      //   error.showStack = false;
+      //   this.emit('error', error);
+      // }
     });
 });
 
