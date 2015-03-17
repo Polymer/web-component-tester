@@ -48,7 +48,6 @@ require.relative = function (parent) {
 
 
 require.register("browser/debug.js", function(module, exports, require){
-
 module.exports = function(type){
   return function(){
   }
@@ -224,7 +223,22 @@ var JsDiff = (function() {
 
   var LineDiff = new Diff();
   LineDiff.tokenize = function(value) {
-    return value.split(/^/m);
+    var retLines = [],
+        lines = value.split(/^/m);
+
+    for(var i = 0; i < lines.length; i++) {
+      var line = lines[i],
+          lastLine = lines[i - 1];
+
+      // Merge lines that may contain windows new lines
+      if (line == '\n' && lastLine && lastLine[lastLine.length - 1] === '\r') {
+        retLines[retLines.length - 1] += '\n';
+      } else if (line) {
+        retLines.push(line);
+      }
+    }
+
+    return retLines;
   };
 
   return {
@@ -414,8 +428,22 @@ if (typeof module !== 'undefined') {
 
 }); // module: browser/diff.js
 
-require.register("browser/events.js", function(module, exports, require){
+require.register("browser/escape-string-regexp.js", function(module, exports, require){
+'use strict';
 
+var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
+
+module.exports = function (str) {
+  if (typeof str !== 'string') {
+    throw new TypeError('Expected a string');
+  }
+
+  return str.replace(matchOperatorsRe,  '\\$&');
+};
+
+}); // module: browser/escape-string-regexp.js
+
+require.register("browser/events.js", function(module, exports, require){
 /**
  * Module exports.
  */
@@ -593,11 +621,16 @@ EventEmitter.prototype.emit = function (name) {
 
   return true;
 };
+
 }); // module: browser/events.js
 
 require.register("browser/fs.js", function(module, exports, require){
 
 }); // module: browser/fs.js
+
+require.register("browser/glob.js", function(module, exports, require){
+
+}); // module: browser/glob.js
 
 require.register("browser/path.js", function(module, exports, require){
 
@@ -700,28 +733,28 @@ Progress.prototype.draw = function(ctx){
       , y = half
       , rad = half - 1
       , fontSize = this._fontSize;
-  
+
     ctx.font = fontSize + 'px ' + this._font;
-  
+
     var angle = Math.PI * 2 * (percent / 100);
     ctx.clearRect(0, 0, size, size);
-  
+
     // outer circle
     ctx.strokeStyle = '#9f9f9f';
     ctx.beginPath();
     ctx.arc(x, y, rad, 0, angle, false);
     ctx.stroke();
-  
+
     // inner circle
     ctx.strokeStyle = '#eee';
     ctx.beginPath();
     ctx.arc(x, y, rad - 1, 0, angle, true);
     ctx.stroke();
-  
+
     // text
     var text = this._text || (percent | 0) + '%'
       , w = ctx.measureText(text).width;
-  
+
     ctx.fillText(
         text
       , x - w / 2 + 1
@@ -733,7 +766,6 @@ Progress.prototype.draw = function(ctx){
 }); // module: browser/progress.js
 
 require.register("browser/tty.js", function(module, exports, require){
-
 exports.isatty = function(){
   return true;
 };
@@ -750,7 +782,6 @@ exports.getWindowSize = function(){
 }); // module: browser/tty.js
 
 require.register("context.js", function(module, exports, require){
-
 /**
  * Expose `Context`.
  */
@@ -821,6 +852,18 @@ Context.prototype.slow = function(ms){
 };
 
 /**
+ * Mark a test as skipped.
+ *
+ * @return {Context} self
+ * @api private
+ */
+
+Context.prototype.skip = function(){
+    this.runnable().skip();
+    return this;
+};
+
+/**
  * Inspect the context void of `._runnable`.
  *
  * @return {String}
@@ -838,7 +881,6 @@ Context.prototype.inspect = function(){
 }); // module: context.js
 
 require.register("hook.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -895,14 +937,14 @@ Hook.prototype.error = function(err){
 }); // module: hook.js
 
 require.register("interfaces/bdd.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
 
 var Suite = require('../suite')
   , Test = require('../test')
-  , utils = require('../utils');
+  , utils = require('../utils')
+  , escapeRe = require('browser/escape-string-regexp');
 
 /**
  * BDD-style interface:
@@ -926,38 +968,13 @@ module.exports = function(suite){
 
   suite.on('pre-require', function(context, file, mocha){
 
-    /**
-     * Execute before running tests.
-     */
+    var common = require('./common')(suites, context);
 
-    context.before = function(name, fn){
-      suites[0].beforeAll(name, fn);
-    };
-
-    /**
-     * Execute after running tests.
-     */
-
-    context.after = function(name, fn){
-      suites[0].afterAll(name, fn);
-    };
-
-    /**
-     * Execute before each test case.
-     */
-
-    context.beforeEach = function(name, fn){
-      suites[0].beforeEach(name, fn);
-    };
-
-    /**
-     * Execute after each test case.
-     */
-
-    context.afterEach = function(name, fn){
-      suites[0].afterEach(name, fn);
-    };
-
+    context.before = common.before;
+    context.after = common.after;
+    context.beforeEach = common.beforeEach;
+    context.afterEach = common.afterEach;
+    context.run = mocha.options.delay && common.runWithSuite(suite);
     /**
      * Describe a "suite" with the given `title`
      * and callback `fn` containing nested suites
@@ -1005,7 +1022,7 @@ module.exports = function(suite){
 
     context.it = context.specify = function(title, fn){
       var suite = suites[0];
-      if (suite.pending) var fn = null;
+      if (suite.pending) fn = null;
       var test = new Test(title, fn);
       test.file = file;
       suite.addTest(test);
@@ -1018,7 +1035,7 @@ module.exports = function(suite){
 
     context.it.only = function(title, fn){
       var test = context.it(title, fn);
-      var reString = '^' + utils.escapeRegexp(test.fullTitle()) + '$';
+      var reString = '^' + escapeRe(test.fullTitle()) + '$';
       mocha.grep(new RegExp(reString));
       return test;
     };
@@ -1032,13 +1049,75 @@ module.exports = function(suite){
     context.it.skip = function(title){
       context.it(title);
     };
+
   });
 };
 
 }); // module: interfaces/bdd.js
 
-require.register("interfaces/exports.js", function(module, exports, require){
+require.register("interfaces/common.js", function(module, exports, require){
+/**
+ * Functions common to more than one interface
+ * @module lib/interfaces/common
+ */
 
+'use strict';
+
+module.exports = function (suites, context) {
+
+  return {
+    /**
+     * This is only present if flag --delay is passed into Mocha.  It triggers
+     * root suite execution.  Returns a function which runs the root suite.
+     */
+    runWithSuite: function runWithSuite(suite) {
+      return function run() {
+        suite.run();
+      };
+    },
+
+    /**
+     * Execute before running tests.
+     */
+    before: function (name, fn) {
+      suites[0].beforeAll(name, fn);
+    },
+
+    /**
+     * Execute after running tests.
+     */
+    after: function (name, fn) {
+      suites[0].afterAll(name, fn);
+    },
+
+    /**
+     * Execute before each test case.
+     */
+    beforeEach: function (name, fn) {
+      suites[0].beforeEach(name, fn);
+    },
+
+    /**
+     * Execute after each test case.
+     */
+    afterEach: function (name, fn) {
+      suites[0].afterEach(name, fn);
+    },
+
+    test: {
+      /**
+       * Pending test case.
+       */
+      skip: function (title) {
+        context.test(title);
+      }
+    }
+  }
+};
+
+}); // module: interfaces/common.js
+
+require.register("interfaces/exports.js", function(module, exports, require){
 /**
  * Module dependencies.
  */
@@ -1092,7 +1171,7 @@ module.exports = function(suite){
             suites[0].addTest(test);
         }
       } else {
-        var suite = Suite.create(suites[0], key);
+        suite = Suite.create(suites[0], key);
         suites.unshift(suite);
         visit(obj[key]);
         suites.shift();
@@ -1104,7 +1183,6 @@ module.exports = function(suite){
 }); // module: interfaces/exports.js
 
 require.register("interfaces/index.js", function(module, exports, require){
-
 exports.bdd = require('./bdd');
 exports.tdd = require('./tdd');
 exports.qunit = require('./qunit');
@@ -1113,13 +1191,13 @@ exports.exports = require('./exports');
 }); // module: interfaces/index.js
 
 require.register("interfaces/qunit.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
 
 var Suite = require('../suite')
   , Test = require('../test')
+  , escapeRe = require('browser/escape-string-regexp')
   , utils = require('../utils');
 
 /**
@@ -1152,38 +1230,13 @@ module.exports = function(suite){
 
   suite.on('pre-require', function(context, file, mocha){
 
-    /**
-     * Execute before running tests.
-     */
+    var common = require('./common')(suites, context);
 
-    context.before = function(name, fn){
-      suites[0].beforeAll(name, fn);
-    };
-
-    /**
-     * Execute after running tests.
-     */
-
-    context.after = function(name, fn){
-      suites[0].afterAll(name, fn);
-    };
-
-    /**
-     * Execute before each test case.
-     */
-
-    context.beforeEach = function(name, fn){
-      suites[0].beforeEach(name, fn);
-    };
-
-    /**
-     * Execute after each test case.
-     */
-
-    context.afterEach = function(name, fn){
-      suites[0].afterEach(name, fn);
-    };
-
+    context.before = common.before;
+    context.after = common.after;
+    context.beforeEach = common.beforeEach;
+    context.afterEach = common.afterEach;
+    context.run = mocha.options.delay && common.runWithSuite(suite);
     /**
      * Describe a "suite" with the given `title`.
      */
@@ -1224,31 +1277,26 @@ module.exports = function(suite){
 
     context.test.only = function(title, fn){
       var test = context.test(title, fn);
-      var reString = '^' + utils.escapeRegexp(test.fullTitle()) + '$';
+      var reString = '^' + escapeRe(test.fullTitle()) + '$';
       mocha.grep(new RegExp(reString));
     };
 
-    /**
-     * Pending test case.
-     */
+    context.test.skip = common.test.skip;
 
-    context.test.skip = function(title){
-      context.test(title);
-    };
   });
 };
 
 }); // module: interfaces/qunit.js
 
 require.register("interfaces/tdd.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
 
 var Suite = require('../suite')
   , Test = require('../test')
-  , utils = require('../utils');;
+  , escapeRe = require('browser/escape-string-regexp')
+  , utils = require('../utils');
 
 /**
  * TDD-style interface:
@@ -1280,38 +1328,13 @@ module.exports = function(suite){
 
   suite.on('pre-require', function(context, file, mocha){
 
-    /**
-     * Execute before each test case.
-     */
+    var common = require('./common')(suites, context);
 
-    context.setup = function(name, fn){
-      suites[0].beforeEach(name, fn);
-    };
-
-    /**
-     * Execute after each test case.
-     */
-
-    context.teardown = function(name, fn){
-      suites[0].afterEach(name, fn);
-    };
-
-    /**
-     * Execute before the suite.
-     */
-
-    context.suiteSetup = function(name, fn){
-      suites[0].beforeAll(name, fn);
-    };
-
-    /**
-     * Execute after the suite.
-     */
-
-    context.suiteTeardown = function(name, fn){
-      suites[0].afterAll(name, fn);
-    };
-
+    context.setup = common.beforeEach;
+    context.teardown = common.afterEach;
+    context.suiteSetup = common.before;
+    context.suiteTeardown = common.after;
+    context.run = mocha.options.delay && common.runWithSuite(suite);
     /**
      * Describe a "suite" with the given `title`
      * and callback `fn` containing nested suites
@@ -1355,7 +1378,7 @@ module.exports = function(suite){
 
     context.test = function(title, fn){
       var suite = suites[0];
-      if (suite.pending) var fn = null;
+      if (suite.pending) fn = null;
       var test = new Test(title, fn);
       test.file = file;
       suite.addTest(test);
@@ -1368,17 +1391,11 @@ module.exports = function(suite){
 
     context.test.only = function(title, fn){
       var test = context.test(title, fn);
-      var reString = '^' + utils.escapeRegexp(test.fullTitle()) + '$';
+      var reString = '^' + escapeRe(test.fullTitle()) + '$';
       mocha.grep(new RegExp(reString));
     };
 
-    /**
-     * Pending test case.
-     */
-
-    context.test.skip = function(title){
-      context.test(title);
-    };
+    context.test.skip = common.test.skip;
   });
 };
 
@@ -1396,6 +1413,7 @@ require.register("mocha.js", function(module, exports, require){
  */
 
 var path = require('browser/path')
+  , escapeRe = require('browser/escape-string-regexp')
   , utils = require('./utils');
 
 /**
@@ -1462,11 +1480,12 @@ function Mocha(options) {
   options = options || {};
   this.files = [];
   this.options = options;
-  this.grep(options.grep);
+  if (options.grep) this.grep(new RegExp(options.grep));
+  if (options.fgrep) this.grep(options.fgrep);
   this.suite = new exports.Suite('', new exports.Context);
   this.ui(options.ui);
   this.bail(options.bail);
-  this.reporter(options.reporter);
+  this.reporter(options.reporter, options.reporterOptions);
   if (null != options.timeout) this.timeout(options.timeout);
   this.useColors(options.useColors)
   if (options.enableTimeouts !== null) this.enableTimeouts(options.enableTimeouts);
@@ -1485,6 +1504,7 @@ function Mocha(options) {
     exports.suite = context.suite || context.describe;
     exports.teardown = context.teardown || context.afterEach;
     exports.test = context.test || context.it;
+    exports.run = context.run;
   });
 }
 
@@ -1517,10 +1537,10 @@ Mocha.prototype.addFile = function(file){
  * Set reporter to `reporter`, defaults to "spec".
  *
  * @param {String|Function} reporter name or constructor
+ * @param {Object} reporterOptions optional options
  * @api public
  */
-
-Mocha.prototype.reporter = function(reporter){
+Mocha.prototype.reporter = function(reporter, reporterOptions){
   if ('function' == typeof reporter) {
     this._reporter = reporter;
   } else {
@@ -1535,6 +1555,7 @@ Mocha.prototype.reporter = function(reporter){
     if (!_reporter) throw new Error('invalid reporter "' + reporter + '"');
     this._reporter = _reporter;
   }
+  this.options.reporterOptions = reporterOptions;
   return this;
 };
 
@@ -1607,7 +1628,7 @@ Mocha.prototype._growl = function(runner, reporter) {
 
 Mocha.prototype.grep = function(re){
   this.options.grep = 'string' == typeof re
-    ? new RegExp(utils.escapeRegexp(re))
+    ? new RegExp(escapeRe(re))
     : re;
   return this;
 };
@@ -1683,9 +1704,9 @@ Mocha.prototype.globals = function(globals){
  */
 
 Mocha.prototype.useColors = function(colors){
-  this.options.useColors = arguments.length && colors != undefined
-    ? colors
-    : true;
+  if (colors !== undefined) {
+    this.options.useColors = colors;
+  }
   return this;
 };
 
@@ -1758,28 +1779,56 @@ Mocha.prototype.asyncOnly = function(){
 };
 
 /**
+ * Disable syntax highlighting (in browser).
+ * @returns {Mocha}
+ * @api public
+ */
+Mocha.prototype.noHighlighting = function() {
+  this.options.noHighlighting = true;
+  return this;
+};
+
+/**
+ * Delay root suite execution.
+ * @returns {Mocha}
+ * @api public
+ */
+Mocha.prototype.delay = function delay() {
+  this.options.delay = true;
+  return this;
+};
+
+/**
  * Run tests and invoke `fn()` when complete.
  *
  * @param {Function} fn
  * @return {Runner}
  * @api public
  */
-
 Mocha.prototype.run = function(fn){
   if (this.files.length) this.loadFiles();
   var suite = this.suite;
   var options = this.options;
   options.files = this.files;
-  var runner = new exports.Runner(suite);
+  var runner = new exports.Runner(suite, options.delay);
   var reporter = new this._reporter(runner, options);
   runner.ignoreLeaks = false !== options.ignoreLeaks;
   runner.asyncOnly = options.asyncOnly;
   if (options.grep) runner.grep(options.grep, options.invert);
   if (options.globals) runner.globals(options.globals);
   if (options.growl) this._growl(runner, reporter);
-  exports.reporters.Base.useColors = options.useColors;
+  if (options.useColors !== undefined) {
+    exports.reporters.Base.useColors = options.useColors;
+  }
   exports.reporters.Base.inlineDiffs = options.useInlineDiffs;
-  return runner.run(fn);
+
+  function done(failures) {
+      if (reporter.done) {
+          reporter.done(failures, fn);
+      } else fn && fn(failures);
+  }
+
+  return runner.run(done);
 };
 
 }); // module: mocha.js
@@ -1811,7 +1860,7 @@ var y = d * 365.25;
 module.exports = function(val, options){
   options = options || {};
   if ('string' == typeof val) return parse(val);
-  return options.long ? longFormat(val) : shortFormat(val);
+  return options['long'] ? longFormat(val) : shortFormat(val);
 };
 
 /**
@@ -1897,8 +1946,27 @@ function plural(ms, n, name) {
 
 }); // module: ms.js
 
-require.register("reporters/base.js", function(module, exports, require){
+require.register("pending.js", function(module, exports, require){
 
+/**
+ * Expose `Pending`.
+ */
+
+module.exports = Pending;
+
+/**
+ * Initialize a new `Pending` error with the given message.
+ *
+ * @param {String} message
+ */
+
+function Pending(message) {
+    this.message = message;
+}
+
+}); // module: pending.js
+
+require.register("reporters/base.js", function(module, exports, require){
 /**
  * Module dependencies.
  */
@@ -1906,7 +1974,8 @@ require.register("reporters/base.js", function(module, exports, require){
 var tty = require('browser/tty')
   , diff = require('browser/diff')
   , ms = require('../ms')
-  , utils = require('../utils');
+  , utils = require('../utils')
+  , supportsColor = process.env ? require('supports-color') : null;
 
 /**
  * Save timer references to avoid Sinon interfering (see GH-237).
@@ -1931,10 +2000,12 @@ var isatty = tty.isatty(1) && tty.isatty(2);
 exports = module.exports = Base;
 
 /**
- * Enable coloring by default.
+ * Enable coloring by default, except in the browser interface.
  */
 
-exports.useColors = isatty || (process.env.MOCHA_COLORS !== undefined);
+exports.useColors = process.env
+  ? (supportsColor || (process.env.MOCHA_COLORS !== undefined))
+  : false;
 
 /**
  * Inline diffs instead of +/-
@@ -1998,7 +2069,7 @@ if ('win32' == process.platform) {
  */
 
 var color = exports.color = function(type, str) {
-  if (!exports.useColors) return str;
+  if (!exports.useColors) return String(str);
   return '\u001b[' + exports.colors[type] + 'm' + str + '\u001b[0m';
 };
 
@@ -2055,7 +2126,7 @@ exports.cursor = {
  */
 
 exports.list = function(failures){
-  console.error();
+  console.log();
   failures.forEach(function(test, i){
     // format
     var fmt = color('error title', '  %s) %s:\n')
@@ -2076,16 +2147,15 @@ exports.list = function(failures){
     if (err.uncaught) {
       msg = 'Uncaught ' + msg;
     }
-
     // explicitly show diff
     if (err.showDiff && sameType(actual, expected)) {
-      escape = false;
-      err.actual = actual = utils.stringify(actual);
-      err.expected = expected = utils.stringify(expected);
-    }
 
-    // actual / expected diff
-    if ('string' == typeof actual && 'string' == typeof expected) {
+      if ('string' !== typeof actual) {
+        escape = false;
+        err.actual = actual = utils.stringify(actual);
+        err.expected = expected = utils.stringify(expected);
+      }
+
       fmt = color('error title', '  %s) %s:\n%s') + color('error stack', '\n%s\n');
       var match = message.match(/^([^:]+): expected/);
       msg = '\n      ' + color('error message', match ? match[1] : msg);
@@ -2101,7 +2171,7 @@ exports.list = function(failures){
     stack = stack.slice(index ? index + 1 : index)
       .replace(/^/gm, '  ');
 
-    console.error(fmt, (i + 1), test.fullTitle(), msg, stack);
+    console.log(fmt, (i + 1), test.fullTitle(), msg, stack);
   });
 };
 
@@ -2206,11 +2276,10 @@ Base.prototype.epilogue = function(){
   if (stats.failures) {
     fmt = color('fail', '  %d failing');
 
-    console.error(fmt,
-      stats.failures);
+    console.log(fmt, stats.failures);
 
     Base.list(this.failures);
-    console.error();
+    console.log();
   }
 
   console.log();
@@ -2288,7 +2357,7 @@ function unifiedDiff(err, escape) {
   function notBlank(line) {
     return line != null;
   }
-  msg = diff.createPatch('string', err.actual, err.expected);
+  var msg = diff.createPatch('string', err.actual, err.expected);
   var lines = msg.split('\n').splice(4);
   return '\n      '
          + colorLines('diff added',   '+ expected') + ' '
@@ -2361,7 +2430,6 @@ function sameType(a, b) {
 }); // module: reporters/base.js
 
 require.register("reporters/doc.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -2428,7 +2496,6 @@ function Doc(runner) {
 }); // module: reporters/doc.js
 
 require.register("reporters/dot.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -2499,7 +2566,6 @@ Dot.prototype.constructor = Dot;
 }); // module: reporters/dot.js
 
 require.register("reporters/html-cov.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -2550,10 +2616,10 @@ function coverageClass(n) {
   if (n >= 25) return 'low';
   return 'terrible';
 }
+
 }); // module: reporters/html-cov.js
 
 require.register("reporters/html.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -2691,7 +2757,7 @@ function HTML(runner) {
     } else if (test.pending) {
       var el = fragment('<li class="test pass pending"><h2>%e</h2></li>', test.title);
     } else {
-      var el = fragment('<li class="test fail"><h2>%e <a href="?grep=%e" class="replay">‣</a></h2></li>', test.title, encodeURIComponent(test.fullTitle()));
+      var el = fragment('<li class="test fail"><h2>%e <a href="%e" class="replay">‣</a></h2></li>', test.title, self.testURL(test));
       var str = test.err.stack || test.err.toString();
 
       // FF / Opera do not add the message
@@ -2733,13 +2799,28 @@ function HTML(runner) {
 }
 
 /**
+ * Makes a URL, preserving querystring ("search") parameters.
+ * @param {string} s
+ * @returns {string} your new URL
+ */
+var makeUrl = function makeUrl(s) {
+  var search = window.location.search;
+
+  // Remove previous grep query parameter if present
+  if (search) {
+    search = search.replace(/[?&]grep=[^&\s]*/g, '').replace(/^&/, '?');
+  }
+
+  return window.location.pathname + (search ? search + '&' : '?' ) + 'grep=' + encodeURIComponent(s);
+};
+
+/**
  * Provide suite URL
  *
  * @param {Object} [suite]
  */
-
 HTML.prototype.suiteURL = function(suite){
-  return '?grep=' + encodeURIComponent(suite.fullTitle());
+  return makeUrl(suite.fullTitle());
 };
 
 /**
@@ -2749,7 +2830,7 @@ HTML.prototype.suiteURL = function(suite){
  */
 
 HTML.prototype.testURL = function(test){
-  return '?grep=' + encodeURIComponent(test.fullTitle());
+  return makeUrl(test.fullTitle());
 };
 
 /**
@@ -2830,7 +2911,6 @@ function on(el, event, fn) {
 }); // module: reporters/html.js
 
 require.register("reporters/index.js", function(module, exports, require){
-
 exports.Base = require('./base');
 exports.Dot = require('./dot');
 exports.Doc = require('./doc');
@@ -2852,7 +2932,6 @@ exports.JSONStream = require('./json-stream');
 }); // module: reporters/index.js
 
 require.register("reporters/json-cov.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -2943,7 +3022,7 @@ function map(cov) {
   }
 
   return ret;
-};
+}
 
 /**
  * Map jscoverage data for a single source file
@@ -3009,7 +3088,6 @@ function clean(test) {
 }); // module: reporters/json-cov.js
 
 require.register("reporters/json-stream.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -3046,7 +3124,9 @@ function List(runner) {
   });
 
   runner.on('fail', function(test, err){
-    console.log(JSON.stringify(['fail', clean(test)]));
+    test = clean(test);
+    test.err = err.message;
+    console.log(JSON.stringify(['fail', test]));
   });
 
   runner.on('end', function(){
@@ -3070,10 +3150,10 @@ function clean(test) {
     , duration: test.duration
   }
 }
+
 }); // module: reporters/json-stream.js
 
 require.register("reporters/json.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -3100,6 +3180,7 @@ function JSONReporter(runner) {
   Base.call(this, runner);
 
   var tests = []
+    , pending = []
     , failures = []
     , passes = [];
 
@@ -3111,21 +3192,23 @@ function JSONReporter(runner) {
     passes.push(test);
   });
 
-  runner.on('fail', function(test, err){
+  runner.on('fail', function(test){
     failures.push(test);
-    if (err === Object(err)) {
-      test.errMsg = err.message;
-      test.errStack = err.stack;
-    }
+  });
+
+  runner.on('pending', function(test){
+    pending.push(test);
   });
 
   runner.on('end', function(){
     var obj = {
       stats: self.stats,
       tests: tests.map(clean),
+      pending: pending.map(clean),
       failures: failures.map(clean),
       passes: passes.map(clean)
     };
+
     runner.testResults = obj;
 
     process.stdout.write(JSON.stringify(obj, null, 2));
@@ -3146,16 +3229,27 @@ function clean(test) {
     title: test.title,
     fullTitle: test.fullTitle(),
     duration: test.duration,
-    err: test.err,
-    errStack: test.err.stack,
-    errMessage: test.err.message
+    err: errorJSON(test.err || {})
   }
+}
+
+/**
+ * Transform `error` into a JSON object.
+ * @param {Error} err
+ * @return {Object}
+ */
+
+function errorJSON(err) {
+  var res = {};
+  Object.getOwnPropertyNames(err).forEach(function(key) {
+    res[key] = err[key];
+  }, err);
+  return res;
 }
 
 }); // module: reporters/json.js
 
 require.register("reporters/landing.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -3213,7 +3307,7 @@ function Landing(runner) {
   }
 
   runner.on('start', function(){
-    stream.write('\n  ');
+    stream.write('\n\n\n  ');
     cursor.hide();
   });
 
@@ -3230,7 +3324,7 @@ function Landing(runner) {
     }
 
     // render landing strip
-    stream.write('\u001b[4F\n\n');
+    stream.write('\u001b['+(width+1)+'D\u001b[2A');
     stream.write(runway());
     stream.write('\n  ');
     stream.write(color('runway', Array(col).join('⋅')));
@@ -3256,10 +3350,10 @@ F.prototype = Base.prototype;
 Landing.prototype = new F;
 Landing.prototype.constructor = Landing;
 
+
 }); // module: reporters/landing.js
 
 require.register("reporters/list.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -3339,6 +3433,12 @@ var Base = require('./base')
   , utils = require('../utils');
 
 /**
+ * Constants
+ */
+
+var SUITE_PREFIX = '$';
+
+/**
  * Expose `Markdown`.
  */
 
@@ -3368,8 +3468,9 @@ function Markdown(runner) {
   }
 
   function mapTOC(suite, obj) {
-    var ret = obj;
-    obj = obj[suite.title] = obj[suite.title] || { suite: suite };
+    var ret = obj,
+        key = SUITE_PREFIX + suite.title;
+    obj = obj[key] = obj[key] || { suite: suite };
     suite.suites.forEach(function(suite){
       mapTOC(suite, obj);
     });
@@ -3382,11 +3483,13 @@ function Markdown(runner) {
     var link;
     for (var key in obj) {
       if ('suite' == key) continue;
-      if (key) link = ' - [' + key + '](#' + utils.slug(obj[key].suite.fullTitle()) + ')\n';
-      if (key) buf += Array(level).join('  ') + link;
+      if (key !== SUITE_PREFIX) {
+        link = ' - [' + key.substring(1) + ']';
+        link += '(#' + utils.slug(obj[key].suite.fullTitle()) + ')\n';
+        buf += Array(level).join('  ') + link;
+      }
       buf += stringifyTOC(obj[key], level);
     }
-    --level;
     return buf;
   }
 
@@ -3422,10 +3525,10 @@ function Markdown(runner) {
     process.stdout.write(buf);
   });
 }
+
 }); // module: reporters/markdown.js
 
 require.register("reporters/min.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -3475,8 +3578,7 @@ require.register("reporters/nyan.js", function(module, exports, require){
  * Module dependencies.
  */
 
-var Base = require('./base')
-  , color = Base.color;
+var Base = require('./base');
 
 /**
  * Expose `Dot`.
@@ -3553,17 +3655,16 @@ NyanCat.prototype.draw = function(){
 
 NyanCat.prototype.drawScoreboard = function(){
   var stats = this.stats;
-  var colors = Base.colors;
 
-  function draw(color, n) {
+  function draw(type, n) {
     write(' ');
-    write('\u001b[' + color + 'm' + n + '\u001b[0m');
+    write(Base.color(type, n));
     write('\n');
   }
 
-  draw(colors.green, stats.passes);
-  draw(colors.fail, stats.failures);
-  draw(colors.pending, stats.pending);
+  draw('green', stats.passes);
+  draw('fail', stats.failures);
+  draw('pending', stats.pending);
   write('\n');
 
   this.cursorUp(this.numberOfLines);
@@ -3613,26 +3714,26 @@ NyanCat.prototype.drawRainbow = function(){
 NyanCat.prototype.drawNyanCat = function() {
   var self = this;
   var startWidth = this.scoreboardWidth + this.trajectories[0].length;
-  var color = '\u001b[' + startWidth + 'C';
+  var dist = '\u001b[' + startWidth + 'C';
   var padding = '';
 
-  write(color);
+  write(dist);
   write('_,------,');
   write('\n');
 
-  write(color);
+  write(dist);
   padding = self.tick ? '  ' : '   ';
   write('_|' + padding + '/\\_/\\ ');
   write('\n');
 
-  write(color);
+  write(dist);
   padding = self.tick ? '_' : '__';
   var tail = self.tick ? '~' : '^';
   var face;
   write(tail + '|' + padding + this.face() + ' ');
   write('\n');
 
-  write(color);
+  write(dist);
   padding = self.tick ? ' ' : '  ';
   write(padding + '""  "" ');
   write('\n');
@@ -3658,7 +3759,7 @@ NyanCat.prototype.face = function() {
   } else {
     return '( - .-)';
   }
-}
+};
 
 /**
  * Move cursor up `n`.
@@ -3713,6 +3814,8 @@ NyanCat.prototype.generateColors = function(){
  */
 
 NyanCat.prototype.rainbowify = function(str){
+  if (!Base.useColors)
+    return str;
   var color = this.rainbowColors[this.colorIndex % this.rainbowColors.length];
   this.colorIndex += 1;
   return '\u001b[38;5;' + color + 'm' + str + '\u001b[0m';
@@ -3839,7 +3942,6 @@ Progress.prototype.constructor = Progress;
 }); // module: reporters/progress.js
 
 require.register("reporters/spec.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -3930,7 +4032,6 @@ Spec.prototype.constructor = Spec;
 }); // module: reporters/spec.js
 
 require.register("reporters/tap.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -4007,13 +4108,13 @@ function title(test) {
 }); // module: reporters/tap.js
 
 require.register("reporters/xunit.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
 
 var Base = require('./base')
   , utils = require('../utils')
+  , fs = require('browser/fs')
   , escape = utils.escape;
 
 /**
@@ -4039,11 +4140,18 @@ exports = module.exports = XUnit;
  * @api public
  */
 
-function XUnit(runner) {
+function XUnit(runner, options) {
   Base.call(this, runner);
   var stats = this.stats
     , tests = []
     , self = this;
+
+  if (options.reporterOptions && options.reporterOptions.output) {
+      if (! fs.createWriteStream) {
+          throw new Error('file output not supported in browser');
+      }
+      self.fileStream = fs.createWriteStream(options.reporterOptions.output);
+  }
 
   runner.on('pending', function(test){
     tests.push(test);
@@ -4058,7 +4166,7 @@ function XUnit(runner) {
   });
 
   runner.on('end', function(){
-    console.log(tag('testsuite', {
+    self.write(tag('testsuite', {
         name: 'Mocha Tests'
       , tests: stats.tests
       , failures: stats.failures
@@ -4068,10 +4176,23 @@ function XUnit(runner) {
       , time: (stats.duration / 1000) || 0
     }, false));
 
-    tests.forEach(test);
-    console.log('</testsuite>');
+    tests.forEach(function(t) { self.test(t); });
+    self.write('</testsuite>');
   });
 }
+
+/**
+ * Override done to close the stream (if it's a file).
+ */
+XUnit.prototype.done = function(failures, fn) {
+    if (this.fileStream) {
+        this.fileStream.end(function() {
+            fn(failures);
+        });
+    } else {
+        fn(failures);
+    }
+};
 
 /**
  * Inherit from `Base.prototype`.
@@ -4084,10 +4205,21 @@ XUnit.prototype.constructor = XUnit;
 
 
 /**
+ * Write out the given line
+ */
+XUnit.prototype.write = function(line) {
+    if (this.fileStream) {
+        this.fileStream.write(line + '\n');
+    } else {
+        console.log(line);
+    }
+};
+
+/**
  * Output tag for the given `test.`
  */
 
-function test(test) {
+XUnit.prototype.test = function(test, ostream) {
   var attrs = {
       classname: test.parent.fullTitle()
     , name: test.title
@@ -4096,13 +4228,13 @@ function test(test) {
 
   if ('failed' == test.state) {
     var err = test.err;
-    console.log(tag('testcase', attrs, false, tag('failure', {}, false, cdata(escape(err.message) + "\n" + err.stack))));
+    this.write(tag('testcase', attrs, false, tag('failure', {}, false, cdata(escape(err.message) + "\n" + err.stack))));
   } else if (test.pending) {
-    console.log(tag('testcase', attrs, false, tag('skipped', {}, true)));
+    this.write(tag('testcase', attrs, false, tag('skipped', {}, true)));
   } else {
-    console.log(tag('testcase', attrs, true) );
+    this.write(tag('testcase', attrs, true) );
   }
-}
+};
 
 /**
  * HTML tag helper.
@@ -4133,14 +4265,15 @@ function cdata(str) {
 }); // module: reporters/xunit.js
 
 require.register("runnable.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
 
 var EventEmitter = require('browser/events').EventEmitter
   , debug = require('browser/debug')('mocha:runnable')
-  , milliseconds = require('./ms');
+  , Pending = require('./pending')
+  , milliseconds = require('./ms')
+  , utils = require('./utils');
 
 /**
  * Save timer references to avoid Sinon interfering (see GH-237).
@@ -4181,6 +4314,7 @@ function Runnable(title, fn) {
   this._slow = 75;
   this._enableTimeouts = true;
   this.timedOut = false;
+  this._trace = new Error('done() called multiple times')
 }
 
 /**
@@ -4203,6 +4337,7 @@ Runnable.prototype.constructor = Runnable;
 
 Runnable.prototype.timeout = function(ms){
   if (0 == arguments.length) return this._timeout;
+  if (ms === 0) this._enableTimeouts = false;
   if ('string' == typeof ms) ms = milliseconds(ms);
   debug('timeout %d', ms);
   this._timeout = ms;
@@ -4239,6 +4374,16 @@ Runnable.prototype.enableTimeouts = function(enabled){
   debug('enableTimeouts %s', enabled);
   this._enableTimeouts = enabled;
   return this;
+};
+
+/**
+ * Halt and mark as pending.
+ *
+ * @api private
+ */
+
+Runnable.prototype.skip = function(){
+    throw new Pending();
 };
 
 /**
@@ -4292,7 +4437,8 @@ Runnable.prototype.resetTimeout = function(){
   if (!this._enableTimeouts) return;
   this.clearTimeout();
   this.timer = setTimeout(function(){
-    self.callback(new Error('timeout of ' + ms + 'ms exceeded'));
+    if (!self._enableTimeouts) return;
+    self.callback(new Error('timeout of ' + ms + 'ms exceeded. Ensure the done() callback is being called in this test.'));
     self.timedOut = true;
   }, ms);
 };
@@ -4328,18 +4474,22 @@ Runnable.prototype.run = function(fn){
   function multiple(err) {
     if (emitted) return;
     emitted = true;
-    self.emit('error', err || new Error('done() called multiple times'));
+    self.emit('error', err || new Error('done() called multiple times; stacktrace may be inaccurate'));
   }
 
   // finished
   function done(err) {
     var ms = self.timeout();
     if (self.timedOut) return;
-    if (finished) return multiple(err);
+    if (finished) return multiple(err || self._trace);
+
+    // Discard the resolution if this test has already failed asynchronously
+    if (self.state) return;
+
     self.clearTimeout();
     self.duration = new Date - start;
     finished = true;
-    if (!err && self.duration > ms && self._enableTimeouts) err = new Error('timeout of ' + ms + 'ms exceeded');
+    if (!err && self.duration > ms && self._enableTimeouts) err = new Error('timeout of ' + ms + 'ms exceeded. Ensure the done() callback is being called in this test.');
     fn(err);
   }
 
@@ -4363,7 +4513,7 @@ Runnable.prototype.run = function(fn){
         done();
       });
     } catch (err) {
-      done(err);
+      done(utils.getError(err));
     }
     return;
   }
@@ -4380,7 +4530,7 @@ Runnable.prototype.run = function(fn){
       callFn(this.fn);
     }
   } catch (err) {
-    done(err);
+    done(utils.getError(err));
   }
 
   function callFn(fn) {
@@ -4409,10 +4559,13 @@ require.register("runner.js", function(module, exports, require){
 
 var EventEmitter = require('browser/events').EventEmitter
   , debug = require('browser/debug')('mocha:runner')
+  , Pending = require('./pending')
   , Test = require('./test')
   , utils = require('./utils')
   , filter = utils.filter
-  , keys = utils.keys;
+  , keys = utils.keys
+  , type = utils.type
+  , stringify = utils.stringify;
 
 /**
  * Non-enumerable globals.
@@ -4424,7 +4577,9 @@ var globals = [
   'setInterval',
   'clearInterval',
   'XMLHttpRequest',
-  'Date'
+  'Date',
+  'setImmediate',
+  'clearImmediate'
 ];
 
 /**
@@ -4450,13 +4605,17 @@ module.exports = Runner;
  *   - `fail`  (test, err) test failed
  *   - `pending`  (test) test pending
  *
+ * @param {Suite} suite Root suite
+ * @param {boolean} [delay] Whether or not to delay execution of root suite
+ *   until ready.
  * @api public
  */
 
-function Runner(suite) {
+function Runner(suite, delay) {
   var self = this;
   this._globals = [];
   this._abort = false;
+  this._delay = delay;
   this.suite = suite;
   this.total = suite.total();
   this.failures = 0;
@@ -4603,6 +4762,8 @@ Runner.prototype.fail = function(test, err){
 
   if ('string' == typeof err) {
     err = new Error('the string "' + err + '" was thrown, throw an Error :)');
+  } else if (!(err instanceof Error)) {
+    err = new Error('the ' + type(err) + ' ' + stringify(err) + ' was thrown, throw an Error :)');
   }
 
   this.emit('fail', test, err);
@@ -4653,7 +4814,6 @@ Runner.prototype.hook = function(name, fn){
   function next(i) {
     var hook = hooks[i];
     if (!hook) return fn();
-    if (self.failures && suite.bail()) return fn();
     self.currentRunnable = hook;
 
     hook.ctx.currentTest = self.test;
@@ -4669,10 +4829,14 @@ Runner.prototype.hook = function(name, fn){
       var testError = hook.error();
       if (testError) self.fail(self.test, testError);
       if (err) {
-        self.failHook(hook, err);
+        if (err instanceof Pending) {
+          suite.pending = true;
+        } else {
+          self.failHook(hook, err);
 
-        // stop executing hooks, notify callee of hook err
-        return fn(err);
+          // stop executing hooks, notify callee of hook err
+          return fn(err);
+        }
       }
       self.emit('hook end', hook);
       delete hook.ctx.currentTest;
@@ -4854,6 +5018,11 @@ Runner.prototype.runTests = function(suite, fn){
     self.emit('test', self.test = test);
     self.hookDown('beforeEach', function(err, errSuite){
 
+      if (suite.pending) {
+        self.emit('pending', test);
+        self.emit('test end', test);
+        return next();
+      }
       if (err) return hookErr(err, errSuite, false);
 
       self.currentRunnable = self.test;
@@ -4861,8 +5030,17 @@ Runner.prototype.runTests = function(suite, fn){
         test = self.test;
 
         if (err) {
-          self.fail(test, err);
+          if (err instanceof Pending) {
+            self.emit('pending', test);
+          } else {
+            self.fail(test, err);
+          }
           self.emit('test end', test);
+
+          if (err instanceof Pending) {
+            return next();
+          }
+
           return self.hookUp('afterEach', next);
         }
 
@@ -4942,16 +5120,22 @@ Runner.prototype.runSuite = function(suite, fn){
 
 Runner.prototype.uncaught = function(err){
   if (err) {
-    debug('uncaught exception %s', err.message);
+    debug('uncaught exception %s', err !== function () {
+      return this;
+    }.call(err) ? err : ( err.message || err ));
   } else {
     debug('uncaught undefined exception');
-    err = new Error('Catched undefined error, did you throw without specifying what?');
+    err = utils.undefinedError();
   }
-  
-  var runnable = this.currentRunnable;
-  if (!runnable || 'failed' == runnable.state) return;
-  runnable.clearTimeout();
   err.uncaught = true;
+
+  var runnable = this.currentRunnable;
+  if (!runnable) return;
+
+  runnable.clearTimeout();
+
+  // Ignore errors if complete
+  if (runnable.state) return;
   this.fail(runnable, err);
 
   // recover from test
@@ -4975,11 +5159,21 @@ Runner.prototype.uncaught = function(err){
  */
 
 Runner.prototype.run = function(fn){
-  var self = this
-    , fn = fn || function(){};
+  var self = this,
+    rootSuite = this.suite;
+
+  fn = fn || function(){};
 
   function uncaught(err){
     self.uncaught(err);
+  }
+
+  function start() {
+    self.emit('start');
+    self.runSuite(rootSuite, function(){
+      debug('finished running');
+      self.emit('end');
+    });
   }
 
   debug('start');
@@ -4991,15 +5185,18 @@ Runner.prototype.run = function(fn){
     fn(self.failures);
   });
 
-  // run suites
-  this.emit('start');
-  this.runSuite(this.suite, function(){
-    debug('finished running');
-    self.emit('end');
-  });
-
   // uncaught exception
   process.on('uncaughtException', uncaught);
+
+  if (this._delay) {
+    // for reporters, I guess.
+    // might be nice to debounce some dots while we wait.
+    this.emit('waiting', rootSuite);
+    rootSuite.once('run', start);
+  }
+  else {
+    start();
+  }
 
   return this;
 };
@@ -5013,7 +5210,7 @@ Runner.prototype.run = function(fn){
 Runner.prototype.abort = function(){
   debug('aborting');
   this._abort = true;
-}
+};
 
 /**
  * Filter leaks with the given globals flagged as `ok`.
@@ -5077,7 +5274,6 @@ function filterLeaks(ok, globals) {
 }); // module: runner.js
 
 require.register("suite.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -5142,6 +5338,7 @@ function Suite(title, parentContext) {
   this._enableTimeouts = true;
   this._slow = 75;
   this._bail = false;
+  this.delayed = false;
 }
 
 /**
@@ -5182,6 +5379,7 @@ Suite.prototype.clone = function(){
 
 Suite.prototype.timeout = function(ms){
   if (0 == arguments.length) return this._timeout;
+  if (ms.toString() === '0') this._enableTimeouts = false;
   if ('string' == typeof ms) ms = milliseconds(ms);
   debug('timeout %d', ms);
   this._timeout = parseInt(ms, 10);
@@ -5201,7 +5399,7 @@ Suite.prototype.enableTimeouts = function(enabled){
   debug('enableTimeouts %s', enabled);
   this._enableTimeouts = enabled;
   return this;
-}
+};
 
 /**
  * Set slow `ms` or short-hand such as "2s".
@@ -5222,7 +5420,7 @@ Suite.prototype.slow = function(ms){
 /**
  * Sets whether to bail after first error.
  *
- * @parma {Boolean} bail
+ * @param {Boolean} bail
  * @return {Suite|Number} for chaining
  * @api private
  */
@@ -5427,10 +5625,18 @@ Suite.prototype.eachTest = function(fn){
   return this;
 };
 
+/**
+ * This will run the root suite if we happen to be running in delayed mode.
+ */
+Suite.prototype.run = function run() {
+  if (this.root) {
+    this.emit('run');
+  }
+};
+
 }); // module: suite.js
 
 require.register("test.js", function(module, exports, require){
-
 /**
  * Module dependencies.
  */
@@ -5476,6 +5682,9 @@ require.register("utils.js", function(module, exports, require){
 
 var fs = require('browser/fs')
   , path = require('browser/path')
+  , basename = path.basename
+  , exists = fs.existsSync || path.existsSync
+  , glob = require('browser/glob')
   , join = path.join
   , debug = require('browser/debug')('mocha:watch');
 
@@ -5527,7 +5736,7 @@ exports.forEach = function(arr, fn, scope){
 exports.map = function(arr, fn, scope){
   var result = [];
   for (var i = 0, l = arr.length; i < l; i++)
-    result.push(fn.call(scope, arr[i], i));
+    result.push(fn.call(scope, arr[i], i, arr));
   return result;
 };
 
@@ -5596,7 +5805,7 @@ exports.filter = function(arr, fn){
 
 exports.keys = Object.keys || function(obj) {
   var keys = []
-    , has = Object.prototype.hasOwnProperty // for `window` on <=IE8
+    , has = Object.prototype.hasOwnProperty; // for `window` on <=IE8
 
   for (var key in obj) {
     if (has.call(obj, key)) {
@@ -5627,6 +5836,28 @@ exports.watch = function(files, fn){
 };
 
 /**
+ * Array.isArray (<=IE8)
+ *
+ * @param {Object} obj
+ * @return {Boolean}
+ * @api private
+ */
+var isArray = Array.isArray || function (obj) {
+  return '[object Array]' == {}.toString.call(obj);
+};
+
+/**
+ * @description
+ * Buffer.prototype.toJSON polyfill
+ * @type {Function}
+ */
+if(typeof Buffer !== 'undefined' && Buffer.prototype) {
+  Buffer.prototype.toJSON = Buffer.prototype.toJSON || function () {
+    return Array.prototype.slice.call(this, 0);
+  };
+}
+
+/**
  * Ignored files.
  */
 
@@ -5648,15 +5879,15 @@ exports.files = function(dir, ext, ret){
   var re = new RegExp('\\.(' + ext.join('|') + ')$');
 
   fs.readdirSync(dir)
-  .filter(ignored)
-  .forEach(function(path){
-    path = join(dir, path);
-    if (fs.statSync(path).isDirectory()) {
-      exports.files(path, ext, ret);
-    } else if (path.match(re)) {
-      ret.push(path);
-    }
-  });
+    .filter(ignored)
+    .forEach(function(path){
+      path = join(dir, path);
+      if (fs.statSync(path).isDirectory()) {
+        exports.files(path, ext, ret);
+      } else if (path.match(re)) {
+        ret.push(path);
+      }
+    });
 
   return ret;
 };
@@ -5694,18 +5925,6 @@ exports.clean = function(str) {
   str = str.replace(re, '');
 
   return exports.trim(str);
-};
-
-/**
- * Escape regular expression characters in `str`.
- *
- * @param {String} str
- * @return {String}
- * @api private
- */
-
-exports.escapeRegexp = function(str){
-  return str.replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&");
 };
 
 /**
@@ -5767,59 +5986,327 @@ function highlight(js) {
  */
 
 exports.highlightTags = function(name) {
-  var code = document.getElementsByTagName(name);
+  var code = document.getElementById('mocha').getElementsByTagName(name);
   for (var i = 0, len = code.length; i < len; ++i) {
     code[i].innerHTML = highlight(code[i].innerHTML);
   }
 };
 
+/**
+ * If a value could have properties, and has none, this function is called, which returns
+ * a string representation of the empty value.
+ *
+ * Functions w/ no properties return `'[Function]'`
+ * Arrays w/ length === 0 return `'[]'`
+ * Objects w/ no properties return `'{}'`
+ * All else: return result of `value.toString()`
+ *
+ * @param {*} value Value to inspect
+ * @param {string} [type] The type of the value, if known.
+ * @returns {string}
+ */
+var emptyRepresentation = function emptyRepresentation(value, type) {
+  type = type || exports.type(value);
+
+  switch(type) {
+    case 'function':
+      return '[Function]';
+    case 'object':
+      return '{}';
+    case 'array':
+      return '[]';
+    default:
+      return value.toString();
+  }
+};
 
 /**
- * Stringify `obj`.
+ * Takes some variable and asks `{}.toString()` what it thinks it is.
+ * @param {*} value Anything
+ * @example
+ * type({}) // 'object'
+ * type([]) // 'array'
+ * type(1) // 'number'
+ * type(false) // 'boolean'
+ * type(Infinity) // 'number'
+ * type(null) // 'null'
+ * type(new Date()) // 'date'
+ * type(/foo/) // 'regexp'
+ * type('type') // 'string'
+ * type(global) // 'global'
+ * @api private
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString
+ * @returns {string}
+ */
+exports.type = function type(value) {
+  if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value)) {
+    return 'buffer';
+  }
+  return Object.prototype.toString.call(value)
+    .replace(/^\[.+\s(.+?)\]$/, '$1')
+    .toLowerCase();
+};
+
+/**
+ * @summary Stringify `value`.
+ * @description Different behavior depending on type of value.
+ * - If `value` is undefined or null, return `'[undefined]'` or `'[null]'`, respectively.
+ * - If `value` is not an object, function or array, return result of `value.toString()` wrapped in double-quotes.
+ * - If `value` is an *empty* object, function, or array, return result of function
+ *   {@link emptyRepresentation}.
+ * - If `value` has properties, call {@link exports.canonicalize} on it, then return result of
+ *   JSON.stringify().
  *
- * @param {Object} obj
- * @return {String}
+ * @see exports.type
+ * @param {*} value
+ * @return {string}
  * @api private
  */
 
-exports.stringify = function(obj) {
-  if (obj instanceof RegExp) return obj.toString();
-  return JSON.stringify(exports.canonicalize(obj), null, 2).replace(/,(\n|$)/g, '$1');
+exports.stringify = function(value) {
+  var type = exports.type(value);
+
+  if (!~exports.indexOf(['object', 'array', 'function'], type)) {
+    if(type != 'buffer') {
+      return jsonStringify(value);
+    }
+    var json = value.toJSON();
+    // Based on the toJSON result
+    return jsonStringify(json.data && json.type ? json.data : json, 2)
+      .replace(/,(\n|$)/g, '$1');
+  }
+
+  for (var prop in value) {
+    if (Object.prototype.hasOwnProperty.call(value, prop)) {
+      return jsonStringify(exports.canonicalize(value), 2).replace(/,(\n|$)/g, '$1');
+    }
+  }
+
+  return emptyRepresentation(value, type);
+};
+
+/**
+ * @description
+ * like JSON.stringify but more sense.
+ * @param {Object}  object
+ * @param {Number=} spaces
+ * @param {number=} depth
+ * @returns {*}
+ * @private
+ */
+function jsonStringify(object, spaces, depth) {
+  if(typeof spaces == 'undefined') return _stringify(object);  // primitive types
+
+  depth = depth || 1;
+  var space = spaces * depth
+    , str = isArray(object) ? '[' : '{'
+    , end = isArray(object) ? ']' : '}'
+    , length = object.length || exports.keys(object).length
+    , repeat = function(s, n) { return new Array(n).join(s); }; // `.repeat()` polyfill
+
+  function _stringify(val) {
+    switch (exports.type(val)) {
+      case 'null':
+      case 'undefined':
+        val = '[' + val + ']';
+        break;
+      case 'array':
+      case 'object':
+        val = jsonStringify(val, spaces, depth + 1);
+        break;
+      case 'boolean':
+      case 'regexp':
+      case 'number':
+        val = val === 0 && (1/val) === -Infinity // `-0`
+          ? '-0'
+          : val.toString();
+        break;
+      case 'date':
+        val = '[Date: ' + val.toISOString() + ']';
+        break;
+      case 'buffer':
+        var json = val.toJSON();
+        // Based on the toJSON result
+        json = json.data && json.type ? json.data : json;
+        val = '[Buffer: ' + jsonStringify(json, 2, depth + 1) + ']';
+        break;
+      default:
+        val = (val == '[Function]' || val == '[Circular]')
+          ? val
+          : '"' + val + '"'; //string
+    }
+    return val;
+  }
+
+  for(var i in object) {
+    if(!object.hasOwnProperty(i)) continue;        // not my business
+    --length;
+    str += '\n ' + repeat(' ', space)
+      + (isArray(object) ? '' : '"' + i + '": ') // key
+      +  _stringify(object[i])                   // value
+      + (length ? ',' : '');                     // comma
+  }
+
+  return str + (str.length != 1                    // [], {}
+    ? '\n' + repeat(' ', --space) + end
+    : end);
 }
 
 /**
- * Return a new object that has the keys in sorted order.
- * @param {Object} obj
- * @return {Object}
+ * Return if obj is a Buffer
+ * @param {Object} arg
+ * @return {Boolean}
+ * @api private
+ */
+exports.isBuffer = function (arg) {
+  return typeof Buffer !== 'undefined' && Buffer.isBuffer(arg);
+};
+
+/**
+ * @summary Return a new Thing that has the keys in sorted order.  Recursive.
+ * @description If the Thing...
+ * - has already been seen, return string `'[Circular]'`
+ * - is `undefined`, return string `'[undefined]'`
+ * - is `null`, return value `null`
+ * - is some other primitive, return the value
+ * - is not a primitive or an `Array`, `Object`, or `Function`, return the value of the Thing's `toString()` method
+ * - is a non-empty `Array`, `Object`, or `Function`, return the result of calling this function again.
+ * - is an empty `Array`, `Object`, or `Function`, return the result of calling `emptyRepresentation()`
+ *
+ * @param {*} value Thing to inspect.  May or may not have properties.
+ * @param {Array} [stack=[]] Stack of seen values
+ * @return {(Object|Array|Function|string|undefined)}
+ * @see {@link exports.stringify}
  * @api private
  */
 
-exports.canonicalize = function(obj, stack) {
-   stack = stack || [];
+exports.canonicalize = function(value, stack) {
+  var canonicalizedObj,
+    type = exports.type(value),
+    prop,
+    withStack = function withStack(value, fn) {
+      stack.push(value);
+      fn();
+      stack.pop();
+    };
 
-   if (exports.indexOf(stack, obj) !== -1) return '[Circular]';
+  stack = stack || [];
 
-   var canonicalizedObj;
+  if (exports.indexOf(stack, value) !== -1) {
+    return '[Circular]';
+  }
 
-   if ({}.toString.call(obj) === '[object Array]') {
-     stack.push(obj);
-     canonicalizedObj = exports.map(obj, function(item) {
-       return exports.canonicalize(item, stack);
-     });
-     stack.pop();
-   } else if (typeof obj === 'object' && obj !== null) {
-     stack.push(obj);
-     canonicalizedObj = {};
-     exports.forEach(exports.keys(obj).sort(), function(key) {
-       canonicalizedObj[key] = exports.canonicalize(obj[key], stack);
-     });
-     stack.pop();
-   } else {
-     canonicalizedObj = obj;
-   }
+  switch(type) {
+    case 'undefined':
+    case 'buffer':
+    case 'null':
+      canonicalizedObj = value;
+      break;
+    case 'array':
+      withStack(value, function () {
+        canonicalizedObj = exports.map(value, function (item) {
+          return exports.canonicalize(item, stack);
+        });
+      });
+      break;
+    case 'function':
+      for (prop in value) {
+        canonicalizedObj = {};
+        break;
+      }
+      if (!canonicalizedObj) {
+        canonicalizedObj = emptyRepresentation(value, type);
+        break;
+      }
+    /* falls through */
+    case 'object':
+      canonicalizedObj = canonicalizedObj || {};
+      withStack(value, function () {
+        exports.forEach(exports.keys(value).sort(), function (key) {
+          canonicalizedObj[key] = exports.canonicalize(value[key], stack);
+        });
+      });
+      break;
+    case 'date':
+    case 'number':
+    case 'regexp':
+    case 'boolean':
+      canonicalizedObj = value;
+      break;
+    default:
+      canonicalizedObj = value.toString();
+  }
 
-   return canonicalizedObj;
- }
+  return canonicalizedObj;
+};
+
+/**
+ * Lookup file names at the given `path`.
+ */
+exports.lookupFiles = function lookupFiles(path, extensions, recursive) {
+  var files = [];
+  var re = new RegExp('\\.(' + extensions.join('|') + ')$');
+
+  if (!exists(path)) {
+    if (exists(path + '.js')) {
+      path += '.js';
+    } else {
+      files = glob.sync(path);
+      if (!files.length) throw new Error("cannot resolve path (or pattern) '" + path + "'");
+      return files;
+    }
+  }
+
+  try {
+    var stat = fs.statSync(path);
+    if (stat.isFile()) return path;
+  }
+  catch (ignored) {
+    return;
+  }
+
+  fs.readdirSync(path).forEach(function(file) {
+    file = join(path, file);
+    try {
+      var stat = fs.statSync(file);
+      if (stat.isDirectory()) {
+        if (recursive) {
+          files = files.concat(lookupFiles(file, extensions, recursive));
+        }
+        return;
+      }
+    }
+    catch (ignored) {
+      return;
+    }
+    if (!stat.isFile() || !re.test(file) || basename(file)[0] === '.') return;
+    files.push(file);
+  });
+
+  return files;
+};
+
+/**
+ * Generate an undefined error with a message warning the user.
+ *
+ * @return {Error}
+ */
+
+exports.undefinedError = function() {
+  return new Error('Caught undefined error, did you throw without specifying what?');
+};
+
+/**
+ * Generate an undefined error if `err` is not defined.
+ *
+ * @param {Error} err
+ * @return {Error}
+ */
+
+exports.getError = function(err) {
+  return err || exports.undefinedError();
+};
+
 
 }); // module: utils.js
 // The global object is "self" in Web Workers.
@@ -5963,12 +6450,14 @@ mocha.run = function(fn){
   mocha.globals('location');
 
   var query = Mocha.utils.parseQuery(global.location.search || '');
-  if (query.grep) mocha.grep(query.grep);
+  if (query.grep) mocha.grep(new RegExp(query.grep));
+  if (query.fgrep) mocha.grep(query.fgrep);
   if (query.invert) mocha.invert();
 
   return Mocha.prototype.run.call(mocha, function(err){
     // The DOM Document is not available in Web Workers.
-    if (global.document) {
+    var document = global.document;
+    if (document && document.getElementById('mocha') && options.noHighlighting !== true) {
       Mocha.utils.highlightTags('code');
     }
     if (fn) fn(err);
@@ -5981,6 +6470,7 @@ mocha.run = function(fn){
 
 Mocha.process = process;
 })();
+
 (function() {
 var style = document.createElement('style');
 style.textContent = '@charset "utf-8";\n\nbody {\n  margin:0;\n}\n\n#mocha {\n  font: 20px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;\n  margin: 60px 50px;\n}\n\n#mocha ul,\n#mocha li {\n  margin: 0;\n  padding: 0;\n}\n\n#mocha ul {\n  list-style: none;\n}\n\n#mocha h1,\n#mocha h2 {\n  margin: 0;\n}\n\n#mocha h1 {\n  margin-top: 15px;\n  font-size: 1em;\n  font-weight: 200;\n}\n\n#mocha h1 a {\n  text-decoration: none;\n  color: inherit;\n}\n\n#mocha h1 a:hover {\n  text-decoration: underline;\n}\n\n#mocha .suite .suite h1 {\n  margin-top: 0;\n  font-size: .8em;\n}\n\n#mocha .hidden {\n  display: none;\n}\n\n#mocha h2 {\n  font-size: 12px;\n  font-weight: normal;\n  cursor: pointer;\n}\n\n#mocha .suite {\n  margin-left: 15px;\n}\n\n#mocha .test {\n  margin-left: 15px;\n  overflow: hidden;\n}\n\n#mocha .test.pending:hover h2::after {\n  content: \'(pending)\';\n  font-family: arial, sans-serif;\n}\n\n#mocha .test.pass.medium .duration {\n  background: #c09853;\n}\n\n#mocha .test.pass.slow .duration {\n  background: #b94a48;\n}\n\n#mocha .test.pass::before {\n  content: \'✓\';\n  font-size: 12px;\n  display: block;\n  float: left;\n  margin-right: 5px;\n  color: #00d6b2;\n}\n\n#mocha .test.pass .duration {\n  font-size: 9px;\n  margin-left: 5px;\n  padding: 2px 5px;\n  color: #fff;\n  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.2);\n  -moz-box-shadow: inset 0 1px 1px rgba(0,0,0,.2);\n  box-shadow: inset 0 1px 1px rgba(0,0,0,.2);\n  -webkit-border-radius: 5px;\n  -moz-border-radius: 5px;\n  -ms-border-radius: 5px;\n  -o-border-radius: 5px;\n  border-radius: 5px;\n}\n\n#mocha .test.pass.fast .duration {\n  display: none;\n}\n\n#mocha .test.pending {\n  color: #0b97c4;\n}\n\n#mocha .test.pending::before {\n  content: \'◦\';\n  color: #0b97c4;\n}\n\n#mocha .test.fail {\n  color: #c00;\n}\n\n#mocha .test.fail pre {\n  color: black;\n}\n\n#mocha .test.fail::before {\n  content: \'✖\';\n  font-size: 12px;\n  display: block;\n  float: left;\n  margin-right: 5px;\n  color: #c00;\n}\n\n#mocha .test pre.error {\n  color: #c00;\n  max-height: 300px;\n  overflow: auto;\n}\n\n/**\n * (1): approximate for browsers not supporting calc\n * (2): 42 = 2*15 + 2*10 + 2*1 (padding + margin + border)\n *      ^^ seriously\n */\n#mocha .test pre {\n  display: block;\n  float: left;\n  clear: left;\n  font: 12px/1.5 monaco, monospace;\n  margin: 5px;\n  padding: 15px;\n  border: 1px solid #eee;\n  max-width: 85%; /*(1)*/\n  max-width: calc(100% - 42px); /*(2)*/\n  word-wrap: break-word;\n  border-bottom-color: #ddd;\n  -webkit-border-radius: 3px;\n  -webkit-box-shadow: 0 1px 3px #eee;\n  -moz-border-radius: 3px;\n  -moz-box-shadow: 0 1px 3px #eee;\n  border-radius: 3px;\n}\n\n#mocha .test h2 {\n  position: relative;\n}\n\n#mocha .test a.replay {\n  position: absolute;\n  top: 3px;\n  right: 0;\n  text-decoration: none;\n  vertical-align: middle;\n  display: block;\n  width: 15px;\n  height: 15px;\n  line-height: 15px;\n  text-align: center;\n  background: #eee;\n  font-size: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  -webkit-transition: opacity 200ms;\n  -moz-transition: opacity 200ms;\n  transition: opacity 200ms;\n  opacity: 0.3;\n  color: #888;\n}\n\n#mocha .test:hover a.replay {\n  opacity: 1;\n}\n\n#mocha-report.pass .test.fail {\n  display: none;\n}\n\n#mocha-report.fail .test.pass {\n  display: none;\n}\n\n#mocha-report.pending .test.pass,\n#mocha-report.pending .test.fail {\n  display: none;\n}\n#mocha-report.pending .test.pass.pending {\n  display: block;\n}\n\n#mocha-error {\n  color: #c00;\n  font-size: 1.5em;\n  font-weight: 100;\n  letter-spacing: 1px;\n}\n\n#mocha-stats {\n  position: fixed;\n  top: 15px;\n  right: 10px;\n  font-size: 12px;\n  margin: 0;\n  color: #888;\n  z-index: 1;\n}\n\n#mocha-stats .progress {\n  float: right;\n  padding-top: 0;\n}\n\n#mocha-stats em {\n  color: black;\n}\n\n#mocha-stats a {\n  text-decoration: none;\n  color: inherit;\n}\n\n#mocha-stats a:hover {\n  border-bottom: 1px solid #eee;\n}\n\n#mocha-stats li {\n  display: inline-block;\n  margin: 0 5px;\n  list-style: none;\n  padding-top: 11px;\n}\n\n#mocha-stats canvas {\n  width: 40px;\n  height: 40px;\n}\n\n#mocha code .comment { color: #ddd; }\n#mocha code .init { color: #2f6fad; }\n#mocha code .string { color: #5890ad; }\n#mocha code .keyword { color: #8a6343; }\n#mocha code .number { color: #2f6fad; }\n\n@media screen and (max-device-width: 480px) {\n  #mocha {\n    margin: 60px 0px;\n  }\n\n  #mocha #stats {\n    position: absolute;\n  }\n}\n';
@@ -7503,7 +7993,9 @@ function runMocha(reporter, done, waited) {
   // We can't use `mocha.run` because it bashes over grep, invert, and friends.
   // See https://github.com/visionmedia/mocha/blob/master/support/tail.js#L137
   var runner = Mocha.prototype.run.call(mocha, function(error) {
-    Mocha.utils.highlightTags('code');
+    if (document.getElementById('mocha')) {
+      Mocha.utils.highlightTags('code');
+    }
     done();  // We ignore the Mocha failure count.
   });
 

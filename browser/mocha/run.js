@@ -164,7 +164,9 @@ function runMocha(reporter, done, waited) {
   // We can't use `mocha.run` because it bashes over grep, invert, and friends.
   // See https://github.com/visionmedia/mocha/blob/master/support/tail.js#L137
   var runner = Mocha.prototype.run.call(mocha, function(error) {
-    Mocha.utils.highlightTags('code');
+    if (document.getElementById('mocha')) {
+      Mocha.utils.highlightTags('code');
+    }
     done();  // We ignore the Mocha failure count.
   });
 
