@@ -6923,7 +6923,7 @@ WCT.util.parseUrl = function(url) {
   return {
     base:   parts[1],
     params: this.getParams(parts[2] || ''),
-  }
+  };
 };
 
 /**
