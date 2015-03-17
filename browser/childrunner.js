@@ -22,7 +22,6 @@
 function ChildRunner(url, parentScope) {
   var params = WCT.util.getParams(parentScope.location.search);
   delete params.cli_browser_id;
-  params.bust = [Math.random()];
 
   this.url         = url + WCT.util.paramsToQuery(params);
   this.parentScope = parentScope;

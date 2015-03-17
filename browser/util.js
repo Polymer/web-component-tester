@@ -65,7 +65,7 @@ WCT.util.pluralizedStat = function pluralizedStat(count, kind) {
  */
 WCT.util.loadScript = function loadScript(path, done) {
   var script = document.createElement('script');
-  script.src = path + '?' + Math.random();
+  script.src = path;
   script.onload = done.bind(null, null);
   script.onerror = done.bind(null, 'Failed to load script ' + script.src);
   document.head.appendChild(script);

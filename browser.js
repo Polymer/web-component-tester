@@ -6896,7 +6896,7 @@ WCT.util.pluralizedStat = function pluralizedStat(count, kind) {
  */
 WCT.util.loadScript = function loadScript(path, done) {
   var script = document.createElement('script');
-  script.src = path + '?' + Math.random();
+  script.src = path;
   script.onload = done.bind(null, null);
   script.onerror = done.bind(null, 'Failed to load script ' + script.src);
   document.head.appendChild(script);
@@ -7075,7 +7075,6 @@ WCT.util.parallel = function parallel(runners, limit, done) {
 function ChildRunner(url, parentScope) {
   var params = WCT.util.getParams(parentScope.location.search);
   delete params.cli_browser_id;
-  params.bust = [Math.random()];
 
   this.url         = url + WCT.util.paramsToQuery(params);
   this.parentScope = parentScope;

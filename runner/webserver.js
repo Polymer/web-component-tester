@@ -104,7 +104,16 @@ module.exports = function(wct) {
         if (error) return done(error);
 
         // The static root is the lowest priority middleware.
-        app.use(serveStatic(options.root, {'index': ['index.html', 'index.htm']}));
+        app.use(serveStatic(options.root, {
+          index: ['index.html', 'index.htm'],
+          setHeaders: function(response) {
+            response.set({
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma':        'no-cache',
+              'Expires':        0,
+            });
+          },
+        }));
 
         app.use(function(request, response, next) {
           if (request.url !== '/favicon.ico') {
