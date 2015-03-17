@@ -84,11 +84,23 @@ WCT.util.debug = function debug(var_args) {
 // URL Processing
 
 /**
- * @param {string} opt_query A query string to parse.
- * @return {!Object.<string, !Array.<string>>} All params on the URL's query.
+ * @param {string} url
+ * @return {{base: string, params: string}}
+ */
+WCT.util.parseUrl = function(url) {
+  var parts = url.match(/^(.*?)(?:\?(.*))?$/);
+  return {
+    base:   parts[1],
+    params: this.getParams(parts[2] || ''),
+  }
+};
+
+/**
+ * @param {string=} opt_query A query string to parse.
+ * @return {!Object<string, !Array<string>>} All params on the URL's query.
  */
 WCT.util.getParams = function getParams(opt_query) {
-  var query = opt_query || window.location.search;
+  var query = typeof opt_query === 'string' ? opt_query : window.location.search;
   if (query.substring(0, 1) === '?') {
     query = query.substring(1);
   }
@@ -118,6 +130,21 @@ WCT.util.getParams = function getParams(opt_query) {
 };
 
 /**
+ * Merges params from `source` into `target` (mutating `target`).
+ *
+ * @param {!Object<string, !Array<string>>} target
+ * @param {!Object<string, !Array<string>>} source
+ */
+WCT.util.mergeParams = function mergeParams(target, source) {
+  Object.keys(source).forEach(function(key) {
+    if (!(key in target)) {
+      target[key] = [];
+    }
+    target[key] = target[key].concat(source[key]);
+  });
+};
+
+/**
  * @param {string} param The param to return a value for.
  * @return {?string} The first value for `param`, if found.
  */
@@ -127,7 +154,7 @@ WCT.util.getParam = function getParam(param) {
 };
 
 /**
- * @param {!Object.<string, !Array.<string>>} params
+ * @param {!Object<string, !Array<string>>} params
  * @return {string} `params` encoded as a URI query.
  */
 WCT.util.paramsToQuery = function paramsToQuery(params) {
@@ -177,7 +204,7 @@ WCT.util.cleanLocation = function cleanLocation(location) {
  * Like `async.parallelLimit`, but our own so that we don't force a dependency
  * on downstream code.
  *
- * @param {!Array.<function(function(*))>} runners Runners that call their given
+ * @param {!Array<function(function(*))>} runners Runners that call their given
  *     Node-style callback when done.
  * @param {number|function(*)} limit Maximum number of concurrent runners.
  *     (optional).

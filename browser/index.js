@@ -42,9 +42,9 @@ WCT.share = {};
  */
 WCT.loadSuites = function loadSuites(files) {
   files.forEach(function(file) {
-    if (file.slice(-3) === '.js') {
+    if (/\.js(\?.*)?$/.test(file)) {
       WCT._dependencies.push(file);
-    } else if (file.slice(-5) === '.html') {
+    } else if (/\.html(\?.*)?$/.test(file)) {
       WCT._suitesToLoad.push(file);
     } else {
       throw new Error('Unknown resource type: ' + file);

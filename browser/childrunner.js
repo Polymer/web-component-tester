@@ -20,10 +20,12 @@
  * are part of the current context.
  */
 function ChildRunner(url, parentScope) {
-  var params = WCT.util.getParams(parentScope.location.search);
-  delete params.cli_browser_id;
+  var urlBits = WCT.util.parseUrl(url);
+  WCT.util.mergeParams(
+      urlBits.params, WCT.util.getParams(parentScope.location.search));
+  delete urlBits.params.cli_browser_id;
 
-  this.url         = url + WCT.util.paramsToQuery(params);
+  this.url         = urlBits.base + WCT.util.paramsToQuery(urlBits.params);
   this.parentScope = parentScope;
 
   this.state = 'initializing';
