@@ -314,6 +314,8 @@ function expand(context, done) {
   var options = context.options;
   var root    = context.options.root || process.cwd();
 
+  options.origSuites = _.clone(options.suites);
+
   expandDeprecated(context, function(error) {
     if (error) return done(error);
 
@@ -414,7 +416,14 @@ function validate(options, done) {
     return done('No browsers configured to run');
   }
   if (options.suites.length === 0) {
-    return done('No test suites were found matching your configuration');
+    var root  = options.root || process.cwd();
+    var globs = options.origSuites.join(', ');
+    return done(
+        'No test suites were found matching your configuration\n' +
+        '\n' +
+        '  WCT searched for .js and .html files matching: ' + globs + '\n' +
+        '\n' +
+        '  Relative paths were resolved against: ' + root);
   }
 
   done(null);

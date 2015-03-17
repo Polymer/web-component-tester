@@ -13,7 +13,8 @@ var fs    = require('fs');
 var glob  = require('glob');
 var path  = require('path');
 
-var INDEX = 'index.html';
+var INDEX      = 'index.html';
+var VALID_FILE = /\.(js|html)$/;
 
 /**
  * Expands a series of path patterns (globs, files, directories) into a set of
@@ -81,7 +82,8 @@ function expandDirectories(baseDir, paths, done) {
       });
     });
   }, function(error, results) {
-    done(error, _.unique(_.flatten(results || [])));
+    var files = _.unique(_.flatten(results || []));
+    done(error, _.filter(files, VALID_FILE.test.bind(VALID_FILE)));
   });
 }
 
