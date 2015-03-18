@@ -124,13 +124,17 @@ CliReporter.prototype.updateStatus = function(force) {
   var statuses = Object.keys(this.browserStats).map(function(browserId) {
     var pretty = this.prettyBrowsers[browserId];
     var stats  = this.browserStats[browserId];
-    var status = stats.status === 'error' ? chalk.red('error') : stats.status;
-    if (status === 'running' || status === 'complete') {
-      var counts = [stats.passing, stats.pending, stats.failing];
+
+    var status = '';
+    var counts = [stats.passing, stats.pending, stats.failing];
+    if (counts[0] > 0 || counts[1] > 0 || counts[2] > 0) {
       if (counts[0] > 0) counts[0] = chalk.green(counts[0]);
       if (counts[1] > 0) counts[1] = chalk.yellow(counts[1]);
       if (counts[2] > 0) counts[2] = chalk.red(counts[2]);
       status = counts.join('/');
+    }
+    if (stats.status === 'error') {
+      status = status + (status === '' ? '' : ' ') + chalk.red('error');
     }
 
     return padRight(pretty + ' (' + status + ')', STATUS_PAD);
