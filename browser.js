@@ -6854,8 +6854,8 @@ WCT.util.whenFrameworksReady = function(callback) {
   };
 
   function importsReady() {
-    window.removeEventListener('HTMLImportsLoaded', importsReady);
-    WCT.util.debug('HTMLImportsLoaded');
+    window.removeEventListener('WebComponentsReady', importsReady);
+    WCT.util.debug('WebComponentsReady');
 
     if (window.Polymer && Polymer.whenReady) {
       Polymer.whenReady(function() {
@@ -6873,7 +6873,7 @@ WCT.util.whenFrameworksReady = function(callback) {
   } else if (HTMLImports.ready) {
     importsReady();
   } else {
-    window.addEventListener('HTMLImportsLoaded', importsReady);
+    window.addEventListener('WebComponentsReady', importsReady);
   }
 };
 
