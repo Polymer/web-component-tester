@@ -140,10 +140,6 @@ var ARG_CONFIG = {
     full:      'webserver-hostname',
     hidden:    true,
   },
-  'webserver.urlPrefix': {
-    full:      'webserver-prefix',
-    hidden:    true,
-  },
   // Managed by supports-color; let's not freak out if we see it.
   color: {flag: true},
 
