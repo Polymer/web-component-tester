@@ -7,11 +7,12 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _      = require('lodash');
-var findup = require('findup-sync');
-var fs     = require('fs');
-var nomnom = require('nomnom');
-var path   = require('path');
+var _              = require('lodash');
+var findup         = require('findup-sync');
+var fs             = require('fs');
+var nomnom         = require('nomnom');
+var path           = require('path');
+var serveWaterfall = require('serve-waterfall');
 
 var paths = require('./paths');
 
@@ -34,9 +35,6 @@ function defaults() {
     expanded:    false,
     // The on-disk path where tests & static files should be served from. Paths
     // (such as `suites`) are evaluated relative to this.
-    //
-    // By default, this is set to the directory above the current directory (so
-    // that element repos can easily be tested with their dependencies).
     root:        undefined,
     // Idle timeout for tests.
     testTimeout: 90 * 1000,
@@ -80,6 +78,11 @@ function defaults() {
       port: undefined,
       // The hostname used when generating URLs for the webdriver client.
       hostname: 'localhost',
+      // mappings of URL prefix to on disk paths that the web server should
+      // serve via https://github.com/PolymerLabs/serve-waterfall
+      pathMappings: serveWaterfall.mappings.WEB_COMPONENT,
+      // The URL prefix that serves contents from the project root.
+      basePath: '/components/<basename>',
     },
   };
 }
@@ -173,7 +176,7 @@ function fromDisk() {
   var options = merge.apply(null, configs);
 
   if (!options.root && projectFile && projectFile !== globalFile) {
-    process.chdir(path.dirname(projectFile));
+    options.root = path.dirname(projectFile);
   }
 
   return options;
@@ -312,7 +315,7 @@ function normalize(config) {
  */
 function expand(context, done) {
   var options = context.options;
-  var root    = context.options.root || process.cwd();
+  var root    = context.options.root = context.options.root || process.cwd();
 
   options.origSuites = _.clone(options.suites);
 
@@ -321,31 +324,9 @@ function expand(context, done) {
 
     paths.expand(root, options.suites, function(error, suites) {
       if (error) return done(error);
-
       options.suites = suites;
-      // Serve from the parent directory so that we can reference element deps.
-      if (!options.root) {
-        _serveFromParent(root, options);
-      }
-
       done();
     });
-  });
-}
-
-/**
- * Sets options.root to the parent directory of `baseDir`, and adjusts all
- * suites relative to it.
- *
- * @param {string} baseDir
- * @param {!Object} options
- */
-function _serveFromParent(baseDir, options) {
-  options.root = path.dirname(baseDir);
-
-  var basename = path.basename(baseDir);
-  options.suites = _.map(options.suites || [], function(file) {
-    return path.join(basename, file);
   });
 }
 

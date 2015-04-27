@@ -8,7 +8,6 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 var _      = require('lodash');
-var async  = require('async');
 var expect = require('chai').expect;
 var sinon  = require('sinon');
 var path   = require('path');
@@ -64,15 +63,17 @@ describe('cli', function() {
       return log;
     }
 
-    it('expands test/ by default, and serves from the parent', function(done) {
+    it('expands test/ by default, and serves from /components/<basename>', function(done) {
       process.chdir(path.join(FIXTURES, 'standard'));
 
       expectRun({}, [], function(call) {
-        expect(call.args[0].options.suites).to.have.members([
-          'standard/test/a.html',
-          'standard/test/b.js',
+        var options = call.args[0].options;
+        expect(options.suites).to.have.members([
+          'test/a.html',
+          'test/b.js',
         ]);
-        expect(call.args[0].options.root).to.equal(FIXTURES);
+        expect(options.root).to.equal(path.join(FIXTURES, 'standard'));
+        expect(options.webserver.webRunnerPath).to.equal('/components/standard/generated-index.html');
         done();
       });
     });
@@ -82,10 +83,9 @@ describe('cli', function() {
 
       expectRun({}, ['**/*.html'], function(call) {
         expect(call.args[0].options.suites).to.have.members([
-          'standard/test/a.html',
-          'standard/x-foo.html',
+          'test/a.html',
+          'x-foo.html',
         ]);
-        expect(call.args[0].options.root).to.equal(FIXTURES);
         done();
       });
     });
@@ -95,10 +95,9 @@ describe('cli', function() {
 
       expectRun({}, ['test/b.js', 'x-foo.html'], function(call) {
         expect(call.args[0].options.suites).to.have.members([
-          'standard/test/b.js',
-          'standard/x-foo.html',
+          'test/b.js',
+          'x-foo.html',
         ]);
-        expect(call.args[0].options.root).to.equal(FIXTURES);
         done();
       });
     });
@@ -122,11 +121,13 @@ describe('cli', function() {
 
       var root = path.join(FIXTURES, 'standard');
       expectRun({}, ['--root', root, '**/*.html'], function(call) {
-        expect(call.args[0].options.suites).to.have.members([
+        var options = call.args[0].options;
+        expect(options.suites).to.have.members([
           'test/a.html',
           'x-foo.html',
         ]);
-        expect(call.args[0].options.root).to.equal(root);
+        expect(options.root).to.equal(root);
+        expect(options.webserver.webRunnerPath).to.equal('/components/standard/generated-index.html');
         done();
       });
     });
@@ -168,14 +169,16 @@ describe('cli', function() {
     describe('with wct.conf.js', function() {
       var ROOT = path.join(FIXTURES, 'conf');
 
-      it('serves from parent', function(done) {
+      it('serves from /components/<basename>', function(done) {
         process.chdir(ROOT);
 
         expectRun({}, [], function(call) {
-          expect(call.args[0].options.suites).to.have.members([
-            'conf/test/foo.js',
+          var options = call.args[0].options;
+          expect(options.suites).to.have.members([
+            'test/foo.js',
           ]);
-          expect(call.args[0].options.root).to.equal(FIXTURES);
+          expect(options.root).to.equal(ROOT);
+          expect(options.webserver.webRunnerPath).to.equal('/components/conf/generated-index.html');
           done();
         });
       });
@@ -184,10 +187,12 @@ describe('cli', function() {
         process.chdir(path.join(ROOT, 'branch/leaf'));
 
         expectRun({}, [], function(call) {
-          expect(call.args[0].options.suites).to.have.members([
-            'conf/test/foo.js',
+          var options = call.args[0].options;
+          expect(options.suites).to.have.members([
+            'test/foo.js',
           ]);
-          expect(call.args[0].options.root).to.equal(FIXTURES);
+          expect(options.root).to.equal(ROOT);
+          expect(options.webserver.webRunnerPath).to.equal('/components/conf/generated-index.html');
           done();
         });
       });
@@ -205,10 +210,12 @@ describe('cli', function() {
         process.chdir(path.join(ROOT, 'rooted'));
 
         expectRun({}, [], function(call) {
-          expect(call.args[0].options.suites).to.have.members([
+          var options = call.args[0].options;
+          expect(options.suites).to.have.members([
             'integration/conf/test/foo.js',
           ]);
-          expect(call.args[0].options.root).to.equal(path.dirname(FIXTURES));
+          expect(options.root).to.equal(path.dirname(FIXTURES));
+          expect(options.webserver.webRunnerPath).to.equal('/components/fixtures/generated-index.html');
           done();
         });
       });

@@ -7,16 +7,16 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _           = require('lodash');
-var chalk       = require('chalk');
-var cleankill   = require('cleankill');
-var express     = require('express');
-var freeport    = require('freeport');
-var fs          = require('fs');
-var http        = require('http');
-var path        = require('path');
-var send        = require('send');
-var serveStatic = require('serve-static');
+var _              = require('lodash');
+var chalk          = require('chalk');
+var cleankill      = require('cleankill');
+var express        = require('express');
+var freeport       = require('freeport');
+var fs             = require('fs');
+var http           = require('http');
+var path           = require('path');
+var send           = require('send');
+var serveWaterfall = require('serve-waterfall');
 
 // Template for generated indexes.
 var INDEX_TEMPLATE = _.template(fs.readFileSync(
@@ -28,6 +28,12 @@ var PACKAGE_ROOT = path.resolve(__dirname, '..');
 var SERVE_STATIC = {  // Keys are regexps.
   '^(.*/web-component-tester|)/browser\\.js$':     path.join(PACKAGE_ROOT, 'browser.js'),
   '^(.*/web-component-tester|)/environment\\.js$': path.join(PACKAGE_ROOT, 'environment.js'),
+};
+
+var DEFAULT_HEADERS = {
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  'Pragma':        'no-cache',
+  'Expires':        0,
 };
 
 /**
@@ -62,6 +68,11 @@ module.exports = function(wct) {
       options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
     }
 
+    // Prefix our web runner URL with the base path.
+    var basePath = options.webserver.basePath;
+    basePath = basePath.replace('<basename>', path.basename(options.root));
+    options.webserver.webRunnerPath = basePath + options.webserver.webRunnerPath;
+
     done();
   });
 
@@ -87,6 +98,7 @@ module.exports = function(wct) {
       // Mapped static content (overriding files served at the root).
       _.each(wsOptions.staticContent, function(file, url) {
         app.get(new RegExp(url), function(request, response) {
+          response.set(DEFAULT_HEADERS);
           send(request, file).pipe(response);
         });
       });
@@ -94,6 +106,7 @@ module.exports = function(wct) {
       // The generated web runner, if present.
       if (wsOptions.webRunnerContent) {
         app.get(wsOptions.webRunnerPath, function(request, response) {
+          response.set(DEFAULT_HEADERS);
           response.send(wsOptions.webRunnerContent);
         });
       }
@@ -103,16 +116,10 @@ module.exports = function(wct) {
       wct.emitHook('prepare:webserver', app, function(error) {
         if (error) return done(error);
 
-        // The static root is the lowest priority middleware.
-        app.use(serveStatic(options.root, {
-          index: ['index.html', 'index.htm'],
-          setHeaders: function(response) {
-            response.set({
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma':        'no-cache',
-              'Expires':        0,
-            });
-          },
+        // Serve up all the static assets.
+        app.use(serveWaterfall(wsOptions.pathMappings, {
+          root:    options.root,
+          headers: DEFAULT_HEADERS,
         }));
 
         app.use(function(request, response, next) {
