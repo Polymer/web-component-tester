@@ -44,11 +44,19 @@ Your test suites can be `.html` documents. For example,
 </html>
 ```
 
+Note that it is _critical_ that you include `web-component-tester/browser.js` in
+your test suites. `browser.js` contains all of WCT's client logic (and loads
+bundled libraries like mocha and chai).
+
+If you are using [WCT via the command line][#wct], it will automatically serve
+its local copy of `browser.js` on any URL that ends with
+`/web-component-tester/browser.js`.
+
 
 ## `.js` Suites
 
-Or, you can write tests in separate `.js` sources, which run in the context of
-your text index. For example, `test/awesome-tests.js`:
+Alternatively, you can write tests in separate `.js` sources. For example,
+`test/awesome-tests.js`:
 
 ```js
 suite('AwesomeLib', function() {
@@ -80,20 +88,21 @@ run it:
 wct
 ```
 
-By default, any tests under `test/` will be run. You can run particular files
-(or globs of files) via `wct path/to/files`.
-
+By default, any tests under `test/` will be run. You can override this by
+specifying particular files (or globs of files) via `wct path/to/files`.
 
 
 ### Web Server
 
-Alternatively, you can run your tests directly by hosting them via a web server
-(sorry, `file://` is not supported). You'll need to save WCT's `browser.js` in
-order to go this route. The recommended approach is to depend on WCT via Bower:
+If you prefer not to use WCT's command line tool, you can also run WCT tests
+directly in a browser via a web server of your choosing.
 
-```sh
-bower install Polymer/web-component-tester --save
-```
+Make sure that WCT's `browser.js` and `environment.js` are accessible by your
+web server, and have your tests load `browser.js`.
+
+The recommended way to fetch these is via Bower:
+
+    bower install Polymer/web-component-tester --save
 
 #### Nested Suites
 
@@ -105,8 +114,8 @@ any desired tests:
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="../../webcomponentsjs/webcomponents.min.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <script src="../bower_components/web-component-tester/browser.js"></script>
     <script src="../awesome.js"></script>
   </head>
   <body>
@@ -119,6 +128,9 @@ any desired tests:
   </body>
 </html>
 ```
+
+_When you use `wct` on the command line, it is generating an index like this for
+you based on the suites you ask it to load._
 
 
 # Configuration
@@ -169,7 +181,8 @@ plugin's configuration to `disabled: false`) will cause the plugin to kick in.
 
 ## Polymer
 
-By default, WCT will defer tests until `polymer-ready` has fired. This saves you from having to wait for elements to upgrade and all that yourself.
+By default, WCT will defer tests until `WebComponentsReady` has fired. This
+saves you from having to wait for elements to upgrade and all that yourself.
 
 If you need to test something that occurs before that event, the [`testImmediate` helper](https://github.com/Polymer/web-component-tester/blob/master/browser/environment/helpers.js#L29-41) can be used. Or, if you just want tests to run as soon as possible, you can disable the delay by setting `WCT.waitForFrameworks = false` (though, they are still async due to Mocha).
 
@@ -185,34 +198,6 @@ you. Just write your tests, and you're set.
 
 Similarly, Chai's [`expect`][chai-bdd] and [`assert`][chai-tdd] interfaces are
 exposed for your convenience.
-
-
-## Command Line
-
-The `wct` tool, and the [gulp](#gulp) and [grunt](#grunt) integration, support
-several command line flags:
-
-
-`--remote`: Uses the [default remote browsers](default-sauce-browsers.json),
-and if omitted uses the default local browsers.
-
-Note that you will need a [valid Sauce Labs account](opensauce) for this. Let
-WCT know your credentials via envrionment variables:
-
-```sh
-export SAUCE_USERNAME=username
-export SAUCE_ACCESS_KEY=abcdef01-abcd-abcd-abcd-abcdef012345
-```
-
-
-`--browsers BROWSER,BROWSER`: Override the browsers that will be run. Browsers
-can be specified via local names such as `chrome`, `canary`, `firefox`,
-`aurora`, `ie`, etc. Remote browsers can be specified via
-`<PLATFORM>/<BROWSER>[@<VERSION>]`.
-
-
-`--persistent`: Doesn't close the browsers after their first run. Refresh the
-browser windows to re-run tests.
 
 
 ## Custom Environments
@@ -263,12 +248,10 @@ Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
 `options` you can use are specified in [`runner/config.js`](runner/config.js).
 
 
-# Plugins
+# Plugin Authoring
 
-WCT also supports plugins. A plugin is a node module that can hook into various
-steps of WCT's flow.
-
-A plugin looks like this:
+A plugin is a node module that can hook into various steps of WCT's flow. It
+looks like this:
 
 `package.json`:
 ```js
