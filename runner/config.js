@@ -82,7 +82,7 @@ function defaults() {
       // serve via https://github.com/PolymerLabs/serve-waterfall
       pathMappings: serveWaterfall.mappings.WEB_COMPONENT,
       // The URL prefix that serves contents from the project root.
-      basePath: '/components/<basename>',
+      urlPrefix: '/components/<basename>',
     },
   };
 }
@@ -140,6 +140,10 @@ var ARG_CONFIG = {
     full:      'webserver-hostname',
     hidden:    true,
   },
+  'webserver.urlPrefix': {
+    full:      'webserver-prefix',
+    hidden:    true,
+  },
   // Managed by supports-color; let's not freak out if we see it.
   color: {flag: true},
 
@@ -154,7 +158,7 @@ var ARG_CONFIG = {
     abbr:   'r',
     hidden: true,
     flag:   true,
-  }
+  },
 };
 
 // Values that should be extracted when pre-parsing args.

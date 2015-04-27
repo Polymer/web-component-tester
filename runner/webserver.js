@@ -69,9 +69,9 @@ module.exports = function(wct) {
     }
 
     // Prefix our web runner URL with the base path.
-    var basePath = options.webserver.basePath;
-    basePath = basePath.replace('<basename>', path.basename(options.root));
-    options.webserver.webRunnerPath = basePath + options.webserver.webRunnerPath;
+    var urlPrefix = options.webserver.urlPrefix;
+    urlPrefix = urlPrefix.replace('<basename>', path.basename(options.root));
+    options.webserver.webRunnerPath = urlPrefix + options.webserver.webRunnerPath;
 
     done();
   });
