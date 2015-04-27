@@ -72,6 +72,7 @@ module.exports = function test(options, done) {
   }
 
   async.series([
+    steps.setupOverrides.bind(steps, context),
     steps.loadPlugins.bind(steps, context),
     steps.configure.bind(steps, context),
     steps.prepare.bind(steps, context),

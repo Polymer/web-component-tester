@@ -17,6 +17,13 @@ var config        = require('./config');
 
 // Steps (& Hooks)
 
+function setupOverrides(context, done) {
+  if (context.options.registerHooks) {
+    context.options.registerHooks(context);
+  }
+  done();
+}
+
 function loadPlugins(context, done) {
   context.emit('log:debug', 'step: loadPlugins');
   context.plugins(function(error, plugins) {
@@ -124,8 +131,9 @@ function runBrowsers(context, done) {
 }
 
 module.exports = {
-  loadPlugins:    loadPlugins,
   configure:      configure,
+  loadPlugins:    loadPlugins,
   prepare:        prepare,
   runTests:       runTests,
+  setupOverrides: setupOverrides,
 };

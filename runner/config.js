@@ -68,6 +68,20 @@ function defaults() {
     //   }
     //
     plugins: ['local', 'sauce'],
+    // Callback that allows you to perform advanced configuration of the WCT
+    // runner.
+    //
+    // The hook is given the WCT context, and can generally be written like a
+    // plugin. For example, to serve custom content via the internal webserver:
+    //
+    //     registerHooks: function(wct) {
+    //       wct.hook('prepare:webserver', function(app, done) {
+    //         app.use(...);
+    //         done();
+    //       });
+    //     }
+    //
+    registerHooks: function(wct) {},
     // Configuration options for the webserver that serves up your test files
     // and dependencies.
     //
