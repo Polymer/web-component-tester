@@ -29,6 +29,11 @@ WCT.numConcurrentSuites = 1;
 /** Whether `console.error` should be treated as a test failure. */
 WCT.trackConsoleError = true;
 
+/** Configuration passed to mocha.setup. */
+WCT.mochaOptions = {
+  timeout: 10 * 1000
+};
+
 // Helpers
 
 // Evaluated in mocha/run.js.

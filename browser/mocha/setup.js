@@ -64,12 +64,12 @@ Object.keys(MOCHA_EXPORTS).forEach(function(ui) {
  * @param {string} ui Sets up mocha to run `ui`-style tests.
  */
 WCT.setupMocha = function setupMocha(ui) {
-  if (WCT._mochaUI && WCT._mochaUI === ui) return;
-  if (WCT._mochaUI && WCT._mochaUI !== ui) {
-    throw new Error('Mixing ' + WCT._mochaUI + ' and ' + ui + ' Mocha styles is not supported.');
+  if (WCT.mochaOptions.ui && WCT.mochaOptions.ui === ui) return;
+  if (WCT.mochaOptions.ui && WCT.mochaOptions.ui !== ui) {
+    throw new Error('Mixing ' + WCT.mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported.');
   }
-  WCT._mochaUI = ui;
-  mocha.setup({ui: ui, timeout: 60 * 1000});  // Note that the reporter is configured in run.js.
+  WCT.mochaOptions.ui = ui;
+  mocha.setup(WCT.mochaOptions);  // Note that the reporter is configured in run.js.
 };
 
 })();
