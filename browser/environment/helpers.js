@@ -9,6 +9,11 @@
  */
 (function() {
 
+// Make sure that we use native timers, in case they're being stubbed out.
+var setInterval           = window.setInterval;
+var setTimeout            = window.setTimeout;
+var requestAnimationFrame = window.requestAnimationFrame;
+
 /**
  * Runs `stepFn`, catching any error and passing it to `callback` (Node-style).
  * Otherwise, calls `callback` with no arguments on success.
