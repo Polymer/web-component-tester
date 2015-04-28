@@ -1243,7 +1243,7 @@ require.latest = function (name, returnPath) {
   }
   // if the build contains more than one branch of the same module
   // you should not use this funciton
-  var module = otherCandidates.pop().name;
+  var module = otherCandidates.sort(function(a, b) {return a.name > b.name})[0].name;
   if (returnPath === true) {
     return module;
   }
@@ -1823,7 +1823,7 @@ var used = []
  * Chai version
  */
 
-exports.version = '1.10.0';
+exports.version = '2.3.0';
 
 /*!
  * Assertion Error
@@ -1855,6 +1855,12 @@ exports.use = function (fn) {
 
   return this;
 };
+
+/*!
+ * Utility Functions
+ */
+
+exports.util = util;
 
 /*!
  * Configuration
@@ -1909,7 +1915,6 @@ require.register("chai/lib/chai/assertion.js", function (exports, module) {
  */
 
 var config = require('chai/lib/chai/config.js');
-var NOOP = function() { };
 
 module.exports = function (_chai, util) {
   /*!
@@ -1973,10 +1978,6 @@ module.exports = function (_chai, util) {
     util.addChainableMethod(this.prototype, name, fn, chainingBehavior);
   };
 
-  Assertion.addChainableNoop = function(name, fn) {
-    util.addChainableMethod(this.prototype, name, NOOP, fn);
-  };
-
   Assertion.overwriteProperty = function (name, fn) {
     util.overwriteProperty(this.prototype, name, fn);
   };
@@ -1996,10 +1997,11 @@ module.exports = function (_chai, util) {
    *
    * @name assert
    * @param {Philosophical} expression to be tested
-   * @param {String or Function} message or function that returns message to display if fails
+   * @param {String or Function} message or function that returns message to display if expression fails
    * @param {String or Function} negatedMessage or function that returns negatedMessage to display if negated expression fails
    * @param {Mixed} expected value (remember to check for negation)
    * @param {Mixed} actual (optional) will default to `this.obj`
+   * @param {Boolean} showDiff (optional) when set to `true`, assert will display a diff in addition to the message if expression fails
    * @api private
    */
 
@@ -2076,10 +2078,15 @@ module.exports = {
    * ### config.truncateThreshold
    *
    * User configurable property, sets length threshold for actual and
-   * expected values in assertion errors. If this threshold is exceeded,
-   * the value is truncated.
+   * expected values in assertion errors. If this threshold is exceeded, for
+   * example for large data structures, the value is replaced with something
+   * like `[ Array(3) ]` or `{ Object (prop1, prop2) }`.
    *
    * Set it to zero if you want to disable truncating altogether.
+   *
+   * This is especially userful when doing assertions on arrays: having this
+   * set to a reasonable large value makes the failure messages readily
+   * inspectable.
    *
    *     chai.config.truncateThreshold = 0;  // disable truncating
    *
@@ -2121,6 +2128,7 @@ module.exports = function (chai, _) {
    * - been
    * - is
    * - that
+   * - which
    * - and
    * - has
    * - have
@@ -2135,7 +2143,7 @@ module.exports = function (chai, _) {
 
   [ 'to', 'be', 'been'
   , 'is', 'and', 'has', 'have'
-  , 'with', 'that', 'at'
+  , 'with', 'that', 'which', 'at'
   , 'of', 'same' ].forEach(function (chain) {
     Assertion.addProperty(chain, function () {
       return this;
@@ -2170,12 +2178,53 @@ module.exports = function (chai, _) {
    *     expect({ foo: { bar: { baz: 'quux' } } })
    *       .to.have.deep.property('foo.bar.baz', 'quux');
    *
+   * `.deep.property` special characters can be escaped
+   * by adding two slashes before the `.` or `[]`.
+   *
+   *     var deepCss = { '.link': { '[target]': 42 }};
+   *     expect(deepCss).to.have.deep.property('\\.link.\\[target\\]', 42);
+   *
    * @name deep
    * @api public
    */
 
   Assertion.addProperty('deep', function () {
     flag(this, 'deep', true);
+  });
+
+  /**
+   * ### .any
+   *
+   * Sets the `any` flag, (opposite of the `all` flag)
+   * later used in the `keys` assertion.
+   *
+   *     expect(foo).to.have.any.keys('bar', 'baz');
+   *
+   * @name any
+   * @api public
+   */
+
+  Assertion.addProperty('any', function () {
+    flag(this, 'any', true);
+    flag(this, 'all', false)
+  });
+
+
+  /**
+   * ### .all
+   *
+   * Sets the `all` flag (opposite of the `any` flag)
+   * later used by the `keys` assertion.
+   *
+   *     expect(foo).to.have.all.keys('bar', 'baz');
+   *
+   * @name all
+   * @api public
+   */
+
+  Assertion.addProperty('all', function () {
+    flag(this, 'all', true);
+    flag(this, 'any', false);
   });
 
   /**
@@ -2223,7 +2272,7 @@ module.exports = function (chai, _) {
    * The `include` and `contain` assertions can be used as either property
    * based language chains or as methods to assert the inclusion of an object
    * in an array or a substring in a string. When used as language chains,
-   * they toggle the `contain` flag for the `keys` assertion.
+   * they toggle the `contains` flag for the `keys` assertion.
    *
    *     expect([1,2,3]).to.include(2);
    *     expect('foobar').to.contain('foo');
@@ -2231,6 +2280,8 @@ module.exports = function (chai, _) {
    *
    * @name include
    * @alias contain
+   * @alias includes
+   * @alias contains
    * @param {Object|String|Number} obj
    * @param {String} message _optional_
    * @api public
@@ -2256,11 +2307,11 @@ module.exports = function (chai, _) {
         for (var k in val) new Assertion(obj).property(k, val[k]);
         return;
       }
-      var subset = {}
-      for (var k in val) subset[k] = obj[k]
+      var subset = {};
+      for (var k in val) subset[k] = obj[k];
       expected = _.eql(subset, val);
     } else {
-      expected = obj && ~obj.indexOf(val)
+      expected = obj && ~obj.indexOf(val);
     }
     this.assert(
         expected
@@ -2270,6 +2321,8 @@ module.exports = function (chai, _) {
 
   Assertion.addChainableMethod('include', include, includeChainingBehavior);
   Assertion.addChainableMethod('contain', include, includeChainingBehavior);
+  Assertion.addChainableMethod('contains', include, includeChainingBehavior);
+  Assertion.addChainableMethod('includes', include, includeChainingBehavior);
 
   /**
    * ### .ok
@@ -2282,15 +2335,11 @@ module.exports = function (chai, _) {
    *     expect(undefined).to.not.be.ok;
    *     expect(null).to.not.be.ok;
    *
-   * Can also be used as a function, which prevents some linter errors.
-   *
-   *     expect('everthing').to.be.ok();
-   *     
    * @name ok
    * @api public
    */
 
-  Assertion.addChainableNoop('ok', function () {
+  Assertion.addProperty('ok', function () {
     this.assert(
         flag(this, 'object')
       , 'expected #{this} to be truthy'
@@ -2305,15 +2354,11 @@ module.exports = function (chai, _) {
    *     expect(true).to.be.true;
    *     expect(1).to.not.be.true;
    *
-   * Can also be used as a function, which prevents some linter errors.
-   *
-   *     expect(true).to.be.true();
-   *
    * @name true
    * @api public
    */
 
-  Assertion.addChainableNoop('true', function () {
+  Assertion.addProperty('true', function () {
     this.assert(
         true === flag(this, 'object')
       , 'expected #{this} to be true'
@@ -2330,15 +2375,11 @@ module.exports = function (chai, _) {
    *     expect(false).to.be.false;
    *     expect(0).to.not.be.false;
    *
-   * Can also be used as a function, which prevents some linter errors.
-   *
-   *     expect(false).to.be.false();
-   *
    * @name false
    * @api public
    */
 
-  Assertion.addChainableNoop('false', function () {
+  Assertion.addProperty('false', function () {
     this.assert(
         false === flag(this, 'object')
       , 'expected #{this} to be false'
@@ -2353,17 +2394,13 @@ module.exports = function (chai, _) {
    * Asserts that the target is `null`.
    *
    *     expect(null).to.be.null;
-   *     expect(undefined).not.to.be.null;
-   *
-   * Can also be used as a function, which prevents some linter errors.
-   *
-   *     expect(null).to.be.null();
+   *     expect(undefined).to.not.be.null;
    *
    * @name null
    * @api public
    */
 
-  Assertion.addChainableNoop('null', function () {
+  Assertion.addProperty('null', function () {
     this.assert(
         null === flag(this, 'object')
       , 'expected #{this} to be null'
@@ -2379,15 +2416,11 @@ module.exports = function (chai, _) {
    *     expect(undefined).to.be.undefined;
    *     expect(null).to.not.be.undefined;
    *
-   * Can also be used as a function, which prevents some linter errors.
-   *
-   *     expect(undefined).to.be.undefined();
-   *
    * @name undefined
    * @api public
    */
 
-  Assertion.addChainableNoop('undefined', function () {
+  Assertion.addProperty('undefined', function () {
     this.assert(
         undefined === flag(this, 'object')
       , 'expected #{this} to be undefined'
@@ -2408,15 +2441,11 @@ module.exports = function (chai, _) {
    *     expect(bar).to.not.exist;
    *     expect(baz).to.not.exist;
    *
-   * Can also be used as a function, which prevents some linter errors.
-   *
-   *     expect(foo).to.exist();
-   *
    * @name exist
    * @api public
    */
 
-  Assertion.addChainableNoop('exist', function () {
+  Assertion.addProperty('exist', function () {
     this.assert(
         null != flag(this, 'object')
       , 'expected #{this} to exist'
@@ -2428,7 +2457,7 @@ module.exports = function (chai, _) {
   /**
    * ### .empty
    *
-   * Asserts that the target's length is `0`. For arrays, it checks
+   * Asserts that the target's length is `0`. For arrays and strings, it checks
    * the `length` property. For objects, it gets the count of
    * enumerable keys.
    *
@@ -2436,15 +2465,11 @@ module.exports = function (chai, _) {
    *     expect('').to.be.empty;
    *     expect({}).to.be.empty;
    *
-   * Can also be used as a function, which prevents some linter errors.
-   *
-   *     expect([]).to.be.empty();
-   *
    * @name empty
    * @api public
    */
 
-  Assertion.addChainableNoop('empty', function () {
+  Assertion.addProperty('empty', function () {
     var obj = flag(this, 'object')
       , expected = obj;
 
@@ -2470,12 +2495,6 @@ module.exports = function (chai, _) {
    *       expect(arguments).to.be.arguments;
    *     }
    *
-   * Can also be used as a function, which prevents some linter errors.
-   *
-   *     function test () {
-   *       expect(arguments).to.be.arguments();
-   *     }
-   *
    * @name arguments
    * @alias Arguments
    * @api public
@@ -2491,8 +2510,8 @@ module.exports = function (chai, _) {
     );
   }
 
-  Assertion.addChainableNoop('arguments', checkArguments);
-  Assertion.addChainableNoop('Arguments', checkArguments);
+  Assertion.addProperty('arguments', checkArguments);
+  Assertion.addProperty('Arguments', checkArguments);
 
   /**
    * ### .equal(value)
@@ -2851,7 +2870,7 @@ module.exports = function (chai, _) {
    *         green: { tea: 'matcha' }
    *       , teas: [ 'chai', 'matcha', { tea: 'konacha' } ]
    *     };
-
+   *
    *     expect(deepObj).to.have.deep.property('green.tea', 'matcha');
    *     expect(deepObj).to.have.deep.property('teas[1]', 'matcha');
    *     expect(deepObj).to.have.deep.property('teas[2].tea', 'konacha');
@@ -2883,6 +2902,18 @@ module.exports = function (chai, _) {
    *       .with.deep.property('[2]')
    *         .that.deep.equals({ tea: 'konacha' });
    *
+   * Note that dots and bracket in `name` must be backslash-escaped when
+   * the `deep` flag is set, while they must NOT be escaped when the `deep`
+   * flag is not set.
+   *
+   *     // simple referencing
+   *     var css = { '.link[target]': 42 };
+   *     expect(css).to.have.property('.link[target]', 42);
+   *
+   *     // deep referencing
+   *     var deepCss = { '.link': { '[target]': 42 }};
+   *     expect(deepCss).to.have.deep.property('\\.link.\\[target\\]', 42);
+   *
    * @name property
    * @alias deep.property
    * @param {String} name
@@ -2895,11 +2926,16 @@ module.exports = function (chai, _) {
   Assertion.addMethod('property', function (name, val, msg) {
     if (msg) flag(this, 'message', msg);
 
-    var descriptor = flag(this, 'deep') ? 'deep property ' : 'property '
+    var isDeep = !!flag(this, 'deep')
+      , descriptor = isDeep ? 'deep property ' : 'property '
       , negate = flag(this, 'negate')
       , obj = flag(this, 'object')
-      , value = flag(this, 'deep')
-        ? _.getPathValue(name, obj)
+      , pathInfo = isDeep ? _.getPathInfo(name, obj) : null
+      , hasProperty = isDeep
+        ? pathInfo.exists
+        : _.hasProperty(name, obj)
+      , value = isDeep
+        ? pathInfo.value
         : obj[name];
 
     if (negate && undefined !== val) {
@@ -2909,7 +2945,7 @@ module.exports = function (chai, _) {
       }
     } else {
       this.assert(
-          undefined !== value
+          hasProperty
         , 'expected #{this} to have a ' + descriptor + _.inspect(name)
         , 'expected #{this} to not have ' + descriptor + _.inspect(name));
     }
@@ -2954,6 +2990,55 @@ module.exports = function (chai, _) {
 
   Assertion.addMethod('ownProperty', assertOwnProperty);
   Assertion.addMethod('haveOwnProperty', assertOwnProperty);
+
+  /**
+   * ### .ownPropertyDescriptor(name[, descriptor[, message]])
+   *
+   * Asserts that the target has an own property descriptor `name`, that optionally matches `descriptor`.
+   *
+   *     expect('test').to.have.ownPropertyDescriptor('length');
+   *     expect('test').to.have.ownPropertyDescriptor('length', { enumerable: false, configurable: false, writable: false, value: 4 });
+   *     expect('test').not.to.have.ownPropertyDescriptor('length', { enumerable: false, configurable: false, writable: false, value: 3 });
+   *     expect('test').ownPropertyDescriptor('length').to.have.property('enumerable', false);
+   *     expect('test').ownPropertyDescriptor('length').to.have.keys('value');
+   *
+   * @name ownPropertyDescriptor
+   * @alias haveOwnPropertyDescriptor
+   * @param {String} name
+   * @param {Object} descriptor _optional_
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  function assertOwnPropertyDescriptor (name, descriptor, msg) {
+    if (typeof descriptor === 'string') {
+      msg = descriptor;
+      descriptor = null;
+    }
+    if (msg) flag(this, 'message', msg);
+    var obj = flag(this, 'object');
+    var actualDescriptor = Object.getOwnPropertyDescriptor(Object(obj), name);
+    if (actualDescriptor && descriptor) {
+      this.assert(
+          _.eql(descriptor, actualDescriptor)
+        , 'expected the own property descriptor for ' + _.inspect(name) + ' on #{this} to match ' + _.inspect(descriptor) + ', got ' + _.inspect(actualDescriptor)
+        , 'expected the own property descriptor for ' + _.inspect(name) + ' on #{this} to not match ' + _.inspect(descriptor)
+        , descriptor
+        , actualDescriptor
+        , true
+      );
+    } else {
+      this.assert(
+          actualDescriptor
+        , 'expected #{this} to have an own property descriptor for ' + _.inspect(name)
+        , 'expected #{this} to not have an own property descriptor for ' + _.inspect(name)
+      );
+    }
+    flag(this, 'object', actualDescriptor);
+  }
+
+  Assertion.addMethod('ownPropertyDescriptor', assertOwnPropertyDescriptor);
+  Assertion.addMethod('haveOwnPropertyDescriptor', assertOwnPropertyDescriptor);
 
   /**
    * ### .length(value)
@@ -3055,42 +3140,87 @@ module.exports = function (chai, _) {
   /**
    * ### .keys(key1, [key2], [...])
    *
-   * Asserts that the target has exactly the given keys, or
-   * asserts the inclusion of some keys when using the
-   * `include` or `contain` modifiers.
+   * Asserts that the target contains any or all of the passed-in keys.
+   * Use in combination with `any`, `all`, `contains`, or `have` will affect
+   * what will pass.
    *
-   *     expect({ foo: 1, bar: 2 }).to.have.keys(['foo', 'bar']);
-   *     expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys('foo', 'bar');
+   * When used in conjunction with `any`, at least one key that is passed
+   * in must exist in the target object. This is regardless whether or not
+   * the `have` or `contain` qualifiers are used. Note, either `any` or `all`
+   * should be used in the assertion. If neither are used, the assertion is
+   * defaulted to `all`.
+   *
+   * When both `all` and `contain` are used, the target object must have at
+   * least all of the passed-in keys but may have more keys not listed.
+   *
+   * When both `all` and `have` are used, the target object must both contain
+   * all of the passed-in keys AND the number of keys in the target object must
+   * match the number of keys passed in (in other words, a target object must
+   * have all and only all of the passed-in keys).
+   *
+   *     expect({ foo: 1, bar: 2 }).to.have.any.keys('foo', 'baz');
+   *     expect({ foo: 1, bar: 2 }).to.have.any.keys('foo');
+   *     expect({ foo: 1, bar: 2 }).to.contain.any.keys('bar', 'baz');
+   *     expect({ foo: 1, bar: 2 }).to.contain.any.keys(['foo']);
+   *     expect({ foo: 1, bar: 2 }).to.contain.any.keys({'foo': 6});
+   *     expect({ foo: 1, bar: 2 }).to.have.all.keys(['bar', 'foo']);
+   *     expect({ foo: 1, bar: 2 }).to.have.all.keys({'bar': 6, 'foo': 7});
+   *     expect({ foo: 1, bar: 2, baz: 3 }).to.contain.all.keys(['bar', 'foo']);
+   *     expect({ foo: 1, bar: 2, baz: 3 }).to.contain.all.keys([{'bar': 6}}]);
+   *
    *
    * @name keys
    * @alias key
-   * @param {String...|Array} keys
+   * @param {String...|Array|Object} keys
    * @api public
    */
 
   function assertKeys (keys) {
     var obj = flag(this, 'object')
       , str
-      , ok = true;
+      , ok = true
+      , mixedArgsMsg = 'keys must be given single argument of Array|Object|String, or multiple String arguments';
 
-    keys = keys instanceof Array
-      ? keys
-      : Array.prototype.slice.call(arguments);
+    switch (_.type(keys)) {
+      case "array":
+        if (arguments.length > 1) throw (new Error(mixedArgsMsg));
+        break;
+      case "object":
+        if (arguments.length > 1) throw (new Error(mixedArgsMsg));
+        keys = Object.keys(keys);
+        break;
+      default:
+        keys = Array.prototype.slice.call(arguments);
+    }
 
     if (!keys.length) throw new Error('keys required');
 
     var actual = Object.keys(obj)
       , expected = keys
-      , len = keys.length;
+      , len = keys.length
+      , any = flag(this, 'any')
+      , all = flag(this, 'all');
 
-    // Inclusion
-    ok = keys.every(function(key){
-      return ~actual.indexOf(key);
-    });
+    if (!any && !all) {
+      all = true;
+    }
 
-    // Strict
-    if (!flag(this, 'negate') && !flag(this, 'contains')) {
-      ok = ok && keys.length == actual.length;
+    // Has any
+    if (any) {
+      var intersection = expected.filter(function(key) {
+        return ~actual.indexOf(key);
+      });
+      ok = intersection.length > 0;
+    }
+
+    // Has all
+    if (all) {
+      ok = keys.every(function(key){
+        return ~actual.indexOf(key);
+      });
+      if (!flag(this, 'negate') && !flag(this, 'contains')) {
+        ok = ok && keys.length == actual.length;
+      }
     }
 
     // Key string
@@ -3099,7 +3229,12 @@ module.exports = function (chai, _) {
         return _.inspect(key);
       });
       var last = keys.pop();
-      str = keys.join(', ') + ', and ' + last;
+      if (all) {
+        str = keys.join(', ') + ', and ' + last;
+      }
+      if (any) {
+        str = keys.join(', ') + ', or ' + last;
+      }
     } else {
       str = _.inspect(keys[0]);
     }
@@ -3115,7 +3250,7 @@ module.exports = function (chai, _) {
         ok
       , 'expected #{this} to ' + str
       , 'expected #{this} to not ' + str
-      , expected.sort()
+      , expected.slice(0).sort()
       , actual.sort()
       , true
     );
@@ -3452,6 +3587,120 @@ module.exports = function (chai, _) {
         , subset
     );
   });
+
+  /**
+   * ### .change(function)
+   *
+   * Asserts that a function changes an object property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { obj.val += 3 };
+   *     var noChangeFn = function() { return 'foo' + 'bar'; }
+   *     expect(fn).to.change(obj, 'val');
+   *     expect(noChangFn).to.not.change(obj, 'val')
+   *
+   * @name change
+   * @alias changes
+   * @alias Change
+   * @param {String} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  function assertChanges (object, prop, msg) {
+    if (msg) flag(this, 'message', msg);
+    var fn = flag(this, 'object');
+    new Assertion(object, msg).to.have.property(prop);
+    new Assertion(fn).is.a('function');
+
+    var initial = object[prop];
+    fn();
+
+    this.assert(
+      initial !== object[prop]
+      , 'expected .' + prop + ' to change'
+      , 'expected .' + prop + ' to not change'
+    );
+  }
+
+  Assertion.addChainableMethod('change', assertChanges);
+  Assertion.addChainableMethod('changes', assertChanges);
+
+  /**
+   * ### .increase(function)
+   *
+   * Asserts that a function increases an object property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { obj.val = 15 };
+   *     expect(fn).to.increase(obj, 'val');
+   *
+   * @name increase
+   * @alias increases
+   * @alias Increase
+   * @param {String} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  function assertIncreases (object, prop, msg) {
+    if (msg) flag(this, 'message', msg);
+    var fn = flag(this, 'object');
+    new Assertion(object, msg).to.have.property(prop);
+    new Assertion(fn).is.a('function');
+
+    var initial = object[prop];
+    fn();
+
+    this.assert(
+      object[prop] - initial > 0
+      , 'expected .' + prop + ' to increase'
+      , 'expected .' + prop + ' to not increase'
+    );
+  }
+
+  Assertion.addChainableMethod('increase', assertIncreases);
+  Assertion.addChainableMethod('increases', assertIncreases);
+
+  /**
+   * ### .decrease(function)
+   *
+   * Asserts that a function decreases an object property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { obj.val = 5 };
+   *     expect(fn).to.decrease(obj, 'val');
+   *
+   * @name decrease
+   * @alias decreases
+   * @alias Decrease
+   * @param {String} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  function assertDecreases (object, prop, msg) {
+    if (msg) flag(this, 'message', msg);
+    var fn = flag(this, 'object');
+    new Assertion(object, msg).to.have.property(prop);
+    new Assertion(fn).is.a('function');
+
+    var initial = object[prop];
+    fn();
+
+    this.assert(
+      object[prop] - initial < 0
+      , 'expected .' + prop + ' to decrease'
+      , 'expected .' + prop + ' to not decrease'
+    );
+  }
+
+  Assertion.addChainableMethod('decrease', assertDecreases);
+  Assertion.addChainableMethod('decreases', assertDecreases);
+
 };
 
 });
@@ -3692,6 +3941,42 @@ module.exports = function (chai, util) {
    *
    * @name isTrue
    * @param {Mixed} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isAbove = function (val, abv, msg) {
+    new Assertion(val, msg).to.be.above(abv);
+  };
+
+   /**
+   * ### .isAbove(valueToCheck, valueToBeAbove, [message])
+   *
+   * Asserts `valueToCheck` is strictly greater than (>) `valueToBeAbove`
+   *
+   *     assert.isAbove(5, 2, '5 is strictly greater than 2');
+   *
+   * @name isAbove
+   * @param {Mixed} valueToCheck
+   * @param {Mixed} valueToBeAbove
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isBelow = function (val, blw, msg) {
+    new Assertion(val, msg).to.be.below(blw);
+  };
+
+   /**
+   * ### .isBelow(valueToCheck, valueToBeBelow, [message])
+   *
+   * Asserts `valueToCheck` is strictly less than (<) `valueToBeBelow`
+   *
+   *     assert.isBelow(3, 6, '3 is strictly less than 6');
+   *
+   * @name isBelow
+   * @param {Mixed} valueToCheck
+   * @param {Mixed} valueToBeBelow
    * @param {String} message
    * @api public
    */
@@ -4427,10 +4712,36 @@ module.exports = function (chai, util) {
    */
 
   assert.operator = function (val, operator, val2, msg) {
-    if (!~['==', '===', '>', '>=', '<', '<=', '!=', '!=='].indexOf(operator)) {
-      throw new Error('Invalid operator "' + operator + '"');
+    var ok;
+    switch(operator) {
+      case '==':
+        ok = val == val2;
+        break;
+      case '===':
+        ok = val === val2;
+        break;
+      case '>':
+        ok = val > val2;
+        break;
+      case '>=':
+        ok = val >= val2;
+        break;
+      case '<':
+        ok = val < val2;
+        break;
+      case '<=':
+        ok = val <= val2;
+        break;
+      case '!=':
+        ok = val != val2;
+        break;
+      case '!==':
+        ok = val !== val2;
+        break;
+      default:
+        throw new Error('Invalid operator "' + operator + '"');
     }
-    var test = new Assertion(eval(val + operator + val2), msg);
+    var test = new Assertion(ok, msg);
     test.assert(
         true === flag(test, 'object')
       , 'expected ' + util.inspect(val) + ' to be ' + operator + ' ' + util.inspect(val2)
@@ -4476,6 +4787,25 @@ module.exports = function (chai, util) {
   }
 
   /**
+   * ### .sameDeepMembers(set1, set2, [message])
+   *
+   * Asserts that `set1` and `set2` have the same members - using a deep equality checking.
+   * Order is not taken into account.
+   *
+   *     assert.sameDeepMembers([ {b: 3}, {a: 2}, {c: 5} ], [ {c: 5}, {b: 3}, {a: 2} ], 'same deep members');
+   *
+   * @name sameDeepMembers
+   * @param {Array} set1
+   * @param {Array} set2
+   * @param {String} message
+   * @api public
+   */
+
+  assert.sameDeepMembers = function (set1, set2, msg) {
+    new Assertion(set1, msg).to.have.same.deep.members(set2);
+  }
+
+  /**
    * ### .includeMembers(superset, subset, [message])
    *
    * Asserts that `subset` is included in `superset`.
@@ -4492,6 +4822,132 @@ module.exports = function (chai, util) {
 
   assert.includeMembers = function (superset, subset, msg) {
     new Assertion(superset, msg).to.include.members(subset);
+  }
+
+   /**
+   * ### .changes(function, object, property)
+   *
+   * Asserts that a function changes the value of a property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { obj.val = 22 };
+   *     assert.changes(fn, obj, 'val');
+   *
+   * @name changes
+   * @param {Function} modifier function
+   * @param {Object} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  assert.changes = function (fn, obj, prop) {
+    new Assertion(fn).to.change(obj, prop);
+  }
+
+   /**
+   * ### .doesNotChange(function, object, property)
+   *
+   * Asserts that a function does not changes the value of a property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { console.log('foo'); };
+   *     assert.doesNotChange(fn, obj, 'val');
+   *
+   * @name doesNotChange
+   * @param {Function} modifier function
+   * @param {Object} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  assert.doesNotChange = function (fn, obj, prop) {
+    new Assertion(fn).to.not.change(obj, prop);
+  }
+
+   /**
+   * ### .increases(function, object, property)
+   *
+   * Asserts that a function increases an object property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { obj.val = 13 };
+   *     assert.increases(fn, obj, 'val');
+   *
+   * @name increases
+   * @param {Function} modifier function
+   * @param {Object} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  assert.increases = function (fn, obj, prop) {
+    new Assertion(fn).to.increase(obj, prop);
+  }
+
+   /**
+   * ### .doesNotIncrease(function, object, property)
+   *
+   * Asserts that a function does not increase object property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { obj.val = 8 };
+   *     assert.doesNotIncrease(fn, obj, 'val');
+   *
+   * @name doesNotIncrease
+   * @param {Function} modifier function
+   * @param {Object} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  assert.doesNotIncrease = function (fn, obj, prop) {
+    new Assertion(fn).to.not.increase(obj, prop);
+  }
+
+   /**
+   * ### .decreases(function, object, property)
+   *
+   * Asserts that a function decreases an object property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { obj.val = 5 };
+   *     assert.decreases(fn, obj, 'val');
+   *
+   * @name decreases
+   * @param {Function} modifier function
+   * @param {Object} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  assert.decreases = function (fn, obj, prop) {
+    new Assertion(fn).to.decrease(obj, prop);
+  }
+
+   /**
+   * ### .doesNotDecrease(function, object, property)
+   *
+   * Asserts that a function does not decreases an object property
+   *
+   *     var obj = { val: 10 };
+   *     var fn = function() { obj.val = 15 };
+   *     assert.doesNotDecrease(fn, obj, 'val');
+   *
+   * @name doesNotDecrease
+   * @param {Function} modifier function
+   * @param {Object} object
+   * @param {String} property name
+   * @param {String} message _optional_
+   * @api public
+   */
+
+  assert.doesNotDecrease = function (fn, obj, prop) {
+    new Assertion(fn).to.not.decrease(obj, prop);
   }
 
   /*!
@@ -4527,8 +4983,29 @@ module.exports = function (chai, util) {
   chai.expect = function (val, message) {
     return new chai.Assertion(val, message);
   };
-};
 
+  /**
+   * ### .fail(actual, expected, [message], [operator])
+   *
+   * Throw a failure.
+   *
+   * @name fail
+   * @param {Mixed} actual
+   * @param {Mixed} expected
+   * @param {String} message
+   * @param {String} operator
+   * @api public
+   */
+
+  chai.expect.fail = function (actual, expected, message, operator) {
+    message = message || 'expect.fail()';
+    throw new chai.AssertionError(message, {
+        actual: actual
+      , expected: expected
+      , operator: operator
+    }, chai.expect.fail);
+  };
+};
 
 });
 
@@ -4545,10 +5022,8 @@ module.exports = function (chai, util) {
   function loadShould () {
     // explicitly define this method as function as to have it's name to include as `ssfi`
     function shouldGetter() {
-      if (this instanceof String || this instanceof Number) {
-        return new Assertion(this.constructor(this), null, shouldGetter);
-      } else if (this instanceof Boolean) {
-        return new Assertion(this == true, null, shouldGetter);
+      if (this instanceof String || this instanceof Number || this instanceof Boolean ) {
+        return new Assertion(this.valueOf(), null, shouldGetter);
       }
       return new Assertion(this, null, shouldGetter);
     }
@@ -4574,6 +5049,28 @@ module.exports = function (chai, util) {
     });
 
     var should = {};
+
+    /**
+     * ### .fail(actual, expected, [message], [operator])
+     *
+     * Throw a failure.
+     *
+     * @name fail
+     * @param {Mixed} actual
+     * @param {Mixed} expected
+     * @param {String} message
+     * @param {String} operator
+     * @api public
+     */
+
+    should.fail = function (actual, expected, message, operator) {
+      message = message || 'should.fail()';
+      throw new chai.AssertionError(message, {
+          actual: actual
+        , expected: expected
+        , operator: operator
+      }, should.fail);
+    };
 
     should.equal = function (val1, val2, msg) {
       new Assertion(val1, msg).to.equal(val2);
@@ -4828,7 +5325,7 @@ require.register("chai/lib/chai/utils/flag.js", function (exports, module) {
  */
 
 /**
- * ### flag(object ,key, [value])
+ * ### flag(object, key, [value])
  *
  * Get or set a flag value on an object. If a
  * value is provided it will be set, else it will
@@ -4838,7 +5335,7 @@ require.register("chai/lib/chai/utils/flag.js", function (exports, module) {
  *     utils.flag(this, 'foo', 'bar'); // setter
  *     utils.flag(this, 'foo'); // getter, returns `bar`
  *
- * @param {Object} object (constructed Assertion
+ * @param {Object} object constructed Assertion
  * @param {String} key
  * @param {Mixed} value (optional)
  * @name flag
@@ -4993,6 +5490,8 @@ require.register("chai/lib/chai/utils/getPathValue.js", function (exports, modul
  * MIT Licensed
  */
 
+var getPathInfo = require('chai/lib/chai/utils/getPathInfo.js');
+
 /**
  * ### .getPathValue(path, object)
  *
@@ -5022,11 +5521,57 @@ require.register("chai/lib/chai/utils/getPathValue.js", function (exports, modul
  * @name getPathValue
  * @api public
  */
+module.exports = function(path, obj) {
+  var info = getPathInfo(path, obj);
+  return info.value;
+}; 
 
-var getPathValue = module.exports = function (path, obj) {
-  var parsed = parsePath(path);
-  return _getPathValue(parsed, obj);
+});
+
+require.register("chai/lib/chai/utils/getPathInfo.js", function (exports, module) {
+/*!
+ * Chai - getPathInfo utility
+ * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+var hasProperty = require('chai/lib/chai/utils/hasProperty.js');
+
+/**
+ * ### .getPathInfo(path, object)
+ *
+ * This allows the retrieval of property info in an
+ * object given a string path.
+ *
+ * The path info consists of an object with the
+ * following properties:
+ *
+ * * parent - The parent object of the property referenced by `path`
+ * * name - The name of the final property, a number if it was an array indexer
+ * * value - The value of the property, if it exists, otherwise `undefined`
+ * * exists - Whether the property exists or not
+ *
+ * @param {String} path
+ * @param {Object} object
+ * @returns {Object} info
+ * @name getPathInfo
+ * @api public
+ */
+
+module.exports = function getPathInfo(path, obj) {
+  var parsed = parsePath(path),
+      last = parsed[parsed.length - 1];
+
+  var info = {
+    parent: parsed.length > 1 ? _getPathValue(parsed, obj, parsed.length - 1) : obj,
+    name: last.p || last.i,
+    value: _getPathValue(parsed, obj),
+  };
+  info.exists = hasProperty(info.name, info.parent);
+
+  return info;
 };
+
 
 /*!
  * ## parsePath(path)
@@ -5040,6 +5585,7 @@ var getPathValue = module.exports = function (path, obj) {
  *
  * * Can be as near infinitely deep and nested
  * * Arrays are also valid using the formal `myobject.document[3].property`.
+ * * Literal dots and brackets (not delimiter) must be backslash-escaped.
  *
  * @param {String} path
  * @returns {Object} parsed
@@ -5047,15 +5593,16 @@ var getPathValue = module.exports = function (path, obj) {
  */
 
 function parsePath (path) {
-  var str = path.replace(/\[/g, '.[')
+  var str = path.replace(/([^\\])\[/g, '$1.[')
     , parts = str.match(/(\\\.|[^.]+?)+/g);
   return parts.map(function (value) {
-    var re = /\[(\d+)\]$/
-      , mArr = re.exec(value)
+    var re = /^\[(\d+)\]$/
+      , mArr = re.exec(value);
     if (mArr) return { i: parseFloat(mArr[1]) };
-    else return { p: value };
+    else return { p: value.replace(/\\([.\[\]])/g, '$1') };
   });
-};
+}
+
 
 /*!
  * ## _getPathValue(parsed, obj)
@@ -5067,14 +5614,18 @@ function parsePath (path) {
  *
  * @param {Object} parsed definition from `parsePath`.
  * @param {Object} object to search against
+ * @param {Number} object to search against
  * @returns {Object|Undefined} value
  * @api private
  */
 
-function _getPathValue (parsed, obj) {
+function _getPathValue (parsed, obj, index) {
   var tmp = obj
     , res;
-  for (var i = 0, l = parsed.length; i < l; i++) {
+
+  index = (index === undefined ? parsed.length : index);
+
+  for (var i = 0, l = index; i < l; i++) {
     var part = parsed[i];
     if (tmp) {
       if ('undefined' !== typeof part.p)
@@ -5087,6 +5638,73 @@ function _getPathValue (parsed, obj) {
     }
   }
   return res;
+}
+
+});
+
+require.register("chai/lib/chai/utils/hasProperty.js", function (exports, module) {
+/*!
+ * Chai - hasProperty utility
+ * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+var type = require('chai/lib/chai/utils/type.js');
+
+/**
+ * ### .hasProperty(object, name)
+ *
+ * This allows checking whether an object has
+ * named property or numeric array index.
+ *
+ * Basically does the same thing as the `in`
+ * operator but works properly with natives
+ * and null/undefined values.
+ *
+ *     var obj = {
+ *         arr: ['a', 'b', 'c']
+ *       , str: 'Hello'
+ *     }
+ *
+ * The following would be the results.
+ *
+ *     hasProperty('str', obj);  // true
+ *     hasProperty('constructor', obj);  // true
+ *     hasProperty('bar', obj);  // false
+ *     
+ *     hasProperty('length', obj.str); // true
+ *     hasProperty(1, obj.str);  // true
+ *     hasProperty(5, obj.str);  // false
+ *
+ *     hasProperty('length', obj.arr);  // true
+ *     hasProperty(2, obj.arr);  // true
+ *     hasProperty(3, obj.arr);  // false
+ *
+ * @param {Objuect} object
+ * @param {String|Number} name
+ * @returns {Boolean} whether it exists
+ * @name getPathInfo
+ * @api public
+ */
+
+var literals = {
+    'number': Number
+  , 'string': String
+};
+
+module.exports = function hasProperty(name, obj) {
+  var ot = type(obj);
+
+  // Bad Object, obviously no props at all
+  if(ot === 'null' || ot === 'undefined')
+    return false;
+
+  // The `in` operator does not work with certain literals
+  // box these before the check
+  if(literals[ot] && typeof obj !== 'object')
+    obj = new literals[ot](obj);
+
+  return name in obj;
 };
 
 });
@@ -5202,6 +5820,18 @@ exports.eql = require('chaijs~deep-eql@0.1.3');
  */
 
 exports.getPathValue = require('chai/lib/chai/utils/getPathValue.js');
+
+/*!
+ * Deep path info
+ */
+
+exports.getPathInfo = require('chai/lib/chai/utils/getPathInfo.js');
+
+/*!
+ * Check if a property exists
+ */
+
+exports.hasProperty = require('chai/lib/chai/utils/hasProperty.js');
 
 /*!
  * Function name
@@ -5759,7 +6389,7 @@ require.register("chai/lib/chai/utils/overwriteChainableMethod.js", function (ex
  */
 
 /**
- * ### overwriteChainableMethod (ctx, name, fn)
+ * ### overwriteChainableMethod (ctx, name, method, chainingBehavior)
  *
  * Overwites an already existing chainable method
  * and provides access to the previous function or
@@ -5861,9 +6491,9 @@ require.register("chai/lib/chai/utils/transferFlags.js", function (exports, modu
  *     utils.transferFlags(assertion, anotherAssertion, false);
  *
  * @param {Assertion} assertion the assertion to transfer the flags from
- * @param {Object} object the object to transfer the flags too; usually a new assertion
+ * @param {Object} object the object to transfer the flags to; usually a new assertion
  * @param {Boolean} includeAll
- * @name getAllFlags
+ * @name transferFlags
  * @api private
  */
 
