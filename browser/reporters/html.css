@@ -7,23 +7,25 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 html, body {
+  position: relative;
   height: 100%;
   width:  100%;
+  min-width: 900px;
 }
 
 #mocha, #subsuites {
   height: 100%;
   position: absolute;
   top: 0;
-  width: 50%;
 }
 
 #mocha {
   box-sizing: border-box;
   margin: 0 !important;
   overflow-y: auto;
-  padding: 60px 50px;
+  padding: 60px 20px;
   right: 0;
+  left: 500px;
 }
 
 #subsuites {
@@ -34,6 +36,7 @@ html, body {
   display: flex;
   flex-direction: column;
   left: 0;
+  width: 500px;
 }
 
 #subsuites .subsuite {
