@@ -26,6 +26,9 @@ WCT.waitForFrameworks = true;
 /** How many `.html` suites that can be concurrently loaded & run. */
 WCT.numConcurrentSuites = 1;
 
+/** Whether `console.error` should be treated as a test failure. */
+WCT.trackConsoleError = true;
+
 // Helpers
 
 // Evaluated in mocha/run.js.

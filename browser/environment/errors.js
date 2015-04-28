@@ -17,4 +17,14 @@ window.addEventListener('error', function(event) {
   WCT.globalErrors.push(event.error);
 });
 
+// Also, we treat `console.error` as a test failure. Unless you prefer not.
+var origConsole = console;
+var origError   = console.error;
+console.error = function wctShimmedError() {
+  origError.apply(origConsole, arguments);
+  if (WCT.trackConsoleError) {
+    throw 'console.error: ' + Array.prototype.join.call(arguments, ' ');
+  }
+};
+
 })();

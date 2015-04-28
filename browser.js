@@ -6801,6 +6801,9 @@ WCT.waitForFrameworks = true;
 /** How many `.html` suites that can be concurrently loaded & run. */
 WCT.numConcurrentSuites = 1;
 
+/** Whether `console.error` should be treated as a test failure. */
+WCT.trackConsoleError = true;
+
 // Helpers
 
 // Evaluated in mocha/run.js.
@@ -7436,6 +7439,16 @@ WCT.globalErrors = [];
 window.addEventListener('error', function(event) {
   WCT.globalErrors.push(event.error);
 });
+
+// Also, we treat `console.error` as a test failure. Unless you prefer not.
+var origConsole = console;
+var origError   = console.error;
+console.error = function wctShimmedError() {
+  origError.apply(origConsole, arguments);
+  if (WCT.trackConsoleError) {
+    throw 'console.error: ' + Array.prototype.join.call(arguments, ' ');
+  }
+};
 
 })();
 
