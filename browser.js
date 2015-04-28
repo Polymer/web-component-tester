@@ -7429,6 +7429,27 @@ window.addEventListener('unload', function(event) {
  */
 (function() {
 
+// We may encounter errors during initialization (for example, syntax errors in
+// a test file). Hang onto those until we are ready to report them.
+WCT.globalErrors = [];
+
+window.addEventListener('error', function(event) {
+  WCT.globalErrors.push(event.error);
+});
+
+})();
+
+/**
+ * @license
+ * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+(function() {
+
 // Make sure that we use native timers, in case they're being stubbed out.
 var setInterval           = window.setInterval;
 var setTimeout            = window.setTimeout;
@@ -7911,6 +7932,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (current) current.ready(error);
       if (error) throw error;
 
+      // Emit any errors we've encountered up til now
+      WCT.globalErrors.forEach(function onError(error) {
+        reporter.emitOutOfBandTest('Test Suite Initialization', error);
+      });
+
       runTests(reporter, childSuites, function(error) {
         // Make sure to let our parent know that we're done.
         if (current) current.done();
@@ -7958,20 +7984,12 @@ function loadEnvironmentSync() {
 function loadDependencies(reporter, done) {
   WCT.util.debug('loadDependencies', WCT._dependencies);
 
-  function onError(event) {
-    reporter.emitOutOfBandTest('Test Suite Initialization', event.error);
-  }
-  window.addEventListener('error', onError);
-
   var loaders = WCT._dependencies.map(function(file) {
     // We only support `.js` dependencies for now.
     return WCT.util.loadScript.bind(WCT.util, file);
   });
 
-  WCT.util.parallel(loaders, function(error) {
-    window.removeEventListener('error', onError);
-    done(error);
-  });
+  WCT.util.parallel(loaders, done);
 }
 
 /**

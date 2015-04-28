@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (current) current.ready(error);
       if (error) throw error;
 
+      // Emit any errors we've encountered up til now
+      WCT.globalErrors.forEach(function onError(error) {
+        reporter.emitOutOfBandTest('Test Suite Initialization', error);
+      });
+
       runTests(reporter, childSuites, function(error) {
         // Make sure to let our parent know that we're done.
         if (current) current.done();
@@ -96,20 +101,12 @@ function loadEnvironmentSync() {
 function loadDependencies(reporter, done) {
   WCT.util.debug('loadDependencies', WCT._dependencies);
 
-  function onError(event) {
-    reporter.emitOutOfBandTest('Test Suite Initialization', event.error);
-  }
-  window.addEventListener('error', onError);
-
   var loaders = WCT._dependencies.map(function(file) {
     // We only support `.js` dependencies for now.
     return WCT.util.loadScript.bind(WCT.util, file);
   });
 
-  WCT.util.parallel(loaders, function(error) {
-    window.removeEventListener('error', onError);
-    done(error);
-  });
+  WCT.util.parallel(loaders, done);
 }
 
 /**
