@@ -48,7 +48,7 @@ function defaults() {
     // Configuration options passed to the browser client.
     clientOptions: {
       // Also see `webserver.pathMappings` below.
-      root: '/test-components/',
+      root: '/components/',
     },
     // Webdriver capabilities objects for each browser that should be run.
     //
@@ -103,8 +103,9 @@ function defaults() {
       // mappings of URL prefix to on disk paths that the web server should
       // serve via https://github.com/PolymerLabs/serve-waterfall
       pathMappings: serveWaterfall.mappings.WEB_COMPONENT.concat([
-        // WCT loads its client dependencies via a separate components root.
-        {'/test-components/': path.join(WCT_ROOT, 'bower_components')},
+        // We also expose built in WCT dependencies, but with lower priority
+        // than the project's components.
+        {'/components/': path.join(WCT_ROOT, 'bower_components')},
       ]),
       // The URL prefix that serves contents from the project root.
       urlPrefix: '/components/<basename>',
