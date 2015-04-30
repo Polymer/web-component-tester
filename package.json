@@ -35,7 +35,6 @@
   "dependencies": {
     "async": "^0.9.0",
     "bower": "^1.4.1",
-    "bower-logger": "^0.2.2",
     "chalk": "^0.5.1",
     "cleankill": "^1.0.0",
     "express": "^4.8.5",

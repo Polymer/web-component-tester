@@ -11,13 +11,13 @@ var bower  = require('bower');
 var path   = require('path');
 
 process.chdir(path.dirname(__dirname));
-console.log('Installing bower dependencies for the WCT client...');
+console.log('Fetching bower dependencies for the WCT client to', path.join(process.cwd(), 'bower_components'));
 bower.commands.install(null, [], {}, {})
     .on('end', function(installed) {
-      console.log('Installed bower packages:', Object.keys(installed).join(', '));
+      console.log('Fetched bower packages:', Object.keys(installed).join(', '));
     })
     .on('error', function(error) {
-      console.log('Failed to install bower dependencies:', error.stack);
+      console.log('Failed to fetch bower dependencies:', error.stack);
       console.log('');
       console.log('WCT install will continue, but you may need to manually provide browser dependencies (mocha, chai, etc)');
     });
