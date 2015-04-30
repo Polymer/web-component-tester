@@ -69,8 +69,8 @@ function _setupMocha(ui, key, alternate) {
   var mochaOptions = config.get('mochaOptions');
   if (mochaOptions.ui && mochaOptions.ui === ui) return;
   if (mochaOptions.ui && mochaOptions.ui !== ui) {
-    var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. '
-                + 'You called "' + key + '". Did you mean ' + alternate + '?';
+    var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. ' +
+                  'You called "' + key + '". Did you mean ' + alternate + '?';
     throw new Error(message);
   }
   mochaOptions.ui = ui;
