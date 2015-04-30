@@ -1411,28 +1411,29 @@
    */
   var MOCHA_EXPORTS = {
     // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
-    tdd: [
-      'setup',
-      'teardown',
-      'suiteSetup',
-      'suiteTeardown',
-      'suite',
-      'test',
-    ],
-    // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
-    bdd: [
-      'before',
-      'after',
-      'beforeEach',
-      'afterEach',
-      'describe',
-      'xdescribe',
-      'xcontext',
-      'it',
-      'xit',
-      'specify',
-      'xspecify',
-    ],
+    tdd: {
+      'setup':         '"before"',
+      'teardown':      '"after"',
+      'suiteSetup':    '"beforeEach"',
+      'suiteTeardown': '"afterEach"',
+      'suite':         '"describe" or "context"',
+      'test':          '"it" or "specify"',
+    },
+    // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/bdd.js
+    bdd: {
+      'before':     '"setup"',
+      'after':      '"teardown"',
+      'beforeEach': '"suiteSetup"',
+      'afterEach':  '"suiteTeardown"',
+      'describe':   '"suite"',
+      'context':    '"suite"',
+      'xdescribe':  '"suite.skip"',
+      'xcontext':   '"suite.skip"',
+      'it':         '"test"',
+      'xit':        '"test.skip"',
+      'specify':    '"test"',
+      'xspecify':   '"test.skip"',
+    },
   };
 
   /**
@@ -1443,9 +1444,9 @@
    */
   function stubInterfaces() {
     Object.keys(MOCHA_EXPORTS).forEach(function(ui) {
-      MOCHA_EXPORTS[ui].forEach(function(key) {
+      Object.keys(MOCHA_EXPORTS[ui]).forEach(function(key) {
         window[key] = function wrappedMochaFunction() {
-          _setupMocha(ui);
+          _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
           if (!window[key] || window[key] === wrappedMochaFunction) {
             throw new Error('Expected mocha.setup to define ' + key);
           }
@@ -1457,12 +1458,16 @@
 
   /**
    * @param {string} ui Sets up mocha to run `ui`-style tests.
+   * @param {string} key The method called that triggered this.
+   * @param {string} alternate The matching method in the opposite interface.
    */
-  function _setupMocha(ui) {
+  function _setupMocha(ui, key, alternate) {
     var mochaOptions = config.get('mochaOptions');
     if (mochaOptions.ui && mochaOptions.ui === ui) return;
     if (mochaOptions.ui && mochaOptions.ui !== ui) {
-      throw new Error('Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported.');
+      var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. '
+                  + 'You called "' + key + '". Did you mean ' + alternate + '?';
+      throw new Error(message);
     }
     mochaOptions.ui = ui;
     mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
