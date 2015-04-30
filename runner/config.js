@@ -17,6 +17,7 @@ var serveWaterfall = require('serve-waterfall');
 var paths = require('./paths');
 
 var HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
+var JSON_MATCHER   = 'wct.conf.json';
 var CONFIG_MATCHER = 'wct.conf.{json,js}';
 var WCT_ROOT       = path.resolve(__dirname, '..');
 
@@ -90,6 +91,10 @@ function defaults() {
     //     }
     //
     registerHooks: function(wct) {},
+    // Whether `wct.conf.*` is allowed, or only `wct.conf.json`.
+    //
+    // Handy for CI suites that want to be locked down.
+    enforceJsonConf: false,
     // Configuration options for the webserver that serves up your test files
     // and dependencies.
     //
@@ -190,11 +195,14 @@ var PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'
  * Discovers appropriate config files (global, and for the project), merging
  * them, and returning them.
  *
+ * @param {boolean} jsonOnly
  * @return {!Object} The merged configuration.
  */
-function fromDisk() {
-  var globalFile  = path.join(HOME_DIR, CONFIG_MATCHER);
-  var projectFile = findup(CONFIG_MATCHER, {nocase: true});
+function fromDisk(jsonOnly) {
+  var matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
+
+  var globalFile  = path.join(HOME_DIR, matcher);
+  var projectFile = findup(matcher, {nocase: true});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
   var paths   = _.unique([globalFile, projectFile]);

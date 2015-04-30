@@ -22,13 +22,18 @@ var Plugin = require('./plugin');
  * @param {Object} options Any initially specified options.
  */
 function Context(options) {
+  options = options || {};
   /**
    * The configuration for the current WCT run.
    *
    * We guarantee that this object is never replaced (e.g. you are free to hold
    * a reference to it, and make changes to it).
    */
-  this.options = config.merge(config.defaults(), config.fromDisk(), options || {});
+  this.options = config.merge(
+    config.defaults(),
+    config.fromDisk(options.enforceJsonConf),
+    options
+  );
 
   /** @type {!Object<string, !Array<function>>} */
   this._hookHandlers = {};
