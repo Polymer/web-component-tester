@@ -36,6 +36,8 @@ function defaults() {
     expanded:    false,
     // The on-disk path where tests & static files should be served from. Paths
     // (such as `suites`) are evaluated relative to this.
+    //
+    // Defaults to the project directory.
     root:        undefined,
     // Idle timeout for tests.
     testTimeout: 90 * 1000,
@@ -338,7 +340,8 @@ function normalize(config) {
  */
 function expand(context, done) {
   var options = context.options;
-  var root    = context.options.root = context.options.root || process.cwd();
+  var root    = context.options.root || process.cwd();
+  context.options.root = root = path.resolve(root);
 
   options.origSuites = _.clone(options.suites);
 
