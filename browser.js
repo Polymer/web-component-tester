@@ -1466,7 +1466,7 @@
     }
     mochaOptions.ui = ui;
     mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
-  };
+  }
 
   /**
    * @license
@@ -1614,9 +1614,9 @@
    */
 
   // Make sure that we use native timers, in case they're being stubbed out.
-  var setInterval           = window.setInterval;
-  var helpers__setTimeout            = window.setTimeout;
-  var requestAnimationFrame = window.requestAnimationFrame;
+  var setInterval           = window.setInterval;           // jshint ignore:line
+  var helpers__setTimeout            = window.setTimeout;            // jshint ignore:line
+  var requestAnimationFrame = window.requestAnimationFrame; // jshint ignore:line
 
   /**
    * Runs `stepFn`, catching any error and passing it to `callback` (Node-style).

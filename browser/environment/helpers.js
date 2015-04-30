@@ -9,9 +9,9 @@
  */
 
 // Make sure that we use native timers, in case they're being stubbed out.
-var setInterval           = window.setInterval;
-var setTimeout            = window.setTimeout;
-var requestAnimationFrame = window.requestAnimationFrame;
+var setInterval           = window.setInterval;           // jshint ignore:line
+var setTimeout            = window.setTimeout;            // jshint ignore:line
+var requestAnimationFrame = window.requestAnimationFrame; // jshint ignore:line
 
 /**
  * Runs `stepFn`, catching any error and passing it to `callback` (Node-style).
