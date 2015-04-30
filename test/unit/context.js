@@ -63,14 +63,13 @@ describe('Context', function() {
     it('passes additional arguments through', function(done) {
       var context = new Context();
       context.hook('foo', function(arg1, arg2, hookDone) {
-        console.log(arguments)
         expect(arg1).to.eq('one');
         expect(arg2).to.eq(2);
         hookDone();
       });
 
       context.emitHook('foo', 'one', 2, function(error) {
-        expect(error).to.not.be.ok();
+        expect(error).to.not.be.ok;
         done();
       });
     });
