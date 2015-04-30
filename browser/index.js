@@ -30,6 +30,9 @@ config.setup(window.WCT);
 // Maybe some day we'll expose WCT as a module to whatever module registry you
 // are using (aka the UMD approach), or as an es6 module.
 var WCT = window.WCT = {};
+// A generic place to hang data about the current suite. This object is reported
+// back via the `sub-suite-start` and `sub-suite-end` events.
+WCT.share = {};
 // Until then, we get to rely on it to expose parent runners to their children.
 WCT._ChildRunner = ChildRunner;
 WCT._config      = config._config;
