@@ -59,6 +59,15 @@ describe('gulp', function() {
     });
   });
 
+  it('prefers wcf.conf.json', function(done) {
+    process.chdir(path.join(FIXTURES, 'conf', 'json'));
+    orch.start('wct:sauce', function(error) {
+      expect(error).to.not.be.ok;
+      expect(options.plugins.sauce.username).to.eq('jsonconf');
+      done();
+    });
+  });
+
   describe('wct:local', function() {
 
     it('kicks off local tests', function(done) {

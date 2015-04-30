@@ -16,9 +16,9 @@ var serveWaterfall = require('serve-waterfall');
 
 var paths = require('./paths');
 
-var HOME_DIR    = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
-var CONFIG_NAME = 'wct.conf.js';
-var WCT_ROOT    = path.resolve(__dirname, '..');
+var HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
+var CONFIG_MATCHER = 'wct.conf.{json,js}';
+var WCT_ROOT       = path.resolve(__dirname, '..');
 
 // The full set of options, as a reference.
 function defaults() {
@@ -193,12 +193,12 @@ var PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'
  * @return {!Object} The merged configuration.
  */
 function fromDisk() {
-  var globalFile  = path.join(HOME_DIR, CONFIG_NAME);
-  var projectFile = findup(CONFIG_NAME, {nocase: true});
+  var globalFile  = path.join(HOME_DIR, CONFIG_MATCHER);
+  var projectFile = findup(CONFIG_MATCHER, {nocase: true});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
   var paths   = _.unique([globalFile, projectFile]);
-  var configs = _.filter(paths, fs.existsSync).map(require);
+  var configs = _.filter(paths, fs.existsSync).map(loadProjectFile);
   var options = merge.apply(null, configs);
 
   if (!options.root && projectFile && projectFile !== globalFile) {
@@ -206,6 +206,27 @@ function fromDisk() {
   }
 
   return options;
+}
+
+/**
+ * @param {string} file
+ * @return {Object?}
+ */
+function loadProjectFile(file) {
+  // If there are _multiple_ configs at this path, prefer `json`
+  if (path.extname(file) === '.js' && fs.existsSync(file + 'on')) {
+    file = file + 'on';
+  }
+
+  try {
+    if (path.extname(file) === '.json') {
+      return JSON.parse(fs.readFileSync(file, 'utf-8'));
+    } else {
+      return require(file);
+    }
+  } catch (error) {
+    throw new Error('Failed to load WCT config "' + file + '": ' + error.message);
+  }
 }
 
 /**
