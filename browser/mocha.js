@@ -60,6 +60,9 @@ export function stubInterfaces() {
   });
 }
 
+// Whether we've called `mocha.setup`
+var _mochaIsSetup = false;
+
 /**
  * @param {string} ui Sets up mocha to run `ui`-style tests.
  * @param {string} key The method called that triggered this.
@@ -67,12 +70,12 @@ export function stubInterfaces() {
  */
 function _setupMocha(ui, key, alternate) {
   var mochaOptions = config.get('mochaOptions');
-  if (mochaOptions.ui && mochaOptions.ui === ui) return;
   if (mochaOptions.ui && mochaOptions.ui !== ui) {
     var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. ' +
                   'You called "' + key + '". Did you mean ' + alternate + '?';
     throw new Error(message);
   }
+  if (_mochaIsSetup) return;
   mochaOptions.ui = ui;
   mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
 }
