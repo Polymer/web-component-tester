@@ -7,7 +7,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
 
 // Make sure that we use native timers, in case they're being stubbed out.
 var setInterval           = window.setInterval;
@@ -175,5 +174,3 @@ window.waitFor = function waitFor(fn, next, intervalOrMutationEl, timeout, timeo
   }
   next();
 };
-
-})();

@@ -7,28 +7,27 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
 
-WCT.util = {};
+import * as config from './config';
 
 /**
  * @param {function()} callback A function to call when the active web component
  *     frameworks have loaded.
  */
-WCT.util.whenFrameworksReady = function(callback) {
-  WCT.util.debug('WCT.util.whenFrameworksReady');
+export function whenFrameworksReady(callback) {
+  debug('whenFrameworksReady');
   var done = function() {
-    WCT.util.debug('WCT.util.whenFrameworksReady done');
+    debug('whenFrameworksReady done');
     callback();
   };
 
   function importsReady() {
     window.removeEventListener('WebComponentsReady', importsReady);
-    WCT.util.debug('WebComponentsReady');
+    debug('WebComponentsReady');
 
     if (window.Polymer && Polymer.whenReady) {
       Polymer.whenReady(function() {
-        WCT.util.debug('polymer-ready');
+        debug('polymer-ready');
         done();
       });
     } else {
@@ -44,42 +43,60 @@ WCT.util.whenFrameworksReady = function(callback) {
   } else {
     window.addEventListener('WebComponentsReady', importsReady);
   }
-};
+}
 
 /**
  * @param {number} count
  * @param {string} kind
  * @return {string} '<count> <kind> tests' or '<count> <kind> test'.
  */
-WCT.util.pluralizedStat = function pluralizedStat(count, kind) {
+export function pluralizedStat(count, kind) {
   if (count === 1) {
     return count + ' ' + kind + ' test';
   } else {
     return count + ' ' + kind + ' tests';
   }
-};
+}
 
 /**
  * @param {string} path The URI of the script to load.
  * @param {function} done
  */
-WCT.util.loadScript = function loadScript(path, done) {
+export function loadScript(path, done) {
   var script = document.createElement('script');
   script.src = path;
-  script.onload = done.bind(null, null);
-  script.onerror = done.bind(null, 'Failed to load script ' + script.src);
+  if (done) {
+    script.onload = done.bind(null, null);
+    script.onerror = done.bind(null, 'Failed to load script ' + script.src);
+  }
   document.head.appendChild(script);
-};
+}
 
 /**
- * @param {...*} var_args Logs values to the console when `WCT.debug` is true.
+ * @param {string} path The URI of the stylesheet to load.
+ * @param {function} done
  */
-WCT.util.debug = function debug(var_args) {
-  if (!WCT.debug) return;
+export function loadStyle(path, done) {
+  var link = document.createElement('link');
+  link.rel  = 'stylesheet';
+  link.href = path;
+  if (done) {
+    link.onload = done.bind(null, null);
+    link.onerror = done.bind(null, 'Failed to load stylesheet ' + link.href);
+  }
+  document.head.appendChild(link);
+}
+
+/**
+ * @param {...*} var_args Logs values to the console when the `debug`
+ *     configuration option is true.
+ */
+export function debug(var_args) {
+  if (!config.get('verbose')) return;
   var args = [window.location.pathname];
   args.push.apply(args, arguments);
   console.debug.apply(console, args);
-};
+}
 
 // URL Processing
 
@@ -87,19 +104,35 @@ WCT.util.debug = function debug(var_args) {
  * @param {string} url
  * @return {{base: string, params: string}}
  */
-WCT.util.parseUrl = function(url) {
+export function parseUrl(url) {
   var parts = url.match(/^(.*?)(?:\?(.*))?$/);
   return {
     base:   parts[1],
     params: this.getParams(parts[2] || ''),
   };
-};
+}
+
+/**
+ * Expands a URL that may or may not be relative to `base`.
+ *
+ * @param {string} url
+ * @param {string} base
+ * @return {string}
+ */
+export function expandUrl(url, base) {
+  if (!base) return url;
+  if (url.match(/^(\/|https?:\/\/)/)) return url;
+  if (base.substr(base.length - 1) !== '/') {
+    base = base + '/';
+  }
+  return base + url;
+}
 
 /**
  * @param {string=} opt_query A query string to parse.
  * @return {!Object<string, !Array<string>>} All params on the URL's query.
  */
-WCT.util.getParams = function getParams(opt_query) {
+export function getParams(opt_query) {
   var query = typeof opt_query === 'string' ? opt_query : window.location.search;
   if (query.substring(0, 1) === '?') {
     query = query.substring(1);
@@ -127,7 +160,7 @@ WCT.util.getParams = function getParams(opt_query) {
   });
 
   return result;
-};
+}
 
 /**
  * Merges params from `source` into `target` (mutating `target`).
@@ -135,29 +168,29 @@ WCT.util.getParams = function getParams(opt_query) {
  * @param {!Object<string, !Array<string>>} target
  * @param {!Object<string, !Array<string>>} source
  */
-WCT.util.mergeParams = function mergeParams(target, source) {
+export function mergeParams(target, source) {
   Object.keys(source).forEach(function(key) {
     if (!(key in target)) {
       target[key] = [];
     }
     target[key] = target[key].concat(source[key]);
   });
-};
+}
 
 /**
  * @param {string} param The param to return a value for.
  * @return {?string} The first value for `param`, if found.
  */
-WCT.util.getParam = function getParam(param) {
-  var params = WCT.util.getParams();
+export function getParam(param) {
+  var params = getParams();
   return params[param] ? params[param][0] : null;
-};
+}
 
 /**
  * @param {!Object<string, !Array<string>>} params
  * @return {string} `params` encoded as a URI query.
  */
-WCT.util.paramsToQuery = function paramsToQuery(params) {
+export function paramsToQuery(params) {
   var pairs = [];
   Object.keys(params).forEach(function(key) {
     params[key].forEach(function(value) {
@@ -165,40 +198,40 @@ WCT.util.paramsToQuery = function paramsToQuery(params) {
     });
   });
   return '?' + pairs.join('&');
-};
+}
 
 /**
  * @param {!Location|string} location
  * @return {string}
  */
-WCT.util.basePath = function basePath(location) {
+export function basePath(location) {
   return (location.pathname || location).match(/^.*\//)[0];
-};
+}
 
 /**
  * @param {!Location|string} location
  * @param {string} basePath
  * @return {string}
  */
-WCT.util.relativeLocation = function relativeLocation(location, basePath) {
+export function relativeLocation(location, basePath) {
   var path = location.pathname || location;
   if (path.indexOf(basePath) === 0) {
     path = path.substring(basePath.length);
   }
   return path;
-};
+}
 
 /**
  * @param {!Location|string} location
  * @return {string}
  */
-WCT.util.cleanLocation = function cleanLocation(location) {
+export function cleanLocation(location) {
   var path = location.pathname || location;
   if (path.slice(-11) === '/index.html') {
     path = path.slice(0, path.length - 10);
   }
   return path;
-};
+}
 
 /**
  * Like `async.parallelLimit`, but our own so that we don't force a dependency
@@ -211,7 +244,7 @@ WCT.util.cleanLocation = function cleanLocation(location) {
  * @param {?function(*)} done Callback that should be triggered once all runners
  *     have completed, or encountered an error.
  */
-WCT.util.parallel = function parallel(runners, limit, done) {
+export function parallel(runners, limit, done) {
   if (typeof limit !== 'number') {
     done  = limit;
     limit = 0;
@@ -243,6 +276,17 @@ WCT.util.parallel = function parallel(runners, limit, done) {
     runners.shift()(runnerDone);
   }
   runners.forEach(runOne);
-};
+}
 
-})();
+/**
+ * Finds the directory that a loaded script is hosted on.
+ *
+ * @param {string} filename
+ * @return {string?}
+ */
+export function scriptPrefix(filename) {
+  var scripts = document.querySelectorAll('script[src*="' + filename + '"]');
+  if (scripts.length !== 1) return null;
+  var script = scripts[0].src;
+  return script.substring(0, script.indexOf(filename));
+}

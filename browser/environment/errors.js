@@ -7,24 +7,27 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
+import * as config from '../config.js';
 
 // We may encounter errors during initialization (for example, syntax errors in
-// a test file). Hang onto those until we are ready to report them.
-WCT.globalErrors = [];
+// a test file). Hang onto those (and more) until we are ready to report them.
+export var globalErrors = [];
 
-window.addEventListener('error', function(event) {
-  WCT.globalErrors.push(event.error);
-});
+/**
+ * Hook the environment to pick up on global errors.
+ */
+export function listenForErrors() {
+  window.addEventListener('error', function(event) {
+    globalErrors.push(event.error);
+  });
 
-// Also, we treat `console.error` as a test failure. Unless you prefer not.
-var origConsole = console;
-var origError   = console.error;
-console.error = function wctShimmedError() {
-  origError.apply(origConsole, arguments);
-  if (WCT.trackConsoleError) {
-    throw 'console.error: ' + Array.prototype.join.call(arguments, ' ');
-  }
-};
-
-})();
+  // Also, we treat `console.error` as a test failure. Unless you prefer not.
+  var origConsole = console;
+  var origError   = console.error;
+  console.error = function wctShimmedError() {
+    origError.apply(origConsole, arguments);
+    if (config.get('trackConsoleError')) {
+      throw 'console.error: ' + Array.prototype.join.call(arguments, ' ');
+    }
+  };
+}

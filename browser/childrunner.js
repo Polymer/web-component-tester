@@ -7,7 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
+import * as util from './util.js';
 
 // TODO(thedeeno): Consider renaming subsuite. IIRC, childRunner is entirely
 // distinct from mocha suite, which tripped me up badly when trying to add
@@ -19,18 +19,17 @@
  * A Mocha suite (or suites) run within a child iframe, but reported as if they
  * are part of the current context.
  */
-function ChildRunner(url, parentScope) {
-  var urlBits = WCT.util.parseUrl(url);
-  WCT.util.mergeParams(
-      urlBits.params, WCT.util.getParams(parentScope.location.search));
+export default function ChildRunner(url, parentScope) {
+  var urlBits = util.parseUrl(url);
+  util.mergeParams(
+      urlBits.params, util.getParams(parentScope.location.search));
   delete urlBits.params.cli_browser_id;
 
-  this.url         = urlBits.base + WCT.util.paramsToQuery(urlBits.params);
+  this.url         = urlBits.base + util.paramsToQuery(urlBits.params);
   this.parentScope = parentScope;
 
   this.state = 'initializing';
 }
-WCT.ChildRunner = ChildRunner;
 
 // ChildRunners get a pretty generous load timeout by default.
 ChildRunner.loadTimeout = 30000;
@@ -62,7 +61,7 @@ ChildRunner.get = function(target, traversal) {
     return null;
   }
   // Otherwise, traverse.
-  return window.parent.WCT.ChildRunner.get(target, true);
+  return window.parent.WCT._ChildRunner.get(target, true);
 };
 
 /**
@@ -71,7 +70,7 @@ ChildRunner.get = function(target, traversal) {
  * @param {function} done Node-style callback.
  */
 ChildRunner.prototype.run = function(done) {
-  WCT.util.debug('ChildRunner#run', this.url);
+  util.debug('ChildRunner#run', this.url);
   this.state = 'loading';
   this.onRunComplete = done;
 
@@ -106,7 +105,7 @@ ChildRunner.prototype.run = function(done) {
  * @param {*} error The error that occured, if any.
  */
 ChildRunner.prototype.loaded = function(error) {
-  WCT.util.debug('ChildRunner#loaded', this.url, error);
+  util.debug('ChildRunner#loaded', this.url, error);
 
   // Not all targets have WCT loaded (compatiblity mode)
   if (this.iframe.contentWindow.WCT) {
@@ -126,7 +125,7 @@ ChildRunner.prototype.loaded = function(error) {
  * @param {*} error The error that occured, if any.
  */
 ChildRunner.prototype.ready = function(error) {
-  WCT.util.debug('ChildRunner#ready', this.url, error);
+  util.debug('ChildRunner#ready', this.url, error);
   if (this.timeoutId) {
     clearTimeout(this.timeoutId);
   }
@@ -138,7 +137,7 @@ ChildRunner.prototype.ready = function(error) {
 
 /** Called when the sub suite's tests are complete, so that it can clean up. */
 ChildRunner.prototype.done = function done() {
-  WCT.util.debug('ChildRunner#done', this.url, arguments);
+  util.debug('ChildRunner#done', this.url, arguments);
 
   this.signalRunComplete();
 
@@ -157,5 +156,3 @@ ChildRunner.prototype.signalRunComplete = function signalRunComplete(error) {
   this.onRunComplete(error);
   this.onRunComplete = null;
 };
-
-})();

@@ -26,8 +26,8 @@ var INDEX_TEMPLATE = _.template(fs.readFileSync(
 // We prefer serving local assets over bower assets.
 var PACKAGE_ROOT = path.resolve(__dirname, '..');
 var SERVE_STATIC = {  // Keys are regexps.
-  '^(.*/web-component-tester|)/browser\\.js$':     path.join(PACKAGE_ROOT, 'browser.js'),
-  '^(.*/web-component-tester|)/environment\\.js$': path.join(PACKAGE_ROOT, 'environment.js'),
+  '^(.*/web-component-tester|)/browser\\.js$':       path.join(PACKAGE_ROOT, 'browser.js'),
+  '^(.*/web-component-tester|)/browser\\.js\\.map$': path.join(PACKAGE_ROOT, 'browser.js.map'),
 };
 
 var DEFAULT_HEADERS = {
@@ -59,6 +59,8 @@ module.exports = function(wct) {
       // should be served by the webserver.
       staticContent: SERVE_STATIC,
     });
+
+    if (options.verbose) options.clientOptions.verbose = true;
 
     // Prefix our web runner URL with the base path.
     var urlPrefix = options.webserver.urlPrefix;
@@ -115,10 +117,12 @@ module.exports = function(wct) {
           headers: DEFAULT_HEADERS,
         }));
 
+        app.get('/favicon.ico', function(request, response) {
+          response.end();
+        });
+
         app.use(function(request, response, next) {
-          if (request.url !== '/favicon.ico') {
-            wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
-          }
+          wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
           next();
         });
 

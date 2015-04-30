@@ -7,9 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
-
-WCT.reporters.Title = Title;
+import * as util from '../util.js';
 
 var ARC_OFFSET = 0; // start at the right.
 var ARC_WIDTH  = 6;
@@ -20,7 +18,7 @@ var ARC_WIDTH  = 6;
  *
  * @param {!Mocha.Runner} runner The runner that is being reported on.
  */
-function Title(runner) {
+export default function Title(runner) {
   Mocha.reporters.Base.call(this, runner);
 
   runner.on('test end', this.report.bind(this));
@@ -35,9 +33,9 @@ Title.prototype.report = function report() {
 /** Updates the document title with a summary of current stats. */
 Title.prototype.updateTitle = function updateTitle() {
   if (this.stats.failures > 0) {
-    document.title = WCT.util.pluralizedStat(this.stats.failures, 'failing');
+    document.title = util.pluralizedStat(this.stats.failures, 'failing');
   } else {
-    document.title = WCT.util.pluralizedStat(this.stats.passes, 'passing');
+    document.title = util.pluralizedStat(this.stats.passes, 'passing');
   }
 };
 
@@ -92,5 +90,3 @@ Title.prototype.setFavicon = function setFavicon(url) {
   link.setAttribute('sizes', '32x32');
   document.head.appendChild(link);
 };
-
-})();

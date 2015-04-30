@@ -7,13 +7,13 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
+import ChildRunner from '../childrunner.js';
 
 // polymer-test-tools (and Polymer/tools) support HTML tests where each file is
 // expected to call `done()`, which posts a message to the parent window.
 window.addEventListener('message', function(event) {
   if (!event.data || (event.data !== 'ok' && !event.data.error)) return;
-  var childRunner = WCT.ChildRunner.get(event.source);
+  var childRunner = ChildRunner.get(event.source);
   if (!childRunner) return;
 
   childRunner.ready();
@@ -32,5 +32,3 @@ window.addEventListener('unload', function(event) {
   // we've gotten to the point of unloading the document.
   Mocha.Runner.immediately = function(callback) { callback(); };
 });
-
-})();

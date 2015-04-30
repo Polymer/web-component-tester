@@ -7,10 +7,10 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var concat      = require('gulp-concat');
 var david       = require('gulp-david');
+var esperanto   = require('esperanto');
+var fs          = require('fs');
 var gulp        = require('gulp');
-var gulpIf      = require('gulp-if');
 var jshint      = require('gulp-jshint');
 var lazypipe    = require('lazypipe');
 var mocha       = require('gulp-mocha');
@@ -19,14 +19,6 @@ var plumber     = require('gulp-plumber');
 var runSequence = require('run-sequence');
 var runTask     = require('orchestrator/lib/runTask');
 var watch       = require('gulp-watch');
-var wrap        = require('gulp-wrap');
-
-var CSS_TO_JS =
-    '(function() {\n' +
-    'var style = document.createElement(\'style\');\n' +
-    'style.textContent = \'<%= String(contents).replace(/\\n/g, "\\\\n").replace(/\'/g, "\\\\\'") %>\';\n' +
-    'document.head.appendChild(style);\n' +
-    '})();';
 
 // Meta tasks
 
@@ -38,7 +30,7 @@ gulp.task('test', function(done) {
 gulp.task('test:all', function(done) {
   runSequence('test:style', 'test:dependencies', 'test:unit', 'test:integration', done);
 });
-gulp.task('build', ['build:browser', 'build:environment']);
+gulp.task('build', ['build:browser']);
 
 gulp.task('watch', function() {
   var config = {
@@ -63,36 +55,25 @@ gulp.task('watch', function() {
 
 // Specific tasks
 
-gulp.task('build:browser', function() {
-  return gulp.src([
-      'vendor/mocha/mocha.js',
-      'vendor/mocha/mocha.css',
-      'vendor/stacky/lib/parsing.js',
-      'vendor/stacky/lib/formatting.js',
-      'vendor/stacky/lib/normalization.js',
-      // Poor-man's dependency management, for now.
-      'browser/index.js',
-      'browser/util.js',
-      'browser/**/*.{js,css}',
-    ])
-    .pipe(gulpIf(/\.css$/, wrap(CSS_TO_JS)))
-    .pipe(concat('browser.js'))
-    .pipe(gulp.dest('.'));
-});
+gulp.task('build:browser', function(done) {
+  esperanto.bundle({
+    base:  'browser',
+    entry: 'index.js',
+  }).then(function(bundle) {
+    var result = bundle.concat({
+      strict:        true,
+      sourceMap:     true,
+      sourceMapFile: 'browser.js',
+    });
 
-gulp.task('build:environment', function() {
-  return gulp.src([
-      'environment/license.js',
-      'vendor/async/lib/async.js',
-      'vendor/chai/chai.js',
-      'vendor/lodash/lodash.js',
-      'vendor/sinon/sinon.js',
-      'vendor/sinon-chai/lib/sinon-chai.js',
-      'environment/**/*.{js,css}',
-    ])
-    .pipe(gulpIf(/\.css$/, wrap(CSS_TO_JS)))
-    .pipe(concat('environment.js'))
-    .pipe(gulp.dest('.'));
+    var sourceMap = result.map.toString()
+        // Just use relative paths.
+        .replace(new RegExp('../' + __dirname + '/', 'g'), '');
+
+    fs.writeFileSync('browser.js',     result.code);
+    fs.writeFileSync('browser.js.map', sourceMap);
+    done();
+  }).catch(done);
 });
 
 gulp.task('test:style', function() {

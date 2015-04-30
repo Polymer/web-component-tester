@@ -7,9 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
-
-WCT.MultiReporter = MultiReporter;
+import * as util from '../util.js';
 
 var STACKY_CONFIG = {
   indent: '  ',
@@ -47,15 +45,15 @@ var ESTIMATED_TESTS_PER_SUITE = 3;
  *     estimate the total number of tests that will be performed.
  * @param {!Array.<!Mocha.reporters.Base>} reporters The set of reporters that
  *     should receive the unified event stream.
- * @param {WCT.MultiReporter} parent The parent reporter, if present.
+ * @param {MultiReporter} parent The parent reporter, if present.
  */
-function MultiReporter(numSuites, reporters, parent) {
+export default function MultiReporter(numSuites, reporters, parent) {
   this.reporters = reporters.map(function(reporter) {
     return new reporter(this);
   }.bind(this));
 
   this.parent = parent;
-  this.basePath = parent && parent.basePath || WCT.util.basePath(window.location);
+  this.basePath = parent && parent.basePath || util.basePath(window.location);
 
   this.total = numSuites * ESTIMATED_TESTS_PER_SUITE;
   // Mocha reporters assume a stream of events, so we have to be careful to only
@@ -66,8 +64,6 @@ function MultiReporter(numSuites, reporters, parent) {
 
   this.emit('start');
 }
-// Mocha doesn't expose its `EventEmitter` shim directly, so:
-MultiReporter.prototype = Object.create(Object.getPrototypeOf(Mocha.Runner.prototype));
 
 /**
  * @param {!Location|string} location The location this reporter represents.
@@ -107,7 +103,7 @@ MultiReporter.prototype.done = function done() {
  *     estimate of `numSuites`.
  */
 MultiReporter.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, opt_error, opt_suiteTitle, opt_estimated) {
-  WCT.util.debug('MultiReporter#emitOutOfBandTest(', arguments, ')');
+  util.debug('MultiReporter#emitOutOfBandTest(', arguments, ')');
   var root = new Mocha.Suite();
   root.title = opt_suiteTitle || '';
   var test = new Mocha.Test(title, function() {
@@ -139,8 +135,8 @@ MultiReporter.prototype.emitOutOfBandTest = function emitOutOfBandTest(title, op
  * @return {string}
  */
 MultiReporter.prototype.suiteTitle = function suiteTitle(location) {
-  var path = WCT.util.relativeLocation(location, this.basePath);
-  path = WCT.util.cleanLocation(path);
+  var path = util.relativeLocation(location, this.basePath);
+  path = util.cleanLocation(path);
   return path;
 };
 
@@ -171,7 +167,7 @@ MultiReporter.prototype.proxyEvent = function proxyEvent(eventName, runner, var_
     this.pendingEvents.push(arguments);
     return;
   }
-  WCT.util.debug('MultiReporter#proxyEvent(', arguments, ')');
+  util.debug('MultiReporter#proxyEvent(', arguments, ')');
 
   // This appears to be a Mocha bug: Tests failed by passing an error to their
   // done function don't set `err` properly.
@@ -233,14 +229,14 @@ MultiReporter.prototype.showRootSuite = function showRootSuite(node) {
 
 /** @param {!Mocha.runners.Base} runner */
 MultiReporter.prototype.onRunnerStart = function onRunnerStart(runner) {
-  WCT.util.debug('MultiReporter#onRunnerStart:', runner.name);
+  util.debug('MultiReporter#onRunnerStart:', runner.name);
   this.total = this.total - ESTIMATED_TESTS_PER_SUITE + runner.total;
   this.currentRunner = runner;
 };
 
 /** @param {!Mocha.runners.Base} runner */
 MultiReporter.prototype.onRunnerEnd = function onRunnerEnd(runner) {
-  WCT.util.debug('MultiReporter#onRunnerEnd:', runner.name);
+  util.debug('MultiReporter#onRunnerEnd:', runner.name);
   this.currentRunner = null;
   this.flushPendingEvents();
 };
@@ -257,5 +253,3 @@ MultiReporter.prototype.flushPendingEvents = function flushPendingEvents() {
     this.proxyEvent.apply(this, eventArgs);
   }.bind(this));
 };
-
-})();

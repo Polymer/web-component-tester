@@ -7,16 +7,13 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
-
-WCT.reporters.HTML = HTML;
 
 /**
  * WCT-specific behavior on top of Mocha's default HTML reporter.
  *
  * @param {!Mocha.Runner} runner The runner that is being reported on.
  */
-function HTML(runner) {
+export default function HTML(runner) {
   var output = document.createElement('div');
   output.id = 'mocha';
   document.body.appendChild(output);
@@ -27,6 +24,45 @@ function HTML(runner) {
 
   Mocha.reporters.HTML.call(this, runner);
 }
-HTML.prototype = Object.create(Mocha.reporters.HTML.prototype);
 
-})();
+// Woo! What a hack. This just saves us from adding a bunch of complexity around
+// style loading.
+var style = document.createElement('style');
+style.textContent = 'html, body {' +
+                    '  position: relative;' +
+                    '  height: 100%;' +
+                    '  width:  100%;' +
+                    '  min-width: 900px;' +
+                    '}' +
+                    '#mocha, #subsuites {' +
+                    '  height: 100%;' +
+                    '  position: absolute;' +
+                    '  top: 0;' +
+                    '}' +
+                    '#mocha {' +
+                    '  box-sizing: border-box;' +
+                    '  margin: 0 !important;' +
+                    '  overflow-y: auto;' +
+                    '  padding: 60px 20px;' +
+                    '  right: 0;' +
+                    '  left: 500px;' +
+                    '}' +
+                    '#subsuites {' +
+                    '  -ms-flex-direction: column;' +
+                    '  -webkit-flex-direction: column;' +
+                    '  display: -ms-flexbox;' +
+                    '  display: -webkit-flex;' +
+                    '  display: flex;' +
+                    '  flex-direction: column;' +
+                    '  left: 0;' +
+                    '  width: 500px;' +
+                    '}' +
+                    '#subsuites .subsuite {' +
+                    '  border: 0;' +
+                    '  width: 100%;' +
+                    '  height: 100%;' +
+                    '}' +
+                    '#mocha .test.pass .duration {' +
+                    '  color: #555 !important;' +
+                    '}';
+document.head.appendChild(style);

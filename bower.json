@@ -9,7 +9,7 @@
   "ignore": [
     "*",
     "!/browser.js",
-    "!/environment.js"
+    "!/browser.js.map"
   ],
   "keywords": [
     "browser",
@@ -22,7 +22,13 @@
     "web component",
     "web"
   ],
-  "devDependencies": {
-    "webcomponentsjs": "Polymer/webcomponentsjs#^0.5.0"
+  "dependencies": {
+    "mocha": "^2.2.4",
+    "stacky": "PolymerLabs/stacky#^1.2.2",
+    "async": "^0.9.2",
+    "chai": "^2.3.0",
+    "lodash": "^3.7.0",
+    "sinon-chai": "^2.7.0",
+    "sinonjs": "^1.14.1"
   }
 }

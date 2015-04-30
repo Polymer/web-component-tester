@@ -18,6 +18,7 @@ var paths = require('./paths');
 
 var HOME_DIR    = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
 var CONFIG_NAME = 'wct.conf.js';
+var WCT_ROOT    = path.resolve(__dirname, '..');
 
 // The full set of options, as a reference.
 function defaults() {
@@ -42,6 +43,11 @@ function defaults() {
     persistent:  false,
     // Additional .js files to include in *generated* test indexes.
     extraScripts: [],
+    // Configuration options passed to the browser client.
+    clientOptions: {
+      // Also see `webserver.pathMappings` below.
+      root: '/test-components/',
+    },
     // Webdriver capabilities objects for each browser that should be run.
     //
     // Capabilities can also contain a `url` value which is either a string URL
@@ -94,7 +100,10 @@ function defaults() {
       hostname: 'localhost',
       // mappings of URL prefix to on disk paths that the web server should
       // serve via https://github.com/PolymerLabs/serve-waterfall
-      pathMappings: serveWaterfall.mappings.WEB_COMPONENT,
+      pathMappings: serveWaterfall.mappings.WEB_COMPONENT.concat([
+        // WCT loads its client dependencies via a separate components root.
+        {'/test-components/': path.join(WCT_ROOT, 'bower_components')},
+      ]),
       // The URL prefix that serves contents from the project root.
       urlPrefix: '/components/<basename>',
     },

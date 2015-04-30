@@ -7,9 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function() {
-
-WCT.reporters.Console = Console;
+import * as util from '../util.js';
 
 // We capture console events when running tests; so make sure we have a
 // reference to the original one.
@@ -71,7 +69,7 @@ function logException(error) {
  *
  * @param {!Mocha.Runner} runner The runner that is being reported on.
  */
-function Console(runner) {
+export default function Console(runner) {
   Mocha.reporters.Base.call(this, runner);
 
   runner.on('suite', function(suite) {
@@ -102,19 +100,18 @@ function Console(runner) {
 
   runner.on('end', this.logSummary.bind(this));
 }
-Console.prototype = Object.create(Mocha.reporters.Base.prototype);
 
 /** Prints out a final summary of test results. */
 Console.prototype.logSummary = function logSummary() {
   logGroup('Test Results', 'results');
 
   if (this.stats.failures > 0) {
-    log(WCT.util.pluralizedStat(this.stats.failures, 'failing'), 'failing');
+    log(util.pluralizedStat(this.stats.failures, 'failing'), 'failing');
   }
   if (this.stats.pending > 0) {
-    log(WCT.util.pluralizedStat(this.stats.pending, 'pending'), 'pending');
+    log(util.pluralizedStat(this.stats.pending, 'pending'), 'pending');
   }
-  log(WCT.util.pluralizedStat(this.stats.passes, 'passing'));
+  log(util.pluralizedStat(this.stats.passes, 'passing'));
 
   if (!this.stats.failures) {
     log('test suite passed', 'passing');
@@ -122,5 +119,3 @@ Console.prototype.logSummary = function logSummary() {
   log('Evaluated ' + this.stats.tests + ' tests in ' + this.stats.duration + 'ms.');
   logGroupEnd();
 };
-
-})();
