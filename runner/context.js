@@ -23,6 +23,7 @@ var Plugin = require('./plugin');
  */
 function Context(options) {
   options = options || {};
+
   /**
    * The configuration for the current WCT run.
    *
@@ -31,7 +32,7 @@ function Context(options) {
    */
   this.options = config.merge(
     config.defaults(),
-    config.fromDisk(options.enforceJsonConf),
+    config.fromDisk(options.enforceJsonConf, options.root),
     options
   );
 

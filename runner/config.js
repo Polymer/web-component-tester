@@ -196,13 +196,14 @@ var PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'
  * them, and returning them.
  *
  * @param {boolean} jsonOnly
+ * @param {string} root
  * @return {!Object} The merged configuration.
  */
-function fromDisk(jsonOnly) {
+function fromDisk(jsonOnly, root) {
   var matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
 
   var globalFile  = path.join(HOME_DIR, matcher);
-  var projectFile = findup(matcher, {nocase: true});
+  var projectFile = findup(matcher, {nocase: true, cwd: root});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
   var paths   = _.unique([globalFile, projectFile]);
