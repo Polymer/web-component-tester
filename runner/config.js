@@ -18,7 +18,7 @@ var paths = require('./paths');
 
 var HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
 var JSON_MATCHER   = 'wct.conf.json';
-var CONFIG_MATCHER = 'wct.conf.{json,js}';
+var CONFIG_MATCHER = 'wct.conf.*';
 var WCT_ROOT       = path.resolve(__dirname, '..');
 
 // The full set of options, as a reference.
