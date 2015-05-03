@@ -35,6 +35,7 @@
     "browser.js",
     "browser.js.map",
     "package.json",
+    "LICENSE",
     "README.md",
     "runner.js"
   ],
