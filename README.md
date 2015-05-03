@@ -97,12 +97,13 @@ specifying particular files (or globs of files) via `wct path/to/files`.
 If you prefer not to use WCT's command line tool, you can also run WCT tests
 directly in a browser via a web server of your choosing.
 
-Make sure that WCT's `browser.js` and `environment.js` are accessible by your
-web server, and have your tests load `browser.js`.
+Make sure that WCT's `browser.js` is accessible by your web server, and have
+your tests load `browser.js`.
 
 The recommended way to fetch these is via Bower:
 
     bower install Polymer/web-component-tester --save
+
 
 #### Nested Suites
 
@@ -202,12 +203,30 @@ exposed for your convenience.
 
 ## Custom Environments
 
-If you would rather not load WCT's shared environment (everything but Mocha is
-optional), you've got a couple options: Set the `WCTSkipEnvironment = true` before loading `browser.js`. Or...
+If you would rather not load WCT's shared environment, or want to have WCT
+load additional libraries, you can override the list of scripts loaded. There
+are two ways of doing this:
 
+Inside your test code (before `browser.js` is loaded):
 ```html
-<script src="../../web-component-tester/browser.js?skipEnv"></script>
+<script>
+  WCT = {
+    environmentScripts: [
+      // Mocha and Stacky are required dependencies
+      'stacky/lib/parsing.js',
+      'stacky/lib/formatting.js',
+      'stacky/lib/normalization.js',
+      'mocha/mocha.js',
+      // Include anything else that you like!
+    ],
+  };
 ```
+
+Alternatively, you can specify these options via the `clientOptions`
+key in `wct.conf.js`.
+
+A reference of the default configuration can be found at
+[browser/config.js](browser/config.js).
 
 
 ## Gulp
