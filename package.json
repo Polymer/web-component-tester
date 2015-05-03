@@ -28,6 +28,16 @@
     "wct": "./bin/wct",
     "wct-st": "./bin/wct-st"
   },
+  "files": [
+    "bin/",
+    "data/",
+    "runner/",
+    "browser.js",
+    "browser.js.map",
+    "package.json",
+    "README.md",
+    "runner.js"
+  ],
   "scripts": {
     "test": "gulp test",
     "postinstall": "node scripts/postinstall.js"
