@@ -32,6 +32,7 @@
     "bin/",
     "data/",
     "runner/",
+    "scripts/",
     "browser.js",
     "browser.js.map",
     "package.json",
