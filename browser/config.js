@@ -25,6 +25,7 @@ export var _config = {
     'stacky/lib/formatting.js',
     'stacky/lib/normalization.js',
     'async/lib/async.js',
+    'lodash/lodash.js',
     'mocha/mocha.js',
     'chai/chai.js',
     'sinonjs/sinon.js',
