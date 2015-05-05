@@ -63,6 +63,8 @@ export function setup(options) {
   var childRunner = ChildRunner.current();
   if (childRunner) {
     _deepMerge(_config, childRunner.parentScope.WCT._config);
+    // But do not force the mocha UI
+    delete _config.mochaOptions.ui;
   }
 
   if (options && typeof options === 'object') {

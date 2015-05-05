@@ -480,6 +480,7 @@
       'stacky/lib/formatting.js',
       'stacky/lib/normalization.js',
       'async/lib/async.js',
+      'lodash/lodash.js',
       'mocha/mocha.js',
       'chai/chai.js',
       'sinonjs/sinon.js',
@@ -517,6 +518,8 @@
     var childRunner = ChildRunner.current();
     if (childRunner) {
       _deepMerge(_config, childRunner.parentScope.WCT._config);
+      // But do not force the mocha UI
+      delete _config.mochaOptions.ui;
     }
 
     if (options && typeof options === 'object') {
