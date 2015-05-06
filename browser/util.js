@@ -95,7 +95,7 @@ export function debug(var_args) {
   if (!config.get('verbose')) return;
   var args = [window.location.pathname];
   args.push.apply(args, arguments);
-  console.debug.apply(console, args);
+  (console.debug || console.log).apply(console, args);
 }
 
 // URL Processing
