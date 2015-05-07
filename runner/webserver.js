@@ -115,6 +115,7 @@ module.exports = function(wct) {
         app.use(serveWaterfall(wsOptions.pathMappings, {
           root:    options.root,
           headers: DEFAULT_HEADERS,
+          log:     wct.emit.bind(wct, 'log:debug'),
         }));
 
         app.get('/favicon.ico', function(request, response) {
