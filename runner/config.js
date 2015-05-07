@@ -110,7 +110,7 @@ function defaults() {
       pathMappings: serveWaterfall.mappings.WEB_COMPONENT.concat([
         // We also expose built in WCT dependencies, but with lower priority
         // than the project's components.
-        {'/components/': path.join(WCT_ROOT, 'bower_components')},
+        {'/components': path.join(WCT_ROOT, 'bower_components')},
       ]),
       // The URL prefix that serves contents from the project root.
       urlPrefix: '/components/<basename>',
