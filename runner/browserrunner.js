@@ -123,16 +123,12 @@ BrowserRunner.prototype.onEvent = function onEvent(event, data) {
     };
   } else if (event === 'test-end') {
     this.stats[data.state] = this.stats[data.state] + 1;
-    // Bump the connection to advance any remote timeouts.
-    if (this.browser) {
-      this.browser.title(function() {});
-    }
   }
 
   if (event === 'browser-end') {
     this.done(data);
   } else {
-    this.emitter.emit(event, this.def, data, this.stats);
+    this.emitter.emit(event, this.def, data, this.stats, this.browser);
   }
 };
 
@@ -151,7 +147,7 @@ BrowserRunner.prototype.done = function done(error) {
     error = this.stats.failing + ' failed tests';
   }
 
-  this.emitter.emit('browser-end', this.def, error, this.stats, this.sessionId);
+  this.emitter.emit('browser-end', this.def, error, this.stats, this.sessionId, this.browser);
 
   // Nothing to quit.
   if (!this.sessionId) {
