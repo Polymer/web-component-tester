@@ -33,6 +33,7 @@
     "data/",
     "runner/",
     "scripts/",
+    ".bowerrc",
     "bower.json",
     "browser.js",
     "browser.js.map",
