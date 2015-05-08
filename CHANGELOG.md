@@ -1,5 +1,13 @@
 # 3.x
 
+## 3.1.3
+
+* `.bowerrc` included in the package to ensure that packages don't get placed in
+  unexpected locations.
+
+## 3.1.2
+
+* `--verbose` now includes logging from [`serve-waterfall`](https://github.com/PolymerLabs/serve-waterfall).
 
 ## 3.1.1
 
