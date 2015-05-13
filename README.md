@@ -48,7 +48,7 @@ Note that it is _critical_ that you include `web-component-tester/browser.js` in
 your test suites. `browser.js` contains all of WCT's client logic (and loads
 bundled libraries like mocha and chai).
 
-If you are using [WCT via the command line][#wct], it will automatically serve
+If you are using [WCT via the command line](#wct), it will automatically serve
 its local copy of `browser.js` on any URL that ends with
 `/web-component-tester/browser.js`.
 
