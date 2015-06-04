@@ -14,23 +14,27 @@ var net = require('net');
 var async = require('async');
 
 function checkPort(port, callback) {
-  var server = net.createServer().listen(port);
+  var server = net.createServer();
+  var hasPort = false;
 
   // if server is listening, we have the port!
-  server.on('listening', function() {
-    // callback on server close to free up the port before report it can be used
-    server.close(function() {
-      callback(true);
-    });
+  server.on('listening', function(err) {
+    hasPort = true;
+    server.close();
+  });
+
+  // callback on server close to free up the port before report it can be used
+  server.on('close', function(err) {
+    callback(hasPort);
   });
 
   // our port is busy, ignore it
   server.on('error', function(err) {
-    callback(false);
+    // docs say the server should close, this doesn't seem to be the case :(
+    server.close();
   });
 
-  // don't hang node exit on this server
-  server.unref();
+  server.listen(port);
 }
 
 module.exports = function findPort(ports, callback) {
