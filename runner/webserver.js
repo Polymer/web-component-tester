@@ -11,10 +11,10 @@ var _              = require('lodash');
 var chalk          = require('chalk');
 var cleankill      = require('cleankill');
 var express        = require('express');
-var openport       = require('openport');
 var fs             = require('fs');
 var http           = require('http');
 var path           = require('path');
+var portscanner    = require('./port-scanner');
 var send           = require('send');
 var serveWaterfall = require('serve-waterfall');
 
@@ -158,7 +158,7 @@ module.exports = function(wct) {
     if (options.webserver.port) {
       done(null, options.webserver.port);
     } else {
-      openport.find({ports: SAUCE_PORTS, count: 1}, done);
+      portscanner(SAUCE_PORTS, done);
     }
   }
 
