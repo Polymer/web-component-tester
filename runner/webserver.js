@@ -141,8 +141,7 @@ module.exports = function(wct) {
         server.listen(port);
         server.port = port;
         cleankill.onInterrupt(function(done) {
-          server.close();
-          done();
+          server.close(done);
         });
 
         wct.emit('log:info',
