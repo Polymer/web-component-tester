@@ -174,3 +174,56 @@ window.waitFor = function waitFor(fn, next, intervalOrMutationEl, timeout, timeo
   }
   next();
 };
+
+/**
+ * Runs the Chrome Accessibility Developer Tools Audit against a test-fixture
+ *
+ * @param {String} fixtureId ID of the fixture element in the document to use
+ */
+window.a11ySuite = function a11ySuite(fixtureId) {
+
+  // capture a reference to the fixture element early
+  var fixtureElement = document.getElementById(fixtureId);
+
+  // build a mocha suite
+  suite('A11y Audit', function() {
+
+    // keep an easy reference to the a11y audit results
+    var auditResults;
+    function getResult(index) {
+      return auditResults[index];
+    }
+
+    // build an audit config to disable certain ignorable tests
+    var axsConfig = new axs.AuditConfiguration();
+    axsConfig.scope = document.body;
+    axsConfig.showUnsupportedRulesWarning = false;
+
+    // filter out rules that only run in the extension
+    var rules = axs.AuditRules.getRules().filter(function(rule) {
+      return !rule.requiresConsoleAPI;
+    });
+
+    rules.forEach(function(rule, index) {
+      test(rule.heading, function() {
+        var result = getResult(index);
+        if (result.result === 'FAIL') {
+          var message = axs.Audit.accessibilityErrorMessage(result);
+          assert.fail(null, null, message);
+        }
+      });
+    });
+
+    // setup fixture and run audit
+    suiteSetup(function() {
+      assert.ok(fixtureElement, 'fixtureElement should be defined');
+      fixtureElement.create();
+      auditResults = axs.Audit.run(axsConfig);
+    });
+
+    // teardown fixture
+    suiteTeardown(function() {
+      fixtureElement.restore();
+    });
+  });
+};
