@@ -88,6 +88,17 @@ function runTests(context, done) {
       runners[data.browserId].onEvent(data.event, data.data);
     });
   });
+
+  context._testRunners = runners;
+}
+
+function cancelTests(context) {
+  if (!context._testRunners) {
+    return;
+  }
+  context._testRunners.forEach(function(tr) {
+    tr.quit();
+  });
 }
 
 // Helpers
@@ -135,5 +146,6 @@ module.exports = {
   loadPlugins:    loadPlugins,
   prepare:        prepare,
   runTests:       runTests,
+  cancelTests:    cancelTests,
   setupOverrides: setupOverrides,
 };

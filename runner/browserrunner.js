@@ -170,4 +170,8 @@ BrowserRunner.prototype.extendTimeout = function extendTimeout() {
   }.bind(this), this.timeout);
 };
 
+BrowserRunner.prototype.quit = function quit() {
+  this.done('quit was called');
+};
+
 module.exports = BrowserRunner;
