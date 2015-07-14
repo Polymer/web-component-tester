@@ -77,6 +77,14 @@ module.exports = function(wct) {
     var urlPrefix = options.webserver.urlPrefix;
     urlPrefix = urlPrefix.replace('<basename>', path.basename(options.root));
     options.webserver.webRunnerPath    = urlPrefix + '/generated-index.html';
+
+    // Hacky workaround for Firefox + Windows issue where FF screws up pathing.
+    // Bug: https://github.com/Polymer/web-component-tester/issues/194
+
+    options.suites = options.suites.map(function (cv) {
+      return cv.replace(/\\/g,'/');
+    });
+
     options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
 
     done();
