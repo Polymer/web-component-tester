@@ -152,7 +152,7 @@ BrowserRunner.prototype.done = function done(error) {
     error = this.stats.failing + ' failed tests';
   }
 
-  this.emitter.emit('browser-end', this.def, error, this.stats, this.sessionId, this.browser);
+  this.emitter.emit('browser-end', this.def, error, this.stats, this.sessionId, browser);
 
   // Nothing to quit.
   if (!this.sessionId) {
