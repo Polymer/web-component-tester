@@ -24,6 +24,11 @@ function BrowserRunner(emitter, capabilities, options, doneCallback) {
   this.stats   = {status: 'initializing'};
   this.browser = wd.remote(this.def.url);
 
+  // never retry selenium commands
+  this.browser.configureHttp({
+    retries: -1
+  });
+
   cleankill.onInterrupt(function(done) {
     if (!this.browser) return done();
 
