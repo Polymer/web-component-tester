@@ -328,7 +328,7 @@
   }
 
   // ChildRunners get a pretty generous load timeout by default.
-  ChildRunner.loadTimeout = 30000;
+  ChildRunner.loadTimeout = 60000;
 
   // We can't maintain properties on iframe elements in Firefox/Safari/???, so we
   // track childRunners by URL.
