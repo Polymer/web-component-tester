@@ -28,14 +28,15 @@ export function loadSync() {
 /**
  * We have some hard dependencies on things that should be loaded via
  * `environmentScripts`, so we assert that they're present here; and do any
- * post-facto setup.
+ * post-facto setup. This setup may be asynchronous and a `callback` can be
+ * supplied to be informed when this is done.
  */
-export function ensureDependenciesPresent() {
-  _ensureMocha();
+export function ensureDependenciesPresent(callback) {
+  _ensureMocha(callback);
   _checkChai();
 }
 
-function _ensureMocha() {
+function _ensureMocha(callback) {
   var Mocha = window.Mocha;
   if (!Mocha) {
     throw new Error('WCT requires Mocha. Please ensure that it is present in WCT.environmentScripts, or that you load it before loading web-component-tester/browser.js');
@@ -44,7 +45,7 @@ function _ensureMocha() {
   // Magic loading of mocha's stylesheet
   var mochaPrefix = util.scriptPrefix('mocha.js');
   if (mochaPrefix) { // Not the end of the world, if not.
-    util.loadStyle(mochaPrefix + 'mocha.css');
+    util.loadStyle(mochaPrefix + 'mocha.css', callback);
   }
 }
 
