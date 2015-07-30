@@ -58,38 +58,40 @@ environment.loadSync();
 document.addEventListener('DOMContentLoaded', function() {
   util.debug('DOMContentLoaded');
 
-  environment.ensureDependenciesPresent();
+  // only start initializing when we're sure dependencies are present...
+  environment.ensureDependenciesPresent(function() {
 
-  // We need the socket built prior to building its reporter.
-  CLISocket.init(function(error, socket) {
-    if (error) throw error;
-
-    // Are we a child of another run?
-    var current = ChildRunner.current();
-    var parent  = current && current.parentScope.WCT._reporter;
-    util.debug('parentReporter:', parent);
-
-    var childSuites    = suites.activeChildSuites();
-    var reportersToUse = reporters.determineReporters(socket, parent);
-    // +1 for any local tests.
-    var reporter = new MultiReporter(childSuites.length + 1, reportersToUse, parent);
-    WCT._reporter = reporter; // For environment/compatibility.js
-
-    // We need the reporter so that we can report errors during load.
-    suites.loadJsSuites(reporter, function(error) {
-      // Let our parent know that we're about to start the tests.
-      if (current) current.ready(error);
+    // We need the socket built prior to building its reporter.
+    CLISocket.init(function(error, socket) {
       if (error) throw error;
 
-      // Emit any errors we've encountered up til now
-      errors.globalErrors.forEach(function onError(error) {
-        reporter.emitOutOfBandTest('Test Suite Initialization', error);
-      });
+      // Are we a child of another run?
+      var current = ChildRunner.current();
+      var parent  = current && current.parentScope.WCT._reporter;
+      util.debug('parentReporter:', parent);
 
-      suites.runSuites(reporter, childSuites, function(error) {
-        // Make sure to let our parent know that we're done.
-        if (current) current.done();
+      var childSuites    = suites.activeChildSuites();
+      var reportersToUse = reporters.determineReporters(socket, parent);
+      // +1 for any local tests.
+      var reporter = new MultiReporter(childSuites.length + 1, reportersToUse, parent);
+      WCT._reporter = reporter; // For environment/compatibility.js
+
+      // We need the reporter so that we can report errors during load.
+      suites.loadJsSuites(reporter, function(error) {
+        // Let our parent know that we're about to start the tests.
+        if (current) current.ready(error);
         if (error) throw error;
+
+        // Emit any errors we've encountered up til now
+        errors.globalErrors.forEach(function onError(error) {
+          reporter.emitOutOfBandTest('Test Suite Initialization', error);
+        });
+
+        suites.runSuites(reporter, childSuites, function(error) {
+          // Make sure to let our parent know that we're done.
+          if (current) current.done();
+          if (error) throw error;
+        });
       });
     });
   });

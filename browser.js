@@ -1335,14 +1335,15 @@
   /**
    * We have some hard dependencies on things that should be loaded via
    * `environmentScripts`, so we assert that they're present here; and do any
-   * post-facto setup.
+   * post-facto setup. This setup may be asynchronous and a `callback` can be
+   * supplied to be informed when this is done.
    */
-  function ensureDependenciesPresent() {
-    _ensureMocha();
+  function ensureDependenciesPresent(callback) {
+    _ensureMocha(callback);
     _checkChai();
   }
 
-  function _ensureMocha() {
+  function _ensureMocha(callback) {
     var Mocha = window.Mocha;
     if (!Mocha) {
       throw new Error('WCT requires Mocha. Please ensure that it is present in WCT.environmentScripts, or that you load it before loading web-component-tester/browser.js');
@@ -1351,7 +1352,7 @@
     // Magic loading of mocha's stylesheet
     var mochaPrefix = util_js.scriptPrefix('mocha.js');
     if (mochaPrefix) { // Not the end of the world, if not.
-      util_js.loadStyle(mochaPrefix + 'mocha.css');
+      util_js.loadStyle(mochaPrefix + 'mocha.css', callback);
     }
   }
 
@@ -1890,38 +1891,40 @@
   document.addEventListener('DOMContentLoaded', function() {
     util_js.debug('DOMContentLoaded');
 
-    environment_js.ensureDependenciesPresent();
+    // only start initializing when we're sure dependencies are present...
+    environment_js.ensureDependenciesPresent(function() {
 
-    // We need the socket built prior to building its reporter.
-    CLISocket.init(function(error, socket) {
-      if (error) throw error;
-
-      // Are we a child of another run?
-      var current = ChildRunner.current();
-      var parent  = current && current.parentScope.WCT._reporter;
-      util_js.debug('parentReporter:', parent);
-
-      var childSuites    = suites_js.activeChildSuites();
-      var reportersToUse = _reporters.determineReporters(socket, parent);
-      // +1 for any local tests.
-      var reporter = new MultiReporter(childSuites.length + 1, reportersToUse, parent);
-      WCT._reporter = reporter; // For environment/compatibility.js
-
-      // We need the reporter so that we can report errors during load.
-      suites_js.loadJsSuites(reporter, function(error) {
-        // Let our parent know that we're about to start the tests.
-        if (current) current.ready(error);
+      // We need the socket built prior to building its reporter.
+      CLISocket.init(function(error, socket) {
         if (error) throw error;
 
-        // Emit any errors we've encountered up til now
-        errors_js.globalErrors.forEach(function onError(error) {
-          reporter.emitOutOfBandTest('Test Suite Initialization', error);
-        });
+        // Are we a child of another run?
+        var current = ChildRunner.current();
+        var parent  = current && current.parentScope.WCT._reporter;
+        util_js.debug('parentReporter:', parent);
 
-        suites_js.runSuites(reporter, childSuites, function(error) {
-          // Make sure to let our parent know that we're done.
-          if (current) current.done();
+        var childSuites    = suites_js.activeChildSuites();
+        var reportersToUse = _reporters.determineReporters(socket, parent);
+        // +1 for any local tests.
+        var reporter = new MultiReporter(childSuites.length + 1, reportersToUse, parent);
+        WCT._reporter = reporter; // For environment/compatibility.js
+
+        // We need the reporter so that we can report errors during load.
+        suites_js.loadJsSuites(reporter, function(error) {
+          // Let our parent know that we're about to start the tests.
+          if (current) current.ready(error);
           if (error) throw error;
+
+          // Emit any errors we've encountered up til now
+          errors_js.globalErrors.forEach(function onError(error) {
+            reporter.emitOutOfBandTest('Test Suite Initialization', error);
+          });
+
+          suites_js.runSuites(reporter, childSuites, function(error) {
+            // Make sure to let our parent know that we're done.
+            if (current) current.done();
+            if (error) throw error;
+          });
         });
       });
     });
