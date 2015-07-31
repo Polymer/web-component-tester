@@ -1350,7 +1350,7 @@
     _reporters.injectMocha(Mocha);
     // Magic loading of mocha's stylesheet
     var mochaPrefix = util_js.scriptPrefix('mocha.js');
-    if (mochaPrefix) { // Not the end of the world, if not.
+    if (mochaPrefix && window.top === window.self) { // Not the end of the world, if not.
       util_js.loadStyle(mochaPrefix + 'mocha.css');
     }
   }

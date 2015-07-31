@@ -43,7 +43,9 @@ function _ensureMocha() {
   reporters.injectMocha(Mocha);
   // Magic loading of mocha's stylesheet
   var mochaPrefix = util.scriptPrefix('mocha.js');
-  if (mochaPrefix) { // Not the end of the world, if not.
+  // only load mocha stylesheet for the test runner output
+  // Not the end of the world, if it doesn't load.
+  if (mochaPrefix && window.top === window.self) {
     util.loadStyle(mochaPrefix + 'mocha.css');
   }
 }
