@@ -139,6 +139,8 @@ ChildRunner.prototype.ready = function(error) {
 ChildRunner.prototype.done = function done() {
   util.debug('ChildRunner#done', this.url, arguments);
 
+  // make sure to clear that timeout
+  this.ready();
   this.signalRunComplete();
 
   if (!this.iframe) return;
