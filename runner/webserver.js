@@ -144,10 +144,11 @@ module.exports = function(wct) {
           // close the socket IO server directly if it is spun up
           var io = wct._socketIOServer;
           if (io) {
-            io.httpServer = null;
             io.close();
+          } else {
+            server.close();
           }
-          server.close(done);
+          done();
         });
 
         wct.emit('log:info',
