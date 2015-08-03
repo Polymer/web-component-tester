@@ -141,7 +141,14 @@ module.exports = function(wct) {
         server.listen(port);
         server.port = port;
         cleankill.onInterrupt(function(done) {
-          server.close(done);
+          // close the socket IO server directly if it is spun up
+          var io = wct._socketIOServer;
+          if (io) {
+            io.close();
+          } else {
+            server.close();
+          }
+          done();
         });
 
         wct.emit('log:info',

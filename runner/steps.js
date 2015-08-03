@@ -82,7 +82,8 @@ function runTests(context, done) {
     }
   });
 
-  socketIO(context._httpServer).on('connection', function(socket) {
+  context._socketIOServer = socketIO(context._httpServer);
+  context._socketIOServer.on('connection', function(socket) {
     context.emit('log:debug', 'Test client opened sideband socket');
     socket.on('client-event', function(data) {
       runners[data.browserId].onEvent(data.event, data.data);
