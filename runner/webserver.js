@@ -17,6 +17,7 @@ var path           = require('path');
 var portscanner    = require('./port-scanner');
 var send           = require('send');
 var serveWaterfall = require('serve-waterfall');
+var serverDestroy  = require('server-destroy');
 
 // Template for generated indexes.
 var INDEX_TEMPLATE = _.template(fs.readFileSync(
@@ -140,15 +141,18 @@ module.exports = function(wct) {
 
         server.listen(port);
         server.port = port;
+        serverDestroy(server);
+
         cleankill.onInterrupt(function(done) {
           // close the socket IO server directly if it is spun up
           var io = wct._socketIOServer;
           if (io) {
+            // we will close the underlying server ourselves
+            io.httpServer = null;
             io.close();
-          } else {
-            server.close();
           }
-          done();
+          server.destroy();
+          server.on('close', done);
         });
 
         wct.emit('log:info',
