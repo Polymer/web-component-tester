@@ -39,6 +39,11 @@ export var _config = {
   /** By default, we wait for any web component frameworks to load. */
   waitForFrameworks: true,
 
+  /** Alternate callback for waiting for tests.
+   * `this` for the callback will be the window currently running tests.
+   */
+  waitFor: null,
+
   /** How many `.html` suites that can be concurrently loaded & run. */
   numConcurrentSuites: 1,
 

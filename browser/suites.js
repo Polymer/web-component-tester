@@ -109,7 +109,8 @@ export function runSuites(reporter, childSuites, done) {
  */
 function _runMocha(reporter, done, waited) {
   if (config.get('waitForFrameworks') && !waited) {
-    util.whenFrameworksReady(_runMocha.bind(null, reporter, done, true));
+    var waitFor = (config.get('waitFor') || util.whenFrameworksReady).bind(window);
+    waitFor(_runMocha.bind(null, reporter, done, true));
     return;
   }
   util.debug('_runMocha');

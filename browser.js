@@ -496,6 +496,11 @@
     /** By default, we wait for any web component frameworks to load. */
     waitForFrameworks: true,
 
+    /** Alternate callback for waiting for tests.
+     * `this` for the callback will be the window currently running tests.
+     */
+    waitFor: null,
+
     /** How many `.html` suites that can be concurrently loaded & run. */
     numConcurrentSuites: 1,
 
@@ -677,7 +682,8 @@
    */
   function _runMocha(reporter, done, waited) {
     if (config_js.get('waitForFrameworks') && !waited) {
-      util_js.whenFrameworksReady(_runMocha.bind(null, reporter, done, true));
+      var waitFor = (config_js.get('waitFor') || util_js.whenFrameworksReady).bind(window);
+      waitFor(_runMocha.bind(null, reporter, done, true));
       return;
     }
     util_js.debug('_runMocha');
