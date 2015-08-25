@@ -30,7 +30,8 @@ export var _config = {
     'chai/chai.js',
     'sinonjs/sinon.js',
     'sinon-chai/lib/sinon-chai.js',
-    'accessibility-developer-tools/dist/js/axs_testing.js'
+    'accessibility-developer-tools/dist/js/axs_testing.js',
+    'web-component-tester/browser/environment/a11ySuite.js'
   ],
 
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
