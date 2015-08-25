@@ -9,7 +9,6 @@
  */
 
 (function(Mocha) {
-  var assert = window.chai.assert;
 
   Object.keys(Mocha.interfaces).forEach(function(iface) {
     var orig = Mocha.interfaces[iface];
@@ -45,7 +44,7 @@
           }
 
           // build mocha suite
-          var a11ySuite = Suite.create(suite, 'A11y Audit');
+          var a11ySuite = Suite.create(suite, 'A11y Audit - Fixture: ' + fixtureId);
           // instantiate fixture
           fixtureElement.create();
 
@@ -54,23 +53,25 @@
 
           // create tests for audit results
           auditResults.forEach(function(result, index) {
-            var title = rules[index].heading;
-            // skip test if it no audit result
-            if (result.result === 'NA') {
-              a11ySuite.addTest(new Test(title));
-            } else {
+            // only show applicable tests
+            if (result.result !== 'NA') {
+              var title = rules[index].heading;
               // fail test if audit result is FAIL
               var error = result.result === 'FAIL' ? axs.Audit.accessibilityErrorMessage(result) : null;
-              a11ySuite.addTest(new Test(title, function() {
+              var test = new Test(title, function() {
                 if (error) {
-                  assert.fail(null, null, error);
+                  throw new Error(error);
                 }
-              }));
+              });
+              test.file = file;
+              a11ySuite.addTest(test);
             }
           });
 
           // teardown fixture
           fixtureElement.restore();
+
+          return a11ySuite;
         };
       });
     };
