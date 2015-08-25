@@ -9,7 +9,8 @@
   "ignore": [
     "*",
     "!/browser.js",
-    "!/browser.js.map"
+    "!/browser.js.map",
+    "!/runtime-helpers/*"
   ],
   "keywords": [
     "browser",
