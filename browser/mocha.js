@@ -79,3 +79,4 @@ function _setupMocha(ui, key, alternate) {
   mochaOptions.ui = ui;
   mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
 }
+
