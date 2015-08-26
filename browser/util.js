@@ -21,37 +21,42 @@ export function whenFrameworksReady(callback) {
     callback();
   };
 
-  function importsReady() {
-    window.removeEventListener('WebComponentsReady', importsReady);
-    debug('WebComponentsReady');
-
-    var readyFn = done;
-    if (window.Polymer) {
-      if (Polymer.RenderStatus) {
-        // 1.0
-        readyFn = Polymer.RenderStatus.whenReady.bind(Polymer.RenderStatus, function() {
-          debug('polymer-renderstatus-ready');
-          done();
-        });
-      } else if (Polymer.whenReady) {
-        // 0.5
-        readyFn = Polymer.whenReady.bind(Polymer, function() {
-          debug('polymer-ready');
-          done();
-        });
-      }
+  function componentsReady() {
+    // handle Polymer 0.5 readiness
+    if (window.Polymer && Polymer.whenReady) {
+      Polymer.whenReady(done);
+    } else {
+      done();
     }
-    readyFn();
   }
 
   // All our supported framework configurations depend on imports.
-  if (!window.HTMLImports) {
-    done();
-  } else if (HTMLImports.ready) {
-    importsReady();
+  if (window.WebComponents) {
+    if (WebComponents.whenReady) {
+      WebComponents.whenReady(function() {
+        debug('WebComponents Ready');
+        componentsReady();
+      });
+    } else {
+      whenWebComponentsReady(componentsReady);
+    }
+  } else if (window.HTMLImports) {
+    HTMLImports.whenReady(function() {
+      debug('HTMLImports Ready');
+      componentsReady();
+    });
   } else {
-    window.addEventListener('WebComponentsReady', importsReady);
+    done();
   }
+}
+
+function whenWebComponentsReady(cb) {
+  var after = function after() {
+    window.removeEventListener('WebComponentsReady', after);
+    debug('WebComponentsReady');
+    cb();
+  };
+  window.addEventListener('WebComponentsReady', after);
 }
 
 /**
