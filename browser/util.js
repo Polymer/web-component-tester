@@ -25,14 +25,23 @@ export function whenFrameworksReady(callback) {
     window.removeEventListener('WebComponentsReady', importsReady);
     debug('WebComponentsReady');
 
-    if (window.Polymer && Polymer.whenReady) {
-      Polymer.whenReady(function() {
-        debug('polymer-ready');
-        done();
-      });
-    } else {
-      done();
+    var readyFn = done;
+    if (window.Polymer) {
+      if (Polymer.RenderStatus) {
+        // 1.0
+        readyFn = Polymer.RenderStatus.whenReady.bind(Polymer.RenderStatus, function() {
+          debug('polymer-renderstatus-ready');
+          done();
+        });
+      } else if (Polymer.whenReady) {
+        // 0.5
+        readyFn = Polymer.whenReady.bind(Polymer, function() {
+          debug('polymer-ready');
+          done();
+        });
+      }
     }
+    readyFn();
   }
 
   // All our supported framework configurations depend on imports.
