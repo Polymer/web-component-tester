@@ -45,31 +45,41 @@
 
           // build mocha suite
           var a11ySuite = Suite.create(suite, 'A11y Audit - Fixture: ' + fixtureId);
-          // instantiate fixture
-          fixtureElement.create();
 
-          // run audit
-          var auditResults = axs.Audit.run(axsConfig);
+          // override the `eachTest` function to hackily create the tests
+          //
+          // eachTest is called right before test runs to calculate the total
+          // number of tests
+          a11ySuite.eachTest = function() {
+            // instantiate fixture
+            fixtureElement.create();
 
-          // create tests for audit results
-          auditResults.forEach(function(result, index) {
-            // only show applicable tests
-            if (result.result !== 'NA') {
-              var title = rules[index].heading;
-              // fail test if audit result is FAIL
-              var error = result.result === 'FAIL' ? axs.Audit.accessibilityErrorMessage(result) : null;
-              var test = new Test(title, function() {
-                if (error) {
-                  throw new Error(error);
-                }
-              });
-              test.file = file;
-              a11ySuite.addTest(test);
-            }
-          });
+            // run audit
+            var auditResults = axs.Audit.run(axsConfig);
 
-          // teardown fixture
-          fixtureElement.restore();
+            // create tests for audit results
+            auditResults.forEach(function(result, index) {
+              // only show applicable tests
+              if (result.result !== 'NA') {
+                var title = rules[index].heading;
+                // fail test if audit result is FAIL
+                var error = result.result === 'FAIL' ? axs.Audit.accessibilityErrorMessage(result) : null;
+                var test = new Test(title, function() {
+                  if (error) {
+                    throw new Error(error);
+                  }
+                });
+                test.file = file;
+                a11ySuite.addTest(test);
+              }
+            });
+
+            // teardown fixture
+            fixtureElement.restore();
+
+            suite.eachTest.apply(a11ySuite, arguments);
+            this.eachTest = suite.eachTest;
+          };
 
           return a11ySuite;
         };
