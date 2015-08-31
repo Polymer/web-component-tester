@@ -33,6 +33,7 @@ var MOCHA_EVENTS = [
   'pass',
   'fail',
   'pending',
+  'childRunner end'
 ];
 
 // Until a suite has loaded, we assume this many tests in it.
