@@ -5,7 +5,9 @@
     <script>WCT = <%= JSON.stringify(clientOptions) %>;</script>
     <script src="/web-component-tester/browser.js"></script>
 <% extraScripts.forEach(function(script) { %>    <script src="<%- script %>"></script>
-<% }); %>  </head>
+<% }); %>
+    <script src="/web-component-tester/data/a11ySuite.js"></script>
+</head>
   <body>
     <script>
       WCT.loadSuites(<%= JSON.stringify(suites) %>);

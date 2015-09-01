@@ -20,8 +20,7 @@ var test        = require('./test');
 var PACKAGE_INFO   = require('../package.json');
 try {
   var updateNotifier = require('update-notifier')({
-    packageName:    PACKAGE_INFO.name,
-    packageVersion: PACKAGE_INFO.version,
+    pkg: PACKAGE_INFO
   });
 } catch (error) {
   // S'ok if we don't have update-notifier. It's optional.

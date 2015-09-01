@@ -501,8 +501,7 @@
       'chai/chai.js',
       'sinonjs/sinon.js',
       'sinon-chai/lib/sinon-chai.js',
-      'accessibility-developer-tools/dist/js/axs_testing.js',
-      'web-component-tester/runtime-helpers/a11ySuite.js'
+      'accessibility-developer-tools/dist/js/axs_testing.js'
     ],
 
     /** Absolute root for client scripts. Detected in `setup()` if not set. */
