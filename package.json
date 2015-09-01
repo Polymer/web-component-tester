@@ -33,6 +33,7 @@
     "data/",
     "runner/",
     "scripts/",
+    "tasks/",
     ".bowerrc",
     "bower.json",
     "browser.js",
