@@ -1346,7 +1346,13 @@
    */
   function loadSync() {
     util_js.debug('Loading environment scripts:');
-    config_js.get('environmentScripts').forEach(function(path) {
+    var scripts = config_js.get('environmentScripts');
+    var a11ySuiteWillBeLoaded = window.__generatedByWct;
+    if (!a11ySuiteWillBeLoaded) {
+      // wct is running as a bower dependency, load a11ySuite from data/
+      scripts.push('web-component-tester/data/a11ySuite.js');
+    }
+    scripts.forEach(function(path) {
       var url = util_js.expandUrl(path, config_js.get('root'));
       util_js.debug('Loading environment script:', url);
       // Synchronous load.
