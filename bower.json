@@ -7,6 +7,7 @@
   "license": "http://polymer.github.io/LICENSE.txt",
   "ignore": [
     "*",
+    "!/data",
     "!/browser.js",
     "!/browser.js.map"
   ],
