@@ -15,10 +15,7 @@
   ],
   "homepage": "https://github.com/Polymer/web-component-tester",
   "bugs": "https://github.com/Polymer/web-component-tester/issues",
-  "license": {
-    "type": "BSD-3-Clause",
-    "url": "http://polymer.github.io/LICENSE.txt"
-  },
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "https://github.com/Polymer/web-component-tester.git"
@@ -71,7 +68,7 @@
     "wct-sauce": "^1.5.0"
   },
   "devDependencies": {
-    "chai": "^2.3.0",
+    "chai": "^3.2.0",
     "esperanto": "^0.6.30",
     "grunt": "^0.4.5",
     "gulp": "^3.8.8",
@@ -82,8 +79,8 @@
     "gulp-plumber": "^1.0.0",
     "gulp-sourcemaps": "^1.1.5",
     "gulp-watch": "^4.1.0",
-    "jshint-stylish": "^1.0.0",
-    "lazypipe": "^0.2.2",
+    "jshint-stylish": "^2.0.1",
+    "lazypipe": "^1.0.1",
     "mocha": "^2.2.4",
     "orchestrator": "^0.3.7",
     "run-sequence": "^1.0.1",

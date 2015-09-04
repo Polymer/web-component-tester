@@ -8,7 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import * as config from './config';
+import * as config from './config.js';
 
 /**
  * @param {function()} callback A function to call when the active web component
