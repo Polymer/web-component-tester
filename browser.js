@@ -122,7 +122,7 @@ function parseUrl(url) {
   var parts = url.match(/^(.*?)(?:\?(.*))?$/);
   return {
     base:   parts[1],
-    params: this.getParams(parts[2] || ''),
+    params: getParams(parts[2] || ''),
   };
 }
 
