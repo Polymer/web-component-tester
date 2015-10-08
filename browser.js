@@ -384,15 +384,15 @@
     this.state = 'loading';
     this.onRunComplete = done;
 
-    this.iframe = document.createElement('iframe');
+    this.iframe = window.top.document.createElement('iframe');
     this.iframe.src = this.url;
     this.iframe.classList.add('subsuite');
 
-    var container = document.getElementById('subsuites');
+    var container = window.top.document.getElementById('subsuites');
     if (!container) {
-      container = document.createElement('div');
+      container = window.top.document.createElement('div');
       container.id = 'subsuites';
-      document.body.appendChild(container);
+      window.top.document.body.appendChild(container);
     }
     container.appendChild(this.iframe);
 
