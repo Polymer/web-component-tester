@@ -74,15 +74,15 @@ ChildRunner.prototype.run = function(done) {
   this.state = 'loading';
   this.onRunComplete = done;
 
-  this.iframe = window.top.document.createElement('iframe');
+  this.iframe = document.createElement('iframe');
   this.iframe.src = this.url;
   this.iframe.classList.add('subsuite');
 
-  var container = window.top.document.getElementById('subsuites');
+  var container = document.getElementById('subsuites');
   if (!container) {
-    container = window.top.document.createElement('div');
+    container = document.createElement('div');
     container.id = 'subsuites';
-    window.top.document.body.appendChild(container);
+    document.body.appendChild(container);
   }
   container.appendChild(this.iframe);
 
