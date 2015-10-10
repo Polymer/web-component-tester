@@ -69,7 +69,6 @@
   },
   "devDependencies": {
     "chai": "^3.2.0",
-    "esperanto": "^0.6.30",
     "grunt": "^0.4.5",
     "gulp": "^3.8.8",
     "gulp-jshint": "^1.8.5",
@@ -77,6 +76,7 @@
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
     "mocha": "^2.2.4",
+    "rollup": "^0.18.5",
     "run-sequence": "^1.0.1",
     "sinon": "^1.11.1",
     "sinon-chai": "^2.6.0"
