@@ -18,13 +18,17 @@ var Plugin      = require('./plugin');
 var test        = require('./test');
 
 var PACKAGE_INFO   = require('../package.json');
-try {
-  var updateNotifier = require('update-notifier')({
-    pkg: PACKAGE_INFO
-  });
-} catch (error) {
-  // S'ok if we don't have update-notifier. It's optional.
-}
+var updateNotifier;
+
+(function() {
+  try {
+    updateNotifier = require('update-notifier')({
+      pkg: PACKAGE_INFO
+    });
+  } catch (error) {
+    // S'ok if we don't have update-notifier. It's optional.
+  }
+})();
 
 function run(env, args, output, callback) {
   var done = wrapCallback(output, callback);
@@ -40,7 +44,7 @@ function run(env, args, output, callback) {
   var context = new Context(options);
 
   if (options.skipUpdateCheck) {
-    updateNotifier = true;
+    updateNotifier = false;
   }
 
   // `parseArgs` merges any new configuration into `context.options`.
@@ -85,7 +89,9 @@ function runSauceTunnel(env, args, output, callback) {
 
 function wrapCallback(output, done) {
   return function(error) {
-    updateNotifier && updateNotifier.notify({defer: false});
+    if (!process.env.CI) {
+      updateNotifier && updateNotifier.notify();
+    }
 
     if (error) {
       output.write('\n');
