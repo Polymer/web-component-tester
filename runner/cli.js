@@ -39,7 +39,7 @@ function run(env, args, output, callback) {
   // Depends on values from the initial merge:
   options = config.merge(options, {
     output:    output,
-    ttyOutput: output.isTTY && !options.simpleOutput,
+    ttyOutput: !process.env.CI && output.isTTY && !options.simpleOutput,
   });
   var context = new Context(options);
 
