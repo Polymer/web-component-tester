@@ -211,7 +211,7 @@ export function paramsToQuery(params) {
       pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
     });
   });
-  return '?' + pairs.join('&');
+  return (pairs.length > 0) ? ('?' + pairs.join('&')) : '';
 }
 
 /**
