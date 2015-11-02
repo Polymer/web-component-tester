@@ -9,6 +9,11 @@
  */
 import * as config from './config.js';
 
+import './mocha/fixture.js';
+import './mocha/stub.js';
+import './mocha/replace.js';
+import { applyExtensions } from './mocha/extend.js';
+
 // Mocha global helpers, broken out by testing method.
 //
 // Keys are the method for a particular interface; values are their analog in
@@ -76,6 +81,8 @@ function _setupMocha(ui, key, alternate) {
     throw new Error(message);
   }
   if (_mochaIsSetup) return;
+
+  applyExtensions();
   mochaOptions.ui = ui;
   mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
 }

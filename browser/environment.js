@@ -30,6 +30,15 @@ export function loadSync() {
     document.write('<script src="' + encodeURI(url) + '"></script>'); // jshint ignore:line
   });
   util.debug('Environment scripts loaded');
+
+  var imports = config.get('environmentImports');
+  imports.forEach(function(path) {
+    var url = util.expandUrl(path, config.get('root'));
+    util.debug('Loading environment import:', url);
+    // Synchronous load.
+    document.write('<link rel="import" href="' + encodeURI(url) + '">'); // jshint ignore:line
+  });
+  util.debug('Environment imports loaded');
 }
 
 /**

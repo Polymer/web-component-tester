@@ -33,6 +33,10 @@ export var _config = {
     'accessibility-developer-tools/dist/js/axs_testing.js'
   ],
 
+  environmentImports: [
+    'test-fixture/test-fixture.html'
+  ],
+
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
   root: null,
 
