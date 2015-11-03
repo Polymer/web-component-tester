@@ -7,17 +7,28 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var bower  = require('bower');
 var path   = require('path');
 
-process.chdir(path.dirname(__dirname));
-console.log('Fetching bower dependencies for the WCT client to', path.join(process.cwd(), 'bower_components'));
-bower.commands.install(null, [], {}, {})
-    .on('end', function(installed) {
-      console.log('Fetched bower packages:', Object.keys(installed).join(', '));
-    })
-    .on('error', function(error) {
-      console.log('Failed to fetch bower dependencies:', error.stack);
-      console.log('');
-      console.log('WCT install will continue, but you may need to manually provide browser dependencies (mocha, chai, etc)');
-    });
+function fail(error) {
+  console.log('Failed to fetch bower dependencies:', error.stack);
+  console.log('');
+  console.log('WCT install will continue, but you may need to manually provide browser dependencies (mocha, chai, etc)');
+}
+
+try {
+  var globalDir = require('global-modules');
+
+  console.log('Using system bower to install browser dependencies');
+  var bower  = require(path.join(globalDir, 'bower'));
+
+  process.chdir(path.dirname(__dirname));
+
+  console.log('Fetching bower dependencies for the WCT client to', path.join(process.cwd(), 'bower_components'));
+  bower.commands.install(null, [], {}, {})
+  .on('end', function(installed) {
+    console.log('Fetched bower packages:', Object.keys(installed).join(', '));
+  })
+  .on('error', fail);
+} catch(e) {
+  fail(e);
+}
