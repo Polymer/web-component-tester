@@ -45,13 +45,13 @@
     "postinstall": "node scripts/postinstall.js"
   },
   "dependencies": {
-    "async": "^0.9.0",
+    "async": "^1.5.0",
     "bower": "^1.4.1",
     "chalk": "^1.1.1",
     "cleankill": "^1.0.0",
     "express": "^4.8.5",
     "findup-sync": "^0.2.1",
-    "glob": "^4.0.6",
+    "glob": "^5.0.15",
     "lodash": "^3.0.1",
     "nomnom": "^1.8.1",
     "resolve": "^1.0.0",
