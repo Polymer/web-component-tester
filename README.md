@@ -235,10 +235,11 @@ We also provide Gulp tasks for your use. `gulpfile.js`:
 
 ```js
 var gulp = require('gulp');
-require('web-component-tester').gulp.init(gulp);
+require('web-component-tester').gulp.init(gulp, [dependencies]);
 ```
 
-Exposes `gulp test:local` and `gulp test:remote`.
+Exposes `gulp test:local` and `gulp test:remote`, which depend on the optional
+`dependencies`.
 
 
 ## Grunt
