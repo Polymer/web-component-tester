@@ -21,9 +21,7 @@ export var _config = {
    */
   environmentScripts: [
     // https://github.com/PolymerLabs/stacky/issues/2
-    'stacky/lib/parsing.js',
-    'stacky/lib/formatting.js',
-    'stacky/lib/normalization.js',
+    'stacky/browser.js',
     'async/lib/async.js',
     'lodash/lodash.js',
     'mocha/mocha.js',
