@@ -54,7 +54,9 @@ extendInterfaces('replace', function(context, teardown) {
         // After each test...
         teardown(function() {
           // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
-          Polymer.Base.instanceTemplate.restore();
+          if (Polymer.Base.instanceTemplate.isSinonProxy) {
+            Polymer.Base.instanceTemplate.restore();
+          }
         });
       }
     };
