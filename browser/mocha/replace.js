@@ -56,7 +56,7 @@ extendInterfaces('replace', function(context, teardown) {
           // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
           if (Polymer.Base.instanceTemplate.isSinonProxy) {
             Polymer.Base.instanceTemplate.restore();
-          };
+          }
         });
       }
     };
