@@ -137,17 +137,17 @@ you based on the suites you ask it to load._
 # Configuration
 
 The `wct` command line tool will pick up custom configuration from a
-`wct.conf.js` file located in the root of your project. It should export the
+`wct.conf.json` file located in the root of your project. It should export the
 custom configuration:
 
 ```js
-module.exports = {
-  verbose: true,
-  plugins: {
-    local: {
-      browsers: ['chrome', 'firefox']
+{
+  "verbose": true,
+  "plugins": {
+    "local": {
+      "browsers": ["chrome", "firefox"]
     }
-  },
+  }
 };
 ```
 
@@ -155,7 +155,7 @@ See [`runner/config.js`](runner/config.js) for the canonical reference of
 configuration properties.
 
 You can also specify global defaults (such as `sauce.username`, etc) via a
-config file located at `~/wct.conf.js`.
+config file located at `~/wct.conf.json`.
 
 ## Plugins
 
@@ -164,13 +164,13 @@ it should load that plugin. If you wish to provide default configuration for a
 plugin, but not enable it, you can have it default to disabled:
 
 ```js
-module.exports = {
-  plugins: {
-    sauce: {
-      disabled: true,
-      browsers: ['chrome', 'firefox']
+{
+  "plugins": {
+    "sauce": {
+      "disabled": true,
+      "browsers": ["chrome", "firefox"]
     }
-  },
+  }
 };
 ```
 
@@ -223,7 +223,7 @@ Inside your test code (before `browser.js` is loaded):
 ```
 
 Alternatively, you can specify these options via the `clientOptions`
-key in `wct.conf.js`.
+key in `wct.conf.json`.
 
 A reference of the default configuration can be found at
 [browser/config.js](browser/config.js).
@@ -292,7 +292,7 @@ module.exports = function(context, pluginOptions, plugin) {
 ```
 
 The plugin can subscribe to hooks via the [`Context`](runner/context.js)
-object. Any options (via wct.conf.js or command line) are merged into
+object. Any options (via wct.conf.json or command line) are merged into
 `pluginOptions`. And, `plugin` is the instance of [`Plugin`](runner/plugin.js)
 for the plugin.
 
