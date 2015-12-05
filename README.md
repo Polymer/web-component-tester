@@ -148,7 +148,7 @@ custom configuration:
       "browsers": ["chrome", "firefox"]
     }
   }
-};
+}
 ```
 
 See [`runner/config.js`](runner/config.js) for the canonical reference of
@@ -171,7 +171,7 @@ plugin, but not enable it, you can have it default to disabled:
       "browsers": ["chrome", "firefox"]
     }
   }
-};
+}
 ```
 
 Requesting that plugin via `--plugin` on the command line (or overriding the
