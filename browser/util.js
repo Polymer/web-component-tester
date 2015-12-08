@@ -23,34 +23,41 @@ export function whenFrameworksReady(callback) {
 
   function componentsReady() {
     // handle Polymer 0.5 readiness
+    debug('Polymer ready?');
     if (window.Polymer && Polymer.whenReady) {
-      Polymer.whenReady(done);
+      Polymer.whenReady(function() {
+        debug('Polymer ready');
+        done();
+      });
     } else {
       done();
     }
   }
 
   // All our supported framework configurations depend on imports.
-  if (window.WebComponents) {
-    if (WebComponents.whenReady) {
+  if (!window.HTMLImports) {
+    done();
+  } else if (HTMLImports.ready) {
+    debug('HTMLImports ready');
+    componentsReady();
+  } else if (HTMLImports.whenReady) {
+    HTMLImports.whenReady(function() {
+      debug('HTMLImports.whenReady ready');
+      componentsReady();
+    });
+  } else if (window.WebComponents && WebComponents.whenReady) {
+      debug('WebComponents Ready?');
       WebComponents.whenReady(function() {
         debug('WebComponents Ready');
         componentsReady();
       });
-    } else {
-      whenWebComponentsReady(componentsReady);
-    }
-  } else if (window.HTMLImports) {
-    HTMLImports.whenReady(function() {
-      debug('HTMLImports Ready');
-      componentsReady();
-    });
   } else {
-    done();
+    whenWebComponentsReady(componentsReady);
   }
 }
 
 function whenWebComponentsReady(cb) {
+  debug('WebComponentsReady?');
   var after = function after() {
     window.removeEventListener('WebComponentsReady', after);
     debug('WebComponentsReady');
