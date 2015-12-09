@@ -41,34 +41,37 @@
     "runner.js"
   ],
   "scripts": {
-    "test": "gulp test",
-    "postinstall": "node scripts/postinstall.js"
+    "test": "gulp test"
   },
   "dependencies": {
+    "accessibility-developer-tools": "^2.10.0",
     "async": "^1.5.0",
-    "bower": "^1.4.1",
+    "chai": "^3.2.0",
     "chalk": "^1.1.1",
     "cleankill": "^1.0.0",
     "express": "^4.8.5",
     "findup-sync": "^0.2.1",
     "glob": "^5.0.15",
     "lodash": "^3.0.1",
+    "mocha": "^2.2.4",
     "nomnom": "^1.8.1",
     "resolve": "^1.0.0",
     "send": "^0.11.1",
     "serve-waterfall": "^1.1.0",
     "server-destroy": "^1.0.1",
+    "sinon": "^1.11.1",
+    "sinon-chai": "^2.6.0",
     "socket.io": "^1.3.7",
-    "stacky": "^1.2.3",
+    "stacky": "^1.3.1",
+    "test-fixture": "github:PolymerElements/test-fixture",
     "wd": "^0.3.8"
   },
   "optionalDependencies": {
-    "update-notifier": "^0.5.0",
+    "update-notifier": "^0.6.0",
     "wct-local": "^1.6.0",
     "wct-sauce": "^1.7.0"
   },
   "devDependencies": {
-    "chai": "^3.2.0",
     "esperanto": "^0.6.30",
     "grunt": "^0.4.5",
     "gulp": "^3.8.8",
@@ -76,9 +79,6 @@
     "gulp-mocha": "^2.0.0",
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
-    "mocha": "^2.2.4",
-    "run-sequence": "^1.0.1",
-    "sinon": "^1.11.1",
-    "sinon-chai": "^2.6.0"
+    "run-sequence": "^1.0.1"
   }
 }
