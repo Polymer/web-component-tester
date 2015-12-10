@@ -11,7 +11,9 @@ var chalk = require('chalk');
 
 var test = require('./test');
 
-function init(gulp) {
+function init(gulp, dependencies) {
+  if (!dependencies) dependencies = [];
+
   // TODO(nevir): Migrate fully to wct:local/etc.
   gulp.task('test',        ['wct:local']);
   gulp.task('test:local',  ['wct:local']);
@@ -19,11 +21,11 @@ function init(gulp) {
 
   gulp.task('wct', ['wct:local']);
 
-  gulp.task('wct:local', function(done) {
+  gulp.task('wct:local', dependencies, function(done) {
     test({plugins: {local: {},   sauce: false}}, cleanDone(done));
   });
 
-  gulp.task('wct:sauce', function(done) {
+  gulp.task('wct:sauce', dependencies, function(done) {
     test({plugins: {local: false, sauce: {}}},   cleanDone(done));
   });
 }
