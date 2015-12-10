@@ -68,7 +68,7 @@
   },
   "optionalDependencies": {
     "update-notifier": "^0.6.0",
-    "wct-local": "^1.6.0",
+    "wct-local": "^2.0.0",
     "wct-sauce": "^1.7.0"
   },
   "devDependencies": {
@@ -80,5 +80,8 @@
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
     "run-sequence": "^1.0.1"
+  },
+  "engines": {
+    "node": ">= 0.12"
   }
 }
