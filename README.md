@@ -168,11 +168,27 @@ plugin, but not enable it, you can have it default to disabled:
   "plugins": {
     "sauce": {
       "disabled": true,
-      "browsers": ["chrome", "firefox"]
+      "browsers": [{
+          "browserName": "microsoftedge",
+          "platform": "Windows 10",
+          "version": ""
+        }, {
+          "browserName": "internet explorer",
+          "platform": "Windows 8.1",
+          "version": "11"
+        },
+        {
+          "browserName": "safari",
+          "platform": "OS X 10.11",
+          "version": "9"
+        }
+      ]
     }
   }
 }
 ```
+
+For more information on Sauce configuration, [see their Wiki](https://wiki.saucelabs.com/display/DOCS/Test+Configuration+Options#TestConfigurationOptions-RequiredSeleniumTestConfigurationSettings)
 
 Requesting that plugin via `--plugin` on the command line (or overriding the
 plugin's configuration to `disabled: false`) will cause the plugin to kick in.
