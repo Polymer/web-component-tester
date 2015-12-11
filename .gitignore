@@ -1,4 +1,5 @@
 .todo
 bower_components
 node_modules
-npm-debug.log
+npm-debug.log 
+npm-debug.log-id
