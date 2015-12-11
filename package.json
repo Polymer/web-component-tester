@@ -41,7 +41,8 @@
     "runner.js"
   ],
   "scripts": {
-    "test": "gulp test"
+    "test": "gulp test",
+    "build": "gulp build"
   },
   "dependencies": {
     "accessibility-developer-tools": "^2.10.0",
@@ -72,13 +73,14 @@
     "wct-sauce": "^1.7.0"
   },
   "devDependencies": {
-    "esperanto": "^0.6.30",
     "grunt": "^0.4.5",
     "gulp": "^3.8.8",
-    "gulp-jshint": "^1.8.5",
+    "gulp-jshint": "^2.0.0",
     "gulp-mocha": "^2.0.0",
+    "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
+    "rollup": "^0.21.2",
     "run-sequence": "^1.0.1"
   },
   "engines": {

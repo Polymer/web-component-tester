@@ -7,12 +7,12 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var esperanto   = require('esperanto');
-var fs          = require('fs');
-var gulp        = require('gulp');
-var jshint      = require('gulp-jshint');
-var lazypipe    = require('lazypipe');
-var mocha       = require('gulp-mocha');
+var fs = require('fs');
+var gulp = require('gulp');
+var jshint = require('gulp-jshint');
+var lazypipe = require('lazypipe');
+var mocha = require('gulp-mocha');
+var rollup = require('rollup');
 var runSequence = require('run-sequence');
 
 // Meta tasks
@@ -30,23 +30,18 @@ gulp.task('build', ['build:browser']);
 // Specific tasks
 
 gulp.task('build:browser', function(done) {
-  esperanto.bundle({
-    base:  'browser',
-    entry: 'index.js',
+  rollup.rollup({
+    entry: 'browser/index.js',
   }).then(function(bundle) {
-    var result = bundle.concat({
-      strict:        true,
-      sourceMap:     true,
-      sourceMapFile: 'browser.js',
+    bundle.write({
+      indent: false,
+      format: 'iife',
+      banner: fs.readFileSync('license-header.txt', 'utf-8'),
+      dest: 'browser.js',
+      sourceMap: true
+    }).then(function() {
+      done();
     });
-
-    var sourceMap = result.map.toString()
-        // Just use relative paths.
-        .replace(new RegExp('../' + __dirname + '/', 'g'), '');
-
-    fs.writeFileSync('browser.js',     result.code);
-    fs.writeFileSync('browser.js.map', sourceMap);
-    done();
   }).catch(done);
 });
 
