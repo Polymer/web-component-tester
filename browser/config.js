@@ -20,7 +20,6 @@ export var _config = {
    * Paths are relative to `scriptPrefix`.
    */
   environmentScripts: [
-    // https://github.com/PolymerLabs/stacky/issues/2
     'stacky/browser.js',
     'async/lib/async.js',
     'lodash/lodash.js',
