@@ -11,6 +11,8 @@ You get a browser-based testing environment, configured out of the box with:
 * [Async][async] to keep your sanity.
 * [Lodash][lodash] (3.0) to repeat fewer things.
 * [Sinon][sinon] and [sinon-chai][sinon-chai] to test just your things.
+* [test-fixture][test-fixture] for easy fixture testing with `<template>` tags.
+* [accessibility-developer-tools][a11ydevtools] through `a11ySuite` for simple, automated Accessibility testing.
 
 WCT will [run your tests](#running-your-tests) against whatever browsers you have locally installed, or remotely via Sauce Labs.
 
@@ -66,6 +68,51 @@ suite('AwesomeLib', function() {
 });
 ```
 
+## Special Features
+
+### test-fixture
+
+`test-fixture` can be used to reset DOM state between test runs.
+```html
+<test-fixture id="simple">
+  <template>
+    <div></div>
+  </template>
+</test-fixture>
+<script>
+  suite('classList', function() {
+    var div;
+    setup(function() {
+      div = fixture('simple');
+    })
+    test('foo', function() {
+      div.classList.add('foo');
+      assertSomethingOrOther(div);
+    });
+    test('bar', function() {
+      div.classList.add('bar');
+      assertNoFooClass(div);
+    });
+  });
+</script>
+```
+
+### a11ySuite
+
+`a11ySuite` provides an simple way to run accessibility-deveoloper-tools' high quality accessiblity audits when given a `test-fixture`.
+The `a11ySuite` will show all the audit results via the standard Mocha test output.
+```html
+<test-fixture id="NoLabel">
+  <template>
+    <paper-radio-button id="radio-1"></paper-radio-button>
+  </template>
+</test-fixture>
+
+<script>
+  a11ySuite('NoLabel');
+</script>
+```
+![Accessibility Suite Test Run](a11ySuiteExample.png)
 
 ## Running Your Tests
 
@@ -332,3 +379,5 @@ follow.
 [lodash]:     https://lodash.com/                   "Lo-Dash"
 [sinon]:      http://sinonjs.org/                   "Sinon.JS"
 [sinon-chai]: https://github.com/domenic/sinon-chai "Chai assertions for Sinon"
+[test-fixture]: https://github.com/PolymerElement/test-fixture "Easy DOM fixture testing"
+[a11ydevtools]: https://github.com/GoogleChrome/accessibility-developer-tools "A collection of audit rules checking for common accessibility problems, and an API for running these rules in an HTML page."
