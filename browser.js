@@ -21,7 +21,24 @@ function whenFrameworksReady(callback) {
     callback();
   };
 
-  function componentsReady() {
+  function whenWebComponentsReady() {
+    debug('WebComponentsReady?');
+    if (window.WebComponents && WebComponents.whenReady) {
+      WebComponents.whenReady(function() {
+        debug('WebComponents Ready');
+        done();
+      });
+    } else {
+      var after = function after() {
+        window.removeEventListener('WebComponentsReady', after);
+        debug('WebComponentsReady');
+        done();
+      };
+      window.addEventListener('WebComponentsReady', after);
+    }
+  }
+
+  function importsReady() {
     // handle Polymer 0.5 readiness
     debug('Polymer ready?');
     if (window.Polymer && Polymer.whenReady) {
@@ -30,7 +47,7 @@ function whenFrameworksReady(callback) {
         done();
       });
     } else {
-      done();
+      whenWebComponentsReady();
     }
   }
 
@@ -39,31 +56,15 @@ function whenFrameworksReady(callback) {
     done();
   } else if (HTMLImports.ready) {
     debug('HTMLImports ready');
-    componentsReady();
+    importsReady();
   } else if (HTMLImports.whenReady) {
     HTMLImports.whenReady(function() {
       debug('HTMLImports.whenReady ready');
-      componentsReady();
+      importsReady();
     });
-  } else if (window.WebComponents && WebComponents.whenReady) {
-      debug('WebComponents Ready?');
-      WebComponents.whenReady(function() {
-        debug('WebComponents Ready');
-        componentsReady();
-      });
   } else {
-    whenWebComponentsReady(componentsReady);
+    whenWebComponentsReady();
   }
-}
-
-function whenWebComponentsReady(cb) {
-  debug('WebComponentsReady?');
-  var after = function after() {
-    window.removeEventListener('WebComponentsReady', after);
-    debug('WebComponentsReady');
-    cb();
-  };
-  window.addEventListener('WebComponentsReady', after);
 }
 
 /**
