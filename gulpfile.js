@@ -10,6 +10,7 @@
 var fs = require('fs');
 var gulp = require('gulp');
 var jshint = require('gulp-jshint');
+var path = require('path');
 var lazypipe = require('lazypipe');
 var mocha = require('gulp-mocha');
 var rollup = require('rollup');
@@ -38,7 +39,8 @@ gulp.task('build:browser', function(done) {
       format: 'iife',
       banner: fs.readFileSync('license-header.txt', 'utf-8'),
       dest: 'browser.js',
-      sourceMap: true
+      sourceMap: true,
+      sourceMapFile: path.resolve('browser.js.map')
     }).then(function() {
       done();
     });
