@@ -36,7 +36,9 @@ extendInterfaces('stub', function(context, teardown) {
       // For all of the keys in the implementation we stubbed..
       keys.forEach(function(key) {
         // Restore the stub:
-        proto[key].restore();
+        if (proto[key].isSinonProxy) {
+          proto[key].restore();
+        }
       });
     });
   };
