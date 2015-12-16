@@ -114,8 +114,8 @@ function defaults() {
         {'/components/lodash/lodash.js': path.join(WCT_ROOT, 'node_modules', 'lodash', 'index.js')},
         {'/components': path.join(WCT_ROOT, 'node_modules')},
         // npm 3 paths
-        {'/components/sinonjs': path.join(WCT_ROOT, 'sinon', 'pkg')},
-        {'/components/lodash/lodash.js': path.join(WCT_ROOT, 'lodash', 'index.js')},
+        {'/components/sinonjs': path.join(WCT_ROOT, '..', 'sinon', 'pkg')},
+        {'/components/lodash/lodash.js': path.join(WCT_ROOT, '..', 'lodash', 'index.js')},
         {'/components/': path.join(WCT_ROOT, '..')}
       ]),
       // The URL prefix that serves contents from the project root.
