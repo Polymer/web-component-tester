@@ -1,4 +1,29 @@
+# 4.x
+## 4.0.3
+* Fix npm 3 serving for lodash and sinon
+
+## 4.0.2
+* Fix serving from `node_modules` for npm 3
+
+## 4.0.1
+* Fix Polymer 0.5 testing
+
+## 4.0.0
+* Remove `bower` as a dependency, serve testing files out of `node_modules`
+* Upgrade to `wct-local` 2.0, which needs node 0.12+ for `launchpad` 0.5
+* Replace esperanto with rollup for building browser bundle
+
 # 3.x
+
+## 3.4.0
+* Integrate [test-fixture](https://github.com/PolymerElements/test-fixture)
+
+## 3.3.0
+* Add ability to cancel running tests from library
+
+## 3.2.0
+* Add accessibility testing with `a11ySuite` and
+    [accessibility-developer-tools](https://github.com/GoogleChrome/accessibility-developer-tools)
 
 ## 3.1.3
 
