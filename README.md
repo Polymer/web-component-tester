@@ -84,7 +84,7 @@ suite('AwesomeLib', function() {
     var div;
     setup(function() {
       div = fixture('simple');
-    })
+    });
     test('foo', function() {
       div.classList.add('foo');
       assertSomethingOrOther(div);
