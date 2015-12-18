@@ -379,5 +379,5 @@ follow.
 [lodash]:     https://lodash.com/                   "Lo-Dash"
 [sinon]:      http://sinonjs.org/                   "Sinon.JS"
 [sinon-chai]: https://github.com/domenic/sinon-chai "Chai assertions for Sinon"
-[test-fixture]: https://github.com/PolymerElement/test-fixture "Easy DOM fixture testing"
+[test-fixture]: https://github.com/Polymer/test-fixture "Easy DOM fixture testing"
 [a11ydevtools]: https://github.com/GoogleChrome/accessibility-developer-tools "A collection of audit rules checking for common accessibility problems, and an API for running these rules in an HTML page."
