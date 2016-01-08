@@ -1,4 +1,9 @@
 # 4.x
+## 4.1.0
+* Add `ignoreRules` option to `a11ySuite`
+    * Array of a11ySuite rules to ignore for that suite
+    * Example: https://github.com/PolymerElements/paper-tooltip/commit/bf22b1dfaf7f47312ddb7f5415f75ae81fa467bf
+
 ## 4.0.3
 * Fix npm 3 serving for lodash and sinon
 

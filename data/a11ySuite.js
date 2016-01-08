@@ -21,27 +21,24 @@
 
       suite.on('pre-require', function(context, file, mocha) {
 
-        // build an audit config to disable certain ignorable tests
-        var axsConfig = new axs.AuditConfiguration();
-        axsConfig.scope = document.body;
-        axsConfig.showUnsupportedRulesWarning = false;
-
-        // filter out rules that only run in the extension
-        var rules = axs.AuditRules.getRules().filter(function(rule) {
-          return !rule.requiresConsoleAPI;
-        });
-
         /**
           * Runs the Chrome Accessibility Developer Tools Audit against a test-fixture
           *
           * @param {String} fixtureId ID of the fixture element in the document to use
+          * @param {Array?} ignoredRules Array of rules to ignore for this suite
           */
-        context.a11ySuite = function(fixtureId) {
+        context.a11ySuite = function(fixtureId, ignoredRules) {
           // capture a reference to the fixture element early
           var fixtureElement = document.getElementById(fixtureId);
           if (!fixtureElement) {
             return;
           }
+
+          // build an audit config to disable certain ignorable tests
+          var axsConfig = new axs.AuditConfiguration();
+          axsConfig.scope = document.body;
+          axsConfig.showUnsupportedRulesWarning = false;
+          axsConfig.auditRulesToIgnore = ignoredRules;
 
           // build mocha suite
           var a11ySuite = Suite.create(suite, 'A11y Audit - Fixture: ' + fixtureId);
@@ -61,7 +58,7 @@
             auditResults.forEach(function(result, index) {
               // only show applicable tests
               if (result.result !== 'NA') {
-                var title = rules[index].heading;
+                var title = result.rule.heading;
                 // fail test if audit result is FAIL
                 var error = result.result === 'FAIL' ? axs.Audit.accessibilityErrorMessage(result) : null;
                 var test = new Test(title, function() {
