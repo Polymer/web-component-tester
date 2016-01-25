@@ -82,7 +82,7 @@
     "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
-    "rollup": "^0.24.0",
+    "rollup": "^0.25.1",
     "run-sequence": "^1.0.1"
   },
   "engines": {

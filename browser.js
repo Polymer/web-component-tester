@@ -721,274 +721,6 @@ function _runMocha(reporter, done, waited) {
   }
 }
 
-// We may encounter errors during initialization (for example, syntax errors in
-// a test file). Hang onto those (and more) until we are ready to report them.
-var globalErrors = [];
-
-/**
- * Hook the environment to pick up on global errors.
- */
-function listenForErrors() {
-  window.addEventListener('error', function(event) {
-    globalErrors.push(event.error);
-  });
-
-  // Also, we treat `console.error` as a test failure. Unless you prefer not.
-  var origConsole = console;
-  var origError   = console.error;
-  console.error = function wctShimmedError() {
-    origError.apply(origConsole, arguments);
-    if (get('trackConsoleError')) {
-      throw 'console.error: ' + Array.prototype.join.call(arguments, ' ');
-    }
-  };
-}
-
-var interfaceExtensions = [];
-
-/**
- * Registers an extension that extends the global `Mocha` implementation
- * with new helper methods. These helper methods will be added to the `window`
- * when tests run for both BDD and TDD interfaces.
- */
-function extendInterfaces(helperName, helperFactory) {
-  interfaceExtensions.push(function() {
-    var Mocha = window.Mocha;
-    // For all Mocha interfaces (probably just TDD and BDD):
-    Object.keys(Mocha.interfaces).forEach(function(interfaceName) {
-      // This is the original callback that defines the interface (TDD or BDD):
-      var originalInterface = Mocha.interfaces[interfaceName];
-      // This is the name of the "teardown" or "afterEach" property for the
-      // current interface:
-      var teardownProperty = interfaceName === 'tdd' ? 'teardown' : 'afterEach';
-      // The original callback is monkey patched with a new one that appends to
-      // the global context however we want it to:
-      Mocha.interfaces[interfaceName] = function(suite) {
-        // Call back to the original callback so that we get the base interface:
-        originalInterface.apply(this, arguments);
-        // Register a listener so that we can further extend the base interface:
-        suite.on('pre-require', function(context, file, mocha) {
-          // Capture a bound reference to the teardown function as a convenience:
-          var teardown = context[teardownProperty].bind(context);
-          // Add our new helper to the testing context. The helper is generated
-          // by a factory method that receives the context, the teardown function
-          // and the interface name and returns the new method to be added to
-          // that context:
-          context[helperName] = helperFactory(context, teardown, interfaceName);
-        });
-      };
-    });
-  });
-}
-
-/**
- * Applies any registered interface extensions. The extensions will be applied
- * as many times as this function is called, so don't call it more than once.
- */
-function applyExtensions() {
-  interfaceExtensions.forEach(function(applyExtension) {
-    applyExtension();
-  });
-}
-
-extendInterfaces('fixture', function(context, teardown) {
-
-  // Return context.fixture if it is already a thing, for backwards
-  // compatibility with `test-fixture-mocha.js`:
-  return context.fixture || function fixture(fixtureId, model) {
-
-    // Automatically register a teardown callback that will restore the
-    // test-fixture:
-    teardown(function() {
-      document.getElementById(fixtureId).restore();
-    });
-
-    // Find the test-fixture with the provided ID and create it, returning
-    // the results:
-    return document.getElementById(fixtureId).create(model);
-  };
-});
-
-/**
- * stub
- *
- * The stub addon allows the tester to partially replace the implementation of
- * an element with some custom implementation. Usage example:
- *
- * beforeEach(function() {
- *   stub('x-foo', {
- *     attached: function() {
- *       // Custom implementation of the `attached` method of element `x-foo`..
- *     },
- *     otherMethod: function() {
- *       // More custom implementation..
- *     },
- *     // etc..
- *   });
- * });
- */
-extendInterfaces('stub', function(context, teardown) {
-
-  return function stub(tagName, implementation) {
-    // Find the prototype of the element being stubbed:
-    var proto = document.createElement(tagName).constructor.prototype;
-
-    // For all keys in the implementation to stub with..
-    var keys = Object.keys(implementation);
-    keys.forEach(function(key) {
-      // Stub the method on the element prototype with Sinon:
-      sinon.stub(proto, key, implementation[key]);
-    });
-
-    // After all tests..
-    teardown(function() {
-      // For all of the keys in the implementation we stubbed..
-      keys.forEach(function(key) {
-        // Restore the stub:
-        if (proto[key].isSinonProxy) {
-          proto[key].restore();
-        }
-      });
-    });
-  };
-});
-
-/**
- * replace
- *
- * The replace addon allows the tester to replace all usages of one element with
- * another element within all Polymer elements created within the time span of
- * the test. Usage example:
- *
- * beforeEach(function() {
- *   replace('x-foo').with('x-fake-foo');
- * });
- *
- * All annotations and attributes will be set on the placement element the way
- * they were set for the original element.
- */
-extendInterfaces('replace', function(context, teardown) {
-  return function replace(oldTagName) {
-    return {
-      with: function(tagName) {
-        // Keep a reference to the original `Polymer.Base.instanceTemplate`
-        // implementation for later:
-        var originalInstanceTemplate = Polymer.Base.instanceTemplate;
-
-        // Use Sinon to stub `Polymer.Base.instanceTemplate`:
-        sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
-          // The DOM to replace is the result of calling the "original"
-          // `instanceTemplate` implementation:
-          var dom = originalInstanceTemplate.apply(this, arguments);
-
-          // The nodes to replace are queried from the DOM chunk:
-          var nodes = Array.prototype.slice.call(dom.querySelectorAll(oldTagName));
-
-          // For all of the nodes we want to place...
-          nodes.forEach(function(node) {
-
-            // Create a replacement:
-            var replacement = document.createElement(tagName);
-
-            // For all attributes in the original node..
-            for (var index = 0; index < node.attributes.length; ++index) {
-              // Set that attribute on the replacement:
-              replacement.setAttribute(
-                node.attributes[index].name, node.attributes[index].value);
-            }
-
-            // Replace the original node with the replacement node:
-            node.parentNode.replaceChild(replacement, node);
-          });
-
-          return dom;
-        });
-
-        // After each test...
-        teardown(function() {
-          // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
-          if (Polymer.Base.instanceTemplate.isSinonProxy) {
-            Polymer.Base.instanceTemplate.restore();
-          }
-        });
-      }
-    };
-  };
-});
-
-// Mocha global helpers, broken out by testing method.
-//
-// Keys are the method for a particular interface; values are their analog in
-// the opposite interface.
-var MOCHA_EXPORTS = {
-  // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
-  tdd: {
-    'setup':         '"before"',
-    'teardown':      '"after"',
-    'suiteSetup':    '"beforeEach"',
-    'suiteTeardown': '"afterEach"',
-    'suite':         '"describe" or "context"',
-    'test':          '"it" or "specify"',
-  },
-  // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/bdd.js
-  bdd: {
-    'before':     '"setup"',
-    'after':      '"teardown"',
-    'beforeEach': '"suiteSetup"',
-    'afterEach':  '"suiteTeardown"',
-    'describe':   '"suite"',
-    'context':    '"suite"',
-    'xdescribe':  '"suite.skip"',
-    'xcontext':   '"suite.skip"',
-    'it':         '"test"',
-    'xit':        '"test.skip"',
-    'specify':    '"test"',
-    'xspecify':   '"test.skip"',
-  },
-};
-
-/**
- * Exposes all Mocha methods up front, configuring and running mocha
- * automatically when you call them.
- *
- * The assumption is that it is a one-off (sub-)suite of tests being run.
- */
-function stubInterfaces() {
-  Object.keys(MOCHA_EXPORTS).forEach(function(ui) {
-    Object.keys(MOCHA_EXPORTS[ui]).forEach(function(key) {
-      window[key] = function wrappedMochaFunction() {
-        _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
-        if (!window[key] || window[key] === wrappedMochaFunction) {
-          throw new Error('Expected mocha.setup to define ' + key);
-        }
-        window[key].apply(window, arguments);
-      };
-    });
-  });
-}
-
-// Whether we've called `mocha.setup`
-var _mochaIsSetup = false;
-
-/**
- * @param {string} ui Sets up mocha to run `ui`-style tests.
- * @param {string} key The method called that triggered this.
- * @param {string} alternate The matching method in the opposite interface.
- */
-function _setupMocha(ui, key, alternate) {
-  var mochaOptions = get('mochaOptions');
-  if (mochaOptions.ui && mochaOptions.ui !== ui) {
-    var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. ' +
-                  'You called "' + key + '". Did you mean ' + alternate + '?';
-    throw new Error(message);
-  }
-  if (_mochaIsSetup) return;
-
-  applyExtensions();
-  mochaOptions.ui = ui;
-  mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
-}
-
 // We capture console events when running tests; so make sure we have a
 // reference to the original one.
 var console$1 = window.console;
@@ -1607,6 +1339,274 @@ function _checkChai() {
 
   window.assert = window.chai.assert;
   window.expect = window.chai.expect;
+}
+
+// We may encounter errors during initialization (for example, syntax errors in
+// a test file). Hang onto those (and more) until we are ready to report them.
+var globalErrors = [];
+
+/**
+ * Hook the environment to pick up on global errors.
+ */
+function listenForErrors() {
+  window.addEventListener('error', function(event) {
+    globalErrors.push(event.error);
+  });
+
+  // Also, we treat `console.error` as a test failure. Unless you prefer not.
+  var origConsole = console;
+  var origError   = console.error;
+  console.error = function wctShimmedError() {
+    origError.apply(origConsole, arguments);
+    if (get('trackConsoleError')) {
+      throw 'console.error: ' + Array.prototype.join.call(arguments, ' ');
+    }
+  };
+}
+
+var interfaceExtensions = [];
+
+/**
+ * Registers an extension that extends the global `Mocha` implementation
+ * with new helper methods. These helper methods will be added to the `window`
+ * when tests run for both BDD and TDD interfaces.
+ */
+function extendInterfaces(helperName, helperFactory) {
+  interfaceExtensions.push(function() {
+    var Mocha = window.Mocha;
+    // For all Mocha interfaces (probably just TDD and BDD):
+    Object.keys(Mocha.interfaces).forEach(function(interfaceName) {
+      // This is the original callback that defines the interface (TDD or BDD):
+      var originalInterface = Mocha.interfaces[interfaceName];
+      // This is the name of the "teardown" or "afterEach" property for the
+      // current interface:
+      var teardownProperty = interfaceName === 'tdd' ? 'teardown' : 'afterEach';
+      // The original callback is monkey patched with a new one that appends to
+      // the global context however we want it to:
+      Mocha.interfaces[interfaceName] = function(suite) {
+        // Call back to the original callback so that we get the base interface:
+        originalInterface.apply(this, arguments);
+        // Register a listener so that we can further extend the base interface:
+        suite.on('pre-require', function(context, file, mocha) {
+          // Capture a bound reference to the teardown function as a convenience:
+          var teardown = context[teardownProperty].bind(context);
+          // Add our new helper to the testing context. The helper is generated
+          // by a factory method that receives the context, the teardown function
+          // and the interface name and returns the new method to be added to
+          // that context:
+          context[helperName] = helperFactory(context, teardown, interfaceName);
+        });
+      };
+    });
+  });
+}
+
+/**
+ * Applies any registered interface extensions. The extensions will be applied
+ * as many times as this function is called, so don't call it more than once.
+ */
+function applyExtensions() {
+  interfaceExtensions.forEach(function(applyExtension) {
+    applyExtension();
+  });
+}
+
+extendInterfaces('fixture', function(context, teardown) {
+
+  // Return context.fixture if it is already a thing, for backwards
+  // compatibility with `test-fixture-mocha.js`:
+  return context.fixture || function fixture(fixtureId, model) {
+
+    // Automatically register a teardown callback that will restore the
+    // test-fixture:
+    teardown(function() {
+      document.getElementById(fixtureId).restore();
+    });
+
+    // Find the test-fixture with the provided ID and create it, returning
+    // the results:
+    return document.getElementById(fixtureId).create(model);
+  };
+});
+
+/**
+ * stub
+ *
+ * The stub addon allows the tester to partially replace the implementation of
+ * an element with some custom implementation. Usage example:
+ *
+ * beforeEach(function() {
+ *   stub('x-foo', {
+ *     attached: function() {
+ *       // Custom implementation of the `attached` method of element `x-foo`..
+ *     },
+ *     otherMethod: function() {
+ *       // More custom implementation..
+ *     },
+ *     // etc..
+ *   });
+ * });
+ */
+extendInterfaces('stub', function(context, teardown) {
+
+  return function stub(tagName, implementation) {
+    // Find the prototype of the element being stubbed:
+    var proto = document.createElement(tagName).constructor.prototype;
+
+    // For all keys in the implementation to stub with..
+    var keys = Object.keys(implementation);
+    keys.forEach(function(key) {
+      // Stub the method on the element prototype with Sinon:
+      sinon.stub(proto, key, implementation[key]);
+    });
+
+    // After all tests..
+    teardown(function() {
+      // For all of the keys in the implementation we stubbed..
+      keys.forEach(function(key) {
+        // Restore the stub:
+        if (proto[key].isSinonProxy) {
+          proto[key].restore();
+        }
+      });
+    });
+  };
+});
+
+/**
+ * replace
+ *
+ * The replace addon allows the tester to replace all usages of one element with
+ * another element within all Polymer elements created within the time span of
+ * the test. Usage example:
+ *
+ * beforeEach(function() {
+ *   replace('x-foo').with('x-fake-foo');
+ * });
+ *
+ * All annotations and attributes will be set on the placement element the way
+ * they were set for the original element.
+ */
+extendInterfaces('replace', function(context, teardown) {
+  return function replace(oldTagName) {
+    return {
+      with: function(tagName) {
+        // Keep a reference to the original `Polymer.Base.instanceTemplate`
+        // implementation for later:
+        var originalInstanceTemplate = Polymer.Base.instanceTemplate;
+
+        // Use Sinon to stub `Polymer.Base.instanceTemplate`:
+        sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
+          // The DOM to replace is the result of calling the "original"
+          // `instanceTemplate` implementation:
+          var dom = originalInstanceTemplate.apply(this, arguments);
+
+          // The nodes to replace are queried from the DOM chunk:
+          var nodes = Array.prototype.slice.call(dom.querySelectorAll(oldTagName));
+
+          // For all of the nodes we want to place...
+          nodes.forEach(function(node) {
+
+            // Create a replacement:
+            var replacement = document.createElement(tagName);
+
+            // For all attributes in the original node..
+            for (var index = 0; index < node.attributes.length; ++index) {
+              // Set that attribute on the replacement:
+              replacement.setAttribute(
+                node.attributes[index].name, node.attributes[index].value);
+            }
+
+            // Replace the original node with the replacement node:
+            node.parentNode.replaceChild(replacement, node);
+          });
+
+          return dom;
+        });
+
+        // After each test...
+        teardown(function() {
+          // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
+          if (Polymer.Base.instanceTemplate.isSinonProxy) {
+            Polymer.Base.instanceTemplate.restore();
+          }
+        });
+      }
+    };
+  };
+});
+
+// Mocha global helpers, broken out by testing method.
+//
+// Keys are the method for a particular interface; values are their analog in
+// the opposite interface.
+var MOCHA_EXPORTS = {
+  // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
+  tdd: {
+    'setup':         '"before"',
+    'teardown':      '"after"',
+    'suiteSetup':    '"beforeEach"',
+    'suiteTeardown': '"afterEach"',
+    'suite':         '"describe" or "context"',
+    'test':          '"it" or "specify"',
+  },
+  // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/bdd.js
+  bdd: {
+    'before':     '"setup"',
+    'after':      '"teardown"',
+    'beforeEach': '"suiteSetup"',
+    'afterEach':  '"suiteTeardown"',
+    'describe':   '"suite"',
+    'context':    '"suite"',
+    'xdescribe':  '"suite.skip"',
+    'xcontext':   '"suite.skip"',
+    'it':         '"test"',
+    'xit':        '"test.skip"',
+    'specify':    '"test"',
+    'xspecify':   '"test.skip"',
+  },
+};
+
+/**
+ * Exposes all Mocha methods up front, configuring and running mocha
+ * automatically when you call them.
+ *
+ * The assumption is that it is a one-off (sub-)suite of tests being run.
+ */
+function stubInterfaces() {
+  Object.keys(MOCHA_EXPORTS).forEach(function(ui) {
+    Object.keys(MOCHA_EXPORTS[ui]).forEach(function(key) {
+      window[key] = function wrappedMochaFunction() {
+        _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
+        if (!window[key] || window[key] === wrappedMochaFunction) {
+          throw new Error('Expected mocha.setup to define ' + key);
+        }
+        window[key].apply(window, arguments);
+      };
+    });
+  });
+}
+
+// Whether we've called `mocha.setup`
+var _mochaIsSetup = false;
+
+/**
+ * @param {string} ui Sets up mocha to run `ui`-style tests.
+ * @param {string} key The method called that triggered this.
+ * @param {string} alternate The matching method in the opposite interface.
+ */
+function _setupMocha(ui, key, alternate) {
+  var mochaOptions = get('mochaOptions');
+  if (mochaOptions.ui && mochaOptions.ui !== ui) {
+    var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. ' +
+                  'You called "' + key + '". Did you mean ' + alternate + '?';
+    throw new Error(message);
+  }
+  if (_mochaIsSetup) return;
+
+  applyExtensions();
+  mochaOptions.ui = ui;
+  mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
 }
 
 var SOCKETIO_ENDPOINT = window.location.protocol + '//' + window.location.host;
