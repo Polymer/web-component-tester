@@ -232,7 +232,7 @@ describe('cli', function() {
 
         it('warns when used', function(done) {
           var log = expectRun({}, ['--browsers', 'firefox'], function(call) {
-            var hasWarning = _.any(log, function(l) { return /--browsers.*deprecated/i.test(l); });
+            var hasWarning = _.some(log, function(l) { return /--browsers.*deprecated/i.test(l); });
             expect(hasWarning).to.eq(true, 'Expected a warning that --browsers is deprecated');
             done();
           });
@@ -266,7 +266,7 @@ describe('cli', function() {
 
         it('warns when used', function(done) {
           var log = expectRun({}, ['--remote'], function(call) {
-            var hasWarning = _.any(log, function(l) { return /--remote.*--sauce/.test(l); });
+            var hasWarning = _.some(log, function(l) { return /--remote.*--sauce/.test(l); });
             expect(hasWarning).to.eq(true, 'Expected a warning that --remote is deprecated');
             done();
           });

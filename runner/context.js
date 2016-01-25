@@ -123,7 +123,7 @@ Context.prototype.plugins = function plugins(done) {
  */
 Context.prototype.enabledPlugins = function enabledPlugins() {
   // Plugins with falsy configuration or disabled: true are _not_ loaded.
-  var pairs = _.reject(_.pairs(this.options.plugins), function(p) { return !p[1] || p[1].disabled });
+  var pairs = _.reject(_.toPairs(this.options.plugins), function(p) { return !p[1] || p[1].disabled });
   return _.map(pairs, function(p) { return p[0] });
 };
 
