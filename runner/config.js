@@ -212,7 +212,7 @@ function fromDisk(jsonOnly, root) {
   var projectFile = findup(matcher, {nocase: true, cwd: root});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
-  var paths   = _.unique([globalFile, projectFile]);
+  var paths   = _.uniq([globalFile, projectFile]);
   var configs = _.filter(paths, fs.existsSync).map(loadProjectFile);
   var options = merge.apply(null, configs);
 
