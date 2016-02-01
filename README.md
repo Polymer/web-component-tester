@@ -99,7 +99,7 @@ suite('AwesomeLib', function() {
 
 ### a11ySuite
 
-`a11ySuite` provides an simple way to run accessibility-deveoloper-tools' high quality accessiblity audits when given a `test-fixture`.
+`a11ySuite` provides an simple way to run accessibility-developer-tools' high quality accessibility audits when given a `test-fixture`.
 The `a11ySuite` will show all the audit results via the standard Mocha test output.
 ```html
 <test-fixture id="NoLabel">
