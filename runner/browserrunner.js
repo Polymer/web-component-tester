@@ -87,7 +87,7 @@ BrowserRunner.prototype._init = function _init(error, sessionId) {
         if (data.value && data.value.message && /Failed to connect to SafariDriver/i.test(data.value.message)) {
           error = 'Until Selenium\'s SafariDriver supports Safari 6.2+, 7.1+, & 8.0+, you must\n' +
                   'manually install it. Follow the steps at:\n' +
-                  'https://code.google.com/p/selenium/issues/detail?id=7933#c23';
+                  'https://github.com/SeleniumHQ/selenium/wiki/SafariDriver#getting-started';
         }
       } catch (error) {
         // Show the original error.
