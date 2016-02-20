@@ -16,6 +16,10 @@ export var jsSuites   = [];
 
 // We process grep ourselves to avoid loading suites that will be filtered.
 var GREP = util.getParam('grep');
+// work around mocha bug (https://github.com/mochajs/mocha/issues/2070)
+if (GREP) {
+  GREP = GREP.replace(/\\\./g, '.');
+}
 
 /**
  * Loads suites of tests, supporting both `.js` and `.html` files.
