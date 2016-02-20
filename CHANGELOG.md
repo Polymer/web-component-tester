@@ -1,4 +1,10 @@
 # 4.x
+## 4.2.1
+* Fix `grep` for upstream mocha bug
+## 4.2.0
+* Add `httpbin` functionality to check `POST` requests
+  * `POST` to `/httpbin`, response will be contents of `POST`
+
 ## 4.1.0
 * Add `ignoreRules` option to `a11ySuite`
     * Array of a11ySuite rules to ignore for that suite
