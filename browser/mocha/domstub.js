@@ -4,7 +4,7 @@
  */
 export function DomStub() {
   this._decorators = [];
-};
+}
 
 /**
  * Returns true, if this instance wasn't setup yet (or just teared down)
