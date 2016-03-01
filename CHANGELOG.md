@@ -1,4 +1,8 @@
 # 4.x
+## 4.2.2
+* Update bower dependencies to match node dependencies
+* Update rollup to 0.25
+* Update README to point to webcomponents-lite.js
 ## 4.2.1
 * Fix `grep` for upstream mocha bug
 ## 4.2.0
