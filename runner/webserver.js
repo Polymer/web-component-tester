@@ -108,7 +108,8 @@ module.exports = function(wct) {
 
       // Debugging information for each request.
       app.use(function(request, response, next) {
-        wct.emit('log:debug', chalk.magenta(request.method), request.url);
+        var msg = request.url + ' (' + request.header('referer') + ')';
+        wct.emit('log:debug', chalk.magenta(request.method), msg);
         next();
       });
 
