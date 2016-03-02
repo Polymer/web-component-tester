@@ -900,16 +900,14 @@ DomStub.prototype.setup = function() {
 
   // Use Sinon to stub `Polymer.Base.instanceTemplate`:
   sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
-    // The DOM to replace is the result of calling the "original"
-    // `instanceTemplate` implementation:
-    var dom = originalInstanceTemplate.apply(this, arguments);
 
     // Apply all decorators that were setup
     decorators.forEach(function(decorator) {
-      decorator(dom);
+      decorator(template.content);
     });
 
-    return dom;
+    // Apply original function and return it's result
+    return originalInstanceTemplate.apply(this, arguments);
   });
 };
 
