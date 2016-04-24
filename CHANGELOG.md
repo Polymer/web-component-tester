@@ -90,7 +90,7 @@
 
 * WCT now always generates an index when run via the command line.
 
-* `wct.conf.json` can be used as an alternative to `wct.conf.js`.
+* `.wct.conf.json` can be used as an alternative to `wct.conf.js`.
 
 ## 3.0.0-3.0.6
 
