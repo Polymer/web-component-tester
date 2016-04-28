@@ -22,6 +22,10 @@ extendInterfaces('replace', function(context, teardown) {
         // implementation for later:
         var originalInstanceTemplate = Polymer.Base.instanceTemplate;
 
+        if (Polymer.Base.instanceTemplate.isSinonProxy) {
+          Polymer.Base.instanceTemplate.restore();
+        }
+
         // Use Sinon to stub `Polymer.Base.instanceTemplate`:
         sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
           // The DOM to replace is the result of calling the "original"
