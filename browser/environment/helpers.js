@@ -92,16 +92,36 @@ window.testImmediateAsync = function testImmediateAsync(name, testFn) {
  * Triggers a flush of any pending events, observations, etc and calls you back
  * after they have been processed.
  *
- * @param {function()} callback
+ * Returns a Promise-like interface for chaining flushes with a 'then' function.
+ *
+ * Example:
+ *
+ *   test('clicking multiple times', function(done) {
+ *     flush(function() {
+ *       element.click();
+ *     }).then(function() {
+ *       assert.equal(...);
+ *       element.click();
+ *     }).then(function() {
+ *       assert.equal(...);
+ *       done();
+ *     }, function(err) {
+ *       done(err);
+ *  }  );
+ *  });
+ *
+ * @param {function()} resolve
+ * @param {function()} reject
+ * @return {object} returns a promise-like object for chaining flush calls.
  */
-window.flush = function flush(callback) {
+window.flush = function flush(resolve, reject) {
   // Ideally, this function would be a call to Polymer.dom.flush, but that doesn't
-  // support a callback yet (https://github.com/Polymer/polymer-dev/issues/851),
+  // support a resolve yet (https://github.com/Polymer/polymer-dev/issues/851),
   // ...and there's cross-browser flakiness to deal with.
 
-  // Make sure that we're invoking the callback with no arguments so that the
+  // Make sure that we're invoking the resolve with no arguments so that the
   // caller can pass Mocha callbacks, etc.
-  var done = function done() { callback(); };
+  var done = function done() { resolve(); };
 
   // Because endOfMicrotask is flaky for IE, we perform microtask checkpoints
   // ourselves (https://github.com/Polymer/polymer-dev/issues/114):
@@ -110,7 +130,7 @@ window.flush = function flush(callback) {
     var reallyDone = done;
     done = function doneIE() {
       Platform.performMicrotaskCheckpoint();
-      setTimeout(reallyDone, 0);
+      setTimeout$1(reallyDone, 0);
     };
   }
 
@@ -129,7 +149,12 @@ window.flush = function flush(callback) {
 
   // Ensure that we are creating a new _task_ to allow all active microtasks to
   // finish (the code you're testing may be using endOfMicrotask, too).
-  setTimeout(done, 0);
+  try {
+    setTimeout$1(done, 0);
+  } catch (err) {
+    reject(err);
+  }
+  return {then: flush};
 };
 
 /**
