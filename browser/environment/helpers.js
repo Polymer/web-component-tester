@@ -130,7 +130,7 @@ window.flush = function flush(resolve, reject) {
     var reallyDone = done;
     done = function doneIE() {
       Platform.performMicrotaskCheckpoint();
-      setTimeout$1(reallyDone, 0);
+      setTimeout(reallyDone, 0);
     };
   }
 
@@ -150,7 +150,7 @@ window.flush = function flush(resolve, reject) {
   // Ensure that we are creating a new _task_ to allow all active microtasks to
   // finish (the code you're testing may be using endOfMicrotask, too).
   try {
-    setTimeout$1(done, 0);
+    setTimeout(done, 0);
   } catch (err) {
     reject(err);
   }
