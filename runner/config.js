@@ -33,6 +33,8 @@ function defaults() {
     ttyOutput:   undefined,
     // Spew all sorts of debugging messages.
     verbose:     false,
+    // Silence output
+    quiet:     false,
     // Display test results in expanded form. Verbose implies expanded.
     expanded:    false,
     // The on-disk path where tests & static files should be served from. Paths
@@ -157,7 +159,11 @@ var ARG_CONFIG = {
     flag:      true,
   },
   verbose: {
-    help:      'Log all the things.',
+    help:      'Turn on debugging output.',
+    flag:      true,
+  },
+  quiet: {
+    help:      'Silence output.',
     flag:      true,
   },
   simpleOutput: {
