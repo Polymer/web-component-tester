@@ -59,12 +59,14 @@ function CliReporter(emitter, stream, options) {
     done();
   }.bind(this));
 
-  emitter.on('log:info',  this.log.bind(this));
-  emitter.on('log:warn',  this.log.bind(this, chalk.yellow));
   emitter.on('log:error', this.log.bind(this, chalk.red));
 
-  if (this.options.verbose) {
-    emitter.on('log:debug', this.log.bind(this, chalk.dim));
+  if (!this.options.quiet) {
+    emitter.on('log:warn',  this.log.bind(this, chalk.yellow));
+    emitter.on('log:info',  this.log.bind(this));
+    if (this.options.verbose) {
+      emitter.on('log:debug', this.log.bind(this, chalk.dim));
+    }
   }
 
   emitter.on('browser-init', function(browser, stats) {
