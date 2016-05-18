@@ -1,4 +1,5 @@
 import { extendInterfaces } from './extend';
+import { DomStub } from './domstub';
 
 /**
  * replace
@@ -15,19 +16,20 @@ import { extendInterfaces } from './extend';
  * they were set for the original element.
  */
 extendInterfaces('replace', function(context, teardown) {
+
+  var stub = new DomStub();
+
   return function replace(oldTagName) {
     return {
       with: function(tagName) {
-        // Keep a reference to the original `Polymer.Base.instanceTemplate`
-        // implementation for later:
-        var originalInstanceTemplate = Polymer.Base.instanceTemplate;
 
-        // Use Sinon to stub `Polymer.Base.instanceTemplate`:
-        sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
-          // The DOM to replace is the result of calling the "original"
-          // `instanceTemplate` implementation:
-          var dom = originalInstanceTemplate.apply(this, arguments);
+        // Stub Polymer.Base.instanceTemplate
+        if (stub.pristine()) {
+          stub.setup();
+          teardown(stub.teardown.bind(stub));
+        }
 
+        stub.decorator(function(dom) {
           // The nodes to replace are queried from the DOM chunk:
           var nodes = Array.prototype.slice.call(dom.querySelectorAll(oldTagName));
 
@@ -47,16 +49,6 @@ extendInterfaces('replace', function(context, teardown) {
             // Replace the original node with the replacement node:
             node.parentNode.replaceChild(replacement, node);
           });
-
-          return dom;
-        });
-
-        // After each test...
-        teardown(function() {
-          // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
-          if (Polymer.Base.instanceTemplate.isSinonProxy) {
-            Polymer.Base.instanceTemplate.restore();
-          }
         });
       }
     };

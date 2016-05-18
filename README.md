@@ -97,6 +97,38 @@ suite('AwesomeLib', function() {
 </script>
 ```
 
+### Create stub methods
+
+Stubs enable you to replace default implementations with custom methods. This is useful for catching side effects.
+
+```javascript
+setup(function() {
+  stub('paper-button', {
+    click: function() {
+      console.log('paper-button.click called');
+    }
+  });
+});
+```
+
+You don’t have to use stubs directly on individual elements. You can override the implementation for all elements of a given type.
+
+### Create stub elements
+
+Use stub elements to test elements in isolation. For example, if one of your tests depends on another element to return data, rather than importing the other (possibly unstable) element into your tests, you can implement a stub of the other element that always returns consistent data.
+
+Use `replace()` to create stub elements.
+
+```javascript
+setup(function() {
+  replace('paper-button').with('fake-paper-button');
+});
+```
+
+The attributes and content of the element are preserved, but the tag is replaced with the specified stub tag.
+
+Because the method is called within `setup()`, all of the changes are reverted at the end of each test.
+
 ### a11ySuite
 
 `a11ySuite` provides an simple way to run accessibility-developer-tools' high quality accessibility audits when given a `test-fixture`.
