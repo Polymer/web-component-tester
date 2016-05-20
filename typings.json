@@ -1,0 +1,11 @@
+{
+  "name": "web-component-tester",
+  "version": false,
+  "dependencies": {
+    "chalk": "registry:npm/chalk#1.0.0+20160211003958",
+    "lodash": "registry:npm/lodash#4.0.0+20160416211519"
+  },
+  "globalDependencies": {
+    "node": "registry:env/node#4.0.0+20160507210304"
+  }
+}
