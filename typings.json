@@ -3,6 +3,8 @@
   "version": false,
   "dependencies": {
     "chalk": "registry:npm/chalk#1.0.0+20160211003958",
+    "es6-promise": "registry:npm/es6-promise#3.0.0+20160211003958",
+    "glob": "registry:npm/glob#6.0.0+20160211003958",
     "lodash": "registry:npm/lodash#4.0.0+20160416211519"
   },
   "globalDependencies": {
