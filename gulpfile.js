@@ -15,18 +15,27 @@ var lazypipe = require('lazypipe');
 var mocha = require('gulp-mocha');
 var rollup = require('rollup');
 var runSequence = require('run-sequence');
+var ts = require('gulp-typescript');
+
+var tsProject = ts.createProject('tsconfig.json', {
+	typescript: require('typescript')
+});
 
 // Meta tasks
 
 gulp.task('default', ['test']);
 
 gulp.task('test', function(done) {
-  runSequence('test:style', 'test:unit', done);
+  runSequence(['build:typescript', 'test:style'], 'test:unit', done);
 });
 gulp.task('test:all', function(done) {
   runSequence('test', 'test:integration', done);
 });
-gulp.task('build', ['build:browser']);
+gulp.task('build', ['build:typescript', 'build:browser']);
+
+gulp.task('build:typescript', function() {
+  return tsProject.src().pipe(ts(tsProject)).js.pipe(gulp.dest('./'));
+});
 
 // Specific tasks
 

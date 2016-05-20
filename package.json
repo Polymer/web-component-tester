@@ -42,6 +42,7 @@
   ],
   "scripts": {
     "test": "gulp test",
+    "test:watch": "watch 'npm test' runner/ browser/ bin/ test/ tasks/",
     "build": "gulp build"
   },
   "dependencies": {
@@ -81,6 +82,7 @@
     "gulp": "^3.8.8",
     "gulp-jshint": "^2.0.0",
     "gulp-mocha": "^2.0.0",
+    "gulp-typescript": "^2.13.4",
     "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
