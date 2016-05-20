@@ -41,7 +41,7 @@
     "runner.js"
   ],
   "scripts": {
-    "test": "gulp test",
+    "test": "gulp test:unit",
     "test:watch": "watch 'npm test' runner/ browser/ bin/ test/ tasks/",
     "build": "gulp build"
   },
