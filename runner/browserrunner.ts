@@ -30,7 +30,7 @@ interface Options {
 }
 
 interface NodeCB<T> {
-  (err: any, value: T):void;
+  (err: any, value: T): void;
 }
 
 interface Def extends wd.Capabilities {
@@ -213,4 +213,4 @@ class BrowserRunner {
   }
 }
 
-// export BrowserRunner;
+module.exports = BrowserRunner;

@@ -7,14 +7,14 @@ declare module 'wd' {
   export interface Browser {
     configureHttp(options: {
       retries: number
-    });
-    attach(sessionId: string, callback: NodeCB<Capabilities>);
-    init(capabilities: Capabilities, callback: NodeCB<string>);
+    }): void;
+    attach(sessionId: string, callback: NodeCB<Capabilities>): void;
+    init(capabilities: Capabilities, callback: NodeCB<string>): void;
 
-    get(url: string, callback: NodeCB<void>);
-    quit(callback: NodeCB<void>);
+    get(url: string, callback: NodeCB<void>): void;
+    quit(callback: NodeCB<void>): void;
 
-    on(eventName: string, handler: Function);
+    on(eventName: string, handler: Function): void;
   }
   export interface Capabilities {
     /** The name of the browser being used */

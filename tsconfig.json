@@ -4,51 +4,21 @@
         "target": "es5",
         "noImplicitAny": true,
         "sourceMap": false,
-        "outDir": "lib",
-        "allowJs": true
+        "suppressImplicitAnyIndexErrors": true
     },
     "exclude": [
         "node_modules"
     ],
     "filesGlob": [
-        "src/**"
+        "runner/*.ts",
+        "custom_typings/*.d.ts",
+        "typings/index.d.ts"
     ],
     "files": [
-        "src/browser.js",
-        "src/browser/childrunner.js",
-        "src/browser/clisocket.js",
-        "src/browser/config.js",
-        "src/browser/environment.js",
-        "src/browser/environment/compatability.js",
-        "src/browser/environment/errors.js",
-        "src/browser/environment/helpers.js",
-        "src/browser/index.js",
-        "src/browser/mocha.js",
-        "src/browser/mocha/extend.js",
-        "src/browser/mocha/fixture.js",
-        "src/browser/mocha/replace.js",
-        "src/browser/mocha/stub.js",
-        "src/browser/reporters.js",
-        "src/browser/reporters/console.js",
-        "src/browser/reporters/html.js",
-        "src/browser/reporters/multi.js",
-        "src/browser/reporters/title.js",
-        "src/browser/suites.js",
-        "src/browser/util.js",
-        "src/runner.js",
-        "src/runner/browserrunner.ts",
-        "src/runner/cli.js",
-        "src/runner/clireporter.js",
-        "src/runner/config.js",
-        "src/runner/context.js",
-        "src/runner/gulp.js",
-        "src/runner/paths.js",
-        "src/runner/plugin.js",
-        "src/runner/port-scanner.js",
-        "src/runner/steps.js",
-        "src/runner/test.js",
-        "src/runner/webserver.js",
-        "src/tasks/test.js"
+        "runner/browserrunner.ts",
+        "custom_typings/cleankill.d.ts",
+        "custom_typings/wd.d.ts",
+        "typings/index.d.ts"
     ],
     "atom": {
         "rewriteTsconfig": true
