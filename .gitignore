@@ -5,3 +5,4 @@ npm-debug.log
 typings/
 runner/browserrunner.js
 runner/paths.js
+runner/plugin.js

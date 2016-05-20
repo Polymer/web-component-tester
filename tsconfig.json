@@ -17,6 +17,7 @@
     "files": [
         "runner/browserrunner.ts",
         "runner/paths.ts",
+        "runner/plugin.ts",
         "custom_typings/cleankill.d.ts",
         "custom_typings/promisify-node.d.ts",
         "custom_typings/wd.d.ts",
