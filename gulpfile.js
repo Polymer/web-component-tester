@@ -51,7 +51,9 @@ gulp.task('test:style', function() {
   return gulp.src([
     '{browser,runner,environment,tasks}/**/*.js',
     'gulpfile.js',
-  ]);
+    '!runner/browserrunner.js',
+    '!runner/paths.js',
+  ]).pipe(jshintFlow());
 });
 
 gulp.task('test:unit', function() {
@@ -63,3 +65,10 @@ gulp.task('test:integration', function() {
   return gulp.src('test/integration/*.js', {read: false})
       .pipe(mocha({reporter: 'spec'}));
 });
+
+// Flows
+
+var jshintFlow = lazypipe()
+  .pipe(jshint)
+  .pipe(jshint.reporter, 'jshint-stylish')
+  .pipe(jshint.reporter, 'fail');
