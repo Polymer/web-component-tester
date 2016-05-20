@@ -13,6 +13,7 @@ var cleankill      = require('cleankill');
 var express        = require('express');
 var fs             = require('fs');
 var http           = require('http');
+var httpbin        = require('./httpbin');
 var path           = require('path');
 var portscanner    = require('./port-scanner');
 var send           = require('send');
@@ -107,7 +108,8 @@ module.exports = function(wct) {
 
       // Debugging information for each request.
       app.use(function(request, response, next) {
-        wct.emit('log:debug', chalk.magenta(request.method), request.url);
+        var msg = request.url + ' (' + request.header('referer') + ')';
+        wct.emit('log:debug', chalk.magenta(request.method), msg);
         next();
       });
 
@@ -138,6 +140,8 @@ module.exports = function(wct) {
           headers: DEFAULT_HEADERS,
           log:     wct.emit.bind(wct, 'log:debug'),
         }));
+
+        app.use('/httpbin', httpbin.httpbin);
 
         app.get('/favicon.ico', function(request, response) {
           response.end();
