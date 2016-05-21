@@ -4,7 +4,8 @@
         "target": "es5",
         "noImplicitAny": true,
         "sourceMap": false,
-        "suppressImplicitAnyIndexErrors": true
+        "suppressImplicitAnyIndexErrors": true,
+        "removeComments": false
     },
     "exclude": [
         "node_modules"
@@ -16,11 +17,14 @@
     ],
     "files": [
         "runner/browserrunner.ts",
+        "runner/config.ts",
         "runner/paths.ts",
         "runner/plugin.ts",
         "runner/port-scanner.ts",
         "custom_typings/cleankill.d.ts",
+        "custom_typings/findup-sync.d.ts",
         "custom_typings/promisify-node.d.ts",
+        "custom_typings/serve-waterfall.d.ts",
         "custom_typings/wd.d.ts",
         "typings/index.d.ts"
     ],
