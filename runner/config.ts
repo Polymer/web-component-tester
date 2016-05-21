@@ -36,7 +36,7 @@ interface Context extends NodeJS.EventEmitter {
 
 type Browser = string | {browserName: string, platform: string};
 
-interface Config {
+export interface Config {
   suites: string[];
   output: NodeJS.WritableStream;
   ttyOutput: boolean;
