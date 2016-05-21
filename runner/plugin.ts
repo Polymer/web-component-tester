@@ -90,6 +90,10 @@ export class Plugin {
     }
     return name;
   };
+
+  // HACK(rictic): Makes es6 style imports happy, so that we can do, e.g.
+  //     import {Plugin} from './plugin';
+  static Plugin = Plugin;
 }
 
 // Plugin Loading
@@ -120,5 +124,5 @@ function _tryLoadPluginPackage(packageName: string) {
   return new Plugin(packageName, metadata);
 }
 
-// Looks like Plugin, but not really.
+
 module.exports = Plugin;

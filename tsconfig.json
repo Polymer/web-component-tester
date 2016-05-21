@@ -18,6 +18,7 @@
     "files": [
         "runner/browserrunner.ts",
         "runner/config.ts",
+        "runner/context.ts",
         "runner/paths.ts",
         "runner/plugin.ts",
         "runner/port-scanner.ts",
