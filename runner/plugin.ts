@@ -9,6 +9,8 @@
  */
 import * as _ from 'lodash';
 import * as path from 'path';
+import {Context} from './context';
+import {Config} from './config';
 
 // Plugin module names can be prefixed by the following:
 const PREFIXES = [
@@ -19,21 +21,13 @@ const PREFIXES = [
 interface Metadata {
 };
 
-interface CliOptions {
-
-}
-
-interface Context {
-  pluginOptions(name: string): any;
-}
-
 /**
  * A WCT plugin. This constructor is private. Plugins can be retrieved via
  * `Plugin.get`.
  */
 export class Plugin {
   name: string;
-  cliConfig: CliOptions;
+  cliConfig: Config;
   constructor(public packageName: string, public metadata: Metadata) {
     this.name = Plugin.shortName(packageName);
 
