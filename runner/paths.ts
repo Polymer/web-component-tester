@@ -22,7 +22,7 @@ import * as promisify from 'promisify-node';
  * @param {!Array<string>} patterns The patterns to expand.
  * @param {function(*, Array<string>)} done Callback given the expanded paths.
  */
-function expand(baseDir: string, patterns: string[], done: (err: any, value?: string[])=>void):void {
+export function expand(baseDir: string, patterns: string[], done: (err: any, value?: string[])=>void):void {
   unglob(baseDir, patterns).then((files) => {
     return expandDirectories(baseDir, files);
   }).then((results) => done(null, results), (err) => done(err));
@@ -82,8 +82,3 @@ function expandDirectories(baseDir: string, paths: string[]): Promise<string[]> 
     return files.filter((file) => /\.(js|html)$/.test(file));
   });
 }
-
-
-module.exports = {
-  expand: expand,
-};

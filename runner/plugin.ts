@@ -17,7 +17,6 @@ const PREFIXES = [
 ];
 
 interface Metadata {
-
 };
 
 interface CliOptions {
@@ -32,7 +31,7 @@ interface Context {
  * A WCT plugin. This constructor is private. Plugins can be retrieved via
  * `Plugin.get`.
  */
-class Plugin {
+export class Plugin {
   name: string;
   cliConfig: CliOptions;
   constructor(public packageName: string, public metadata: Metadata) {

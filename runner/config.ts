@@ -7,22 +7,78 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _              = require('lodash');
-var findup         = require('findup-sync');
-var fs             = require('fs');
-var nomnom         = require('nomnom');
-var path           = require('path');
-var serveWaterfall = require('serve-waterfall');
+import * as _ from 'lodash';
+import * as findup from 'findup-sync';
+import * as fs from 'fs';
+import * as nomnom from 'nomnom';
+import * as path from 'path';
+import * as serveWaterfall from 'serve-waterfall';
 
-var paths = require('./paths');
+import {Capabilities} from 'wd';
+import * as paths from './paths';
+import {Plugin} from './plugin';
+
+
 
 var HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
 var JSON_MATCHER   = 'wct.conf.json';
 var CONFIG_MATCHER = 'wct.conf.*';
 var WCT_ROOT       = path.resolve(__dirname, '..');
 
+interface WCT {
+
+}
+
+interface Context extends NodeJS.EventEmitter {
+  plugins(f: (err:any, plugins: Plugin[])=> void): void;
+  options: Config;
+}
+
+type Browser = string | {browserName: string, platform: string};
+
+interface Config {
+  suites: string[];
+  output: NodeJS.WritableStream;
+  ttyOutput: boolean;
+  verbose: boolean;
+  expanded: boolean;
+  root: string;
+  testTimeout: number;
+  persistent: boolean;
+  extraScripts: string[];
+  clientOptions: {
+    root: string;
+  };
+  activeBrowsers: string[];
+  browserOptions: {
+    [name: string]: Capabilities
+  };
+  plugins: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
+  registerHooks: (wct: WCT)=>void;
+  enforceJsonConf: boolean;
+  webserver: {
+    // The port that the webserver should run on. A port will be determined at
+    // runtime if none is provided.
+    port: number;
+    // The hostname used when generating URLs for the webdriver client.
+    hostname: string;
+    // mappings of URL prefix to on disk paths that the web server should
+    // serve via https://github.com/PolymerLabs/serve-waterfall
+    pathMappings: {[urlPath: string]: string}[];
+    // The URL prefix that serves contents from the project root.
+    urlPrefix: string;
+  };
+  skipPlugins?: boolean;
+
+  sauce?: {};
+  remote?: {};
+  origSuites?: string[];
+  /** A deprecated option */
+  browsers?: Browser[] | Browser;
+}
+
 // The full set of options, as a reference.
-function defaults() {
+export function defaults(): Config {
   return {
     // The test suites that should be run.
     suites:      ['test/'],
@@ -211,16 +267,16 @@ var PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'
  * @param {string} root
  * @return {!Object} The merged configuration.
  */
-function fromDisk(jsonOnly, root) {
+export function fromDisk(jsonOnly: boolean, root: string): Config {
   var matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
 
   var globalFile  = path.join(HOME_DIR, matcher);
   var projectFile = findup(matcher, {nocase: true, cwd: root});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
-  var paths   = _.unique([globalFile, projectFile]);
+  var paths   = _.union([globalFile, projectFile]);
   var configs = _.filter(paths, fs.existsSync).map(loadProjectFile);
-  var options = merge.apply(null, configs);
+  var options: Config = merge.apply(null, configs);
 
   if (!options.root && projectFile && projectFile !== globalFile) {
     options.root = path.dirname(projectFile);
@@ -233,7 +289,7 @@ function fromDisk(jsonOnly, root) {
  * @param {string} file
  * @return {Object?}
  */
-function loadProjectFile(file) {
+function loadProjectFile(file: string) {
   // If there are _multiple_ configs at this path, prefer `json`
   if (path.extname(file) === '.js' && fs.existsSync(file + 'on')) {
     file = file + 'on';
@@ -259,7 +315,7 @@ function loadProjectFile(file) {
  * @param {!Array<string>} args
  * @return {!Object}
  */
-function preparseArgs(args) {
+export function preparseArgs(args: string[]) {
   // Don't let it short circuit on help.
   args = _.difference(args, ['--help', '-h']);
 
@@ -279,16 +335,16 @@ function preparseArgs(args) {
  * @param {!Array<string>} args The args to parse.
  * @param {function(*)} done
  */
-function parseArgs(context, args, done) {
+export function parseArgs(context: Context, args: string[], done: (err?: any)=>void):void {
   var parser = nomnom();
   parser.script('wct');
   parser.options(ARG_CONFIG);
 
-  context.plugins(function(error, plugins) {
+  context.plugins(function(error: any, plugins: Plugin[]) {
     if (error) return done(error);
 
     plugins.forEach(_configurePluginOptions.bind(null, parser));
-    var options = _expandOptionPaths(normalize(parser.parse(args)));
+    var options = <any>_expandOptionPaths(normalize(parser.parse(args)));
     if (options._ && options._.length > 0) {
       options.suites = options._;
     }
@@ -298,8 +354,9 @@ function parseArgs(context, args, done) {
   });
 }
 
-function _configurePluginOptions(parser, plugin) {
-  if (!plugin.cliConfig || plugin.cliConfig.length === 0) return;
+function _configurePluginOptions(parser: NomnomInternal.Parser, plugin: Plugin) {
+  /** HACK(rictic): this looks wrong, cliConfig shouldn't have a length. */
+  if (!plugin.cliConfig || (<any>plugin.cliConfig).length === 0) return;
 
   // Group options per plugin. It'd be nice to also have a header, but that ends
   // up shifting all the options over.
@@ -314,7 +371,7 @@ function _configurePluginOptions(parser, plugin) {
   });
 }
 
-function _expandOptionPaths(options) {
+function _expandOptionPaths(options: Object) {
   var result = {};
   _.each(options, function(value, key) {
     var target = result;
@@ -332,9 +389,9 @@ function _expandOptionPaths(options) {
  * @return {!Object} The merged configuration, where configuration objects
  *     specified later in the arguments list are given precedence.
  */
-function merge() {
-  var result  = {};
-  var configs = Array.prototype.map.call(arguments, normalize);
+export function merge(...configs: Config[]): Config {
+  var result = <Config>{};
+  configs = configs.map(normalize);
   _.merge.apply(_, [result].concat(configs));
 
   // false plugin configs are preserved.
@@ -353,11 +410,10 @@ function merge() {
  * @param {!Object} config Configuration object to normalize.
  * @return {!Object} `config`.
  */
-function normalize(config) {
-  var i, name;
+export function normalize(config: Config) {
   if (_.isArray(config.plugins)) {
-    var pluginConfigs = {};
-    for (i = 0, name; name = config.plugins[i]; i++) {
+    var pluginConfigs = <{[key: string]: {disabled: boolean}}>{};
+    for (let i = 0, name: string; name = <string>config.plugins[i]; i++) {
       // A named plugin is explicitly enabled (e.g. --plugin foo).
       pluginConfigs[name] = {disabled: false};
     }
@@ -367,7 +423,7 @@ function normalize(config) {
   // Always wins.
   if (config.skipPlugins) {
     config.plugins = config.plugins || {};
-    for (i = 0, name; name = config.skipPlugins[i]; i++) {
+    for (let i = 0, name: string; name = config.skipPlugins[i]; i++) {
       config.plugins[name] = false;
     }
   }
@@ -381,7 +437,7 @@ function normalize(config) {
  * @param {!Context} context The context for the current run.
  * @param {function(*)} done
  */
-function expand(context, done) {
+export function expand(context: Context, done: (err?: any)=>void): void {
   var options = context.options;
   var root    = context.options.root || process.cwd();
   context.options.root = root = path.resolve(root);
@@ -404,10 +460,10 @@ function expand(context, done) {
  *
  * @param {!Context} context The context for the current run.
  */
-function expandDeprecated(context, done) {
+function expandDeprecated(context: Context, done: (err?: any)=> void): void {
   var options = context.options;
   // We collect configuration fragments to be merged into the options object.
-  var fragments = [];
+  var fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
 
   var browsers = _.isArray(options.browsers) ? options.browsers : [options.browsers];
   browsers = _.compact(browsers);
@@ -416,9 +472,9 @@ function expandDeprecated(context, done) {
     var fragment = {plugins: {sauce: {}, local: {}}};
     fragments.push(fragment);
 
-    for (var i = 0, browser; browser = browsers[i]; i++) {
-      var name   = browser.browserName || browser;
-      var plugin = browser.platform || name.indexOf('/') !== -1 ? 'sauce' : 'local';
+    for (var i = 0, browser: Browser; browser = browsers[i]; i++) {
+      var name   = (<any>browser).browserName || browser;
+      var plugin = (<any>browser).platform || name.indexOf('/') !== -1 ? 'sauce' : 'local';
       fragment.plugins[plugin].browsers = fragment.plugins[plugin].browsers || [];
       fragment.plugins[plugin].browsers.push(browser);
     }
@@ -454,11 +510,11 @@ function expandDeprecated(context, done) {
  * @param {!Object} options The configuration to validate.
  * @param {function(*)} Callback indicating whether the configuration is valid.
  */
-function validate(options, done) {
-  if (options.webRunner) {
+export function validate(options: Config, done: (err?: string)=>void): void {
+  if (options['webRunner']) {
     return done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
   }
-  if (options.component) {
+  if (options['component']) {
     return done('component is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
   }
 
@@ -478,14 +534,3 @@ function validate(options, done) {
 
   done(null);
 }
-
-module.exports = {
-  defaults:     defaults,
-  fromDisk:     fromDisk,
-  preparseArgs: preparseArgs,
-  parseArgs:    parseArgs,
-  merge:        merge,
-  normalize:    normalize,
-  expand:       expand,
-  validate:     validate,
-};
