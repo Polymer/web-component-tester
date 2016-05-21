@@ -27,7 +27,7 @@ type Handler = (o: {}, f: (v: any)=>void)=>void;
  *
  * @param {Object} options Any initially specified options.
  */
-class Context extends events.EventEmitter {
+export class Context extends events.EventEmitter {
   options: config.Config;
   private _hookHandlers : {[key: string]: Handler[]} = {};
   constructor(options: config.Config) {
@@ -135,6 +135,8 @@ class Context extends events.EventEmitter {
   pluginOptions(name: string) {
     return this.options.plugins[Plugin.shortName(name)];
   };
+
+  static Context = Context;
 }
 
 

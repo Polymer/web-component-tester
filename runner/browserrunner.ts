@@ -11,22 +11,13 @@ import * as _ from 'lodash';
 import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
 import * as wd from 'wd';
+import {Config} from './config';
 
 interface Stats {
   status: string;
   passing?: number;
   pending?: number;
   failing?: number;
-}
-
-interface Options {
-  testTimeout: number;
-  persistent: boolean;
-  webserver: {
-    hostname: string;
-    port: number;
-    webRunnerPath: string;
-  };
 }
 
 interface NodeCB<T> {
@@ -48,7 +39,7 @@ class BrowserRunner {
   sessionId: string;
   timeoutId: NodeJS.Timer;
 
-  constructor(public emitter:NodeJS.EventEmitter, public def: Def, public options: Options, public doneCallback: NodeCB<BrowserRunner>) {
+  constructor(public emitter:NodeJS.EventEmitter, public def: Def, public options: Config, public doneCallback: NodeCB<BrowserRunner>) {
     this.timeout = options.testTimeout;
     this.emitter = emitter;
 

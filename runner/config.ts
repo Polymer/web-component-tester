@@ -17,7 +17,7 @@ import * as serveWaterfall from 'serve-waterfall';
 import {Capabilities} from 'wd';
 import * as paths from './paths';
 import {Plugin} from './plugin';
-
+import {Context} from './context';
 
 
 var HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
@@ -27,11 +27,6 @@ var WCT_ROOT       = path.resolve(__dirname, '..');
 
 interface WCT {
 
-}
-
-interface Context extends NodeJS.EventEmitter {
-  plugins(f: (err:any, plugins: Plugin[])=> void): void;
-  options: Config;
 }
 
 type Browser = string | {browserName: string, platform: string};
@@ -67,7 +62,9 @@ export interface Config {
     pathMappings: {[urlPath: string]: string}[];
     // The URL prefix that serves contents from the project root.
     urlPrefix: string;
+    webRunnerPath?: string;
   };
+  
   skipPlugins?: boolean;
 
   sauce?: {};
