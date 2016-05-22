@@ -18,7 +18,7 @@ var runSequence = require('run-sequence');
 var ts = require('gulp-typescript');
 
 var tsProject = ts.createProject('tsconfig.json', {
-	typescript: require('typescript')
+  typescript: require('typescript')
 });
 
 // Meta tasks
@@ -61,7 +61,12 @@ gulp.task('test:style', function() {
     '{browser,runner,environment,tasks}/**/*.js',
     'gulpfile.js',
     '!runner/browserrunner.js',
+    '!runner/config.js',
+    '!runner/context.js',
     '!runner/paths.js',
+    '!runner/plugin.js',
+    '!runner/port-scanner.js',
+    '!runner/steps.js',
   ]).pipe(jshintFlow());
 });
 

@@ -11,9 +11,13 @@ import * as _ from 'lodash';
 var async  = require('async');
 import * as events from 'events';
 import * as util from 'util';
+import * as socketIO from 'socket.io';
+import * as http from 'http';
 
 import * as config from './config';
 import {Plugin} from './plugin';
+import {BrowserRunner} from './browserrunner';
+
 
 interface Options {
 
@@ -30,6 +34,10 @@ type Handler = (o: {}, f: (v: any)=>void)=>void;
 export class Context extends events.EventEmitter {
   options: config.Config;
   private _hookHandlers : {[key: string]: Handler[]} = {};
+  _socketIOServer: SocketIO.Server;
+  _httpServer: http.Server;
+  _testRunners: BrowserRunner[];
+
   constructor(options: config.Config) {
     super();
     options = options || <config.Config>{};

@@ -13,6 +13,7 @@
     "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160322035842",
     "node": "registry:env/node#4.0.0+20160507210304",
     "nomnom": "registry:dt/nomnom#0.0.0+20160317120654",
-    "serve-static": "registry:dt/serve-static#0.0.0+20160501131543"
+    "serve-static": "registry:dt/serve-static#0.0.0+20160501131543",
+    "socket.io": "registry:dt/socket.io#1.4.4+20160317120654"
   }
 }
