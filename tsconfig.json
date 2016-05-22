@@ -22,6 +22,7 @@
         "runner/paths.ts",
         "runner/plugin.ts",
         "runner/port-scanner.ts",
+        "runner/steps.ts",
         "custom_typings/cleankill.d.ts",
         "custom_typings/findup-sync.d.ts",
         "custom_typings/promisify-node.d.ts",

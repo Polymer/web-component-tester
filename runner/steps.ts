@@ -7,37 +7,61 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _        = require('lodash');
-var async    = require('async');
-var http     = require('http');
-var socketIO = require('socket.io');
+import * as _ from 'lodash';
+import * as http from 'http';
+import * as socketIO from 'socket.io';
+import * as promisify from 'promisify-node';
+import {Promise} from 'es6-promise';
 
-var BrowserRunner = require('./browserrunner');
-var config        = require('./config');
+import {BrowserRunner} from './browserrunner';
+import * as config from './config';
+import {Context} from './context';
+import {Plugin} from './plugin';
+const webserver = require('./webserver');
+
+interface ClientMessage<T> {
+  browserId: number;
+  event: string;
+  data: T;
+}
 
 // Steps (& Hooks)
 
-function setupOverrides(context, done) {
+export function setupOverrides(context: Context, done: () => void): void {
   if (context.options.registerHooks) {
     context.options.registerHooks(context);
   }
   done();
 }
 
-function loadPlugins(context, done) {
+export function loadPlugins(context: Context, done: (err: any, plugins?: Plugin[])=>void): void {
   context.emit('log:debug', 'step: loadPlugins');
   context.plugins(function(error, plugins) {
     if (error) return done(error);
     // built in quasi-plugin.
-    require('./webserver')(context);
+    webserver(context);
     // Actual plugins.
-    async.map(plugins, function(plugin, pluginDone) {
-      return plugin.execute(context, pluginDone);
-    }, done);
+
+    const promises = plugins.map((plugin => {
+      return new Promise((resolve, reject) => {
+        plugin.execute(context, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }));
+    Promise.all(promises).then((v) => {
+      done(null, plugins);
+    }, (err) => {
+      done(err)
+    });
   });
 }
 
-function configure(context, done) {
+export function configure(context: Context, done: (err?: any)=>void): void {
   context.emit('log:debug', 'step: configure');
   var options = context.options;
   _.defaults(options, config.defaults());
@@ -67,14 +91,14 @@ function configure(context, done) {
  *
  * Note that some "plugins" are also built directly into WCT (webserver).
  */
-function prepare(context, done) {
+export function prepare(context: Context, done: (err?: any) => void): void {
   context.emitHook('prepare', done);
 }
 
-function runTests(context, done) {
+export function runTests(context: Context, done: (err?: any) => void): void {
   context.emit('log:debug', 'step: runTests');
   var failed = false;
-  var runners = runBrowsers(context, function(error) {
+  var runners = runBrowsers(context, function(error: any) {
     if (error) {
       done(error);
     } else {
@@ -85,7 +109,7 @@ function runTests(context, done) {
   context._socketIOServer = socketIO(context._httpServer);
   context._socketIOServer.on('connection', function(socket) {
     context.emit('log:debug', 'Test client opened sideband socket');
-    socket.on('client-event', function(data) {
+    socket.on('client-event', function(data: ClientMessage<any>) {
       runners[data.browserId].onEvent(data.event, data.data);
     });
   });
@@ -93,7 +117,7 @@ function runTests(context, done) {
   context._testRunners = runners;
 }
 
-function cancelTests(context) {
+export function cancelTests(context: Context) {
   if (!context._testRunners) {
     return;
   }
@@ -104,9 +128,9 @@ function cancelTests(context) {
 
 // Helpers
 
-function runBrowsers(context, done) {
-  var options = context.options;
-  var numActiveBrowsers = options.activeBrowsers.length;
+function runBrowsers(context: Context, done: (err?: any)=>void): BrowserRunner[] {
+  const options = context.options;
+  const numActiveBrowsers = options.activeBrowsers.length;
   if (numActiveBrowsers === 0) {
     throw new Error('No browsers configured to run');
   }
@@ -119,19 +143,21 @@ function runBrowsers(context, done) {
 
   context.emit('run-start', options);
 
-  var errors  = [];
-  var numDone = 0;
+  const errors: any[] = [];
+  let numDone = 0;
   return options.activeBrowsers.map(function(browser, id) {
     // Needed by both `BrowserRunner` and `CliReporter`.
     browser.id = id;
     _.defaults(browser, options.browserOptions);
 
-    return new BrowserRunner(context, browser, options, function(error) {
+    return new BrowserRunner(context, browser, options, function(error: any) {
       context.emit('log:debug', browser, 'BrowserRunner complete');
-      if (error) errors.push(error);
+      if (error) {
+        errors.push(error);
+      }
       numDone = numDone + 1;
       if (numDone === numActiveBrowsers) {
-        error = errors.length > 0 ? _.unique(errors).join(', ') : null;
+        error = errors.length > 0 ? _.union(errors).join(', ') : null;
         context.emit('run-end', error);
         // TODO(nevir): Better rationalize run-end and hook.
         context.emitHook('cleanup', function() {
@@ -141,12 +167,3 @@ function runBrowsers(context, done) {
     });
   });
 }
-
-module.exports = {
-  configure:      configure,
-  loadPlugins:    loadPlugins,
-  prepare:        prepare,
-  runTests:       runTests,
-  cancelTests:    cancelTests,
-  setupOverrides: setupOverrides,
-};

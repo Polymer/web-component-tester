@@ -18,6 +18,7 @@ import {Capabilities} from 'wd';
 import * as paths from './paths';
 import {Plugin} from './plugin';
 import {Context} from './context';
+import {BrowserDef} from './browserrunner';
 
 
 var HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
@@ -44,7 +45,7 @@ export interface Config {
   clientOptions: {
     root: string;
   };
-  activeBrowsers: string[];
+  activeBrowsers: BrowserDef[];
   browserOptions: {
     [name: string]: Capabilities
   };
@@ -64,7 +65,7 @@ export interface Config {
     urlPrefix: string;
     webRunnerPath?: string;
   };
-  
+
   skipPlugins?: boolean;
 
   sauce?: {};

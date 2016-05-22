@@ -21,25 +21,25 @@ interface Stats {
 }
 
 interface NodeCB<T> {
-  (err: any, value: T): void;
+  (err: any, value?: T): void;
 }
 
-interface Def extends wd.Capabilities {
-  id: string;
+export interface BrowserDef extends wd.Capabilities {
+  id: number;
   url: string;
   sessionId: string;
 }
 
 // Browser abstraction, responsible for spinning up a browser instance via wd.js and
 // executing runner.html test files passed in options.files
-class BrowserRunner {
+export class BrowserRunner {
   timeout: number;
   browser: wd.Browser;
   stats: Stats;
   sessionId: string;
   timeoutId: NodeJS.Timer;
 
-  constructor(public emitter:NodeJS.EventEmitter, public def: Def, public options: Config, public doneCallback: NodeCB<BrowserRunner>) {
+  constructor(public emitter:NodeJS.EventEmitter, public def: BrowserDef, public options: Config, public doneCallback: NodeCB<BrowserRunner>) {
     this.timeout = options.testTimeout;
     this.emitter = emitter;
 
@@ -202,6 +202,9 @@ class BrowserRunner {
   quit() {
     this.done('quit was called');
   }
+
+  //HACK
+  static BrowserRunner = BrowserRunner;
 }
 
 module.exports = BrowserRunner;
