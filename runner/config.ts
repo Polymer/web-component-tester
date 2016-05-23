@@ -26,10 +26,6 @@ var JSON_MATCHER   = 'wct.conf.json';
 var CONFIG_MATCHER = 'wct.conf.*';
 var WCT_ROOT       = path.resolve(__dirname, '..');
 
-interface WCT {
-
-}
-
 type Browser = string | {browserName: string, platform: string};
 
 export interface Config {
@@ -44,13 +40,14 @@ export interface Config {
   extraScripts: string[];
   clientOptions: {
     root: string;
+    verbose?: boolean;
   };
   activeBrowsers: BrowserDef[];
   browserOptions: {
     [name: string]: Capabilities
   };
   plugins: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
-  registerHooks: (wct: WCT)=>void;
+  registerHooks: (wct: Context)=>void;
   enforceJsonConf: boolean;
   webserver: {
     // The port that the webserver should run on. A port will be determined at
@@ -64,6 +61,8 @@ export interface Config {
     // The URL prefix that serves contents from the project root.
     urlPrefix: string;
     webRunnerPath?: string;
+    webRunnerContent?: string;
+    staticContent?: {[file: string]: string};
   };
 
   skipPlugins?: boolean;

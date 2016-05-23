@@ -23,10 +23,13 @@
         "runner/plugin.ts",
         "runner/port-scanner.ts",
         "runner/steps.ts",
+        "runner/webserver.ts",
         "custom_typings/cleankill.d.ts",
         "custom_typings/findup-sync.d.ts",
         "custom_typings/promisify-node.d.ts",
+        "custom_typings/send.d.ts",
         "custom_typings/serve-waterfall.d.ts",
+        "custom_typings/server-destroy.d.ts",
         "custom_typings/wd.d.ts",
         "typings/index.d.ts"
     ],

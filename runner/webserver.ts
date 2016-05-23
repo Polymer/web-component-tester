@@ -7,33 +7,36 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _              = require('lodash');
-var chalk          = require('chalk');
-var cleankill      = require('cleankill');
-var express        = require('express');
-var fs             = require('fs');
-var http           = require('http');
-var httpbin        = require('./httpbin');
-var path           = require('path');
-var portscanner    = require('./port-scanner');
-var send           = require('send');
-var serveWaterfall = require('serve-waterfall');
-var serverDestroy  = require('server-destroy');
+
+import * as _ from 'lodash';
+import * as chalk from 'chalk';
+import * as cleankill from 'cleankill';
+import * as express from 'express';
+import * as fs from 'fs';
+import * as http from 'http';
+import * as path from 'path';
+import {findPort} from './port-scanner';
+import * as send from 'send';
+import * as serveWaterfall from 'serve-waterfall';
+import * as serverDestroy from 'server-destroy';
+import * as httpbin from './httpbin';
+
+import {Context} from './context';
 
 // Template for generated indexes.
-var INDEX_TEMPLATE = _.template(fs.readFileSync(
+const INDEX_TEMPLATE = _.template(fs.readFileSync(
   path.resolve(__dirname, '../data/index.html'), {encoding: 'utf-8'}
 ));
 
 // We prefer serving local assets over bower assets.
-var PACKAGE_ROOT = path.resolve(__dirname, '..');
-var SERVE_STATIC = {  // Keys are regexps.
+const PACKAGE_ROOT = path.resolve(__dirname, '..');
+const SERVE_STATIC = {  // Keys are regexps.
   '^(.*/web-component-tester|)/browser\\.js$':         path.join(PACKAGE_ROOT, 'browser.js'),
   '^(.*/web-component-tester|)/browser\\.js\\.map$':   path.join(PACKAGE_ROOT, 'browser.js.map'),
   '^(.*/web-component-tester|)/data/a11ySuite\\.js$':  path.join(PACKAGE_ROOT, 'data', 'a11ySuite.js'),
 };
 
-var DEFAULT_HEADERS = {
+const DEFAULT_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
   'Pragma':        'no-cache',
   'Expires':        0,
@@ -43,7 +46,7 @@ var DEFAULT_HEADERS = {
 // taken from https://docs.saucelabs.com/reference/sauce-connect/#can-i-access-applications-on-localhost-
 // - 80, 443, 888: these ports must have root access
 // - 5555, 8080: not forwarded on Android
-var SAUCE_PORTS = [
+const SAUCE_PORTS = [
 2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333, 4000, 4001,
 4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000, 6001, 6060, 6666,
 6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031, 8081, 8765, 8777, 8888,
@@ -57,10 +60,10 @@ var SAUCE_PORTS = [
  * It provides a static HTTP server for serving the desired tests and WCT's
  * `browser.js`/`environment.js`.
  */
-module.exports = function(wct) {
+module.exports = function(wct: Context) {
   var options = wct.options;
 
-  wct.hook('configure', function(done) {
+  wct.hook('configure', function(done: () => void) {
     // For now, you should treat all these options as an implementation detail
     // of WCT. They may be opened up for public configuration, but we need to
     // spend some time rationalizing interactions with external webservers.
@@ -93,10 +96,10 @@ module.exports = function(wct) {
     done();
   });
 
-  wct.hook('prepare', function(done) {
+  wct.hook('prepare', function(done: (err?: any) => void) {
     var wsOptions = options.webserver;
 
-    getPort(function(error, port) {
+    getPort(function(error: any, port: number) {
       if (error) return done(error);
       // `port` (and `webRunnerPath`) is read down the line by `BrowserRunner`.
       wsOptions.port = port;
@@ -153,7 +156,7 @@ module.exports = function(wct) {
         });
 
         server.listen(port);
-        server.port = port;
+        (<any>server).port = port;
         serverDestroy(server);
 
         cleankill.onInterrupt(function(done) {
@@ -161,7 +164,7 @@ module.exports = function(wct) {
           var io = wct._socketIOServer;
           if (io) {
             // we will close the underlying server ourselves
-            io.httpServer = null;
+            (<any>io).httpServer = null;
             io.close();
           }
           server.destroy();
@@ -169,7 +172,7 @@ module.exports = function(wct) {
         });
 
         wct.emit('log:info',
-          'Web server running on port', chalk.yellow(port),
+          'Web server running on port', chalk.yellow(port.toString()),
           'and serving from', chalk.magenta(options.root)
         );
         done();
@@ -177,11 +180,11 @@ module.exports = function(wct) {
     });
   });
 
-  function getPort(done) {
+  function getPort(done: (err: any, port?: number)=>void): void {
     if (options.webserver.port) {
       done(null, options.webserver.port);
     } else {
-      portscanner(SAUCE_PORTS, done);
+      findPort(SAUCE_PORTS, done);
     }
   }
 
