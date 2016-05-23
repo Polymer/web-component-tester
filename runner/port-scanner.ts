@@ -52,7 +52,7 @@ async function detectSeries<T>(values: T[], promiseGetter: PromiseGetter<T>): Pr
   throw new Error('Couldn\'t find a good value in detectSeries');
 }
 
-module.exports = function findPort(ports: number[], callback: (err: any, port?: number)=> void):any {
+export function findPort(ports: number[], callback: (err: any, port?: number)=> void):any {
   // check the ports in series so that checkPort does not stomp on itself
   detectSeries(ports, checkPort).then((port) => {
     callback(null, port);

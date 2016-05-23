@@ -67,6 +67,7 @@ gulp.task('test:style', function() {
     '!runner/plugin.js',
     '!runner/port-scanner.js',
     '!runner/steps.js',
+		'!runner/webserver.js',
   ]).pipe(jshintFlow());
 });
 

@@ -94,9 +94,9 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
+  emitHook(name: 'prepare:webserver', app: Express.Application, don: (err?: any)=> void): Context;
   emitHook(name: string, done: (err?: any)=>void): Context {
     done = done || ((e) => {});
-    console.log('done in emitHook:', done);
     this.emit('log:debug', 'hook:', name);
 
     const hooks = (this._hookHandlers[name] || []);
@@ -115,7 +115,6 @@ export class Context extends events.EventEmitter {
     // We execute the handlers _sequentially_. This may be slower, but it gives us
     // a lighter cognitive load and more obvious logs.
     let promise = Promise.resolve(null);
-    console.log(boundHooks.length + ' hooks to emit for ' + name);
     for (const hook of boundHooks) {
       promise = promise.then(() => {
         return new Promise((resolve, reject) => {
