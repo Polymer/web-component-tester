@@ -8,11 +8,12 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 import * as _ from 'lodash';
-var async  = require('async');
 import * as events from 'events';
 import * as util from 'util';
 import * as socketIO from 'socket.io';
 import * as http from 'http';
+import * as promisify from 'promisify-node';
+import {Promise} from 'es6-promise';
 
 import * as config from './config';
 import {Plugin} from './plugin';
@@ -23,7 +24,7 @@ interface Options {
 
 }
 
-type Handler = (o: {}, f: (v: any)=>void)=>void;
+type Handler = (o: {}, callback: (err: any)=>void)=>void;
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -93,28 +94,42 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
-  emitHook(name: string, done: (err: any)=>void): Context {
+  emitHook(name: string, done: (err?: any)=>void): Context {
+    done = done || ((e) => {});
+    console.log('done in emitHook:', done);
     this.emit('log:debug', 'hook:', name);
 
-    var hooks = (this._hookHandlers[name] || []);
+    const hooks = (this._hookHandlers[name] || []);
+    let boundHooks : ((cb: (err: any)=>void)=>void)[];
     if (arguments.length > 2) {
       var hookArgs = Array.prototype.slice.call(arguments, 1, arguments.length - 1);
       done = arguments[arguments.length - 1];  // mutates arguments in loose mode!
-      hooks = hooks.map(function(hook) {
+      boundHooks = hooks.map(function(hook) {
         return hook.bind.apply(hook, [null].concat(hookArgs));
       });
+    }
+    if (!boundHooks) {
+      boundHooks = <any>hooks;
     }
 
     // We execute the handlers _sequentially_. This may be slower, but it gives us
     // a lighter cognitive load and more obvious logs.
-    async.series(hooks, function(error: any) {
-      if (error) {
-        this.emit('log:debug', 'hook done:', name, 'with error:', error);
-      } else {
-        this.emit('log:debug', 'hook done:', name);
-      }
-      done(error);
-    }.bind(this));
+    let promise = Promise.resolve(null);
+    console.log(boundHooks.length + ' hooks to emit for ' + name);
+    for (const hook of boundHooks) {
+      promise = promise.then(() => {
+        return new Promise((resolve, reject) => {
+          hook((err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          })
+        });
+      });
+    }
+    promise.then(() => done(), (err) => done(err));
 
     return this;
   };
@@ -123,8 +138,18 @@ export class Context extends events.EventEmitter {
    * @param {function(*, Array<!Plugin>)} done Asynchronously loads the plugins
    *     requested by `options.plugins`.
    */
-  plugins(done: (err: any, plugins: Plugin[])=> void): void {
-    async.map(this.enabledPlugins(), Plugin.get, done);
+  plugins(done: (err: any, plugins?: Plugin[])=> void): void {
+    Promise.all(this.enabledPlugins().map((name) => {
+      return new Promise<Plugin>((resolve, reject) => {
+        Plugin.get(name, (err, plugin) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(plugin);
+          }
+        });
+      });
+    })).then((plugins) => done(null, plugins), (err) => done(err));
   };
 
   /**
