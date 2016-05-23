@@ -94,7 +94,12 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
-  emitHook(name: 'prepare:webserver', app: Express.Application, don: (err?: any)=> void): Context;
+  emitHook(name: 'prepare:webserver', app: Express.Application, done: (err?: any)=> void): Context;
+  emitHook(name: 'configure', done: (err?: any)=> void): Context;
+  emitHook(name: 'prepare', done: (err?: any)=> void): Context;
+  emitHook(name: 'cleanup', done: (err?: any)=> void): Context;
+  emitHook(name: string, done: (err?: any)=> void): Context;
+  emitHook(name: string, ...args: any[]): Context;
   emitHook(name: string, done: (err?: any)=>void): Context {
     done = done || ((e) => {});
     this.emit('log:debug', 'hook:', name);
@@ -169,8 +174,7 @@ export class Context extends events.EventEmitter {
   };
 
   static Context = Context;
+
 }
-
-
 
 module.exports = Context;

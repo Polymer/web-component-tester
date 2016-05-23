@@ -13,7 +13,7 @@ import * as cleankill from 'cleankill';
 import * as wd from 'wd';
 import {Config} from './config';
 
-interface Stats {
+export interface Stats {
   status: string;
   passing?: number;
   pending?: number;
@@ -28,6 +28,7 @@ export interface BrowserDef extends wd.Capabilities {
   id: number;
   url: string;
   sessionId: string;
+  deviceName?: string;
 }
 
 // Browser abstraction, responsible for spinning up a browser instance via wd.js and

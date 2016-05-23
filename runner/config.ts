@@ -33,6 +33,7 @@ export interface Config {
   output: NodeJS.WritableStream;
   ttyOutput: boolean;
   verbose: boolean;
+  quiet?: boolean;
   expanded: boolean;
   root: string;
   testTimeout: number;
@@ -317,7 +318,7 @@ export function preparseArgs(args: string[]) {
   args = _.difference(args, ['--help', '-h']);
 
   var parser = nomnom();
-  parser.options(ARG_CONFIG);
+  parser.options(<any>ARG_CONFIG);
   parser.printer(function() {});  // No-op output & errors.
   var options = parser.parse(args);
 
@@ -335,7 +336,7 @@ export function preparseArgs(args: string[]) {
 export function parseArgs(context: Context, args: string[], done: (err?: any)=>void):void {
   var parser = nomnom();
   parser.script('wct');
-  parser.options(ARG_CONFIG);
+  parser.options(<any>ARG_CONFIG);
 
   context.plugins(function(error: any, plugins: Plugin[]) {
     if (error) return done(error);
@@ -463,7 +464,7 @@ function expandDeprecated(context: Context, done: (err?: any)=> void): void {
   var fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
 
   var browsers = _.isArray(options.browsers) ? options.browsers : [options.browsers];
-  browsers = _.compact(browsers);
+  browsers = <any>_.compact(<any>browsers);
   if (browsers.length > 0) {
     context.emit('log:warn', 'The --browsers flag/option is deprecated. Please use --local and --sauce instead, or configure via plugins.[local|sauce].browsers.');
     var fragment = {plugins: {sauce: {}, local: {}}};

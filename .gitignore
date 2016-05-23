@@ -11,3 +11,4 @@ runner/config.js
 runner/context.js
 runner/steps.js
 runner/webserver.js
+runner/clireporter.js
