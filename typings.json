@@ -6,6 +6,7 @@
     "es6-promise": "registry:npm/es6-promise#3.0.0+20160211003958",
     "glob": "registry:npm/glob#6.0.0+20160211003958",
     "lodash": "registry:npm/lodash#4.0.0+20160416211519",
+    "mime": "registry:npm/mime#1.3.0+20160423043021",
     "minimatch": "registry:npm/minimatch#3.0.0+20160211003958"
   },
   "globalDependencies": {

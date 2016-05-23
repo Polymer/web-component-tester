@@ -17,6 +17,7 @@
     ],
     "files": [
         "runner/browserrunner.ts",
+        "runner/clireporter.ts",
         "runner/config.ts",
         "runner/context.ts",
         "runner/paths.ts",
@@ -30,6 +31,7 @@
         "custom_typings/send.d.ts",
         "custom_typings/serve-waterfall.d.ts",
         "custom_typings/server-destroy.d.ts",
+        "custom_typings/stacky.d.ts",
         "custom_typings/wd.d.ts",
         "typings/index.d.ts"
     ],
