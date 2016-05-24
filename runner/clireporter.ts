@@ -13,7 +13,6 @@ import * as cleankill from 'cleankill';
 import * as stacky from 'stacky';
 import * as util from 'util';
 import * as events from 'events';
-import * as stream from 'stream';
 import * as config from './config';
 import {BrowserDef, Stats} from './browserrunner';
 import * as context from './context';
@@ -63,7 +62,7 @@ interface TestEndData {
   error: any;
 }
 
-class CliReporter {
+export class CliReporter {
   prettyBrowsers: {[id: number]: string} = {};
   browserStats: {[id: number]: Stats} = {};
 
@@ -72,7 +71,7 @@ class CliReporter {
    */
   private linesWritten: number;
 
-  constructor(public emitter: context.Context, public stream: stream.Writable, public options: config.Config) {
+  constructor(public emitter: events.EventEmitter, public stream: NodeJS.WritableStream, public options: config.Config) {
     cleankill.onInterrupt((done) => {
       this.flush();
       done();
@@ -285,6 +284,9 @@ class CliReporter {
       this.stream.write('\n');
     }
   };
+
+  //HACK
+  static CliReporter = CliReporter;
 }
 // Yeah, yeah.
 function padRight(string: string, length: number) {

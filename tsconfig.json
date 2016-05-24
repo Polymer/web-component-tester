@@ -17,6 +17,7 @@
     ],
     "files": [
         "runner/browserrunner.ts",
+        "runner/cli.ts",
         "runner/clireporter.ts",
         "runner/config.ts",
         "runner/context.ts",
@@ -24,6 +25,7 @@
         "runner/plugin.ts",
         "runner/port-scanner.ts",
         "runner/steps.ts",
+        "runner/test.ts",
         "runner/webserver.ts",
         "custom_typings/cleankill.d.ts",
         "custom_typings/findup-sync.d.ts",

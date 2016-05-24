@@ -6,5 +6,10 @@ declare module 'cleankill' {
    *
    * As an escape hatch, if the user mashes interrupt, the process will be immediately killed.
    */
-  export function onInterrupt(f: (done: (message?:string)=>void)=>void): void;
+  export function onInterrupt(handler: (done: (message?:string)=>void)=>void): void;
+
+  /**
+   * Run the cleankill onInterrupt handlers without actually exiting.
+   */
+  export function close(whenDone: ()=>any): void;
 }

@@ -69,6 +69,8 @@ gulp.task('test:style', function() {
     '!runner/steps.js',
 		'!runner/webserver.js',
     '!runner/clireporter.js',
+    '!runner/cli.js',
+    '!runner/test.js',
   ]).pipe(jshintFlow());
 });
 
