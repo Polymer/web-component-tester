@@ -73,6 +73,9 @@ export interface Config {
   origSuites?: string[];
   /** A deprecated option */
   browsers?: Browser[] | Browser;
+  skipCleanup?: boolean;
+  simpleOutput?: boolean;
+  skipUpdateCheck?: boolean;
 }
 
 // The full set of options, as a reference.
@@ -265,7 +268,7 @@ var PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'
  * @param {string} root
  * @return {!Object} The merged configuration.
  */
-export function fromDisk(jsonOnly: boolean, root: string): Config {
+export function fromDisk(jsonOnly?: boolean, root?: string): Config {
   var matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
 
   var globalFile  = path.join(HOME_DIR, matcher);
