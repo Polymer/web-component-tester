@@ -23,7 +23,7 @@ interface Options {
 
 }
 
-type Handler = (o: {}, callback: (err: any)=>void)=>void;
+type Handler = (o: {}, callback: (err: any) => void) => void;
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -33,7 +33,7 @@ type Handler = (o: {}, callback: (err: any)=>void)=>void;
  */
 export class Context extends events.EventEmitter {
   options: config.Config;
-  private _hookHandlers : {[key: string]: Handler[]} = {};
+  private _hookHandlers: {[key: string]: Handler[]} = {};
   _socketIOServer: SocketIO.Server;
   _httpServer: http.Server;
   _testRunners: BrowserRunner[];
@@ -93,20 +93,20 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
-  emitHook(name: 'prepare:webserver', app: Express.Application, done: (err?: any)=> void): Context;
-  emitHook(name: 'configure', done: (err?: any)=> void): Context;
-  emitHook(name: 'prepare', done: (err?: any)=> void): Context;
-  emitHook(name: 'cleanup', done: (err?: any)=> void): Context;
-  emitHook(name: string, done: (err?: any)=> void): Context;
+  emitHook(name: 'prepare:webserver', app: Express.Application, done: (err?: any) => void): Context;
+  emitHook(name: 'configure', done: (err?: any) => void): Context;
+  emitHook(name: 'prepare', done: (err?: any) => void): Context;
+  emitHook(name: 'cleanup', done: (err?: any) => void): Context;
+  emitHook(name: string, done: (err?: any) => void): Context;
   emitHook(name: string, ...args: any[]): Context;
-  emitHook(name: string, done: (err?: any)=>void): Context {
+  emitHook(name: string, done: (err?: any) => void): Context {
     done = done || ((e) => {});
     this.emit('log:debug', 'hook:', name);
 
     const hooks = (this._hookHandlers[name] || []);
-    let boundHooks : ((cb: (err: any)=>void)=>void)[];
+    let boundHooks: ((cb: (err: any) => void) => void)[];
     if (arguments.length > 2) {
-      var hookArgs = Array.prototype.slice.call(arguments, 1, arguments.length - 1);
+      const hookArgs = Array.prototype.slice.call(arguments, 1, arguments.length - 1);
       done = arguments[arguments.length - 1];  // mutates arguments in loose mode!
       boundHooks = hooks.map(function(hook) {
         return hook.bind.apply(hook, [null].concat(hookArgs));
@@ -128,7 +128,7 @@ export class Context extends events.EventEmitter {
             } else {
               resolve();
             }
-          })
+          });
         });
       });
     }
@@ -141,7 +141,7 @@ export class Context extends events.EventEmitter {
    * @param {function(*, Array<!Plugin>)} done Asynchronously loads the plugins
    *     requested by `options.plugins`.
    */
-  plugins(done: (err: any, plugins?: Plugin[])=> void): void {
+  plugins(done: (err: any, plugins?: Plugin[]) => void): void {
     this._plugins().then(
       (plugins) => done(null, plugins),
       (err) => done(err)
@@ -170,8 +170,10 @@ export class Context extends events.EventEmitter {
    */
   enabledPlugins(): string[] {
     // Plugins with falsy configuration or disabled: true are _not_ loaded.
-    var pairs = _.reject((<any>_).pairs(this.options.plugins), function(p: [string, {disabled: boolean}]) { return !p[1] || p[1].disabled });
-    return _.map(pairs, function(p) { return p[0] });
+    const pairs = _.reject(
+        (<any>_).pairs(this.options.plugins),
+        (p: [string, {disabled: boolean}]) => !p[1] || p[1].disabled);
+    return _.map(pairs, (p) => p[0]);
   };
 
   /**

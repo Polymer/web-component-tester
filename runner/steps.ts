@@ -33,7 +33,7 @@ export function setupOverrides(context: Context, done: () => void): void {
   done();
 }
 
-export function loadPlugins(context: Context, done: (err: any, plugins?: Plugin[])=>void): void {
+export function loadPlugins(context: Context, done: (err: any, plugins?: Plugin[]) => void): void {
   context.emit('log:debug', 'step: loadPlugins');
   context.plugins(function(error, plugins) {
     if (error) return done(error);
@@ -55,14 +55,14 @@ export function loadPlugins(context: Context, done: (err: any, plugins?: Plugin[
     Promise.all(promises).then((v) => {
       done(null, plugins);
     }, (err) => {
-      done(err)
+      done(err);
     });
   });
 }
 
-export function configure(context: Context, done: (err?: any)=>void): void {
+export function configure(context: Context, done: (err?: any) => void): void {
   context.emit('log:debug', 'step: configure');
-  var options = context.options;
+  const options = context.options;
   _.defaults(options, config.defaults());
 
   config.expand(context, function(error) {
@@ -75,7 +75,7 @@ export function configure(context: Context, done: (err?: any)=>void): void {
     context.emitHook('configure', function(error) {
       if (error) return done(error);
       // Even if the options don't validate; useful debugging info.
-      var cleanOptions = _.omit(options, 'output');
+      const cleanOptions = _.omit(options, 'output');
       context.emit('log:debug', 'configuration:', cleanOptions);
 
       config.validate(options, done);
@@ -96,8 +96,8 @@ export function prepare(context: Context, done: (err?: any) => void): void {
 
 export function runTests(context: Context, done: (err?: any) => void): void {
   context.emit('log:debug', 'step: runTests');
-  var failed = false;
-  var runners = runBrowsers(context, function(error: any) {
+  const failed = false;
+  const runners = runBrowsers(context, function(error: any) {
     if (error) {
       done(error);
     } else {
@@ -127,7 +127,7 @@ export function cancelTests(context: Context) {
 
 // Helpers
 
-function runBrowsers(context: Context, done: (err?: any)=>void): BrowserRunner[] {
+function runBrowsers(context: Context, done: (err?: any) => void): BrowserRunner[] {
   const options = context.options;
   const numActiveBrowsers = options.activeBrowsers.length;
   if (numActiveBrowsers === 0) {

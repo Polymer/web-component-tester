@@ -40,7 +40,7 @@ export class BrowserRunner {
   sessionId: string;
   timeoutId: NodeJS.Timer;
 
-  constructor(public emitter:NodeJS.EventEmitter, public def: BrowserDef, public options: Config, public doneCallback: NodeCB<BrowserRunner>) {
+  constructor(public emitter: NodeJS.EventEmitter, public def: BrowserDef, public options: Config, public doneCallback: NodeCB<BrowserRunner>) {
     this.timeout = options.testTimeout;
     this.emitter = emitter;
 
@@ -57,7 +57,7 @@ export class BrowserRunner {
         return done();
       }
 
-      var origDoneCallback = this.doneCallback;
+      const origDoneCallback = this.doneCallback;
       this.doneCallback = function(error, runner) {
         done();
         origDoneCallback(error, runner);
@@ -85,7 +85,7 @@ export class BrowserRunner {
 
     // Make sure that we are passing a pristine capabilities object to webdriver.
     // None of our screwy custom properties!
-    var webdriverCapabilities = _.clone(this.def);
+    const webdriverCapabilities = _.clone(this.def);
     delete webdriverCapabilities.id;
     delete webdriverCapabilities.url;
     delete webdriverCapabilities.sessionId;
@@ -107,7 +107,7 @@ export class BrowserRunner {
       if (this.def.browserName === 'safari' && error.data) {
         // debugger;
         try {
-          var data = JSON.parse(error.data);
+          const data = JSON.parse(error.data);
           console.log(data.value.message);
           if (data.value && data.value.message && /Failed to connect to SafariDriver/i.test(data.value.message)) {
             error = 'Until Selenium\'s SafariDriver supports Safari 6.2+, 7.1+, & 8.0+, you must\n' +
@@ -128,9 +128,9 @@ export class BrowserRunner {
   }
 
   startTest() {
-    var host  = 'http://' + this.options.webserver.hostname + ':' + this.options.webserver.port;
-    var path  = this.options.webserver.webRunnerPath;
-    var extra = (path.indexOf('?') === -1 ? '?' : '&') + 'cli_browser_id=' + this.def.id;
+    const host  = 'http://' + this.options.webserver.hostname + ':' + this.options.webserver.port;
+    const path  = this.options.webserver.webRunnerPath;
+    const extra = (path.indexOf('?') === -1 ? '?' : '&') + 'cli_browser_id=' + this.def.id;
     this.browser.get(host + path + extra, (error) => {
       if (error) {
         this.done(error.data || error);
@@ -169,7 +169,7 @@ export class BrowserRunner {
     if (this.timeoutId) clearTimeout(this.timeoutId);
     // Don't double-quit.
     if (!this.browser) return;
-    var browser = this.browser;
+    const browser = this.browser;
     this.browser = null;
 
     this.stats.status = error ? 'error' : 'complete';

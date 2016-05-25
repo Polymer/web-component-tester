@@ -21,10 +21,10 @@ import {Context} from './context';
 import {BrowserDef} from './browserrunner';
 
 
-var HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
-var JSON_MATCHER   = 'wct.conf.json';
-var CONFIG_MATCHER = 'wct.conf.*';
-var WCT_ROOT       = path.resolve(__dirname, '..');
+const HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
+const JSON_MATCHER   = 'wct.conf.json';
+const CONFIG_MATCHER = 'wct.conf.*';
+const WCT_ROOT       = path.resolve(__dirname, '..');
 
 type Browser = string | {browserName: string, platform: string};
 
@@ -48,7 +48,7 @@ export interface Config {
     [name: string]: Capabilities
   };
   plugins: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
-  registerHooks: (wct: Context)=>void;
+  registerHooks: (wct: Context) => void;
   enforceJsonConf: boolean;
   webserver: {
     // The port that the webserver should run on. A port will be determined at
@@ -189,7 +189,7 @@ export function defaults(): Config {
  * in `cli.js`?). But, not every option matches a configurable value, and it is
  * best to keep the configuration for these together to help keep them in sync.
  */
-var ARG_CONFIG = {
+const ARG_CONFIG = {
   persistent: {
     help:      'Keep browsers active (refresh to rerun tests).',
     abbr:      'p',
@@ -258,7 +258,7 @@ var ARG_CONFIG = {
 };
 
 // Values that should be extracted when pre-parsing args.
-var PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
+const PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
 
 /**
  * Discovers appropriate config files (global, and for the project), merging
@@ -269,15 +269,15 @@ var PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'
  * @return {!Object} The merged configuration.
  */
 export function fromDisk(jsonOnly?: boolean, root?: string): Config {
-  var matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
+  const matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
 
-  var globalFile  = path.join(HOME_DIR, matcher);
-  var projectFile = findup(matcher, {nocase: true, cwd: root});
+  const globalFile  = path.join(HOME_DIR, matcher);
+  const projectFile = findup(matcher, {nocase: true, cwd: root});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
-  var paths   = _.union([globalFile, projectFile]);
-  var configs = _.filter(paths, fs.existsSync).map(loadProjectFile);
-  var options: Config = merge.apply(null, configs);
+  const paths   = _.union([globalFile, projectFile]);
+  const configs = _.filter(paths, fs.existsSync).map(loadProjectFile);
+  const options: Config = merge.apply(null, configs);
 
   if (!options.root && projectFile && projectFile !== globalFile) {
     options.root = path.dirname(projectFile);
@@ -320,10 +320,10 @@ export function preparseArgs(args: string[]) {
   // Don't let it short circuit on help.
   args = _.difference(args, ['--help', '-h']);
 
-  var parser = nomnom();
+  const parser = nomnom();
   parser.options(<any>ARG_CONFIG);
   parser.printer(function() {});  // No-op output & errors.
-  var options = parser.parse(args);
+  const options = parser.parse(args);
 
   return _expandOptionPaths(_.pick(options, PREPARSE_ARGS));
 }
@@ -336,8 +336,8 @@ export function preparseArgs(args: string[]) {
  * @param {!Array<string>} args The args to parse.
  * @param {function(*)} done
  */
-export function parseArgs(context: Context, args: string[], done: (err?: any)=>void):void {
-  var parser = nomnom();
+export function parseArgs(context: Context, args: string[], done: (err?: any) => void): void {
+  const parser = nomnom();
   parser.script('wct');
   parser.options(<any>ARG_CONFIG);
 
@@ -345,7 +345,7 @@ export function parseArgs(context: Context, args: string[], done: (err?: any)=>v
     if (error) return done(error);
 
     plugins.forEach(_configurePluginOptions.bind(null, parser));
-    var options = <any>_expandOptionPaths(normalize(parser.parse(args)));
+    const options = <any>_expandOptionPaths(normalize(parser.parse(args)));
     if (options._ && options._.length > 0) {
       options.suites = options._;
     }
@@ -373,12 +373,12 @@ function _configurePluginOptions(parser: NomnomInternal.Parser, plugin: Plugin) 
 }
 
 function _expandOptionPaths(options: Object) {
-  var result = {};
+  const result = {};
   _.each(options, function(value, key) {
-    var target = result;
-    var parts  = key.split('.');
-    for (var i = 0; i < parts.length - 1; i++) {
-      target = target[parts[i]] = target[parts[i]] || {};
+    let target = result;
+    const parts  = key.split('.');
+    for (const part of parts) {
+      target = target[part] = target[part] || {};
     }
     target[_.last(parts)] = value;
   });
@@ -393,7 +393,7 @@ function _expandOptionPaths(options: Object) {
 export function merge(...configs: Config[]): Config;
 export function merge(): Config {
   let configs: Config[] = Array.prototype.slice.call(arguments);
-  var result = <Config>{};
+  const result = <Config>{};
   configs = configs.map(normalize);
   _.merge.apply(_, [result].concat(configs));
 
@@ -415,7 +415,7 @@ export function merge(): Config {
  */
 export function normalize(config: Config) {
   if (_.isArray(config.plugins)) {
-    var pluginConfigs = <{[key: string]: {disabled: boolean}}>{};
+    const pluginConfigs = <{[key: string]: {disabled: boolean}}>{};
     for (let i = 0, name: string; name = <string>config.plugins[i]; i++) {
       // A named plugin is explicitly enabled (e.g. --plugin foo).
       pluginConfigs[name] = {disabled: false};
@@ -440,9 +440,9 @@ export function normalize(config: Config) {
  * @param {!Context} context The context for the current run.
  * @param {function(*)} done
  */
-export function expand(context: Context, done: (err?: any)=>void): void {
-  var options = context.options;
-  var root    = context.options.root || process.cwd();
+export function expand(context: Context, done: (err?: any) => void): void {
+  const options = context.options;
+  let root    = context.options.root || process.cwd();
   context.options.root = root = path.resolve(root);
 
   options.origSuites = _.clone(options.suites);
@@ -463,21 +463,21 @@ export function expand(context: Context, done: (err?: any)=>void): void {
  *
  * @param {!Context} context The context for the current run.
  */
-function expandDeprecated(context: Context, done: (err?: any)=> void): void {
-  var options = context.options;
+function expandDeprecated(context: Context, done: (err?: any) => void): void {
+  const options = context.options;
   // We collect configuration fragments to be merged into the options object.
-  var fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
+  const fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
 
-  var browsers: Browser[] = <any>(_.isArray(options.browsers) ? options.browsers : [options.browsers]);
+  let browsers: Browser[] = <any>(_.isArray(options.browsers) ? options.browsers : [options.browsers]);
   browsers = <any>_.compact(<any>browsers);
   if (browsers.length > 0) {
     context.emit('log:warn', 'The --browsers flag/option is deprecated. Please use --local and --sauce instead, or configure via plugins.[local|sauce].browsers.');
-    var fragment = {plugins: {sauce: {}, local: {}}};
+    const fragment = {plugins: {sauce: {}, local: {}}};
     fragments.push(fragment);
 
-    for (var i = 0, browser: Browser; browser = browsers[i]; i++) {
-      var name   = (<any>browser).browserName || browser;
-      var plugin = (<any>browser).platform || name.indexOf('/') !== -1 ? 'sauce' : 'local';
+    for (const browser of browsers) {
+      const name   = (<any>browser).browserName || browser;
+      const plugin = (<any>browser).platform || name.indexOf('/') !== -1 ? 'sauce' : 'local';
       fragment.plugins[plugin].browsers = fragment.plugins[plugin].browsers || [];
       fragment.plugins[plugin].browsers.push(browser);
     }
@@ -513,7 +513,7 @@ function expandDeprecated(context: Context, done: (err?: any)=> void): void {
  * @param {!Object} options The configuration to validate.
  * @param {function(*)} Callback indicating whether the configuration is valid.
  */
-export function validate(options: Config, done: (err?: string)=>void): void {
+export function validate(options: Config, done: (err?: string) => void): void {
   if (options['webRunner']) {
     return done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
   }
@@ -525,8 +525,8 @@ export function validate(options: Config, done: (err?: string)=>void): void {
     return done('No browsers configured to run');
   }
   if (options.suites.length === 0) {
-    var root  = options.root || process.cwd();
-    var globs = options.origSuites.join(', ');
+    const root  = options.root || process.cwd();
+    const globs = options.origSuites.join(', ');
     return done(
         'No test suites were found matching your configuration\n' +
         '\n' +

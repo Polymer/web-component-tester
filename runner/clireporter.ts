@@ -18,7 +18,7 @@ import {BrowserDef, Stats} from './browserrunner';
 import * as context from './context';
 import * as tty from 'tty';
 
-var STACKY_CONFIG = {
+const STACKY_CONFIG = {
   indent: '    ',
   locationStrip: [
     /^https?:\/\/[^\/]+/,
@@ -30,16 +30,16 @@ var STACKY_CONFIG = {
 };
 
 type State = 'passing' | 'pending' | 'failing' | 'unknown' | 'error';
-type Formatter = (value: string)=> string;
+type Formatter = (value: string) => string;
 
-var STATE_ICONS = {
+const STATE_ICONS = {
   passing: '✓',
   pending: '✖',
   failing: '✖',
   unknown: '?',
 };
 
-var STATE_COLORS: {[state: string]: Formatter} = {
+const STATE_COLORS: {[state: string]: Formatter} = {
   passing: chalk.green,
   pending: chalk.yellow,
   failing: chalk.red,
@@ -48,12 +48,12 @@ var STATE_COLORS: {[state: string]: Formatter} = {
 };
 
 
-var SHORT = {
+const SHORT = {
   'internet explorer': 'IE',
 };
 
-var BROWSER_PAD = 24;
-var STATUS_PAD  = 38;
+const BROWSER_PAD = 24;
+const STATUS_PAD  = 38;
 
 interface TestEndData {
   state: 'passing'|'failing'|'pending'|'unknown';
@@ -140,13 +140,13 @@ export class CliReporter {
     // stats:  An object containing test stats (total, passing, failing, etc).
     // state:  The state that the run is in (running, etc).
     // status: A string representation of above.
-    var statuses = Object.keys(this.browserStats).map((browserIdStr) => {
+    const statuses = Object.keys(this.browserStats).map((browserIdStr) => {
       const browserId = parseInt(browserIdStr, 10);
-      var pretty = this.prettyBrowsers[browserId];
-      var stats  = this.browserStats[browserId];
+      const pretty = this.prettyBrowsers[browserId];
+      const stats  = this.browserStats[browserId];
 
-      var status = '';
-      var counts = [stats.passing, stats.pending, stats.failing];
+      let status = '';
+      const counts = [stats.passing, stats.pending, stats.failing];
       if (counts[0] > 0 || counts[1] > 0 || counts[2] > 0) {
         if (counts[0] > 0) counts[0] = <any>chalk.green(counts[0].toString());
         if (counts[1] > 0) counts[1] = <any>chalk.yellow(counts[1].toString());
@@ -166,10 +166,10 @@ export class CliReporter {
   writeTestError(browser: BrowserDef, data: TestEndData) {
     this.log(browser, this.stateIcon(data.state), this.prettyTest(data));
 
-    var error = data.error || {};
+    const error = data.error || {};
     this.write('\n');
 
-    var prettyMessage = error.message || error;
+    let prettyMessage = error.message || error;
     if (typeof prettyMessage !== 'string') {
       prettyMessage = util.inspect(prettyMessage);
     }
@@ -189,12 +189,12 @@ export class CliReporter {
   // Object Formatting
 
   stateIcon(state: State) {
-    var color = STATE_COLORS[state] || STATE_COLORS['unknown'];
+    const color = STATE_COLORS[state] || STATE_COLORS['unknown'];
     return color(STATE_ICONS[state] || STATE_ICONS.unknown);
   };
 
   prettyTest(data: TestEndData) {
-    var color = STATE_COLORS[data.state] || STATE_COLORS['unknown'];
+    const color = STATE_COLORS[data.state] || STATE_COLORS['unknown'];
     return color(data.test.join(' » ') || '<unknown test>');
   };
 
@@ -205,7 +205,7 @@ export class CliReporter {
       parts.push(browser.platform);
     }
 
-    var name = browser.deviceName || browser.browserName;
+    const name = browser.deviceName || browser.browserName;
     parts.push(SHORT[name] || name);
 
     if (browser.version) {
@@ -217,10 +217,10 @@ export class CliReporter {
 
   // General Output Formatting
 
-  log(...values: any[]):void;
+  log(...values: any[]): void;
   log() {
     let values = Array.prototype.slice.call(arguments);
-    let format: (line: string)=> string;
+    let format: (line: string) => string;
     if (_.isFunction(values[0])) {
       format = values[0];
       values = values.slice(1);
@@ -229,7 +229,7 @@ export class CliReporter {
       values[0] = padRight(this.prettyBrowser(values[0]), BROWSER_PAD);
     }
 
-    var line = _.toArray(values).map(function(value) {
+    let line = _.toArray(values).map(function(value) {
       return _.isString(value) ? value : util.inspect(value);
     }).join(' ');
     line = line.replace(/[\s\n\r]+$/, '');
@@ -240,11 +240,11 @@ export class CliReporter {
   writeWrapped(blocks: string[], separator: string) {
     if (blocks.length === 0) return;
 
-    var lines = [''];
-    var width = (<tty.WriteStream>this.stream).columns || 0;
+    const lines = [''];
+    const width = (<tty.WriteStream>this.stream).columns || 0;
     for (const block of blocks) {
-      var line     = lines[lines.length - 1];
-      var combined = line + separator + block;
+      const line     = lines[lines.length - 1];
+      const combined = line + separator + block;
       if (line === '') {
         lines[lines.length - 1] = block;
       } else if (chalk.stripColor(combined).length <= width) {
@@ -282,7 +282,7 @@ export class CliReporter {
   flush() {
     if (!this.options.ttyOutput) return;
     // Add an extra line for padding.
-    for (var i = 0; i <= this.linesWritten; i++) {
+    for (let i = 0; i <= this.linesWritten; i++) {
       this.stream.write('\n');
     }
   };
@@ -291,13 +291,13 @@ export class CliReporter {
   static CliReporter = CliReporter;
 }
 // Yeah, yeah.
-function padRight(string: string, length: number) {
-  var currLength = chalk.stripColor(string).length;
+function padRight(str: string, length: number) {
+  let currLength = chalk.stripColor(str).length;
   while (currLength < length) {
     currLength = currLength + 1;
-    string = string + ' ';
+    str = str + ' ';
   }
-  return string;
+  return str;
 }
 
 

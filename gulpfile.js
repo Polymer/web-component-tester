@@ -7,17 +7,18 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var fs = require('fs');
-var gulp = require('gulp');
-var jshint = require('gulp-jshint');
-var path = require('path');
-var lazypipe = require('lazypipe');
-var mocha = require('gulp-mocha');
-var rollup = require('rollup');
-var runSequence = require('run-sequence');
-var ts = require('gulp-typescript');
+const fs = require('fs');
+const gulp = require('gulp');
+const jshint = require('gulp-jshint');
+const path = require('path');
+const lazypipe = require('lazypipe');
+const mocha = require('gulp-mocha');
+const rollup = require('rollup');
+const runSequence = require('run-sequence');
+const ts = require('gulp-typescript');
+const tslint = require("gulp-tslint");
 
-var tsProject = ts.createProject('tsconfig.json', {
+const tsProject = ts.createProject('tsconfig.json', {
   typescript: require('typescript')
 });
 
@@ -74,9 +75,16 @@ gulp.task('test:integration', function() {
       .pipe(mocha({reporter: 'spec'}));
 });
 
+gulp.task('tslint', () =>
+  gulp.src('runner/*.ts')
+    .pipe(tslint({
+      configuration: 'tslint.json',
+    }))
+    .pipe(tslint.report('verbose')));
+
 // Flows
 
-var jshintFlow = lazypipe()
+const jshintFlow = lazypipe()
   .pipe(jshint)
   .pipe(jshint.reporter, 'jshint-stylish')
   .pipe(jshint.reporter, 'fail');
