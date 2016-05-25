@@ -21,6 +21,7 @@
         "runner/clireporter.ts",
         "runner/config.ts",
         "runner/context.ts",
+        "runner/gulp.ts",
         "runner/paths.ts",
         "runner/plugin.ts",
         "runner/port-scanner.ts",

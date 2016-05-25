@@ -3,14 +3,4 @@ bower_components
 node_modules
 npm-debug.log
 typings/
-runner/browserrunner.js
-runner/paths.js
-runner/plugin.js
-runner/port-scanner.js
-runner/config.js
-runner/context.js
-runner/steps.js
-runner/webserver.js
-runner/clireporter.js
-runner/cli.js
-runner/test.js
+runner/*.js
