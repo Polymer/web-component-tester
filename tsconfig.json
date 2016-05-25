@@ -1,19 +1,26 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
         "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "isolatedModules": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
         "noImplicitAny": true,
-        "sourceMap": false,
-        "suppressImplicitAnyIndexErrors": true,
-        "removeComments": false
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "suppressImplicitAnyIndexErrors": true
     },
     "exclude": [
         "node_modules"
     ],
     "filesGlob": [
         "runner/*.ts",
+        "!node_modules/**",
         "custom_typings/*.d.ts",
-        "typings/index.d.ts"
+        "typings/index.d.ts",
+        "node_modules/typescript/lib/lib.core.es6.d.ts"
     ],
     "files": [
         "runner/browserrunner.ts",
