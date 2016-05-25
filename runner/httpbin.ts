@@ -65,26 +65,28 @@ httpbin.post('/post', function (req, res) {
 // that just serves out /httpbin/...
 // Useful for debugging only the httpbin functionality without the rest of
 // wct.
-if (require.main === module) {
+async function main() {
   const app = express();
   const server = http.createServer(app);
 
   app.use('/httpbin', httpbin);
 
 
-  findPort([7777, 7000, 8000, 8080, 8888], function(err, port) {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-    }
-    server.listen(port);
-    (<any>server).port = port;
-    serverDestroy(server);
-    cleankill.onInterrupt((done: (err: any) => void) => {
-      server.destroy();
-      server.on('close', done);
-    });
+  const port = await findPort([7777, 7000, 8000, 8080, 8888]);
 
-    console.log('Server running at http://localhost:' + port + '/httpbin/');
+  server.listen(port);
+  (<any>server).port = port;
+  serverDestroy(server);
+  cleankill.onInterrupt((done: (err: any) => void) => {
+    server.destroy();
+    server.on('close', done);
+  });
+
+  console.log('Server running at http://localhost:' + port + '/httpbin/');
+}
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
   });
 }
