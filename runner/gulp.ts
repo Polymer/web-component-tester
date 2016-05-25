@@ -7,11 +7,14 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var chalk = require('chalk');
+import * as chalk from 'chalk';
 
-var test = require('./test');
+import {test} from './test';
+import {Gulp} from 'gulp';
+import {Config} from './config';
 
-function init(gulp, dependencies) {
+
+export function init(gulp: Gulp, dependencies: string[]) {
   if (!dependencies) dependencies = [];
 
   // TODO(nevir): Migrate fully to wct:local/etc.
@@ -21,18 +24,18 @@ function init(gulp, dependencies) {
 
   gulp.task('wct', ['wct:local']);
 
-  gulp.task('wct:local', dependencies, function(done) {
-    test({plugins: {local: {},   sauce: false}}, cleanDone(done));
+  gulp.task('wct:local', dependencies, function(done: (err: any)=>void) {
+    test(<any>{plugins: {local: {},   sauce: false}}, cleanDone(done));
   });
 
-  gulp.task('wct:sauce', dependencies, function(done) {
-    test({plugins: {local: false, sauce: {}}},   cleanDone(done));
+  gulp.task('wct:sauce', dependencies, function(done: (err: any)=>void) {
+    test(<any>{plugins: {local: false, sauce: {}}}, cleanDone(done));
   });
 }
 
 // Utility
 
-function cleanDone(done) {
+function cleanDone(done: (err?: any)=>void): (err?: any)=>void {
   return function(error) {
    if (error) {
       // Pretty error for gulp.
@@ -42,9 +45,3 @@ function cleanDone(done) {
     done(error);
   };
 }
-
-// Exports
-
-module.exports = {
-  init: init,
-};

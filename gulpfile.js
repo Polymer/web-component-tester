@@ -60,17 +60,7 @@ gulp.task('test:style', function() {
   return gulp.src([
     '{browser,runner,environment,tasks}/**/*.js',
     'gulpfile.js',
-    '!runner/browserrunner.js',
-    '!runner/config.js',
-    '!runner/context.js',
-    '!runner/paths.js',
-    '!runner/plugin.js',
-    '!runner/port-scanner.js',
-    '!runner/steps.js',
-		'!runner/webserver.js',
-    '!runner/clireporter.js',
-    '!runner/cli.js',
-    '!runner/test.js',
+    '!runner/*.js',
   ]).pipe(jshintFlow());
 });
 
