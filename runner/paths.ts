@@ -11,7 +11,6 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import * as path from 'path';
-import {Promise} from 'es6-promise';
 import * as promisify from 'promisify-node';
 
 /**
@@ -34,16 +33,14 @@ export function expand(baseDir: string, patterns: string[], done: (err: any, val
  * @param {string} baseDir
  * @param {!Array<string>} patterns
  */
- function unglob(baseDir: string, patterns: string[]): Promise<string[]> {
-   const promises: Promise<string[]>[] = [];
-   for (const pattern of patterns) {
-     const f: any = promisify(glob);
-     promises.push(f(String(pattern), {cwd: baseDir, root: baseDir}));
-   }
-   return Promise.all(promises).then((strs: string[][]) => {
-     return _.union(_.flatten(strs));
-   });
- }
+async function unglob(baseDir: string, patterns: string[]): Promise<string[]> {
+  const strs: string[][] = [];
+  const pGlob: any = promisify(glob);
+  for (const pattern of patterns) {
+    strs.push(await pGlob(String(pattern), {cwd: baseDir, root: baseDir}));
+  }
+  return  _.union(_.flatten(strs));
+}
 
 /**
  * Expands any directories in `patterns`, following logic similar to a web
@@ -56,10 +53,10 @@ export function expand(baseDir: string, patterns: string[], done: (err: any, val
  * @param {string} baseDir
  * @param {!Array<string>} patterns
  */
-function expandDirectories(baseDir: string, paths: string[]): Promise<string[]> {
-  const promises: Promise<string[]>[] = [];
+async function expandDirectories(baseDir: string, paths: string[]): Promise<string[]> {
+  const listsOfPaths: string[][] = [];
   for (const aPath of paths) {
-    promises.push(Promise.resolve().then(() => {
+    const paths = await Promise.resolve().then(() => {
       return promisify(fs.stat)(path.resolve(baseDir, aPath));
     }).then((stat) => {
       if (!stat.isDirectory()) {
@@ -74,11 +71,11 @@ function expandDirectories(baseDir: string, paths: string[]): Promise<string[]> 
           return children.map((child) => path.join(aPath, child));
         });
       });
-    }));
+    });
+    listsOfPaths.push(paths);
   }
 
-  return Promise.all(promises).then((listsOfPaths) => {
-    const files = _.union(_.flatten(listsOfPaths));
-    return files.filter((file) => /\.(js|html)$/.test(file));
-  });
+
+  const files = _.union(_.flatten(listsOfPaths));
+  return files.filter((file) => /\.(js|html)$/.test(file));
 }

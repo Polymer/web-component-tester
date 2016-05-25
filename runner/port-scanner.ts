@@ -11,7 +11,6 @@
 'use strict';
 
 import * as net from 'net';
-import {Promise} from 'es6-promise';
 
 function checkPort(port: number): Promise<boolean> {
   return new Promise<boolean>(function(resolve) {

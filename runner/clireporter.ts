@@ -217,8 +217,10 @@ export class CliReporter {
 
   // General Output Formatting
 
-  log(...values: any[]) {
-    var format: (line: string)=> string;
+  log(...values: any[]):void;
+  log() {
+    let values = Array.prototype.slice.call(arguments);
+    let format: (line: string)=> string;
     if (_.isFunction(values[0])) {
       format = values[0];
       values = values.slice(1);
