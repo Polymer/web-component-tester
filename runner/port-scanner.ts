@@ -14,8 +14,8 @@ import * as net from 'net';
 
 function checkPort(port: number): Promise<boolean> {
   return new Promise<boolean>(function(resolve) {
-    var server = net.createServer();
-    var hasPort = false;
+    const server = net.createServer();
+    let hasPort = false;
 
     // if server is listening, we have the port!
     server.on('listening', function(err: any) {
@@ -51,7 +51,7 @@ async function detectSeries<T>(values: T[], promiseGetter: PromiseGetter<T>): Pr
   throw new Error('Couldn\'t find a good value in detectSeries');
 }
 
-export function findPort(ports: number[], callback: (err: any, port?: number)=> void):any {
+export function findPort(ports: number[], callback: (err: any, port?: number) => void): any {
   // check the ports in series so that checkPort does not stomp on itself
   detectSeries(ports, checkPort).then((port) => {
     callback(null, port);

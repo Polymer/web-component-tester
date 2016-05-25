@@ -24,18 +24,18 @@ export function init(gulp: Gulp, dependencies: string[]) {
 
   gulp.task('wct', ['wct:local']);
 
-  gulp.task('wct:local', dependencies, function(done: (err: any)=>void) {
+  gulp.task('wct:local', dependencies, function(done: (err: any) => void) {
     test(<any>{plugins: {local: {},   sauce: false}}, cleanDone(done));
   });
 
-  gulp.task('wct:sauce', dependencies, function(done: (err: any)=>void) {
+  gulp.task('wct:sauce', dependencies, function(done: (err: any) => void) {
     test(<any>{plugins: {local: false, sauce: {}}}, cleanDone(done));
   });
 }
 
 // Utility
 
-function cleanDone(done: (err?: any)=>void): (err?: any)=>void {
+function cleanDone(done: (err?: any) => void): (err?: any) => void {
   return function(error) {
    if (error) {
       // Pretty error for gulp.

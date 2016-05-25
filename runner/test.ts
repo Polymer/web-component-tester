@@ -7,7 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var async = require('async');
+const async = require('async');
 import * as cleankill from 'cleankill';
 
 import {CliReporter} from './clireporter';
@@ -62,7 +62,7 @@ import {Config} from './config';
  *     `Context` object.
  * @param {function(*)} done callback indicating error or success.
  */
-export function test(options: (Config|Context), done: (err: any)=> void): Context {
+export function test(options: (Config|Context), done: (err: any) => void): Context {
   const context = (options instanceof Context) ? options : new Context(options);
 
   // We assume that any options related to logging are passed in via the initial

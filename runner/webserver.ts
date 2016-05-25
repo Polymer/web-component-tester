@@ -61,7 +61,7 @@ const SAUCE_PORTS = [
  * `browser.js`/`environment.js`.
  */
 module.exports = function(wct: Context) {
-  var options = wct.options;
+  const options = wct.options;
 
   wct.hook('configure', function(done: () => void) {
     // For now, you should treat all these options as an implementation detail
@@ -80,16 +80,14 @@ module.exports = function(wct: Context) {
     if (options.verbose) options.clientOptions.verbose = true;
 
     // Prefix our web runner URL with the base path.
-    var urlPrefix = options.webserver.urlPrefix;
+    let urlPrefix = options.webserver.urlPrefix;
     urlPrefix = urlPrefix.replace('<basename>', path.basename(options.root));
     options.webserver.webRunnerPath    = urlPrefix + '/generated-index.html';
 
     // Hacky workaround for Firefox + Windows issue where FF screws up pathing.
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
 
-    options.suites = options.suites.map(function (cv) {
-      return cv.replace(/\\/g,'/');
-    });
+    options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
     options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
 
@@ -97,15 +95,15 @@ module.exports = function(wct: Context) {
   });
 
   wct.hook('prepare', function(done: (err?: any) => void) {
-    var wsOptions = options.webserver;
+    const wsOptions = options.webserver;
 
     getPort(function(error: any, port: number) {
       if (error) return done(error);
       // `port` (and `webRunnerPath`) is read down the line by `BrowserRunner`.
       wsOptions.port = port;
 
-      var app    = express();
-      var server = http.createServer(app);
+      const app    = express();
+      const server = http.createServer(app);
       // `runTests` needs a reference to this (for the socket.io endpoint).
       wct._httpServer = server;
 
@@ -161,7 +159,7 @@ module.exports = function(wct: Context) {
 
         cleankill.onInterrupt(function(done) {
           // close the socket IO server directly if it is spun up
-          var io = wct._socketIOServer;
+          const io = wct._socketIOServer;
           if (io) {
             // we will close the underlying server ourselves
             (<any>io).httpServer = null;
@@ -180,7 +178,7 @@ module.exports = function(wct: Context) {
     });
   });
 
-  function getPort(done: (err: any, port?: number)=>void): void {
+  function getPort(done: (err: any, port?: number) => void): void {
     if (options.webserver.port) {
       done(null, options.webserver.port);
     } else {

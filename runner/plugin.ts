@@ -39,7 +39,7 @@ export class Plugin {
    *     within.
    * @param {function(*)} done
    */
-  execute(context: Context, done: (message?: string)=>void):void {
+  execute(context: Context, done: (message?: string) => void): void {
     try {
       require(this.packageName)(context, context.pluginOptions(this.name), this);
     } catch (error) {
@@ -54,16 +54,16 @@ export class Plugin {
    * @param {string} name
    * @param {function(*, Plugin)} done
    */
-  static get(name: string, done: (err: any, plugin?: Plugin)=>void):void {
-    var shortName = Plugin.shortName(name);
+  static get(name: string, done: (err: any, plugin?: Plugin) => void): void {
+    const shortName = Plugin.shortName(name);
     if (_loadedPlugins[shortName]) {
       return done(null, _loadedPlugins[shortName]);
     }
 
-    var names  = [shortName].concat(PREFIXES.map(function(p) {return p + shortName;}));
-    var loaded = _.compact(names.map(_tryLoadPluginPackage));
+    const names = [shortName].concat(PREFIXES.map((p) => p + shortName));
+    const loaded = _.compact(names.map(_tryLoadPluginPackage));
     if (loaded.length > 1) {
-      var prettyNames = loaded.map(function(p) { return p.packageName }).join(' ');
+      const prettyNames = loaded.map((p) => p.packageName).join(' ');
       done('Loaded conflicting WCT plugin packages: ' + prettyNames);
     } else if (loaded.length < 1) {
       done('Could not find WCT plugin named "' + name + '"');
@@ -93,14 +93,14 @@ export class Plugin {
 // Plugin Loading
 
 // We maintain an identity map of plugins, keyed by short name.
-var _loadedPlugins: {[name: string]: Plugin} = {};
+const _loadedPlugins: {[name: string]: Plugin} = {};
 
 /**
  * @param {string} packageName Attempts to load a package as a WCT plugin.
  * @return {Plugin}
  */
 function _tryLoadPluginPackage(packageName: string) {
-  var packageInfo: Object;
+  let packageInfo: Object;
   try {
     packageInfo = require(path.join(packageName, 'package.json'));
   } catch (error) {
@@ -113,7 +113,7 @@ function _tryLoadPluginPackage(packageName: string) {
   // Plugins must have a (truthy) wct-plugin field.
   if (!packageInfo['wct-plugin']) return null;
   // Allow {"wct-plugin": true} as a shorthand.
-  var metadata = _.isObject(packageInfo['wct-plugin']) ? packageInfo['wct-plugin'] : {};
+  const metadata = _.isObject(packageInfo['wct-plugin']) ? packageInfo['wct-plugin'] : {};
 
   return new Plugin(packageName, metadata);
 }
