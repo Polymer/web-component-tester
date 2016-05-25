@@ -66,7 +66,7 @@ const SAUCE_PORTS = [
 export function webserver(wct: Context) {
   const options = wct.options;
 
-  wct.hook('configure', function(done: () => void) {
+  wct.hook('configure', async function() {
     // For now, you should treat all these options as an implementation detail
     // of WCT. They may be opened up for public configuration, but we need to
     // spend some time rationalizing interactions with external webservers.
@@ -93,11 +93,9 @@ export function webserver(wct: Context) {
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
     options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
-
-    done();
   });
 
-  wct.hook('prepare', async function(done: (err?: any) => void) {
+  wct.hook('prepare', async function() {
     const wsOptions = options.webserver;
 
     const port = await getPort();
@@ -135,49 +133,46 @@ export function webserver(wct: Context) {
 
     // At this point, we allow other plugins to hook and configure the
     // webserver as they please.
-    wct.emitHook('prepare:webserver', app, function(error) {
-      if (error) return done(error);
+    await wct.emitHook('prepare:webserver', app, () => {});
 
-      // Serve up all the static assets.
-      app.use(serveWaterfall(wsOptions.pathMappings, {
-        root:    options.root,
-        headers: DEFAULT_HEADERS,
-        log:     wct.emit.bind(wct, 'log:debug'),
-      }));
+    // Serve up all the static assets.
+    app.use(serveWaterfall(wsOptions.pathMappings, {
+      root:    options.root,
+      headers: DEFAULT_HEADERS,
+      log:     wct.emit.bind(wct, 'log:debug'),
+    }));
 
-      app.use('/httpbin', httpbin.httpbin);
+    app.use('/httpbin', httpbin.httpbin);
 
-      app.get('/favicon.ico', function(request, response) {
-        response.end();
-      });
-
-      app.use(function(request, response, next) {
-        wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
-        next();
-      });
-
-      server.listen(port);
-      (<any>server).port = port;
-      serverDestroy(server);
-
-      cleankill.onInterrupt(function(done) {
-        // close the socket IO server directly if it is spun up
-        const io = wct._socketIOServer;
-        if (io) {
-          // we will close the underlying server ourselves
-          (<any>io).httpServer = null;
-          io.close();
-        }
-        server.destroy();
-        server.on('close', done);
-      });
-
-      wct.emit('log:info',
-        'Web server running on port', chalk.yellow(port.toString()),
-        'and serving from', chalk.magenta(options.root)
-      );
-      done();
+    app.get('/favicon.ico', function(request, response) {
+      response.end();
     });
+
+    app.use(function(request, response, next) {
+      wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
+      next();
+    });
+
+    server.listen(port);
+    (<any>server).port = port;
+    serverDestroy(server);
+
+    cleankill.onInterrupt(function(done) {
+      // close the socket IO server directly if it is spun up
+      const io = wct._socketIOServer;
+      if (io) {
+        // we will close the underlying server ourselves
+        (<any>io).httpServer = null;
+        io.close();
+      }
+      server.destroy();
+      server.on('close', done);
+    });
+
+    wct.emit('log:info',
+      'Web server running on port', chalk.yellow(port.toString()),
+      'and serving from', chalk.magenta(options.root)
+    );
   });
 
   async function getPort(): Promise<number> {
