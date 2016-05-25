@@ -377,7 +377,7 @@ function _expandOptionPaths(options: Object) {
   _.each(options, function(value, key) {
     let target = result;
     const parts  = key.split('.');
-    for (const part of parts) {
+    for (const part of parts.slice(0, -1)) {
       target = target[part] = target[part] || {};
     }
     target[_.last(parts)] = value;
