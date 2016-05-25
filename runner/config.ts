@@ -390,7 +390,9 @@ function _expandOptionPaths(options: Object) {
  * @return {!Object} The merged configuration, where configuration objects
  *     specified later in the arguments list are given precedence.
  */
-export function merge(...configs: Config[]): Config {
+export function merge(...configs: Config[]): Config;
+export function merge(): Config {
+  let configs: Config[] = Array.prototype.slice.call(arguments);
   var result = <Config>{};
   configs = configs.map(normalize);
   _.merge.apply(_, [result].concat(configs));
@@ -466,7 +468,7 @@ function expandDeprecated(context: Context, done: (err?: any)=> void): void {
   // We collect configuration fragments to be merged into the options object.
   var fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
 
-  var browsers = _.isArray(options.browsers) ? options.browsers : [options.browsers];
+  var browsers: Browser[] = <any>(_.isArray(options.browsers) ? options.browsers : [options.browsers]);
   browsers = <any>_.compact(<any>browsers);
   if (browsers.length > 0) {
     context.emit('log:warn', 'The --browsers flag/option is deprecated. Please use --local and --sauce instead, or configure via plugins.[local|sauce].browsers.');

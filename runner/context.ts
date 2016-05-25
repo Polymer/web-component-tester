@@ -13,7 +13,6 @@ import * as util from 'util';
 import * as socketIO from 'socket.io';
 import * as http from 'http';
 import * as promisify from 'promisify-node';
-import {Promise} from 'es6-promise';
 
 import * as config from './config';
 import {Plugin} from './plugin';
@@ -143,8 +142,16 @@ export class Context extends events.EventEmitter {
    *     requested by `options.plugins`.
    */
   plugins(done: (err: any, plugins?: Plugin[])=> void): void {
-    Promise.all(this.enabledPlugins().map((name) => {
-      return new Promise<Plugin>((resolve, reject) => {
+    this._plugins().then(
+      (plugins) => done(null, plugins),
+      (err) => done(err)
+    );
+  };
+
+  private async _plugins() {
+    const plugins: Plugin[] = [];
+    for (const name of this.enabledPlugins()) {
+      const plugin = await (new Promise<Plugin>((resolve, reject) => {
         Plugin.get(name, (err, plugin) => {
           if (err) {
             reject(err);
@@ -152,9 +159,11 @@ export class Context extends events.EventEmitter {
             resolve(plugin);
           }
         });
-      });
-    })).then((plugins) => done(null, plugins), (err) => done(err));
-  };
+      }));
+      plugins.push(plugin);
+    }
+    return plugins;
+  }
 
   /**
    * @return {!Array<string>} The names of enabled plugins.
