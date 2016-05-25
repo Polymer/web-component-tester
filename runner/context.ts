@@ -23,7 +23,7 @@ interface Options {
 
 }
 
-type Handler = (o: {}, callback: (err: any) => void) => void;
+type Handler = (o: {}) => Promise<any>;
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -93,18 +93,18 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
-  emitHook(name: 'prepare:webserver', app: Express.Application, done: (err?: any) => void): Context;
-  emitHook(name: 'configure', done: (err?: any) => void): Context;
-  emitHook(name: 'prepare', done: (err?: any) => void): Context;
-  emitHook(name: 'cleanup', done: (err?: any) => void): Context;
-  emitHook(name: string, done: (err?: any) => void): Context;
-  emitHook(name: string, ...args: any[]): Context;
-  emitHook(name: string, done: (err?: any) => void): Context {
+  emitHook(name: 'prepare:webserver', app: Express.Application, done: (err?: any) => void): Promise<void>;
+  emitHook(name: 'configure', done: (err?: any) => void): Promise<void>;
+  emitHook(name: 'prepare', done: (err?: any) => void): Promise<void>;
+  emitHook(name: 'cleanup', done: (err?: any) => void): Promise<void>;
+  emitHook(name: string, done: (err?: any) => void): Promise<void>;
+  emitHook(name: string, ...args: any[]): Promise<void>;
+  async emitHook(name: string, done: (err?: any) => void): Promise<void> {
     done = done || ((e) => {});
     this.emit('log:debug', 'hook:', name);
 
     const hooks = (this._hookHandlers[name] || []);
-    let boundHooks: ((cb: (err: any) => void) => void)[];
+    let boundHooks: ((cb: (err: any) => void) => (void|Promise<any>))[];
     if (arguments.length > 2) {
       const hookArgs = Array.prototype.slice.call(arguments, 1, arguments.length - 1);
       done = arguments[arguments.length - 1];  // mutates arguments in loose mode!
@@ -122,19 +122,25 @@ export class Context extends events.EventEmitter {
     for (const hook of boundHooks) {
       promise = promise.then(() => {
         return new Promise((resolve, reject) => {
-          hook((err) => {
+          const maybePromise = hook((err) => {
             if (err) {
               reject(err);
             } else {
               resolve();
             }
           });
+          if (maybePromise) {
+            // Once typescript ≥1.9 is out I think we'll be able to get rid of
+            // this local variable.
+            const promise = <Promise<any>> maybePromise;
+            promise.then(resolve, reject);
+          }
         });
       });
     }
+    const resultPromise = promise;
     promise.then(() => done(), (err) => done(err));
-
-    return this;
+    return resultPromise;
   };
 
   /**
