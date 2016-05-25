@@ -29,6 +29,7 @@
         "runner/config.ts",
         "runner/context.ts",
         "runner/gulp.ts",
+        "runner/httpbin.ts",
         "runner/paths.ts",
         "runner/plugin.ts",
         "runner/port-scanner.ts",
