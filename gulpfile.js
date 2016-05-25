@@ -21,6 +21,7 @@ const runSequence = require('run-sequence');
 const ts = require('gulp-typescript');
 const tslint = require('gulp-tslint');
 const typings = require('gulp-typings');
+const glob = require('glob');
 
 const tsProject = ts.createProject('tsconfig.json', {
   typescript: require('typescript')
@@ -34,12 +35,48 @@ gulp.task('lint', ['tslint', 'test:style', 'depcheck']);
 
 gulp.task('default', ['test']);
 
+function removeFile(path) {
+  try {
+    fs.unlinkSync(path);
+    return;
+  } catch(e) {
+    try {
+      fs.statSync(path);
+    } catch(e) {
+      return;
+    }
+    throw new Error('Unable to remove file: ' + path);
+  }
+}
+
+gulp.task('clean', (done) => {
+  removeFile('browser.js');
+  removeFile('browser.js.map');
+  glob('runner/*.js', (err, files) => {
+    if (err) return done(err);
+    try {
+      for (const file of files) {
+        removeFile(file);
+      }
+    } catch(e) {
+      return done(e);
+    }
+    done();
+  });
+});
+
 gulp.task('test', function(done) {
   runSequence(['build:typescript', 'lint'], 'test:unit', done);
 });
 gulp.task('test:all', function(done) {
   runSequence('test', 'test:integration', done);
 });
+
+gulp.task('build-all', (done) => {
+  // This doesn't work, it stops right before it runs 'build'
+  runSequence('clean', 'init', 'lint', 'build', done);
+});
+
 gulp.task('build', ['build:typescript', 'build:browser']);
 
 gulp.task('build:typescript', function() {
@@ -97,35 +134,35 @@ const jshintFlow = lazypipe()
   .pipe(jshint.reporter, 'jshint-stylish')
   .pipe(jshint.reporter, 'fail');
 
-const usedUnusually = new Set([
-  // Used in browser.js
-  'accessibility-developer-tools',
-  'mocha',
-  'test-fixture',
+gulp.task('depcheck', () => {
+  return new Promise((resolve, reject) => {
+    depcheck(__dirname, {ignoreDirs: []}, resolve);
+  }).then((result) => {
+    const usedUnusually = new Set([
+      // Used in browser.js
+      'accessibility-developer-tools',
+      'mocha',
+      'test-fixture',
 
-  // Used in the wct binary
-  'resolve'
-]);
-gulp.task('depcheck', () => new Promise((resolve, reject) => {
-  depcheck(__dirname, {ignoreDirs: []}, (result) => {
+      // Used in the wct binary
+      'resolve'
+    ]);
+
     const invalidFiles = Object.keys(result.invalidFiles) || [];
     const invalidJsFiles = invalidFiles.filter((f) => f.endsWith('.js'));
+
     if (invalidJsFiles.length > 0) {
       console.log('Invalid files:', result.invalidFiles);
-      reject(new Error('Invalid files'));
-      return;
+      throw new Error('Invalid files');
     }
 
     const unused = new Set(result.dependencies);
     for (const falseUnused of usedUnusually) {
-      unused.remove(falseUnused);
+      unused.delete(falseUnused);
     }
     if (unused.size > 0) {
       console.log('Unused dependencies:', unused);
-      reject(new Error('Unused dependencies'));
-      return;
+      throw new Error('Unused dependencies');
     }
-
-    resolve();
   });
-}));
+});

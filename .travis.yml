@@ -1,9 +1,15 @@
 language: node_js
 node_js:
-  - "0.12"
-  - "4"
+  - "6"
   - "5"
+  - "4"
 sudo: false
+before_script:
+  - npm install
+  - npm run init
+  - npm run build
+script:
+  - npm run test
 addons:
   apt:
     sources:
