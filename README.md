@@ -365,6 +365,10 @@ for the plugin.
 follow.
 
 
+### Node support
+
+WCT supports node versions 4 and up.
+
 <!-- References -->
 [async]:      https://github.com/caolan/async       "Async.js"
 [chai-bdd]:   http://chaijs.com/api/bdd/            "Chai's BDD Interface"
