@@ -109,7 +109,7 @@ module.exports = function(wct: Context) {
 
       // Debugging information for each request.
       app.use(function(request, response, next) {
-        var msg = request.url + ' (' + request.header('referer') + ')';
+        const msg = request.url + ' (' + request.header('referer') + ')';
         wct.emit('log:debug', chalk.magenta(request.method), msg);
         next();
       });
