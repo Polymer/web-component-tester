@@ -3,7 +3,7 @@ declare module 'send' {
   import * as events from 'events';
 
 
-  function send(req: http.IncomingMessage, path:string, options?: send.Options): send.SendStream;
+  function send(req: http.IncomingMessage, path: string, options?: send.Options): send.SendStream;
   namespace send {
     export interface SendStream extends events.EventEmitter {
       pipe(res: http.ServerResponse): void;

@@ -121,7 +121,7 @@ gulp.task('test:integration', function() {
 });
 
 gulp.task('tslint', () =>
-  gulp.src('runner/*.ts')
+  gulp.src(['runner/*.ts', 'custom_typings/*.d.ts'])
     .pipe(tslint({
       configuration: 'tslint.json',
     }))
