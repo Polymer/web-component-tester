@@ -62,31 +62,41 @@ import {Config} from './config';
  *     `Context` object.
  * @param {function(*)} done callback indicating error or success.
  */
-export function test(options: (Config|Context), done: (err: any) => void): Context {
-  const context = (options instanceof Context) ? options : new Context(options);
+export async function test(options: (Config|Context)): Promise<void> {
+  await new Promise((resolve, reject) => {
+    const context = (options instanceof Context) ? options : new Context(options);
 
-  // We assume that any options related to logging are passed in via the initial
-  // `options`.
-  if (context.options.output) {
-    new CliReporter(context, context.options.output, context.options);
-  }
-
-
-  async.series([
-    steps.setupOverrides.bind(steps, context),
-    steps.loadPlugins.bind(steps, context),
-    steps.configure.bind(steps, context),
-    steps.prepare.bind(steps, context),
-    steps.runTests.bind(steps, context),
-  ], (error: any) => {
-    if ((<Config>options).skipCleanup) {
-      done(error);
-    } else {
-     cleankill.close(done.bind(null, error));
+    // We assume that any options related to logging are passed in via the initial
+    // `options`.
+    if (context.options.output) {
+      new CliReporter(context, context.options.output, context.options);
     }
-  });
 
-  return context;
+
+    async.series([
+      steps.setupOverrides.bind(steps, context),
+      steps.loadPlugins.bind(steps, context),
+      steps.configure.bind(steps, context),
+      steps.prepare.bind(steps, context),
+      steps.runTests.bind(steps, context),
+    ], (error: any) => {
+      if ((<Config>options).skipCleanup) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      } else {
+       cleankill.close(() => {
+         if (error) {
+           reject(error);
+         } else {
+           resolve();
+         }
+       });
+      }
+    });
+  });
 };
 
 // HACK
