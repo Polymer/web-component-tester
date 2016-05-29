@@ -34,7 +34,7 @@ let updateNotifier = noopNotifier;
 
 export function run(
       env: any, args: string[], output: NodeJS.WritableStream,
-      callback: (err: any) => void) {
+      callback: (err?: any) => void) {
   const done = wrapCallback(output, callback);
 
   // Options parsing is a two phase affair. First, we need an initial set of
@@ -54,7 +54,7 @@ export function run(
   // `parseArgs` merges any new configuration into `context.options`.
   config.parseArgs(context, args, function(error) {
     if (error) return done(error);
-    test(context, done);
+    test(context).then(() => done(), done);
   });
 }
 
@@ -98,8 +98,9 @@ export function runSauceTunnel(
   });
 }
 
-function wrapCallback(output: NodeJS.WritableStream, done: (err: any) => void) {
-  return (error: any) => {
+function wrapCallback(
+      output: NodeJS.WritableStream, done: (err?: any) => void) {
+  return (error?: any) => {
     if (!process.env.CI) {
       updateNotifier.notify();
     }
