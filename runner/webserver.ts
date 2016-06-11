@@ -60,7 +60,7 @@ const SAUCE_PORTS = [
  * It provides a static HTTP server for serving the desired tests and WCT's
  * `browser.js`/`environment.js`.
  */
-module.exports = function(wct: Context) {
+export function webserver(wct: Context) {
   const options = wct.options;
 
   wct.hook('configure', function(done: () => void) {
@@ -187,3 +187,8 @@ module.exports = function(wct: Context) {
   }
 
 };
+
+// HACK
+webserver['webserver'] = webserver;
+
+module.exports = webserver;

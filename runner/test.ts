@@ -11,9 +11,9 @@ const async = require('async');
 import * as cleankill from 'cleankill';
 
 import {CliReporter} from './clireporter';
+import {Config} from './config';
 import {Context} from './context';
 import * as steps from './steps';
-import {Config} from './config';
 
 /**
  * Runs a suite of web component tests.

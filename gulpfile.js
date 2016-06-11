@@ -11,17 +11,17 @@
 
 const depcheck = require('depcheck');
 const fs = require('fs');
+const glob = require('glob');
 const gulp = require('gulp');
-const jshint = require('gulp-jshint');
-const lazypipe = require('lazypipe');
 const mocha = require('gulp-mocha');
+const jshint = require('gulp-jshint');
+const tslint = require('gulp-tslint');
+const ts = require('gulp-typescript');
+const typings = require('gulp-typings');
+const lazypipe = require('lazypipe');
 const path = require('path');
 const rollup = require('rollup');
 const runSequence = require('run-sequence');
-const ts = require('gulp-typescript');
-const tslint = require('gulp-tslint');
-const typings = require('gulp-typings');
-const glob = require('glob');
 
 // const commonTools = require('tools-common/gulpfile');
 const commonTools = {

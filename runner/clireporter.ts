@@ -7,16 +7,16 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
 import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
-import * as stacky from 'stacky';
-import * as util from 'util';
 import * as events from 'events';
-import * as config from './config';
-import {BrowserDef, Stats} from './browserrunner';
-import * as context from './context';
+import * as _ from 'lodash';
+import * as stacky from 'stacky';
 import * as tty from 'tty';
+import * as util from 'util';
+import {BrowserDef, Stats} from './browserrunner';
+import * as config from './config';
+import * as context from './context';
 
 const STACKY_CONFIG = {
   indent: '    ',

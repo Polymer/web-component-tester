@@ -7,9 +7,9 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
 import * as chalk from 'chalk';
 import * as events from 'events';
+import * as _ from 'lodash';
 
 import {CliReporter} from './clireporter';
 import * as config from './config';

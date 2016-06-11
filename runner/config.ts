@@ -7,18 +7,18 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
 import * as findup from 'findup-sync';
 import * as fs from 'fs';
+import * as _ from 'lodash';
 import * as nomnom from 'nomnom';
 import * as path from 'path';
 import * as serveWaterfall from 'serve-waterfall';
-
 import {Capabilities} from 'wd';
+
+import {BrowserDef} from './browserrunner';
+import {Context} from './context';
 import * as paths from './paths';
 import {Plugin} from './plugin';
-import {Context} from './context';
-import {BrowserDef} from './browserrunner';
 
 
 const HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
