@@ -21,10 +21,11 @@ import * as paths from './paths';
 import {Plugin} from './plugin';
 
 
-const HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
-const JSON_MATCHER   = 'wct.conf.json';
+const HOME_DIR = path.resolve(
+    process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
+const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
-const WCT_ROOT       = path.resolve(__dirname, '..');
+const WCT_ROOT = path.resolve(__dirname, '..');
 
 type Browser = string | {browserName: string, platform: string};
 

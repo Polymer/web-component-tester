@@ -10,18 +10,12 @@
 import * as events from 'events';
 import * as http from 'http';
 import * as _ from 'lodash';
-import * as promisify from 'promisify-node';
 import * as socketIO from 'socket.io';
 import * as util from 'util';
 
 import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
-
-
-interface Options {
-
-}
 
 type Handler = (o: {}, callback: (err: any) => void) => void;
 

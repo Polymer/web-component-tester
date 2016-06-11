@@ -56,26 +56,23 @@ async function unglob(baseDir: string, patterns: string[]): Promise<string[]> {
 async function expandDirectories(baseDir: string, paths: string[]): Promise<string[]> {
   const listsOfPaths: string[][] = [];
   for (const aPath of paths) {
-    const paths = await Promise.resolve().then(() => {
-      return promisify(fs.stat)(path.resolve(baseDir, aPath));
-    }).then((stat) => {
-      if (!stat.isDirectory()) {
-        return [aPath];
-      }
-      return promisify(fs.readdir)(path.resolve(baseDir, aPath)).then((files) => {
-        // We have an index; defer to that.
-        if (_.includes(files, 'index.html')) {
-          return [path.join(aPath, 'index.html')];
-        }
-        return expandDirectories(path.join(baseDir, aPath), files).then((children) => {
-          return children.map((child) => path.join(aPath, child));
-        });
-      });
-    });
-    listsOfPaths.push(paths);
+    listsOfPaths.push(await expandDirectory(baseDir, aPath));
   }
-
 
   const files = _.union(_.flatten(listsOfPaths));
   return files.filter((file) => /\.(js|html)$/.test(file));
+}
+
+async function expandDirectory(baseDir: string, aPath: string): Promise<string[]> {
+  const stat = await promisify(fs.stat)(path.resolve(baseDir, aPath));
+  if (!stat.isDirectory()) {
+    return [aPath];
+  }
+  const files = await promisify(fs.readdir)(path.resolve(baseDir, aPath));
+  // We have an index; defer to that.
+  if (_.includes(files, 'index.html')) {
+    return [path.join(aPath, 'index.html')];
+  }
+  const children = await expandDirectories(path.join(baseDir, aPath), files);
+  return children.map((child) => path.join(aPath, child));
 }

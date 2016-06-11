@@ -31,7 +31,9 @@ let updateNotifier = noopNotifier;
   }
 })();
 
-export function run(env: void, args: string[], output: NodeJS.WritableStream, callback: (err: any) => void) {
+export function run(
+      env: any, args: string[], output: NodeJS.WritableStream,
+      callback: (err: any) => void) {
   const done = wrapCallback(output, callback);
 
   // Options parsing is a two phase affair. First, we need an initial set of
@@ -58,13 +60,18 @@ export function run(env: void, args: string[], output: NodeJS.WritableStream, ca
 // Note that we're cheating horribly here. Ideally all of this logic is within
 // wct-sauce. The trouble is that we also want WCT's configuration lookup logic,
 // and that's not (yet) cleanly exposed.
-export function runSauceTunnel(env: void, args: string[], output: NodeJS.WritableStream, callback: (err: any) => void) {
+export function runSauceTunnel(
+      env: void, args: string[], output: NodeJS.WritableStream,
+      callback: (err: any) => void) {
   const done = wrapCallback(output, callback);
 
   const diskOptions = config.fromDisk();
-  const baseOptions: config.Config = diskOptions.plugins && diskOptions.plugins['sauce'] || diskOptions.sauce || {};
+  const baseOptions: config.Config =
+      (diskOptions.plugins && diskOptions.plugins['sauce'])
+      || diskOptions.sauce
+      || {};
 
-  Plugin.get('sauce', function(error, plugin) {
+  Plugin.get('sauce',  (error, plugin) => {
     if (error) return done(error);
 
     const parser = require('nomnom');
@@ -77,7 +84,7 @@ export function runSauceTunnel(env: void, args: string[], output: NodeJS.Writabl
 
     const emitter = new events.EventEmitter();
     new CliReporter(emitter, output, <config.Config>{});
-    wctSauce.startTunnel(options, emitter, function(error: any, tunnelId: string) {
+    wctSauce.startTunnel(options, emitter, (error: any, tunnelId: string) => {
       if (error) return done(error); // Otherwise, we keep at it.
       output.write('\n');
       output.write('The tunnel will remain active while this process is running.\n');
@@ -89,7 +96,7 @@ export function runSauceTunnel(env: void, args: string[], output: NodeJS.Writabl
 }
 
 function wrapCallback(output: NodeJS.WritableStream, done: (err: any) => void) {
-  return function(error: any) {
+  return (error: any) => {
     if (!process.env.CI) {
       updateNotifier.notify();
     }

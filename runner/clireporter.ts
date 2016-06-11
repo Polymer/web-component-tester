@@ -57,6 +57,9 @@ const STATUS_PAD  = 38;
 
 interface TestEndData {
   state: 'passing'|'failing'|'pending'|'unknown';
+  /**
+   * The titles of the tests that ran.
+   */
   test: string[];
   duration: number;
   error: any;
@@ -65,13 +68,21 @@ interface TestEndData {
 export class CliReporter {
   prettyBrowsers: {[id: number]: string} = {};
   browserStats: {[id: number]: Stats} = {};
+  emitter: events.EventEmitter;
+  stream: NodeJS.WritableStream;
+  options: config.Config;
 
   /**
    * The number of lines written the last time writeLines was called.
    */
   private linesWritten: number;
 
-  constructor(public emitter: events.EventEmitter, public stream: NodeJS.WritableStream, public options: config.Config) {
+  constructor(
+        emitter: events.EventEmitter, stream: NodeJS.WritableStream,
+        options: config.Config) {
+    this.emitter = emitter;
+    this.stream = stream;
+    this.options = options;
     cleankill.onInterrupt((done) => {
       this.flush();
       done();
@@ -219,7 +230,7 @@ export class CliReporter {
 
   log(...values: any[]): void;
   log() {
-    let values = Array.prototype.slice.call(arguments);
+    let values = Array.from(arguments);
     let format: (line: string) => string;
     if (_.isFunction(values[0])) {
       format = values[0];

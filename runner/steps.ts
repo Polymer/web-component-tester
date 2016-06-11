@@ -10,7 +10,6 @@
 import * as http from 'http';
 import * as _ from 'lodash';
 import * as socketIO from 'socket.io';
-import * as promisify from 'promisify-node';
 
 import {BrowserRunner} from './browserrunner';
 import * as config from './config';
