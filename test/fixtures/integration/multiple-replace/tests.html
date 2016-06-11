@@ -63,6 +63,7 @@
       }
 
       var template = fixture('NormalTemplate');
+      debugger;
       element1 = template.$$('#element1');
       element2 = template.$$('#element2');
       element3 = template.$$('#element3');
@@ -78,7 +79,7 @@
       assert.equal(element1.nodeName, 'C');
       assert.equal(element2.nodeName, 'C');
 
-      assert.equal(element3.nodeName, 'E');
+      assert.equal(element3.nodeName, 'F');
       assert.equal(element4.nodeName, 'F');
     });
   });
