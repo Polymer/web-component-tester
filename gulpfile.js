@@ -23,11 +23,17 @@ const tslint = require('gulp-tslint');
 const typings = require('gulp-typings');
 const glob = require('glob');
 
+// const commonTools = require('tools-common/gulpfile');
+const commonTools = {
+  init: commonInit,
+  depcheck: commonDepCheck
+};
+
 const tsProject = ts.createProject('tsconfig.json', {
   typescript: require('typescript')
 });
 
-gulp.task('init', () => gulp.src('./typings.json').pipe(typings()));
+commonTools.init();
 
 gulp.task('lint', ['tslint', 'test:style', 'depcheck']);
 
@@ -134,35 +140,48 @@ const jshintFlow = lazypipe()
   .pipe(jshint.reporter, 'jshint-stylish')
   .pipe(jshint.reporter, 'fail');
 
-gulp.task('depcheck', () => {
-  return new Promise((resolve, reject) => {
-    depcheck(__dirname, {ignoreDirs: []}, resolve);
-  }).then((result) => {
-    const usedUnusually = new Set([
-      // Used in browser.js
-      'accessibility-developer-tools',
-      'mocha',
-      'test-fixture',
 
-      // Used in the wct binary
-      'resolve'
-    ]);
 
-    const invalidFiles = Object.keys(result.invalidFiles) || [];
-    const invalidJsFiles = invalidFiles.filter((f) => f.endsWith('.js'));
+commonTools.depcheck({
+  stickyDeps: new Set([
+    // Used in browser.js
+    'accessibility-developer-tools',
+    'mocha',
+    'test-fixture',
 
-    if (invalidJsFiles.length > 0) {
-      console.log('Invalid files:', result.invalidFiles);
-      throw new Error('Invalid files');
-    }
-
-    const unused = new Set(result.dependencies);
-    for (const falseUnused of usedUnusually) {
-      unused.delete(falseUnused);
-    }
-    if (unused.size > 0) {
-      console.log('Unused dependencies:', unused);
-      throw new Error('Unused dependencies');
-    }
-  });
+    // Used in the wct binary
+    'resolve'
+  ])
 });
+
+function commonInit() {
+  gulp.task('init', () => gulp.src('./typings.json').pipe(typings()));
+}
+
+function commonDepCheck(options) {
+  const defaultOptions = {stickyDeps: new Set()};
+  options = Object.assign({}, defaultOptions, options);
+
+  gulp.task('depcheck', () => {
+    return new Promise((resolve, reject) => {
+      depcheck(__dirname, {ignoreDirs: []}, resolve);
+    }).then((result) => {
+      const invalidFiles = Object.keys(result.invalidFiles) || [];
+      const invalidJsFiles = invalidFiles.filter((f) => f.endsWith('.js'));
+
+      if (invalidJsFiles.length > 0) {
+        console.log('Invalid files:', result.invalidFiles);
+        throw new Error('Invalid files');
+      }
+
+      const unused = new Set(result.dependencies);
+      for (const falseUnused of options.stickyDeps) {
+        unused.delete(falseUnused);
+      }
+      if (unused.size > 0) {
+        console.log('Unused dependencies:', unused);
+        throw new Error('Unused dependencies');
+      }
+    });
+  });
+}
