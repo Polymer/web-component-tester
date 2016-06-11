@@ -29,7 +29,7 @@ extendInterfaces('replace', function(context, teardown) {
 
         // If the function is already a stub, restore it to original
         if (Polymer.Base.instanceTemplate.isSinonProxy) {
-          Polymer.Base.instanceTemplate.restore();
+          return;
         }
 
         // Keep a reference to the original `Polymer.Base.instanceTemplate`
