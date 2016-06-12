@@ -7,8 +7,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-// jshint node: true
-'use strict';
 
 import * as net from 'net';
 
@@ -42,7 +40,8 @@ interface PromiseGetter<T> {
   (val: T): Promise<boolean>;
 }
 
-async function detectSeries<T>(values: T[], promiseGetter: PromiseGetter<T>): Promise<T> {
+async function detectSeries<T>(
+      values: T[], promiseGetter: PromiseGetter<T>): Promise<T> {
   for (const value of values) {
     if (await promiseGetter(value)) {
       return value;
@@ -51,7 +50,8 @@ async function detectSeries<T>(values: T[], promiseGetter: PromiseGetter<T>): Pr
   throw new Error('Couldn\'t find a good value in detectSeries');
 }
 
-export function findPort(ports: number[], callback: (err: any, port?: number) => void): any {
+export function findPort(
+      ports: number[], callback: (err: any, port?: number) => void): any {
   // check the ports in series so that checkPort does not stomp on itself
   detectSeries(ports, checkPort).then((port) => {
     callback(null, port);

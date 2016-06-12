@@ -40,8 +40,18 @@ export class BrowserRunner {
   stats: Stats;
   sessionId: string;
   timeoutId: NodeJS.Timer;
+  emitter: NodeJS.EventEmitter;
+  def: BrowserDef;
+  options: Config;
+  doneCallback: NodeCB<BrowserRunner>
 
-  constructor(public emitter: NodeJS.EventEmitter, public def: BrowserDef, public options: Config, public doneCallback: NodeCB<BrowserRunner>) {
+  constructor(
+        emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config,
+        doneCallback: NodeCB<BrowserRunner>) {
+    this.emitter = emitter;
+    this.def = def;
+    this.options = options;
+    this.doneCallback = doneCallback;
     this.timeout = options.testTimeout;
     this.emitter = emitter;
 
@@ -72,14 +82,18 @@ export class BrowserRunner {
 
     this.browser.on('http', (method: any, path: any, data: any) => {
       if (data) {
-        emitter.emit('log:debug', this.def, chalk.magenta(method), chalk.cyan(path), data);
+        emitter.emit(
+            'log:debug', this.def,
+            chalk.magenta(method), chalk.cyan(path), data);
       } else {
-        emitter.emit('log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
+        emitter.emit(
+            'log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
       }
     });
 
     this.browser.on('connection', (code: any, message: any, error: any) => {
-      emitter.emit('log:warn', this.def, 'Error code ' + code + ':', message, error);
+      emitter.emit(
+          'log:warn', this.def, 'Error code ' + code + ':', message, error);
     });
 
     this.emitter.emit('browser-init', this.def, this.stats);
@@ -110,8 +124,11 @@ export class BrowserRunner {
         try {
           const data = JSON.parse(error.data);
           console.log(data.value.message);
-          if (data.value && data.value.message && /Failed to connect to SafariDriver/i.test(data.value.message)) {
-            error = 'Until Selenium\'s SafariDriver supports Safari 6.2+, 7.1+, & 8.0+, you must\n' +
+          if (data.value &&
+              data.value.message &&
+              /Failed to connect to SafariDriver/i.test(data.value.message)) {
+            error = 'Until Selenium\'s SafariDriver supports ' +
+                    'Safari 6.2+, 7.1+, & 8.0+, you must\n' +
                     'manually install it. Follow the steps at:\n' +
                     'https://github.com/SeleniumHQ/selenium/wiki/SafariDriver#getting-started';
           }
@@ -129,9 +146,12 @@ export class BrowserRunner {
   }
 
   startTest() {
-    const host  = 'http://' + this.options.webserver.hostname + ':' + this.options.webserver.port;
+    const webserver = this.options.webserver;
+    const host  =  `http://${webserver.hostname}:${webserver.port}`;
     const path  = this.options.webserver.webRunnerPath;
-    const extra = (path.indexOf('?') === -1 ? '?' : '&') + 'cli_browser_id=' + this.def.id;
+    const extra =
+        (path.indexOf('?') === -1 ? '?' : '&') +
+        `cli_browser_id=${this.def.id}`;
     this.browser.get(host + path + extra, (error) => {
       if (error) {
         this.done(error.data || error);
@@ -178,7 +198,8 @@ export class BrowserRunner {
       error = this.stats.failing + ' failed tests';
     }
 
-    this.emitter.emit('browser-end', this.def, error, this.stats, this.sessionId, browser);
+    this.emitter.emit(
+        'browser-end', this.def, error, this.stats, this.sessionId, browser);
 
     // Nothing to quit.
     if (!this.sessionId) {
@@ -187,7 +208,9 @@ export class BrowserRunner {
 
     browser.quit((quitError) => {
       if (quitError) {
-        this.emitter.emit('log:warn', this.def, 'Failed to quit:', quitError.data || quitError);
+        this.emitter.emit(
+            'log:warn', this.def, 'Failed to quit:',
+            quitError.data || quitError);
       }
       this.doneCallback(error, this);
     });

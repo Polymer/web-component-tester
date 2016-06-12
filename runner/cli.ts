@@ -7,6 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+
 import * as chalk from 'chalk';
 import * as events from 'events';
 import * as _ from 'lodash';
@@ -87,8 +88,10 @@ export function runSauceTunnel(
     wctSauce.startTunnel(options, emitter, (error: any, tunnelId: string) => {
       if (error) return done(error); // Otherwise, we keep at it.
       output.write('\n');
-      output.write('The tunnel will remain active while this process is running.\n');
-      output.write('To use this tunnel for other WCT runs, export the following:\n');
+      output.write(
+          'The tunnel will remain active while this process is running.\n');
+      output.write(
+          'To use this tunnel for other WCT runs, export the following:\n');
       output.write('\n');
       output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
     });

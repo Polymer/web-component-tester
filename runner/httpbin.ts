@@ -7,6 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+
 'use strict';
 
 import * as bodyParser from 'body-parser';
@@ -40,7 +41,8 @@ function formatRequest(req: express.Request) {
     form: {},
     json: {},
   };
-  const contentType = (headers['Content-Type'] || '').toLowerCase().split(';')[0];
+  const contentType =
+      (headers['Content-Type'] || '').toLowerCase().split(';')[0];
   const field = {
       'application/json': 'json',
       'application/x-www-form-urlencoded': 'form',

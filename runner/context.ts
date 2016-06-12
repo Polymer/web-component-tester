@@ -7,6 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+
 import * as events from 'events';
 import * as http from 'http';
 import * as _ from 'lodash';
@@ -87,7 +88,8 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
-  emitHook(name: 'prepare:webserver', app: Express.Application, done: (err?: any) => void): Context;
+  emitHook(name: 'prepare:webserver',
+           app: Express.Application, done: (err?: any) => void): Context;
   emitHook(name: 'configure', done: (err?: any) => void): Context;
   emitHook(name: 'prepare', done: (err?: any) => void): Context;
   emitHook(name: 'cleanup', done: (err?: any) => void): Context;
@@ -100,8 +102,8 @@ export class Context extends events.EventEmitter {
     const hooks = (this._hookHandlers[name] || []);
     let boundHooks: ((cb: (err: any) => void) => void)[];
     if (arguments.length > 2) {
-      const hookArgs = Array.prototype.slice.call(arguments, 1, arguments.length - 1);
-      done = arguments[arguments.length - 1];  // mutates arguments in loose mode!
+      const hookArgs = Array.from(arguments).slice(1, arguments.length - 1);
+      done = arguments[arguments.length - 1];
       boundHooks = hooks.map(function(hook) {
         return hook.bind.apply(hook, [null].concat(hookArgs));
       });

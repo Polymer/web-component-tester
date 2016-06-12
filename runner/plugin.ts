@@ -7,6 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+
 import * as _ from 'lodash';
 import * as path from 'path';
 
@@ -42,7 +43,8 @@ export class Plugin {
    */
   execute(context: Context, done: (message?: string) => void): void {
     try {
-      require(this.packageName)(context, context.pluginOptions(this.name), this);
+      require(this.packageName)(
+            context, context.pluginOptions(this.name), this);
     } catch (error) {
       return done('Failed to load plugin "' + this.name + '": ' + error);
     }
@@ -114,7 +116,8 @@ function _tryLoadPluginPackage(packageName: string) {
   // Plugins must have a (truthy) wct-plugin field.
   if (!packageInfo['wct-plugin']) return null;
   // Allow {"wct-plugin": true} as a shorthand.
-  const metadata = _.isObject(packageInfo['wct-plugin']) ? packageInfo['wct-plugin'] : {};
+  const metadata =
+      _.isObject(packageInfo['wct-plugin']) ? packageInfo['wct-plugin'] : {};
 
   return new Plugin(packageName, metadata);
 }

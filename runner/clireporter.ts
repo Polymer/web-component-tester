@@ -7,6 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+
 import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
 import * as events from 'events';
@@ -104,13 +105,15 @@ export class CliReporter {
       this.updateStatus();
     });
 
-    emitter.on('browser-start', (browser: BrowserDef, data: {url: string}, stats: Stats) => {
+    emitter.on('browser-start', (browser: BrowserDef,
+                                 data: {url: string}, stats: Stats) => {
       this.browserStats[browser.id] = stats;
       this.log(browser, 'Beginning tests via', chalk.magenta(data.url));
       this.updateStatus();
     });
 
-    emitter.on('test-end', (browser: BrowserDef, data: TestEndData, stats: Stats) => {
+    emitter.on('test-end', (browser: BrowserDef,
+                            data: TestEndData, stats: Stats) => {
       this.browserStats[browser.id] = stats;
       if (data.state === 'failing') {
         this.writeTestError(browser, data);
@@ -121,7 +124,8 @@ export class CliReporter {
       this.updateStatus();
     });
 
-    emitter.on('browser-end', (browser: BrowserDef, error: any, stats: Stats) => {
+    emitter.on('browser-end', (browser: BrowserDef,
+                               error: any, stats: Stats) => {
       this.browserStats[browser.id] = stats;
       if (error) {
         this.log(chalk.red, browser, 'Tests failed:', error);

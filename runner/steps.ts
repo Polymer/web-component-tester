@@ -32,7 +32,8 @@ export function setupOverrides(context: Context, done: () => void): void {
   done();
 }
 
-export function loadPlugins(context: Context, done: (err: any, plugins?: Plugin[]) => void): void {
+export function loadPlugins(
+      context: Context, done: (err: any, plugins?: Plugin[]) => void): void {
   context.emit('log:debug', 'step: loadPlugins');
   context.plugins(function(error, plugins) {
     if (error) return done(error);
@@ -126,7 +127,8 @@ export function cancelTests(context: Context) {
 
 // Helpers
 
-function runBrowsers(context: Context, done: (err?: any) => void): BrowserRunner[] {
+function runBrowsers(
+      context: Context, done: (err?: any) => void): BrowserRunner[] {
   const options = context.options;
   const numActiveBrowsers = options.activeBrowsers.length;
   if (numActiveBrowsers === 0) {
@@ -137,7 +139,8 @@ function runBrowsers(context: Context, done: (err?: any) => void): BrowserRunner
 
   // Up the socket limit so that we can maintain more active requests.
   // TODO(nevir): We should be queueing the browsers above some limit too.
-  http.globalAgent.maxSockets = Math.max(http.globalAgent.maxSockets, numActiveBrowsers * 2);
+  http.globalAgent.maxSockets =
+      Math.max(http.globalAgent.maxSockets, numActiveBrowsers * 2);
 
   context.emit('run-start', options);
 

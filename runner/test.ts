@@ -62,7 +62,8 @@ import * as steps from './steps';
  *     `Context` object.
  * @param {function(*)} done callback indicating error or success.
  */
-export function test(options: (Config|Context), done: (err: any) => void): Context {
+export function test(
+      options: (Config|Context), done: (err: any) => void): Context {
   const context = (options instanceof Context) ? options : new Context(options);
 
   // We assume that any options related to logging are passed in via the initial
