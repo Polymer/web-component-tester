@@ -30,7 +30,11 @@ interface Metadata {
 export class Plugin {
   name: string;
   cliConfig: Config;
-  constructor(public packageName: string, public metadata: Metadata) {
+  packageName: string;
+  metadata: Metadata;
+  constructor(packageName: string, metadata: Metadata) {
+    this.packageName = packageName;
+    this.metadata = metadata;
     this.name = Plugin.shortName(packageName);
 
     this.cliConfig = this.metadata['cli-options'] || {};

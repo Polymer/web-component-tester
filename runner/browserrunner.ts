@@ -43,7 +43,7 @@ export class BrowserRunner {
   emitter: NodeJS.EventEmitter;
   def: BrowserDef;
   options: Config;
-  doneCallback: NodeCB<BrowserRunner>
+  doneCallback: NodeCB<BrowserRunner>;
 
   constructor(
         emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config,
