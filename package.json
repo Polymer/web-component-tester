@@ -41,8 +41,12 @@
     "runner.js"
   ],
   "scripts": {
+    "lint": "gulp lint",
+    "init": "gulp init",
+    "build": "gulp build",
     "test": "gulp test",
-    "build": "gulp build"
+    "prepublish": "gulp build-all",
+    "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/"
   },
   "dependencies": {
     "accessibility-developer-tools": "^2.10.0",
@@ -58,6 +62,7 @@
     "mocha": "^2.2.4",
     "multer": "^1.1.0",
     "nomnom": "^1.8.1",
+    "promisify-node": "^0.4.0",
     "resolve": "^1.0.0",
     "send": "^0.11.1",
     "serve-waterfall": "^1.1.0",
@@ -75,15 +80,22 @@
     "wct-sauce": "^1.8.2"
   },
   "devDependencies": {
+    "depcheck": "^0.6.3",
     "grunt": "^0.4.5",
     "gulp": "^3.8.8",
     "gulp-jshint": "^2.0.0",
     "gulp-mocha": "^2.0.0",
+    "gulp-tslint": "^5.0.0",
+    "gulp-typescript": "^2.13.4",
+    "gulp-typings": "^2.0.0",
     "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
     "rollup": "^0.25.1",
-    "run-sequence": "^1.0.1"
+    "run-sequence": "^1.0.1",
+    "tslint": "^3.10.2",
+    "typescript": "^1.8.10",
+    "watch": "^0.18.0"
   },
   "engines": {
     "node": ">= 0.12"

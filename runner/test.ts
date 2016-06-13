@@ -7,12 +7,13 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var async     = require('async');
-var cleankill = require('cleankill');
+const async = require('async');
+import * as cleankill from 'cleankill';
 
-var CliReporter = require('./clireporter');
-var Context     = require('./context');
-var steps       = require('./steps');
+import {CliReporter} from './clireporter';
+import {Config} from './config';
+import {Context} from './context';
+import * as steps from './steps';
 
 /**
  * Runs a suite of web component tests.
@@ -57,13 +58,13 @@ var steps       = require('./steps');
  *  * log:warn
  *  * log:error
  *
- * @param {!Object|!Context} options The configuration, as specified in,
- *     `./config.js` or an already formed `Context` object.
+ * @param {!Config|!Context} options The configuration or an already formed
+ *     `Context` object.
  * @param {function(*)} done callback indicating error or success.
- * @return {!Context}
  */
-module.exports = function test(options, done) {
-  var context = (options instanceof Context) ? options : new Context(options);
+export function test(
+      options: (Config|Context), done: (err: any) => void): Context {
+  const context = (options instanceof Context) ? options : new Context(options);
 
   // We assume that any options related to logging are passed in via the initial
   // `options`.
@@ -71,19 +72,25 @@ module.exports = function test(options, done) {
     new CliReporter(context, context.options.output, context.options);
   }
 
+
   async.series([
     steps.setupOverrides.bind(steps, context),
     steps.loadPlugins.bind(steps, context),
     steps.configure.bind(steps, context),
     steps.prepare.bind(steps, context),
     steps.runTests.bind(steps, context),
-  ], function(error) {
-    if (options.skipCleanup) {
+  ], (error: any) => {
+    if ((<Config>options).skipCleanup) {
       done(error);
     } else {
-      cleankill.close(done.bind(null, error));
+     cleankill.close(done.bind(null, error));
     }
   });
 
   return context;
 };
+
+// HACK
+test['test'] = test;
+
+module.exports = test;

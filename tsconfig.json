@@ -1,0 +1,52 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "isolatedModules": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "suppressImplicitAnyIndexErrors": true
+    },
+    "exclude": [
+        "node_modules"
+    ],
+    "filesGlob": [
+        "runner/*.ts",
+        "!node_modules/**",
+        "custom_typings/*.d.ts",
+        "typings/index.d.ts",
+        "node_modules/typescript/lib/lib.core.es6.d.ts"
+    ],
+    "files": [
+        "runner/browserrunner.ts",
+        "runner/cli.ts",
+        "runner/clireporter.ts",
+        "runner/config.ts",
+        "runner/context.ts",
+        "runner/gulp.ts",
+        "runner/httpbin.ts",
+        "runner/paths.ts",
+        "runner/plugin.ts",
+        "runner/port-scanner.ts",
+        "runner/steps.ts",
+        "runner/test.ts",
+        "runner/webserver.ts",
+        "custom_typings/cleankill.d.ts",
+        "custom_typings/findup-sync.d.ts",
+        "custom_typings/promisify-node.d.ts",
+        "custom_typings/send.d.ts",
+        "custom_typings/serve-waterfall.d.ts",
+        "custom_typings/server-destroy.d.ts",
+        "custom_typings/stacky.d.ts",
+        "custom_typings/wd.d.ts",
+        "typings/index.d.ts"
+    ],
+    "atom": {
+        "rewriteTsconfig": true
+    }
+}

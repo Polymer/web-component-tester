@@ -7,18 +7,20 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _      = require('lodash');
-var chalk  = require('chalk');
-var events = require('events');
 
-var CliReporter = require('./clireporter');
-var config      = require('./config');
-var Context     = require('./context');
-var Plugin      = require('./plugin');
-var test        = require('./test');
+import * as chalk from 'chalk';
+import * as events from 'events';
+import * as _ from 'lodash';
 
-var PACKAGE_INFO   = require('../package.json');
-var updateNotifier;
+import {CliReporter} from './clireporter';
+import * as config from './config';
+import {Context} from './context';
+import {Plugin} from './plugin';
+import {test} from './test';
+
+const PACKAGE_INFO   = require('../package.json');
+const noopNotifier = {notify: () => {}};
+let updateNotifier = noopNotifier;
 
 (function() {
   try {
@@ -30,21 +32,23 @@ var updateNotifier;
   }
 })();
 
-function run(env, args, output, callback) {
-  var done = wrapCallback(output, callback);
+export function run(
+      env: any, args: string[], output: NodeJS.WritableStream,
+      callback: (err: any) => void) {
+  const done = wrapCallback(output, callback);
 
   // Options parsing is a two phase affair. First, we need an initial set of
   // configuration so that we know which plugins to load, etc:
-  var options = config.preparseArgs(args);
+  let options = <config.Config>config.preparseArgs(args);
   // Depends on values from the initial merge:
-  options = config.merge(options, {
+  options = config.merge(options, <config.Config> {
     output:    output,
-    ttyOutput: !process.env.CI && output.isTTY && !options.simpleOutput,
+    ttyOutput: !process.env.CI && output['isTTY'] && !options.simpleOutput,
   });
-  var context = new Context(options);
+  const context = new Context(options);
 
   if (options.skipUpdateCheck) {
-    updateNotifier = false;
+    updateNotifier = noopNotifier;
   }
 
   // `parseArgs` merges any new configuration into `context.options`.
@@ -57,40 +61,47 @@ function run(env, args, output, callback) {
 // Note that we're cheating horribly here. Ideally all of this logic is within
 // wct-sauce. The trouble is that we also want WCT's configuration lookup logic,
 // and that's not (yet) cleanly exposed.
-function runSauceTunnel(env, args, output, callback) {
-  var done = wrapCallback(output, callback);
+export function runSauceTunnel(
+      env: void, args: string[], output: NodeJS.WritableStream,
+      callback: (err: any) => void) {
+  const done = wrapCallback(output, callback);
 
-  var diskOptions = config.fromDisk();
-  var baseOptions = diskOptions.plugins && diskOptions.plugins.sauce || diskOptions.sauce || {};
+  const diskOptions = config.fromDisk();
+  const baseOptions: config.Config =
+      (diskOptions.plugins && diskOptions.plugins['sauce'])
+      || diskOptions.sauce
+      || {};
 
-  Plugin.get('sauce', function(error, plugin) {
+  Plugin.get('sauce',  (error, plugin) => {
     if (error) return done(error);
 
-    var parser = require('nomnom');
+    const parser = require('nomnom');
     parser.script('wct-st');
     parser.options(_.omit(plugin.cliConfig, 'browsers', 'tunnelId'));
-    var options = _.merge(baseOptions, parser.parse(args));
+    const options = _.merge(baseOptions, parser.parse(args));
 
-    var wctSauce = require('wct-sauce');
+    const wctSauce = require('wct-sauce');
     wctSauce.expandOptions(options);
 
-    var emitter = new events.EventEmitter();
-    new CliReporter(emitter, output, {});
-    wctSauce.startTunnel(options, emitter, function(error, tunnelId) {
+    const emitter = new events.EventEmitter();
+    new CliReporter(emitter, output, <config.Config>{});
+    wctSauce.startTunnel(options, emitter, (error: any, tunnelId: string) => {
       if (error) return done(error); // Otherwise, we keep at it.
       output.write('\n');
-      output.write('The tunnel will remain active while this process is running.\n');
-      output.write('To use this tunnel for other WCT runs, export the following:\n');
+      output.write(
+          'The tunnel will remain active while this process is running.\n');
+      output.write(
+          'To use this tunnel for other WCT runs, export the following:\n');
       output.write('\n');
       output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
     });
   });
 }
 
-function wrapCallback(output, done) {
-  return function(error) {
+function wrapCallback(output: NodeJS.WritableStream, done: (err: any) => void) {
+  return (error: any) => {
     if (!process.env.CI) {
-      updateNotifier && updateNotifier.notify();
+      updateNotifier.notify();
     }
 
     if (error) {
@@ -101,8 +112,3 @@ function wrapCallback(output, done) {
     done(error);
   };
 }
-
-module.exports = {
-  run:            run,
-  runSauceTunnel: runSauceTunnel,
-};
