@@ -17,7 +17,7 @@ var serveWaterfall = require('serve-waterfall');
 var paths = require('./paths');
 
 var HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
-var JSON_MATCHER   = 'wct.conf.json';
+var JSON_MATCHER   = '.wct.conf.json';
 var CONFIG_MATCHER = 'wct.conf.*';
 var WCT_ROOT       = path.resolve(__dirname, '..');
 
@@ -93,7 +93,7 @@ function defaults() {
     //     }
     //
     registerHooks: function(wct) {},
-    // Whether `wct.conf.*` is allowed, or only `wct.conf.json`.
+    // Whether `wct.conf.*` is allowed, or only `.wct.conf.json`.
     //
     // Handy for CI suites that want to be locked down.
     enforceJsonConf: false,
