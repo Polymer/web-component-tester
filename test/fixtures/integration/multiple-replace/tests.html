@@ -1,0 +1,89 @@
+<html>
+<head>
+  <script src="../../../../../webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="../../../../../polymer/polymer.html">
+  <script src="../../../../browser.js"></script>
+  <link rel="import" href="dom-if-element.html">
+  <link rel="import" href="normal-element.html">
+</head>
+<body>
+  <test-fixture id="DomIfTemplate">
+    <template>
+      <dom-if-element></dom-if-element>
+    </template>
+  </test-fixture>
+
+  <test-fixture id="NormalTemplate">
+    <template>
+      <normal-element></normal-element>
+    </template>
+  </test-fixture>
+
+  <script>
+  'use strict';
+
+  describe('testing dom-if', function() {
+    var domIfElement;
+    var insideElement;
+    var outsideElement;
+
+    before(function() {
+      replace('normal-element').with('changed-element-name');
+      domIfElement = fixture('DomIfTemplate');
+      domIfElement.isStamped = true;
+      Polymer.dom.flush();
+      insideElement = domIfElement.$$('#inside');
+      outsideElement = domIfElement.$.outside;
+      domIfElement.isStamped = false;
+      Polymer.dom.flush();
+    });
+
+    it('dom-if test', function() {
+      assert.equal(insideElement.nodeName, 'CHANGED-ELEMENT-NAME');
+      assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
+    });
+  });
+
+  describe('testing double replace', function() {
+    var setupCorrectly = true;
+    var element1;
+    var element2;
+    var element3;
+    var element4;
+
+    before(function() {
+      try {
+        replace('a').with('b');
+        replace('b').with('c');
+
+        replace('e').with('f');
+        replace('d').with('e');
+      } catch (err) {
+        setupCorrectly = false;
+      }
+
+      var template = fixture('NormalTemplate');
+      debugger;
+      element1 = template.$$('#element1');
+      element2 = template.$$('#element2');
+      element3 = template.$$('#element3');
+      element4 = template.$$('#element4');
+    });
+
+    after(function () {
+
+    });
+
+    it('double replace test', function() {
+      assert.isOk(setupCorrectly);
+      assert.equal(element1.nodeName, 'C');
+      assert.equal(element2.nodeName, 'C');
+
+      assert.equal(element3.nodeName, 'F');
+      assert.equal(element4.nodeName, 'F');
+    });
+  });
+  </script>
+
+</body>
+</html>

@@ -1,5 +1,8 @@
 import { extendInterfaces } from './extend';
 
+// replacement map stores what should be
+var replacements = {};
+
 /**
  * replace
  *
@@ -18,6 +21,17 @@ extendInterfaces('replace', function(context, teardown) {
   return function replace(oldTagName) {
     return {
       with: function(tagName) {
+        // Standardizes our replacements map
+        oldTagName = oldTagName.toLowerCase();
+        tagName = tagName.toLowerCase();
+
+        replacements[oldTagName] = tagName;
+
+        // If the function is already a stub, restore it to original
+        if (Polymer.Base.instanceTemplate.isSinonProxy) {
+          return;
+        }
+
         // Keep a reference to the original `Polymer.Base.instanceTemplate`
         // implementation for later:
         var originalInstanceTemplate = Polymer.Base.instanceTemplate;
@@ -27,27 +41,32 @@ extendInterfaces('replace', function(context, teardown) {
           // The DOM to replace is the result of calling the "original"
           // `instanceTemplate` implementation:
           var dom = originalInstanceTemplate.apply(this, arguments);
+          var nodeIterator = document.createNodeIterator(dom,
+              NodeFilter.SHOW_ELEMENT);
+          var node;
 
-          // The nodes to replace are queried from the DOM chunk:
-          var nodes = Array.prototype.slice.call(dom.querySelectorAll(oldTagName));
+          // Traverses the tree. A recently-replaced node will be put next, so
+          // if a node is replaced, it will be checked if it needs to be
+          // replaced again.
+          while (node = nodeIterator.nextNode()) {
+            var currentTagName = node.tagName.toLowerCase();
 
-          // For all of the nodes we want to place...
-          nodes.forEach(function(node) {
+            if (replacements.hasOwnProperty(currentTagName)) {
+              // Create a replacement:
+              var replacement = document.createElement(
+                  replacements[currentTagName]);
 
-            // Create a replacement:
-            var replacement = document.createElement(tagName);
+              // For all attributes in the original node..
+              for (var index = 0; index < node.attributes.length; ++index) {
+                // Set that attribute on the replacement:
+                replacement.setAttribute(
+                  node.attributes[index].name, node.attributes[index].value);
+              }
 
-            // For all attributes in the original node..
-            for (var index = 0; index < node.attributes.length; ++index) {
-              // Set that attribute on the replacement:
-              replacement.setAttribute(
-                node.attributes[index].name, node.attributes[index].value);
+              // Replace the original node with the replacement node:
+              node.parentNode.replaceChild(replacement, node);
             }
-
-            // Replace the original node with the replacement node:
-            node.parentNode.replaceChild(replacement, node);
-          });
-
+          }
           return dom;
         });
 
@@ -57,6 +76,9 @@ extendInterfaces('replace', function(context, teardown) {
           if (Polymer.Base.instanceTemplate.isSinonProxy) {
             Polymer.Base.instanceTemplate.restore();
           }
+
+          // Empty the replacement map
+          replacements = {};
         });
       }
     };

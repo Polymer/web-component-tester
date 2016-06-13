@@ -1491,9 +1491,14 @@ extendInterfaces('replace', function(context, teardown) {
   return function replace(oldTagName) {
     return {
       with: function(tagName) {
+
         // Keep a reference to the original `Polymer.Base.instanceTemplate`
         // implementation for later:
         var originalInstanceTemplate = Polymer.Base.instanceTemplate;
+
+        if (Polymer.Base.instanceTemplate.isSinonProxy) {
+          Polymer.Base.instanceTemplate.restore();
+        }
 
         // Use Sinon to stub `Polymer.Base.instanceTemplate`:
         sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
