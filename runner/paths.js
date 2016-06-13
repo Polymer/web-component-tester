@@ -45,7 +45,7 @@ function unglob(baseDir, patterns, done) {
       root: baseDir,
     }, next);
   }, function(error, results) {
-    done(error, _.unique(_.flatten(results || [])));
+    done(error, _.uniq(_.flatten(results || [])));
   });
 }
 
@@ -70,7 +70,7 @@ function expandDirectories(baseDir, paths, done) {
       fs.readdir(path.resolve(baseDir, aPath), function(error, files) {
         if (error) return next(error);
         // We have an index; defer to that.
-        if (_.include(files, INDEX)) {
+        if (_.includes(files, INDEX)) {
           return next(null, path.join(aPath, INDEX));
         }
         // Otherwise, we've gotta recursively expand.
@@ -82,7 +82,7 @@ function expandDirectories(baseDir, paths, done) {
       });
     });
   }, function(error, results) {
-    var files = _.unique(_.flatten(results || []));
+    var files = _.uniq(_.flatten(results || []));
     done(error, _.filter(files, VALID_FILE.test.bind(VALID_FILE)));
   });
 }

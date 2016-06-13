@@ -131,7 +131,7 @@ function runBrowsers(context, done) {
       if (error) errors.push(error);
       numDone = numDone + 1;
       if (numDone === numActiveBrowsers) {
-        error = errors.length > 0 ? _.unique(errors).join(', ') : null;
+        error = errors.length > 0 ? _.uniq(errors).join(', ') : null;
         context.emit('run-end', error);
         // TODO(nevir): Better rationalize run-end and hook.
         context.emitHook('cleanup', function() {
