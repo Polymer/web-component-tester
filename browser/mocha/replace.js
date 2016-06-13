@@ -41,7 +41,6 @@ extendInterfaces('replace', function(context, teardown) {
           // The DOM to replace is the result of calling the "original"
           // `instanceTemplate` implementation:
           var dom = originalInstanceTemplate.apply(this, arguments);
-          // creates an iterator of the node tree
           var nodeIterator = document.createNodeIterator(dom,
               NodeFilter.SHOW_ELEMENT);
           var node;
@@ -52,7 +51,6 @@ extendInterfaces('replace', function(context, teardown) {
           while (node = nodeIterator.nextNode()) {
             var currentTagName = node.tagName.toLowerCase();
 
-            // If this node is in our replacements map...
             if (replacements.hasOwnProperty(currentTagName)) {
               // Create a replacement:
               var replacement = document.createElement(
