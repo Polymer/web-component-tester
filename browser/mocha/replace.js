@@ -38,9 +38,10 @@ extendInterfaces('replace', function(context, teardown) {
 
         // Use Sinon to stub `Polymer.Base.instanceTemplate`:
         sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
-          // The DOM to replace is the result of calling the "original"
-          // `instanceTemplate` implementation:
-          var dom = originalInstanceTemplate.apply(this, arguments);
+
+          // dom to be replaced. _content is used for templatize calls the
+          // content is used for every other occasion of template instantiation
+          var dom = template._content || template.content;
           var nodeIterator = document.createNodeIterator(dom,
               NodeFilter.SHOW_ELEMENT);
           var node;
@@ -67,7 +68,8 @@ extendInterfaces('replace', function(context, teardown) {
               node.parentNode.replaceChild(replacement, node);
             }
           }
-          return dom;
+
+          return originalInstanceTemplate.call(this, template);
         });
 
         // After each test...
