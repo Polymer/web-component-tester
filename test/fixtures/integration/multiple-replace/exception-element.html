@@ -1,0 +1,13 @@
+<dom-module id="exception-element">
+  <template>
+  </template>
+  <script>
+    Polymer({
+      is: 'exception-element',
+
+      created: function() {
+        throw new Error('exception-element created');
+      }
+    });
+  </script>
+</dom-module>

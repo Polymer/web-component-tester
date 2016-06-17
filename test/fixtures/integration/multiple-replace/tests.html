@@ -4,7 +4,7 @@
   <link rel="import" href="../../../../../polymer/polymer.html">
   <script src="../../../../browser.js"></script>
   <link rel="import" href="dom-if-element.html">
-  <link rel="import" href="normal-element.html">
+  <link rel="import" href="exception-fixture.html">
 </head>
 <body>
   <test-fixture id="DomIfTemplate">
@@ -13,38 +13,43 @@
     </template>
   </test-fixture>
 
-  <test-fixture id="NormalTemplate">
+  <test-fixture id="ExceptionFixture">
     <template>
-      <normal-element></normal-element>
+      <exception-fixture></exception-fixture>
     </template>
   </test-fixture>
 
   <script>
   'use strict';
 
-  describe('testing dom-if', function() {
+  describe('testing templatized multiple replace', function() {
     var domIfElement;
     var insideElement;
     var outsideElement;
 
     before(function() {
       replace('normal-element').with('changed-element-name');
+      replace('exception-element').with('changed-element-name');
+
       domIfElement = fixture('DomIfTemplate');
       domIfElement.isStamped = true;
+
       Polymer.dom.flush();
+
       insideElement = domIfElement.$$('#inside');
       outsideElement = domIfElement.$.outside;
       domIfElement.isStamped = false;
+
       Polymer.dom.flush();
     });
 
     it('dom-if test', function() {
-      assert.equal(insideElement.nodeName, 'CHANGED-ELEMENT-NAME');
       assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
+      assert.equal(insideElement.nodeName, 'CHANGED-ELEMENT-NAME');
     });
   });
 
-  describe('testing double replace', function() {
+  describe('testing standard multiple replace', function() {
     var setupCorrectly = true;
     var element1;
     var element2;
@@ -58,16 +63,17 @@
 
         replace('e').with('f');
         replace('d').with('e');
+
+        replace('exception-element').with('dummy-element');
       } catch (err) {
         setupCorrectly = false;
       }
 
-      var template = fixture('NormalTemplate');
-      debugger;
-      element1 = template.$$('#element1');
-      element2 = template.$$('#element2');
-      element3 = template.$$('#element3');
-      element4 = template.$$('#element4');
+      var template = fixture('ExceptionFixture');
+      element1 = template.$.normal.$$('#element1');
+      element2 = template.$.normal.$$('#element2');
+      element3 = template.$.normal.$$('#element3');
+      element4 = template.$.normal.$$('#element4');
     });
 
     after(function () {
