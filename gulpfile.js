@@ -75,7 +75,7 @@ gulp.task('test:all', function(done) {
 });
 
 gulp.task('build-all', (done) => {
-  runSequence('clean', 'init', ['lint', 'build'], 'test', done);
+  runSequence('clean', 'init', 'lint', 'build', 'test', done);
 });
 
 gulp.task('build', ['build:typescript', 'build:browser']);

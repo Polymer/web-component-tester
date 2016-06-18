@@ -152,20 +152,13 @@ export class Context extends events.EventEmitter {
    * @param {function(*, Array<!Plugin>)} done Asynchronously loads the plugins
    *     requested by `options.plugins`.
    */
-  plugins(done: (err: any, plugins?: Plugin[]) => void): void {
-    this._plugins().then(
-      (plugins) => done(null, plugins),
-      (err) => done(err)
-    );
-  };
-
-  private async _plugins() {
+  async plugins(): Promise<Plugin[]> {
     const plugins: Plugin[] = [];
     for (const name of this.enabledPlugins()) {
       plugins.push(await Plugin.get(name));
     }
     return plugins;
-  }
+  };
 
   /**
    * @return {!Array<string>} The names of enabled plugins.
