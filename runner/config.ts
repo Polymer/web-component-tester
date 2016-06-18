@@ -449,14 +449,7 @@ export async function expand(context: Context) {
 
   expandDeprecated(context);
 
-  const suites = await new Promise<string[]>((resolve, reject) => {
-    paths.expand(
-        root, options.suites,
-        (error, suites) => error ? reject(error) : resolve(suites)
-    );
-  });
-
-  options.suites = suites;
+  options.suites = await paths.expand(root, options.suites);
 }
 
 /**
