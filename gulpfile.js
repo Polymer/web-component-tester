@@ -27,7 +27,9 @@ const tsProject = ts.createProject('tsconfig.json', {
   typescript: require('typescript')
 });
 
-gulp.task('init', () => gulp.src('./typings.json').pipe(typings()));
+gulp.task('init', () => {
+  gulp.src('./typings.json').pipe(typings());
+});
 
 gulp.task('lint', ['tslint', 'test:style', 'depcheck']);
 
@@ -73,8 +75,7 @@ gulp.task('test:all', function(done) {
 });
 
 gulp.task('build-all', (done) => {
-  // This doesn't work, it stops right before it runs 'build'
-  runSequence('clean', 'init', 'lint', 'build', done);
+  runSequence('clean', 'init', ['lint', 'build'], 'test', done);
 });
 
 gulp.task('build', ['build:typescript', 'build:browser']);

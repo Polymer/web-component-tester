@@ -39,8 +39,12 @@ export class BrowserRunner {
   stats: Stats;
   sessionId: string;
   timeoutId: NodeJS.Timer;
+  donePromise: Promise<void>;
 
-  constructor(public emitter: NodeJS.EventEmitter, public def: BrowserDef, public options: Config, public doneCallback: NodeCB<BrowserRunner>) {
+  private _resolveBrowser: () => void;
+  private _rejectBrowser: (err: any) => void;
+
+  constructor(public emitter: NodeJS.EventEmitter, public def: BrowserDef, public options: Config) {
     this.timeout = options.testTimeout;
     this.emitter = emitter;
 
@@ -51,17 +55,17 @@ export class BrowserRunner {
     this.browser.configureHttp({
       retries: -1
     });
+    this.donePromise = new Promise<void>((resolve, reject) => {
+      this._resolveBrowser = resolve;
+      this._rejectBrowser = reject;
+    });
 
     cleankill.onInterrupt((done) => {
       if (!this.browser) {
         return done();
       }
 
-      const origDoneCallback = this.doneCallback;
-      this.doneCallback = function(error, runner) {
-        done();
-        origDoneCallback(error, runner);
-      };
+      this.donePromise.then(() => done(), () => done());
       this.done('Interrupting');
     });
 
@@ -181,14 +185,22 @@ export class BrowserRunner {
 
     // Nothing to quit.
     if (!this.sessionId) {
-      return this.doneCallback(error, this);
+      if (error) {
+        return this._rejectBrowser(error);
+      } else {
+        return this._resolveBrowser();
+      }
     }
 
     browser.quit((quitError) => {
       if (quitError) {
         this.emitter.emit('log:warn', this.def, 'Failed to quit:', quitError.data || quitError);
       }
-      this.doneCallback(error, this);
+      if (error) {
+        this._rejectBrowser(error);
+      } else {
+        this._resolveBrowser();
+      }
     });
   }
 

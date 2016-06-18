@@ -11,6 +11,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import {Context} from './context';
 import {Config} from './config';
+import * as util from 'util';
 
 // Plugin module names can be prefixed by the following:
 const PREFIXES = [
@@ -41,7 +42,8 @@ export class Plugin {
    */
   execute(context: Context, done: (message?: string) => void): void {
     try {
-      require(this.packageName)(context, context.pluginOptions(this.name), this);
+      const plugin = require(this.packageName);
+      plugin(context, context.pluginOptions(this.name), this);
     } catch (error) {
       return done('Failed to load plugin "' + this.name + '": ' + error);
     }

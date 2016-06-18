@@ -31,11 +31,11 @@ describe('cli', function() {
   var sandbox;
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
-    sandbox.stub(steps, 'runTests', function(context, done) { done(); });
+    sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
+    sandbox.stub(steps, 'runTests', (context, done) => done());
 
-    sandbox.stub(wctLocalBrowsers, 'detect', function(done) {
-      done(null, _.omit(LOCAL_BROWSERS, 'aurora'));
+    sandbox.stub(wctLocalBrowsers, 'detect', function() {
+      return Promise.resolve(_.omit(LOCAL_BROWSERS, 'aurora'));
     });
     sandbox.stub(wctLocalBrowsers, 'supported', function() {
       return _.keys(LOCAL_BROWSERS);
