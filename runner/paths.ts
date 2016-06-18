@@ -19,12 +19,10 @@ import * as promisify from 'promisify-node';
  *
  * @param {string} baseDir The directory that patterns are relative to.
  * @param {!Array<string>} patterns The patterns to expand.
- * @param {function(*, Array<string>)} done Callback given the expanded paths.
+ * @returns {Promise<Array<string>} The expanded paths.
  */
-export function expand(baseDir: string, patterns: string[], done: (err: any, value?: string[]) => void): void {
-  unglob(baseDir, patterns).then((files) => {
-    return expandDirectories(baseDir, files);
-  }).then((results) => done(null, results), (err) => done(err));
+export async function expand(baseDir: string, patterns: string[]): Promise<string[]> {
+  return expandDirectories(baseDir, await unglob(baseDir, patterns));
 }
 
 /**
