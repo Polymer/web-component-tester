@@ -41,8 +41,8 @@ export class BrowserRunner {
   timeoutId: NodeJS.Timer;
   donePromise: Promise<void>;
 
-  private _resolveBrowser: () => void;
-  private _rejectBrowser: (err: any) => void;
+  private _resolve: () => void;
+  private _reject: (err: any) => void;
 
   constructor(public emitter: NodeJS.EventEmitter, public def: BrowserDef, public options: Config) {
     this.timeout = options.testTimeout;
@@ -56,8 +56,8 @@ export class BrowserRunner {
       retries: -1
     });
     this.donePromise = new Promise<void>((resolve, reject) => {
-      this._resolveBrowser = resolve;
-      this._rejectBrowser = reject;
+      this._resolve = resolve;
+      this._reject = reject;
     });
 
     cleankill.onInterrupt((done) => {
@@ -186,9 +186,9 @@ export class BrowserRunner {
     // Nothing to quit.
     if (!this.sessionId) {
       if (error) {
-        return this._rejectBrowser(error);
+        return this._reject(error);
       } else {
-        return this._resolveBrowser();
+        return this._resolve();
       }
     }
 
@@ -197,9 +197,9 @@ export class BrowserRunner {
         this.emitter.emit('log:warn', this.def, 'Failed to quit:', quitError.data || quitError);
       }
       if (error) {
-        this._rejectBrowser(error);
+        this._reject(error);
       } else {
-        this._resolveBrowser();
+        this._resolve();
       }
     });
   }

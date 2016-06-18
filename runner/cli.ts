@@ -64,9 +64,7 @@ export function runSauceTunnel(env: void, args: string[], output: NodeJS.Writabl
   const diskOptions = config.fromDisk();
   const baseOptions: config.Config = diskOptions.plugins && diskOptions.plugins['sauce'] || diskOptions.sauce || {};
 
-  Plugin.get('sauce', function(error, plugin) {
-    if (error) return done(error);
-
+  Plugin.get('sauce').then((plugin) => {
     const parser = require('nomnom');
     parser.script('wct-st');
     parser.options(_.omit(plugin.cliConfig, 'browsers', 'tunnelId'));
@@ -85,7 +83,7 @@ export function runSauceTunnel(env: void, args: string[], output: NodeJS.Writabl
       output.write('\n');
       output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
     });
-  });
+  }, (error) => done(error));
 }
 
 function wrapCallback(output: NodeJS.WritableStream, done: (err?: any) => void) {
