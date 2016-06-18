@@ -439,24 +439,24 @@ export function normalize(config: Config) {
  * Expands values within the configuration based on the current environment.
  *
  * @param {!Context} context The context for the current run.
- * @param {function(*)} done
  */
-export function expand(context: Context, done: (err?: any) => void): void {
+export async function expand(context: Context) {
   const options = context.options;
   let root    = context.options.root || process.cwd();
   context.options.root = root = path.resolve(root);
 
   options.origSuites = _.clone(options.suites);
 
-  expandDeprecated(context, function(error) {
-    if (error) return done(error);
+  expandDeprecated(context);
 
-    paths.expand(root, options.suites, function(error, suites) {
-      if (error) return done(error);
-      options.suites = suites;
-      done();
-    });
+  const suites = await new Promise<string[]>((resolve, reject) => {
+    paths.expand(
+        root, options.suites,
+        (error, suites) => error ? reject(error) : resolve(suites)
+    );
   });
+
+  options.suites = suites;
 }
 
 /**
@@ -464,7 +464,7 @@ export function expand(context: Context, done: (err?: any) => void): void {
  *
  * @param {!Context} context The context for the current run.
  */
-function expandDeprecated(context: Context, done: (err?: any) => void): void {
+function expandDeprecated(context: Context) {
   const options = context.options;
   // We collect configuration fragments to be merged into the options object.
   const fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
@@ -515,8 +515,6 @@ function expandDeprecated(context: Context, done: (err?: any) => void): void {
     // We are careful to modify context.options in place.
     _.merge(context.options, merge.apply(null, fragments));
   }
-
-  done();
 }
 
 /**

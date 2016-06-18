@@ -49,15 +49,7 @@ export async function configure(context: Context) {
   const options = context.options;
   _.defaults(options, config.defaults());
 
-  await new Promise((resolve, reject) => {
-    config.expand(context, (error) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await config.expand(context);
 
   // Note that we trigger the configure hook _after_ filling in the `options`
   // object.
