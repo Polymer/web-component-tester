@@ -139,14 +139,13 @@ const jshintFlow = lazypipe()
   .pipe(jshint.reporter, 'jshint-stylish')
   .pipe(jshint.reporter, 'fail');
 
-
-
 commonTools.depcheck({
   stickyDeps: new Set([
     // Used in browser.js
     'accessibility-developer-tools',
     'mocha',
     'test-fixture',
+    'async',
 
     // Used in the wct binary
     'resolve'

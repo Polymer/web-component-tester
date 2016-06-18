@@ -33,9 +33,9 @@ describe('gulp', function() {
 
     sandbox = sinon.sandbox.create();
     sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
-    sandbox.stub(steps, 'runTests', function(context, done) {
+    sandbox.stub(steps, 'runTests', (context) => {
       options = context.options;
-      done();
+      return Promise.resolve();
     });
 
     pluginsCalled = [];
