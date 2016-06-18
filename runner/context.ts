@@ -29,6 +29,11 @@ type Handler = (o: {}) => Promise<any>;
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
  * downstream to listen to.
  *
+ * TODO(rictic): break back-compat with plugins by moving hooks entirely away
+ *     from callbacks to promises. Easiest way to do this would be to rename
+ *     the hook-related methods on this object, so that downstream callers would
+ *     break in obvious ways.
+ *
  * @param {Object} options Any initially specified options.
  */
 export class Context extends events.EventEmitter {
