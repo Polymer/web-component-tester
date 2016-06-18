@@ -64,6 +64,7 @@
     "nomnom": "^1.8.1",
     "promisify-node": "^0.4.0",
     "resolve": "^1.0.0",
+    "selenium-webdriver": "^2.53.2",
     "send": "^0.11.1",
     "serve-waterfall": "^1.1.0",
     "server-destroy": "^1.0.1",

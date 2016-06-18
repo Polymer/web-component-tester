@@ -13,6 +13,7 @@ import * as cleankill from 'cleankill';
 import * as _ from 'lodash';
 import * as wd from 'wd';
 import {Config} from './config';
+import * as selenium from 'selenium-webdriver';
 
 export interface Stats {
   status: string;
@@ -32,11 +33,33 @@ export interface BrowserDef extends wd.Capabilities {
   deviceName?: string;
 }
 
+type ValidHost =
+    string |
+    {hostname: string, port?: number,
+     auth?: string, path?: string, } |
+    {host: string, port?: number,
+     username?: string, accesskey?: string, path?: string, };
+
+
+function getUrl(url: ValidHost): string {
+  console.log(url);
+  if (typeof url === 'string') {
+    return url;
+  }
+  const normalized = {
+    scheme: url['scheme'] || 'http',
+    host: url['host'] || url['hostname'],
+    port: url['port'] || 80,
+    path: url['path'] || '/'
+  }
+  return `${normalized.scheme}://${normalized.host}:${normalized.port}${normalized.path}`;
+}
+
 // Browser abstraction, responsible for spinning up a browser instance via wd.js and
 // executing runner.html test files passed in options.files
 export class BrowserRunner {
   timeout: number;
-  browser: wd.Browser;
+  browser: selenium.WebDriver;
   stats: Stats;
   sessionId: string;
   timeoutId: NodeJS.Timer;
@@ -56,12 +79,26 @@ export class BrowserRunner {
     this.emitter = emitter;
 
     this.stats   = {status: 'initializing'};
-    this.browser = wd.remote(this.def.url);
+
+    // Make sure that we are passing a pristine capabilities object to webdriver.
+    // None of our screwy custom properties!
+    const webdriverCapabilities = _.clone(this.def);
+    delete webdriverCapabilities.id;
+    delete webdriverCapabilities.url;
+    delete webdriverCapabilities.sessionId;
+
+    this.browser = new webdriver.Builder()
+        .forBrowser(this.def.browserName, this.def.version)
+        .withCapabilities(webdriverCapabilities)
+        .usingServer(getUrl(this.def.url))
+        .build();
+
+    // this.browser = wd.remote(this.def.url);
 
     // never retry selenium commands
-    this.browser.configureHttp({
-      retries: -1
-    });
+    // this.browser.configureHttp({
+    //   retries: -1
+    // });
 
     cleankill.onInterrupt((done) => {
       if (!this.browser) {
@@ -76,43 +113,38 @@ export class BrowserRunner {
       this.done('Interrupting');
     });
 
-    this.browser.on('command', (method: any, context: any) => {
-      emitter.emit('log:debug', this.def, chalk.cyan(method), context);
-    });
+    // this.browser.on('command', (method: any, context: any) => {
+    //   emitter.emit('log:debug', this.def, chalk.cyan(method), context);
+    // });
 
-    this.browser.on('http', (method: any, path: any, data: any) => {
-      if (data) {
-        emitter.emit(
-            'log:debug', this.def,
-            chalk.magenta(method), chalk.cyan(path), data);
-      } else {
-        emitter.emit(
-            'log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
-      }
-    });
+    // this.browser.on('http', (method: any, path: any, data: any) => {
+    //   if (data) {
+    //     emitter.emit(
+    //         'log:debug', this.def,
+    //         chalk.magenta(method), chalk.cyan(path), data);
+    //   } else {
+    //     emitter.emit(
+    //         'log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
+    //   }
+    // });
 
-    this.browser.on('connection', (code: any, message: any, error: any) => {
-      emitter.emit(
-          'log:warn', this.def, 'Error code ' + code + ':', message, error);
-    });
+    // this.browser.on('connection', (code: any, message: any, error: any) => {
+    //   emitter.emit(
+    //       'log:warn', this.def, 'Error code ' + code + ':', message, error);
+    // });
 
     this.emitter.emit('browser-init', this.def, this.stats);
-
-    // Make sure that we are passing a pristine capabilities object to webdriver.
-    // None of our screwy custom properties!
-    const webdriverCapabilities = _.clone(this.def);
-    delete webdriverCapabilities.id;
-    delete webdriverCapabilities.url;
-    delete webdriverCapabilities.sessionId;
+    this.startTest();
+    this.extendTimeout();
 
     // Reusing a session?
-    if (this.def.sessionId) {
-      this.browser.attach(this.def.sessionId, (error) => {
-        this._init(error, this.def.sessionId);
-      });
-    } else {
-      this.browser.init(webdriverCapabilities, this._init.bind(this));
-    }
+    // if (this.def.sessionId) {
+    //   this.browser.attach(this.def.sessionId, (error) => {
+    //     this._init(error, this.def.sessionId);
+    //   });
+    // } else {
+    //   this.browser.init(webdriverCapabilities, this._init.bind(this));
+    // }
   }
 
   _init(error: any, sessionId: string) {
@@ -152,13 +184,10 @@ export class BrowserRunner {
     const extra =
         (path.indexOf('?') === -1 ? '?' : '&') +
         `cli_browser_id=${this.def.id}`;
-    this.browser.get(host + path + extra, (error) => {
-      if (error) {
-        this.done(error.data || error);
-      } else {
-        this.extendTimeout();
-      }
-    });
+    this.browser.get(host + path + extra).then(
+      () => this.extendTimeout(),
+      (error) => this.done(error.data || error)
+    );
   }
 
   onEvent(event: string, data: any) {
@@ -198,22 +227,19 @@ export class BrowserRunner {
       error = this.stats.failing + ' failed tests';
     }
 
-    this.emitter.emit(
-        'browser-end', this.def, error, this.stats, this.sessionId, browser);
+    // this.emitter.emit(
+    //     'browser-end', this.def, error, this.stats, this.sessionId, browser);
 
     // Nothing to quit.
-    if (!this.sessionId) {
-      return this.doneCallback(error, this);
-    }
+    // if (!this.sessionId) {
+    //   return this.doneCallback(error, this);
+    // }
 
-    browser.quit((quitError) => {
-      if (quitError) {
-        this.emitter.emit(
-            'log:warn', this.def, 'Failed to quit:',
-            quitError.data || quitError);
-      }
-      this.doneCallback(error, this);
-    });
+    browser.quit().then(null, (quitError) => {
+      this.emitter.emit(
+          'log:warn', this.def, 'Failed to quit:',
+          quitError.data || quitError);
+    }).then(() => this.doneCallback(error, this));
   }
 
   extendTimeout() {
