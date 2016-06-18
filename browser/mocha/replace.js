@@ -32,42 +32,84 @@ extendInterfaces('replace', function(context, teardown) {
           return;
         }
 
-        // Keep a reference to the original `Polymer.Base.instanceTemplate`
-        // implementation for later:
-        var originalInstanceTemplate = Polymer.Base.instanceTemplate;
-
         // Use Sinon to stub `Polymer.Base.instanceTemplate`:
         sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
-          // The DOM to replace is the result of calling the "original"
-          // `instanceTemplate` implementation:
-          var dom = originalInstanceTemplate.apply(this, arguments);
-          var nodeIterator = document.createNodeIterator(dom,
-              NodeFilter.SHOW_ELEMENT);
-          var node;
+          // dom to be replaced. _content is used for templatize calls the
+          // content is used for every other occasion of template instantiation
+          var dom = template._content || template.content;
+          var templateNode = dom;
+          var instanceNode;
+          var instanceParent;
 
-          // Traverses the tree. A recently-replaced node will be put next, so
-          // if a node is replaced, it will be checked if it needs to be
-          // replaced again.
-          while (node = nodeIterator.nextNode()) {
-            var currentTagName = node.tagName.toLowerCase();
+          // Traverses the tree. And places the new nodes (after replacing) into
+          // a new template.
+          while (templateNode) {
+            if (templateNode.nodeType === Node.ELEMENT_NODE) {
+              var originalTagName = templateNode.tagName.toLowerCase();
+              var currentTagName = originalTagName;
 
-            if (replacements.hasOwnProperty(currentTagName)) {
-              // Create a replacement:
-              var replacement = document.createElement(
-                  replacements[currentTagName]);
-
-              // For all attributes in the original node..
-              for (var index = 0; index < node.attributes.length; ++index) {
-                // Set that attribute on the replacement:
-                replacement.setAttribute(
-                  node.attributes[index].name, node.attributes[index].value);
+              // determines the name of the element in the new template
+              while (replacements.hasOwnProperty(currentTagName)) {
+                currentTagName = replacements[currentTagName];
               }
 
-              // Replace the original node with the replacement node:
-              node.parentNode.replaceChild(replacement, node);
+              // if we have not changed this element, copy it over
+              if (currentTagName === originalTagName) {
+                instanceNode = document.importNode(templateNode);
+
+              } else {
+                // create the new node
+                instanceNode = document.createElement(currentTagName);
+
+                var numAttributes = templateNode.attributes.length;
+                // For all attributes in the original node..
+                for (var index=0; index<numAttributes; ++index) {
+                  // Set that attribute on the new node:
+                  instanceNode.setAttribute(templateNode.attributes[index].name,
+                      templateNode.attributes[index].value);
+                }
+              }
+
+            } else {
+              // if it is not an element node, simply import it.
+              instanceNode = document.importNode(templateNode);
+            }
+
+            if (instanceParent) {
+              instanceParent.appendChild(instanceNode);
+            }
+
+            // traverse down the tree
+            if (templateNode.firstChild) {
+              instanceParent = instanceNode;
+              templateNode = templateNode.firstChild;
+
+            // traverse laterally if you cannot traverse down
+            } else if (templateNode.nextSibling) {
+              templateNode = templateNode.nextSibling;
+
+            // if the parent is the dom, we are done
+            } else if (templateNode.parentNode === dom) {
+              instanceParent = instanceNode.parentNode;
+              return instanceParent;
+
+            // traverse up
+            } else {
+              // traverse up until you can move laterally
+              while (!templateNode.nextSibling) {
+                templateNode = templateNode.parentNode;
+                instanceParent = instanceParent.parentNode;
+
+                // stop traversing up if we are at the top
+                if (templateNode === dom) {
+                  return instanceParent;
+                }
+              }
+
+              // traverse laterally
+              templateNode = templateNode.nextSibling;
             }
           }
-          return dom;
         });
 
         // After each test...

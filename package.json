@@ -1,6 +1,6 @@
 {
   "name": "web-component-tester",
-  "version": "4.2.2",
+  "version": "4.3.0",
   "description": "web-component-tester makes testing your web components a breeze!",
   "keywords": [
     "browser",
@@ -98,6 +98,6 @@
     "watch": "^0.18.0"
   },
   "engines": {
-    "node": ">= 0.12"
+    "node": ">= 4.0"
   }
 }
