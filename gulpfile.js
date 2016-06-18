@@ -144,6 +144,7 @@ gulp.task('depcheck', () => {
       'accessibility-developer-tools',
       'mocha',
       'test-fixture',
+      'async',
 
       // Used in the wct binary
       'resolve'

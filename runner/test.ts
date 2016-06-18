@@ -7,7 +7,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-const async = require('async');
 import * as cleankill from 'cleankill';
 
 import {CliReporter} from './clireporter';
@@ -87,18 +86,7 @@ async function testActual(context: Context) {
   await steps.configure(context);
 
   await steps.prepare(context);
-
-  await new Promise((resolve, reject) => {
-    async.series([
-      steps.runTests.bind(steps, context),
-    ], (error: any) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await steps.runTests(context);
 }
 
 // HACK
