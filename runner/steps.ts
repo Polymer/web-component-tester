@@ -32,21 +32,14 @@ export async function setupOverrides(context: Context): Promise<void> {
 }
 
 export async function loadPlugins(context: Context): Promise<Plugin[]> {
-  const plugins = await new Promise<Plugin[]>((resolve, reject) => {
-    context.emit('log:debug', 'step: loadPlugins');
+  context.emit('log:debug', 'step: loadPlugins');
 
-    context.plugins(function(error, plugins) {
-      if (error) {
-        return reject(error);
-      }
-      resolve(plugins);
-    });
-  });
+  const plugins = await context.plugins();
 
   // built in quasi-plugin.
   webserver(context);
-  // Actual plugins.
 
+  // Actual plugins.
   await Promise.all(plugins.map(plugin => plugin.execute(context)));
   return plugins;
 }

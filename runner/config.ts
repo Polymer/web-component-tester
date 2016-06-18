@@ -348,9 +348,7 @@ export function parseArgs(context: Context, args: string[],
   parser.script('wct');
   parser.options(<any>ARG_CONFIG);
 
-  context.plugins(function(error: any, plugins: Plugin[]) {
-    if (error) return done(error);
-
+  context.plugins().then((plugins) => {
     plugins.forEach(_configurePluginOptions.bind(null, parser));
     const options = <any>_expandOptionPaths(normalize(parser.parse(args)));
     if (options._ && options._.length > 0) {
@@ -359,7 +357,7 @@ export function parseArgs(context: Context, args: string[],
 
     context.options = merge(context.options, options);
     done();
-  });
+  }).then(null, (error) => done(error));
 }
 
 function _configurePluginOptions(parser: NomnomInternal.Parser, plugin: Plugin) {
