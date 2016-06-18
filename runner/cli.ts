@@ -52,10 +52,9 @@ export function run(
   }
 
   // `parseArgs` merges any new configuration into `context.options`.
-  config.parseArgs(context, args, function(error) {
-    if (error) return done(error);
-    test(context).then(() => done(), done);
-  });
+  config.parseArgs(context, args)
+    .then(() => test(context))
+    .then(() => done(), (error) => done(error));
 }
 
 // Note that we're cheating horribly here. Ideally all of this logic is within

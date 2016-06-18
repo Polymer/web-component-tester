@@ -340,24 +340,20 @@ export function preparseArgs(args: string[]) {
  * @param {!Context} context The context, containing plugin state and any base
  *     options to merge into.
  * @param {!Array<string>} args The args to parse.
- * @param {function(*)} done
  */
-export function parseArgs(context: Context, args: string[],
-                          done: (err?: any) => void): void {
+export async function parseArgs(context: Context, args: string[]) {
   const parser = nomnom();
   parser.script('wct');
   parser.options(<any>ARG_CONFIG);
 
-  context.plugins().then((plugins) => {
-    plugins.forEach(_configurePluginOptions.bind(null, parser));
-    const options = <any>_expandOptionPaths(normalize(parser.parse(args)));
-    if (options._ && options._.length > 0) {
-      options.suites = options._;
-    }
+  const plugins = await context.plugins();
+  plugins.forEach(_configurePluginOptions.bind(null, parser));
+  const options = <any>_expandOptionPaths(normalize(parser.parse(args)));
+  if (options._ && options._.length > 0) {
+    options.suites = options._;
+  }
 
-    context.options = merge(context.options, options);
-    done();
-  }).then(null, (error) => done(error));
+  context.options = merge(context.options, options);
 }
 
 function _configurePluginOptions(parser: NomnomInternal.Parser, plugin: Plugin) {
