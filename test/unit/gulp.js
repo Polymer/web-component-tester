@@ -31,18 +31,18 @@ describe('gulp', function() {
     orch = new gulp.Gulp();
     wctGulp.init(orch);
 
-    sandbox = sinon.sandbox.create()
-    sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());;
+    sandbox = sinon.sandbox.create();
+    sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
     sandbox.stub(steps, 'runTests', function(context, done) {
       options = context.options;
       done();
     });
 
     pluginsCalled = [];
-    sandbox.stub(Plugin.prototype, 'execute', function(context, done) {
+    sandbox.stub(Plugin.prototype, 'execute', function(context) {
       pluginsCalled.push(this.name);
       context.options.activeBrowsers.push({browserName: 'fake for ' + this.name});
-      done()
+      return Promise.resolve();
     });
   });
 

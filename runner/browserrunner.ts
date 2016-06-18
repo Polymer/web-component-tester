@@ -45,8 +45,8 @@ export class BrowserRunner {
   options: Config;
   donePromise: Promise<void>;
 
-  private _resolveBrowser: () => void;
-  private _rejectBrowser: (err: any) => void;
+  private _resolve: () => void;
+  private _reject: (err: any) => void;
 
   constructor(emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config) {
     this.emitter = emitter;
@@ -63,8 +63,8 @@ export class BrowserRunner {
       retries: -1
     });
     this.donePromise = new Promise<void>((resolve, reject) => {
-      this._resolveBrowser = resolve;
-      this._rejectBrowser = reject;
+      this._resolve = resolve;
+      this._reject = reject;
     });
 
     cleankill.onInterrupt((done) => {
@@ -204,9 +204,9 @@ export class BrowserRunner {
     // Nothing to quit.
     if (!this.sessionId) {
       if (error) {
-        return this._rejectBrowser(error);
+        return this._reject(error);
       } else {
-        return this._resolveBrowser();
+        return this._resolve();
       }
     }
 
@@ -217,9 +217,9 @@ export class BrowserRunner {
             quitError.data || quitError);
       }
       if (error) {
-        this._rejectBrowser(error);
+        this._reject(error);
       } else {
-        this._resolveBrowser();
+        this._resolve();
       }
     });
   }

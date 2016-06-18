@@ -72,9 +72,7 @@ export function runSauceTunnel(
       || diskOptions.sauce
       || {};
 
-  Plugin.get('sauce',  (error, plugin) => {
-    if (error) return done(error);
-
+  Plugin.get('sauce').then((plugin) => {
     const parser = require('nomnom');
     parser.script('wct-st');
     parser.options(_.omit(plugin.cliConfig, 'browsers', 'tunnelId'));
@@ -95,7 +93,7 @@ export function runSauceTunnel(
       output.write('\n');
       output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
     });
-  });
+  }, (error) => done(error));
 }
 
 function wrapCallback(

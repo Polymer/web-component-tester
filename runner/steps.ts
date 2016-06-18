@@ -47,18 +47,7 @@ export async function loadPlugins(context: Context): Promise<Plugin[]> {
   webserver(context);
   // Actual plugins.
 
-  const promises = plugins.map((plugin => {
-    return new Promise((resolve, reject) => {
-      plugin.execute(context, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }));
-  await Promise.all(promises);
+  await Promise.all(plugins.map(plugin => plugin.execute(context)));
   return plugins;
 }
 

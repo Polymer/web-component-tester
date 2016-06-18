@@ -158,16 +158,7 @@ export class Context extends events.EventEmitter {
   private async _plugins() {
     const plugins: Plugin[] = [];
     for (const name of this.enabledPlugins()) {
-      const plugin = await (new Promise<Plugin>((resolve, reject) => {
-        Plugin.get(name, (err, plugin) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(plugin);
-          }
-        });
-      }));
-      plugins.push(plugin);
+      plugins.push(await Plugin.get(name));
     }
     return plugins;
   }
