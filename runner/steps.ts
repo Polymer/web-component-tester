@@ -56,21 +56,13 @@ export async function configure(context: Context) {
   // object.
   //
   // If you want to modify options prior to this; do it during plugin init.
-  await context.emitHook('configure', () => {});
+  await context.emitHook('configure');
 
   // Even if the options don't validate; useful debugging info.
   const cleanOptions = _.omit(options, 'output');
   context.emit('log:debug', 'configuration:', cleanOptions);
 
-  await new Promise((resolve, reject) => {
-    config.validate(options, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await config.validate(options);
 }
 
 /**

@@ -143,9 +143,9 @@ export function defaults(): Config {
     // plugin. For example, to serve custom content via the internal webserver:
     //
     //     registerHooks: function(wct) {
-    //       wct.hook('prepare:webserver', function(app, done) {
+    //       wct.hook('prepare:webserver', function(app) {
     //         app.use(...);
-    //         done();
+    //         return Promise.resolve();
     //       });
     //     }
     //
@@ -497,29 +497,25 @@ function expandDeprecated(context: Context) {
 
 /**
  * @param {!Object} options The configuration to validate.
- * @param {function(*)} Callback indicating whether the configuration is valid.
  */
-export function validate(options: Config, done: (err?: string) => void): void {
+export async function validate(options: Config) {
   if (options['webRunner']) {
-    return done('webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
+    throw 'webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.';
   }
   if (options['component']) {
-    return done('component is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.');
+    throw 'component is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.';
   }
 
   if (options.activeBrowsers.length === 0) {
-    return done('No browsers configured to run');
+    throw 'No browsers configured to run';
   }
   if (options.suites.length === 0) {
     const root  = options.root || process.cwd();
     const globs = options.origSuites.join(', ');
-    return done(
-        'No test suites were found matching your configuration\n' +
-        '\n' +
-        '  WCT searched for .js and .html files matching: ' + globs + '\n' +
-        '\n' +
-        '  Relative paths were resolved against: ' + root);
+    throw 'No test suites were found matching your configuration\n' +
+          '\n' +
+          '  WCT searched for .js and .html files matching: ' + globs + '\n' +
+          '\n' +
+          '  Relative paths were resolved against: ' + root;
   }
-
-  done(null);
 }
