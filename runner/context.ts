@@ -96,14 +96,18 @@ export class Context extends events.EventEmitter {
   emitHook(name: string, done: (err?: any) => void): Promise<void>;
   emitHook(name: string, ...args: any[]): Promise<void>;
   async emitHook(name: string, done: (err?: any) => void): Promise<void> {
-    done = done || ((e) => {});
     this.emit('log:debug', 'hook:', name);
 
     const hooks = (this._hookHandlers[name] || []);
     let boundHooks: ((cb: (err: any) => void) => (void|Promise<any>))[];
     if (arguments.length > 2) {
-      const hookArgs = Array.from(arguments).slice(1, arguments.length - 1);
-      done = arguments[arguments.length - 1];
+      done = arguments[arguments.length - 1];  // mutates arguments in loose mode!
+      let argsEnd = arguments.length - 1;
+      if (!(done instanceof Function)) {
+        done = (e) => {};
+        argsEnd = arguments.length;
+      }
+      const hookArgs = Array.from(arguments).slice(1, argsEnd);
       boundHooks = hooks.map(function(hook) {
         return hook.bind.apply(hook, [null].concat(hookArgs));
       });
@@ -111,6 +115,7 @@ export class Context extends events.EventEmitter {
     if (!boundHooks) {
       boundHooks = <any>hooks;
     }
+    done = done || ((e) => {});
 
     // We execute the handlers _sequentially_. This may be slower, but it gives us
     // a lighter cognitive load and more obvious logs.

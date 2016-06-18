@@ -60,45 +60,46 @@ import * as steps from './steps';
  *
  * @param {!Config|!Context} options The configuration or an already formed
  *     `Context` object.
- * @param {function(*)} done callback indicating error or success.
  */
 export async function test(options: (Config|Context)): Promise<void> {
-  await new Promise((resolve, reject) => {
-    const context =
-        (options instanceof Context) ? options : new Context(options);
+  const context = (options instanceof Context) ? options : new Context(options);
 
-    // We assume that any options related to logging are passed in via the initial
-    // `options`.
-    if (context.options.output) {
-      new CliReporter(context, context.options.output, context.options);
+  // We assume that any options related to logging are passed in via the initial
+  // `options`.
+  if (context.options.output) {
+    new CliReporter(context, context.options.output, context.options);
+  }
+
+  try {
+    await testActual(context);
+  } finally {
+    if (!context.options.skipCleanup) {
+      await new Promise((resolve, reject) => {
+        cleankill.close(resolve);
+      });
     }
+  }
+};
 
+async function testActual(context: Context) {
+  await steps.setupOverrides(context);
+  await steps.loadPlugins(context);
+  await steps.configure(context);
 
+  await steps.prepare(context);
+
+  await new Promise((resolve, reject) => {
     async.series([
-      steps.setupOverrides.bind(steps, context),
-      steps.loadPlugins.bind(steps, context),
-      steps.configure.bind(steps, context),
-      steps.prepare.bind(steps, context),
       steps.runTests.bind(steps, context),
     ], (error: any) => {
-      if ((<Config>options).skipCleanup) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
-        }
+      if (error) {
+        reject(error);
       } else {
-       cleankill.close(() => {
-         if (error) {
-           reject(error);
-         } else {
-           resolve();
-         }
-       });
+        resolve();
       }
     });
   });
-};
+}
 
 // HACK
 test['test'] = test;

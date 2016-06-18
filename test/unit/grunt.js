@@ -74,8 +74,8 @@ describe('grunt', function() {
 
     var sandbox;
     beforeEach(function() {
-      sandbox = sinon.sandbox.create();
-      sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
+      sandbox = sinon.sandbox.create()
+      sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
 
       sandbox.stub(wctLocalBrowsers, 'detect', () => Promise.resolve(LOCAL_BROWSERS));
       sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));

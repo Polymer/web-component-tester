@@ -25,60 +25,75 @@ interface ClientMessage<T> {
 
 // Steps (& Hooks)
 
-export function setupOverrides(context: Context, done: () => void): void {
+export async function setupOverrides(context: Context): Promise<void> {
   if (context.options.registerHooks) {
     context.options.registerHooks(context);
   }
-  done();
 }
 
-export function loadPlugins(
-      context: Context, done: (err: any, plugins?: Plugin[]) => void): void {
-  context.emit('log:debug', 'step: loadPlugins');
-  context.plugins(function(error, plugins) {
-    if (error) return done(error);
-    // built in quasi-plugin.
-    webserver(context);
-    // Actual plugins.
+export async function loadPlugins(context: Context): Promise<Plugin[]> {
+  const plugins = await new Promise<Plugin[]>((resolve, reject) => {
+    context.emit('log:debug', 'step: loadPlugins');
 
-    const promises = plugins.map((plugin => {
-      return new Promise((resolve, reject) => {
-        plugin.execute(context, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
-    }));
-    Promise.all(promises).then((v) => {
-      done(null, plugins);
-    }, (err) => {
-      done(err);
+    context.plugins(function(error, plugins) {
+      if (error) {
+        return reject(error);
+      }
+      resolve(plugins);
     });
   });
+
+  // built in quasi-plugin.
+  webserver(context);
+  // Actual plugins.
+
+  const promises = plugins.map((plugin => {
+    return new Promise((resolve, reject) => {
+      plugin.execute(context, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }));
+  await Promise.all(promises);
+  return plugins;
 }
 
-export function configure(context: Context, done: (err?: any) => void): void {
+export async function configure(context: Context) {
   context.emit('log:debug', 'step: configure');
   const options = context.options;
   _.defaults(options, config.defaults());
 
-  config.expand(context, function(error) {
-    if (error) return done(error);
+  await new Promise((resolve, reject) => {
+    config.expand(context, (error) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
 
-    // Note that we trigger the configure hook _after_ filling in the `options`
-    // object.
-    //
-    // If you want to modify options prior to this; do it during plugin init.
-    context.emitHook('configure', function(error) {
-      if (error) return done(error);
-      // Even if the options don't validate; useful debugging info.
-      const cleanOptions = _.omit(options, 'output');
-      context.emit('log:debug', 'configuration:', cleanOptions);
+  // Note that we trigger the configure hook _after_ filling in the `options`
+  // object.
+  //
+  // If you want to modify options prior to this; do it during plugin init.
+  await context.emitHook('configure', () => {});
 
-      config.validate(options, done);
+  // Even if the options don't validate; useful debugging info.
+  const cleanOptions = _.omit(options, 'output');
+  context.emit('log:debug', 'configuration:', cleanOptions);
+
+  await new Promise((resolve, reject) => {
+    config.validate(options, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
     });
   });
 }
@@ -90,20 +105,16 @@ export function configure(context: Context, done: (err?: any) => void): void {
  *
  * Note that some "plugins" are also built directly into WCT (webserver).
  */
-export function prepare(context: Context, done: (err?: any) => void): void {
-  context.emitHook('prepare', done);
+export async function prepare(context: Context): Promise<void> {
+  await context.emitHook('prepare');
 }
 
-export function runTests(context: Context, done: (err?: any) => void): void {
+export async function runTests(context: Context): Promise<void> {
   context.emit('log:debug', 'step: runTests');
   const failed = false;
-  const runners = runBrowsers(context, function(error: any) {
-    if (error) {
-      done(error);
-    } else {
-      done(failed ? 'Had failed tests' : null);
-    }
-  });
+
+  const result = runBrowsers(context);
+  const runners = result.runners;
 
   context._socketIOServer = socketIO(context._httpServer);
   context._socketIOServer.on('connection', function(socket) {
@@ -114,6 +125,8 @@ export function runTests(context: Context, done: (err?: any) => void): void {
   });
 
   context._testRunners = runners;
+
+  await result.completionPromise;
 }
 
 export function cancelTests(context: Context) {
@@ -127,8 +140,7 @@ export function cancelTests(context: Context) {
 
 // Helpers
 
-function runBrowsers(
-      context: Context, done: (err?: any) => void): BrowserRunner[] {
+function runBrowsers(context: Context) {
   const options = context.options;
   const numActiveBrowsers = options.activeBrowsers.length;
   if (numActiveBrowsers === 0) {
@@ -145,26 +157,32 @@ function runBrowsers(
   context.emit('run-start', options);
 
   const errors: any[] = [];
-  let numDone = 0;
-  return options.activeBrowsers.map(function(browser, id) {
+
+  const promises: Promise<void>[] = [];
+  const runners = options.activeBrowsers.map(function(browser, id) {
     // Needed by both `BrowserRunner` and `CliReporter`.
     browser.id = id;
     _.defaults(browser, options.browserOptions);
 
-    return new BrowserRunner(context, browser, options, function(error: any) {
-      context.emit('log:debug', browser, 'BrowserRunner complete');
-      if (error) {
+    const runner = new BrowserRunner(context, browser, options);
+    promises.push(
+      runner.donePromise.then(() => {
+        context.emit('log:debug', browser, 'BrowserRunner complete');
+      }, (error) => {
+        context.emit('log:debug', browser, 'BrowserRunner complete');
         errors.push(error);
-      }
-      numDone = numDone + 1;
-      if (numDone === numActiveBrowsers) {
-        error = errors.length > 0 ? _.union(errors).join(', ') : null;
-        context.emit('run-end', error);
-        // TODO(nevir): Better rationalize run-end and hook.
-        context.emitHook('cleanup', function() {
-          done(error);
-        });
-      }
-    });
+      })
+    );
+    return runner;
   });
+
+  return {runners, completionPromise: (async function() {
+    await Promise.all(promises);
+    const error = errors.length > 0 ? _.union(errors).join(', ') : null;
+    context.emit('run-end', error);
+    // TODO(nevir): Better rationalize run-end and hook.
+    await context.emitHook('cleanup');
+
+    return error;
+  }())};
 }

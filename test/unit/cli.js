@@ -31,8 +31,8 @@ describe('cli', function() {
   var sandbox;
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
-    sandbox.stub(steps, 'runTests', function(context, done) { done(); });
+    sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
+    sandbox.stub(steps, 'runTests', (context, done) => done());
 
     sandbox.stub(
         wctLocalBrowsers, 'detect',

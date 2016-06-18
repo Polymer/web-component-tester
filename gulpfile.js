@@ -79,8 +79,7 @@ gulp.task('test:all', function(done) {
 });
 
 gulp.task('build-all', (done) => {
-  // This doesn't work, it stops right before it runs 'build'
-  runSequence('clean', 'init', 'lint', 'build', done);
+  runSequence('clean', 'init', ['lint', 'build'], 'test', done);
 });
 
 gulp.task('build', ['build:typescript', 'build:browser']);
