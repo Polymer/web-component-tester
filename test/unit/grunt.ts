@@ -7,29 +7,31 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var _     = require('lodash');
-var chai  = require('chai');
-var grunt = require('grunt');
-var path  = require('path');
-var sinon = require('sinon');
+import * as _ from 'lodash';
+import * as chai from 'chai';
+import * as grunt from 'grunt';
+import * as path from 'path';
+import * as sinon from 'sinon';
 
-var steps = require('../../runner/steps');
+import {Context} from '../../runner/context';
+import * as steps from '../../runner/steps';
 
-var wctLocalBrowsers = require('wct-local/lib/browsers');
-var LOCAL_BROWSERS = {
+
+const wctLocalBrowsers = require('wct-local/lib/browsers');
+const expect = chai.expect;
+chai.use(require('sinon-chai'));
+
+const LOCAL_BROWSERS = {
   aurora:  {browserName: 'aurora',  version: '1'},
   canary:  {browserName: 'canary',  version: '2'},
   chrome:  {browserName: 'chrome',  version: '3'},
   firefox: {browserName: 'firefox', version: '4'},
 };
 
-var expect = chai.expect;
-chai.use(require('sinon-chai'));
-
 describe('grunt', function() {
 
   // Sinon doesn't stub process.env very well.
-  var origEnv, origArgv;
+  let origEnv: any, origArgv: any;
   beforeEach(function() {
     origEnv  = _.clone(process.env);
     origArgv = process.argv;
@@ -56,31 +58,25 @@ describe('grunt', function() {
     grunt.loadTasks(path.resolve(__dirname, '../../tasks'));
   });
 
-  function runTask(task, done) {
-    var called = false;
-    function handleCallback(error) {
-      if (called) return;
-      called = true;
-      // We shouldn't error before hitting it.
-      expect(steps.runTests).to.have.been.calledOnce;
-      done(error, steps.runTests.getCall(0));
-    }
-
-    grunt.task.options({error: handleCallback, done: handleCallback});
-    grunt.task.run('wct-test:' + task).start();
+  async function runTask(task: string) {
+    await new Promise((resolve, reject) => {
+      grunt.task['options']({error: reject, done: resolve});
+      grunt.task.run('wct-test:' + task)['start']();
+    });
+    // We shouldn't error before hitting it.
+    expect(steps.runTests).to.have.been.calledOnce;
+    return <{args: [Context]}>steps.runTests['getCall'](0);
   }
 
   describe('wct-test', function() {
 
-    var sandbox;
+    let sandbox: sinon.SinonSandbox;
     beforeEach(function() {
-      sandbox = sinon.sandbox.create()
-      sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
+      sandbox = sinon.sandbox.create();
+      sandbox.stub(steps, 'prepare',  async (context: Context) => undefined);
 
-      sandbox.stub(
-          wctLocalBrowsers, 'detect', () => Promise.resolve(LOCAL_BROWSERS));
-      sandbox.stub(
-          wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));
+      sandbox.stub(wctLocalBrowsers, 'detect', async () => LOCAL_BROWSERS);
+      sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));
 
       process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
     });
@@ -92,34 +88,28 @@ describe('grunt', function() {
     describe('with a passing suite', function() {
 
       beforeEach(function() {
-        sandbox.stub(steps, 'runTests', () => Promise.resolve());
+        sandbox.stub(steps, 'runTests', async () => undefined);
       });
 
-      it('passes configuration through', function(done) {
-        runTask('passthrough', function(error, call) {
-          expect(error).to.not.be.ok;
-          expect(call.args[0].options).to.include({foo: 1, bar: 'asdf'});
-          done();
-        });
+      it('passes configuration through', async () => {
+        const call = await runTask('passthrough');
+        expect(call.args[0].options).to.include({foo: 1, bar: 'asdf'});
       });
-
     });
 
     describe('with a failing suite', function() {
-
       beforeEach(function() {
-        sandbox.stub(steps, 'runTests', () => Promise.reject('failures'));
+        sandbox.stub(steps, 'runTests', async () => { throw 'failures'; });
       });
 
-      it('passes errors out', function(done) {
-        runTask('passthrough', function(error, call) {
-          expect(error).to.be.ok;
-          done();
-        });
+      it('passes errors out', async () => {
+        try {
+          await runTask('passthrough');
+        } catch (error) {
+          return; // All's well!
+        }
+        throw new Error('Expected runTask to fail!');
       });
-
     });
-
   });
-
 });
