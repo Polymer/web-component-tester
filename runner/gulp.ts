@@ -13,7 +13,7 @@ import {Gulp} from 'gulp';
 import {Config} from './config';
 import {test} from './test';
 
-export function init(gulp: Gulp, dependencies: string[]) {
+export function init(gulp: Gulp, dependencies?: string[]) {
   if (!dependencies) dependencies = [];
 
   // TODO(nevir): Migrate fully to wct:local/etc.

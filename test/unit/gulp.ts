@@ -7,42 +7,43 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var chai  = require('chai');
-var gulp  = require('gulp');
-var path  = require('path');
-var sinon = require('sinon');
+import * as chai from 'chai';
+import * as gulp from 'gulp';
+import * as path from 'path';
+import * as sinon from 'sinon';
 
-var Plugin  = require('../../runner/plugin');
-var steps   = require('../../runner/steps');
-var wctGulp = require('../../runner/gulp');
+import {Context} from '../../runner/context';
+import {Config} from '../../runner/config';
+import {Plugin} from '../../runner/plugin';
+import * as steps from '../../runner/steps';
+import * as wctGulp from '../../runner/gulp';
 
-var expect = chai.expect;
+const expect = chai.expect;
 chai.use(require('sinon-chai'));
 
-var FIXTURES = path.resolve(__dirname, '../fixtures/integration');
+const FIXTURES = path.resolve(__dirname, '../fixtures/integration');
 
 describe('gulp', function() {
 
-  var pluginsCalled;
-  var sandbox;
-  var orch;
-  var options;
+  let pluginsCalled: string[];
+  let sandbox: sinon.SinonSandbox;
+  let orch: gulp.Gulp;
+  let options: Config;
   beforeEach(function() {
-    orch = new gulp.Gulp();
+    orch = new gulp['Gulp']();
     wctGulp.init(orch);
 
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
-    sandbox.stub(steps, 'runTests', (context) => {
+    sandbox.stub(steps, 'prepare',  async (context: Context) => undefined);
+    sandbox.stub(steps, 'runTests', async (context: Context) => {
       options = context.options;
-      return Promise.resolve();
     });
 
     pluginsCalled = [];
-    sandbox.stub(Plugin.prototype, 'execute', function(context) {
+    sandbox.stub(Plugin.prototype, 'execute', async function(context: Context) {
       pluginsCalled.push(this.name);
-      context.options.activeBrowsers.push({browserName: 'fake for ' + this.name});
-      return Promise.resolve();
+      context.options.activeBrowsers.push(
+          <any>{browserName: 'fake for ' + this.name});
     });
   });
 
@@ -50,46 +51,40 @@ describe('gulp', function() {
     sandbox.restore();
   });
 
-  it('honors wcf.conf.js', function(done) {
-    process.chdir(path.join(FIXTURES, 'conf'));
-    orch.start('wct:sauce', function(error) {
-      expect(error).to.not.be.ok;
-      expect(options.plugins.sauce.username).to.eq('abc123');
-      done();
+  async function runGulpTask(name: string) {
+    await new Promise((resolve, reject) => {
+      orch.start(name, (error) => error ? reject(error) : resolve());
     });
+  }
+
+  it('honors wcf.conf.js', async () => {
+    process.chdir(path.join(FIXTURES, 'conf'));
+    await runGulpTask('wct:sauce');
+    expect(options.plugins['sauce'].username).to.eq('abc123');
   });
 
-  it('prefers wcf.conf.json', function(done) {
+  it('prefers wcf.conf.json', async () => {
     process.chdir(path.join(FIXTURES, 'conf', 'json'));
-    orch.start('wct:sauce', function(error) {
-      expect(error).to.not.be.ok;
-      expect(options.plugins.sauce.username).to.eq('jsonconf');
-      done();
-    });
+    await runGulpTask('wct:sauce');
+    expect(options.plugins['sauce'].username).to.eq('jsonconf');
   });
 
   describe('wct:local', function() {
 
-    it('kicks off local tests', function(done) {
-      orch.start('wct:local', function(error) {
-        expect(error).to.not.be.ok;
-        expect(steps.runTests).to.have.been.calledOnce;
-        expect(pluginsCalled).to.have.members(['local']);
-        done();
-      });
+    it('kicks off local tests', async () => {
+      await runGulpTask('wct:local');
+      expect(steps.runTests).to.have.been.calledOnce;
+      expect(pluginsCalled).to.have.members(['local']);
     });
 
   });
 
   describe('wct:sauce', function() {
 
-    it('kicks off sauce tests', function(done) {
-      orch.start('wct:sauce', function(error) {
-        expect(error).to.not.be.ok;
-        expect(steps.runTests).to.have.been.calledOnce;
-        expect(pluginsCalled).to.have.members(['sauce']);
-        done();
-      });
+    it('kicks off sauce tests', async () => {
+      await runGulpTask('wct:sauce');
+      expect(steps.runTests).to.have.been.calledOnce;
+      expect(pluginsCalled).to.have.members(['sauce']);
     });
 
   });
