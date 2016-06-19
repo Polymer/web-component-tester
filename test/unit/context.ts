@@ -7,81 +7,131 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var chai      = require('chai');
-var sinon     = require('sinon');
-var sinonChai = require('sinon-chai');
+import * as chai from 'chai';
+import * as sinon from 'sinon';
+import * as sinonChai from 'sinon-chai';
 
-var expect = chai.expect;
+import {Context, ZeroArgCallbackHandler} from '../../runner/context';
+import {Plugin} from '../../runner/plugin';
+
+const expect = chai.expect;
 chai.use(sinonChai);
 
-var Context = require('../../runner/context');
-var Plugin  = require('../../runner/plugin');
+describe('Context', () => {
 
-describe('Context', function() {
-
-  var sandbox;
-  beforeEach(function() {
+  let sandbox: sinon.SinonSandbox;
+  beforeEach(() => {
     sandbox = sinon.sandbox.create();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     sandbox.restore();
   });
 
-  describe('.plugins', function() {
+  describe('.plugins', () => {
 
-    it('excludes plugins with a falsy config', function() {
-      var context = new Context({plugins: {local: false, sauce: {}}});
-      var stub = sandbox.stub(Plugin, 'get', (name) => {
-        return Promise.resolve(name)
+    it('excludes plugins with a falsy config', async () => {
+      const context = new Context(<any>{plugins: {local: false, sauce: {}}});
+      const stub = sandbox.stub(Plugin, 'get', (name: string) => {
+        return Promise.resolve(name);
       });
 
-      return context.plugins().then((plugins) => {
-        expect(stub).to.have.been.calledOnce;
-        expect(stub).to.have.been.calledWith('sauce');
-        expect(plugins).to.have.members(['sauce']);
-      });
+      const plugins = await context.plugins();
+      expect(stub).to.have.been.calledOnce;
+      expect(stub).to.have.been.calledWith('sauce');
+      expect(plugins).to.have.members(['sauce']);
     });
 
-    it('excludes plugins disabled: true', function() {
-      var context = new Context({plugins: {local: {}, sauce: {disabled: true}}});
-      var stub = sandbox.stub(Plugin, 'get', (name) => {
-        return Promise.resolve(name)
+    it('excludes plugins disabled: true', async () => {
+      const context = new Context(<any>
+          {plugins: {local: {}, sauce: {disabled: true}}});
+      const stub = sandbox.stub(Plugin, 'get', (name: string) => {
+        return Promise.resolve(name);
       });
 
-      return context.plugins().then((plugins) => {
-        expect(stub).to.have.been.calledOnce;
-        expect(stub).to.have.been.calledWith('local');
-        expect(plugins).to.have.members(['local']);
-      });
+      const plugins = await context.plugins();
+      expect(stub).to.have.been.calledOnce;
+      expect(stub).to.have.been.calledWith('local');
+      expect(plugins).to.have.members(['local']);
     });
 
-    it('passes additional arguments through', function(done) {
-      var context = new Context();
-      context.hook('foo', function(arg1, arg2, hookDone) {
-        expect(arg1).to.eq('one');
-        expect(arg2).to.eq(2);
-        hookDone();
-      });
+    describe('hook handlers written to call callbacks', () => {
+      it('passes additional arguments through', async () => {
+        const context = new Context();
+        context.hook('foo', (arg1: string, arg2: number,
+                             hookDone: (err?: any) => void) => {
+          expect(arg1).to.eq('one');
+          expect(arg2).to.eq(2);
+          hookDone();
+        });
 
-      context.emitHook('foo', 'one', 2, function(error) {
+        // Tests the promise form of emitHook.
+        await context.emitHook('foo', 'one', 2);
+
+        // Tests the callback form of emitHook.
+        const error = await new Promise((resolve) => {
+          context.emitHook('foo', 'one', 2, resolve);
+        });
         expect(error).to.not.be.ok;
-        done();
-      });
-    });
-
-    it('halts on error', function(done) {
-      var context = new Context();
-      context.hook('bar', function(hookDone) {
-        hookDone('nope');
       });
 
-      context.emitHook('bar',function(error) {
+      it('halts on error', async () => {
+        const context = new Context();
+        context.hook('bar', function(hookDone: (err?: any) => void) {
+          hookDone('nope');
+        });
+
+        // Tests the promise form of emitHook.
+        try {
+          await context.emitHook('bar');
+          throw new Error('emitHook should have thrown');
+        } catch (error) {
+          expect(error).to.eq('nope');
+        }
+
+        // Tests the callback form of emitHook.
+        const error = await new Promise((resolve) => {
+          context.emitHook('bar', resolve);
+        });
         expect(error).to.eq('nope');
-        done();
       });
     });
 
-  });
+    describe('hooks handlers written to return promises', () => {
+      it('passes additional arguments through', async() => {
+        const context = new Context();
+        context.hook('foo', async function(arg1: any, arg2: any) {
+          expect(arg1).to.eq('one');
+          expect(arg2).to.eq(2);
+        });
 
+        await context.emitHook('foo', 'one', 2);
+        const error = await new Promise((resolve) => {
+          context.emitHook('foo', 'one', 2, resolve);
+        });
+        expect(error).to.not.be.ok;
+      });
+
+      it('halts on error', async () => {
+        const context = new Context();
+        context.hook('bar', async () => {
+          throw 'nope';
+        });
+
+        // Tests the promise form of emitHook.
+        try {
+          await context.emitHook('bar');
+          throw new Error('emitHook should have thrown');
+        } catch (error) {
+          expect(error).to.eq('nope');
+        }
+
+        // Tests the callback form of emitHook.
+        const error = await new Promise((resolve) => {
+          context.emitHook('bar', resolve);
+        });
+        expect(error).to.eq('nope');
+      });
+    });
+  });
 });
