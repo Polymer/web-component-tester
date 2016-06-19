@@ -38,6 +38,7 @@
         "runner/test.ts",
         "runner/webserver.ts",
         "test/unit/cli.ts",
+        "test/unit/config.ts",
         "custom_typings/cleankill.d.ts",
         "custom_typings/findup-sync.d.ts",
         "custom_typings/promisify-node.d.ts",
