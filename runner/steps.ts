@@ -7,7 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
- import * as http from 'http';
+import * as http from 'http';
 import * as _ from 'lodash';
 import * as promisify from 'promisify-node';
 import * as socketIO from 'socket.io';

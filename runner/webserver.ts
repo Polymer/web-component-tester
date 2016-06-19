@@ -31,9 +31,12 @@ const INDEX_TEMPLATE = _.template(fs.readFileSync(
 // We prefer serving local assets over bower assets.
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
 const SERVE_STATIC = {  // Keys are regexps.
-  '^(.*/web-component-tester|)/browser\\.js$':         path.join(PACKAGE_ROOT, 'browser.js'),
-  '^(.*/web-component-tester|)/browser\\.js\\.map$':   path.join(PACKAGE_ROOT, 'browser.js.map'),
-  '^(.*/web-component-tester|)/data/a11ySuite\\.js$':  path.join(PACKAGE_ROOT, 'data', 'a11ySuite.js'),
+  '^(.*/web-component-tester|)/browser\\.js$':
+      path.join(PACKAGE_ROOT, 'browser.js'),
+  '^(.*/web-component-tester|)/browser\\.js\\.map$':
+      path.join(PACKAGE_ROOT, 'browser.js.map'),
+  '^(.*/web-component-tester|)/data/a11ySuite\\.js$':
+      path.join(PACKAGE_ROOT, 'data', 'a11ySuite.js'),
 };
 
 const DEFAULT_HEADERS = {

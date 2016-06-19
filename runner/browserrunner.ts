@@ -7,9 +7,9 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
 import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
+import * as _ from 'lodash';
 
 import * as wd from 'wd';
 import {Config} from './config';
@@ -204,11 +204,6 @@ export class BrowserRunner {
     // Nothing to quit.
     if (!this.sessionId) {
       error ? this._reject(error) : this._resolve();
-      if (error) {
-        return this._reject(error);
-      } else {
-        return this._resolve();
-      }
     }
 
     browser.quit((quitError) => {

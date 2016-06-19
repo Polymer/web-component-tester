@@ -52,7 +52,6 @@ async function unglob(baseDir: string, patterns: string[]): Promise<string[]> {
  * @param {string} baseDir
  * @param {!Array<string>} patterns
  */
-
 async function expandDirectories(
       baseDir: string, paths: string[]): Promise<string[]> {
   const listsOfPaths: string[][] = [];
