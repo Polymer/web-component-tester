@@ -18,6 +18,7 @@ import {BrowserDef, Stats} from './browserrunner';
 import * as context from './context';
 import * as tty from 'tty';
 
+
 const STACKY_CONFIG = {
   indent: '    ',
   locationStrip: [
@@ -57,6 +58,9 @@ const STATUS_PAD  = 38;
 
 interface TestEndData {
   state: 'passing'|'failing'|'pending'|'unknown';
+  /**
+   * The titles of the tests that ran.
+   */
   test: string[];
   duration: number;
   error: any;
@@ -65,13 +69,21 @@ interface TestEndData {
 export class CliReporter {
   prettyBrowsers: {[id: number]: string} = {};
   browserStats: {[id: number]: Stats} = {};
+  emitter: events.EventEmitter;
+  stream: NodeJS.WritableStream;
+  options: config.Config;
 
   /**
    * The number of lines written the last time writeLines was called.
    */
   private linesWritten: number;
 
-  constructor(public emitter: events.EventEmitter, public stream: NodeJS.WritableStream, public options: config.Config) {
+  constructor(
+        emitter: events.EventEmitter, stream: NodeJS.WritableStream,
+        options: config.Config) {
+    this.emitter = emitter;
+    this.stream = stream;
+    this.options = options;
     cleankill.onInterrupt((done) => {
       this.flush();
       done();
@@ -93,13 +105,15 @@ export class CliReporter {
       this.updateStatus();
     });
 
-    emitter.on('browser-start', (browser: BrowserDef, data: {url: string}, stats: Stats) => {
+    emitter.on('browser-start', (browser: BrowserDef,
+                                 data: {url: string}, stats: Stats) => {
       this.browserStats[browser.id] = stats;
       this.log(browser, 'Beginning tests via', chalk.magenta(data.url));
       this.updateStatus();
     });
 
-    emitter.on('test-end', (browser: BrowserDef, data: TestEndData, stats: Stats) => {
+    emitter.on('test-end', (browser: BrowserDef,
+                            data: TestEndData, stats: Stats) => {
       this.browserStats[browser.id] = stats;
       if (data.state === 'failing') {
         this.writeTestError(browser, data);
@@ -110,7 +124,8 @@ export class CliReporter {
       this.updateStatus();
     });
 
-    emitter.on('browser-end', (browser: BrowserDef, error: any, stats: Stats) => {
+    emitter.on('browser-end', (browser: BrowserDef,
+                               error: any, stats: Stats) => {
       this.browserStats[browser.id] = stats;
       if (error) {
         this.log(chalk.red, browser, 'Tests failed:', error);
@@ -219,7 +234,7 @@ export class CliReporter {
 
   log(...values: any[]): void;
   log() {
-    let values = Array.prototype.slice.call(arguments);
+    let values = Array.from(arguments);
     let format: (line: string) => string;
     if (_.isFunction(values[0])) {
       format = values[0];

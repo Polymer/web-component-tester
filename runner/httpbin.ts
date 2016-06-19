@@ -1,12 +1,23 @@
+/**
+ * @license
+ * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 'use strict';
 
-import * as express from 'express';
 import * as bodyParser from 'body-parser';
-import * as multer from 'multer';
-import {findPort} from './port-scanner';
-import * as http from 'http';
-import * as serverDestroy from 'server-destroy';
 import * as cleankill from 'cleankill';
+import * as express from 'express';
+import * as http from 'http';
+import * as multer from 'multer';
+import * as serverDestroy from 'server-destroy';
+
+import {findPort} from './port-scanner';
 
 export const httpbin = express.Router();
 
@@ -30,7 +41,8 @@ function formatRequest(req: express.Request) {
     form: {},
     json: {},
   };
-  const contentType = (headers['Content-Type'] || '').toLowerCase().split(';')[0];
+  const contentType =
+      (headers['Content-Type'] || '').toLowerCase().split(';')[0];
   const field = {
       'application/json': 'json',
       'application/x-www-form-urlencoded': 'form',

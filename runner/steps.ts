@@ -7,16 +7,16 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+ import * as http from 'http';
 import * as _ from 'lodash';
-import * as http from 'http';
-import * as socketIO from 'socket.io';
 import * as promisify from 'promisify-node';
+import * as socketIO from 'socket.io';
 
 import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Context} from './context';
 import {Plugin} from './plugin';
-const webserver = require('./webserver');
+import {webserver} from './webserver';
 
 interface ClientMessage<T> {
   browserId: number;
@@ -118,7 +118,8 @@ function runBrowsers(context: Context) {
 
   // Up the socket limit so that we can maintain more active requests.
   // TODO(nevir): We should be queueing the browsers above some limit too.
-  http.globalAgent.maxSockets = Math.max(http.globalAgent.maxSockets, numActiveBrowsers * 2);
+  http.globalAgent.maxSockets =
+      Math.max(http.globalAgent.maxSockets, numActiveBrowsers * 2);
 
   context.emit('run-start', options);
 

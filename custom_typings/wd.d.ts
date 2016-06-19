@@ -2,7 +2,7 @@
 
 declare module 'wd' {
   interface NodeCB<T> {
-    (err: any, value: T):void;
+    (err: any, value: T): void;
   }
   export interface Browser {
     configureHttp(options: {
@@ -34,13 +34,13 @@ declare module 'wd' {
       remote: {
         quietExceptions: boolean;
       }
-    }
+    };
 
     selenium: {
       server: {
         url: string;
       }
-    }
+    };
   }
 
   export function remote(
@@ -48,10 +48,10 @@ declare module 'wd' {
       username?: string, password?: string): Browser;
   export function remote(
       options: {hostname: string, port?: number,
-                auth?: string, path?: string,}
+                auth?: string, path?: string, }
       ): Browser;
   export function remote(
       options: {host: string, port?: number,
-                username?: string, accesskey?: string, path?: string,}
+                username?: string, accesskey?: string, path?: string, }
       ): Browser;
 }

@@ -47,10 +47,10 @@ const DEFAULT_HEADERS = {
 // - 80, 443, 888: these ports must have root access
 // - 5555, 8080: not forwarded on Android
 const SAUCE_PORTS = [
-2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333, 4000, 4001,
-4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000, 6001, 6060, 6666,
-6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031, 8081, 8765, 8777, 8888,
-9000, 9001, 9080, 9090, 9876, 9877, 9999, 49221, 55001
+  2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333, 4000, 4001,
+  4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000, 6001, 6060, 6666,
+  6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031, 8081, 8765, 8777, 8888,
+  9000, 9001, 9080, 9090, 9876, 9877, 9999, 49221, 55001
 ];
 
 /**
@@ -60,7 +60,7 @@ const SAUCE_PORTS = [
  * It provides a static HTTP server for serving the desired tests and WCT's
  * `browser.js`/`environment.js`.
  */
-module.exports = function(wct: Context) {
+export function webserver(wct: Context) {
   const options = wct.options;
 
   wct.hook('configure', async function() {
@@ -179,5 +179,9 @@ module.exports = function(wct: Context) {
       return await findPort(SAUCE_PORTS);
     }
   }
-
 };
+
+// HACK(rictic): remove this ES6-compat hack and export webserver itself
+webserver['webserver'] = webserver;
+
+module.exports = webserver;

@@ -10,9 +10,9 @@
 import * as cleankill from 'cleankill';
 
 import {CliReporter} from './clireporter';
+import {Config} from './config';
 import {Context} from './context';
 import * as steps from './steps';
-import {Config} from './config';
 
 /**
  * Runs a suite of web component tests.
@@ -73,12 +73,10 @@ export async function test(options: (Config|Context)): Promise<void> {
     await testActual(context);
   } finally {
     if (!context.options.skipCleanup) {
-      await new Promise((resolve, reject) => {
-        cleankill.close(resolve);
-      });
+      await new Promise((resolve) => cleankill.close(resolve));
     }
   }
-};
+}
 
 async function testActual(context: Context) {
   await steps.setupOverrides(context);

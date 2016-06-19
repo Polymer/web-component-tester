@@ -7,23 +7,19 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
-import * as events from 'events';
-import * as util from 'util';
-import * as socketIO from 'socket.io';
-import * as http from 'http';
-import * as promisify from 'promisify-node';
 
+import * as events from 'events';
+import * as http from 'http';
+import * as _ from 'lodash';
+import * as socketIO from 'socket.io';
+import * as util from 'util';
+
+import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
-import {BrowserRunner} from './browserrunner';
-
-
-interface Options {
-
-}
 
 type Handler = (o: {}) => Promise<any>;
+
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -98,7 +94,8 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
-  emitHook(name: 'prepare:webserver', app: Express.Application, done: (err?: any) => void): Promise<void>;
+  emitHook(name: 'prepare:webserver', app: Express.Application,
+           done: (err?: any) => void): Promise<void>;
   emitHook(name: 'configure', done: (err?: any) => void): Promise<void>;
   emitHook(name: 'prepare', done: (err?: any) => void): Promise<void>;
   emitHook(name: 'cleanup', done: (err?: any) => void): Promise<void>;
@@ -110,7 +107,7 @@ export class Context extends events.EventEmitter {
     const hooks = (this._hookHandlers[name] || []);
     let boundHooks: ((cb: (err: any) => void) => (void|Promise<any>))[];
     if (arguments.length > 2) {
-      done = arguments[arguments.length - 1];  // mutates arguments in loose mode!
+      done = arguments[arguments.length - 1];
       let argsEnd = arguments.length - 1;
       if (!(done instanceof Function)) {
         done = (e) => {};

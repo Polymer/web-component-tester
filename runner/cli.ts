@@ -7,9 +7,10 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
+
 import * as chalk from 'chalk';
 import * as events from 'events';
+import * as _ from 'lodash';
 
 import {CliReporter} from './clireporter';
 import * as config from './config';
@@ -31,7 +32,8 @@ let updateNotifier = noopNotifier;
   }
 })();
 
-export async function run(env: void, args: string[], output: NodeJS.WritableStream) {
+export async function run(
+      env: any, args: string[], output: NodeJS.WritableStream) {
   await wrap(output, _run(args, output));
 }
 
@@ -58,13 +60,17 @@ async function _run(args: string[], output: NodeJS.WritableStream) {
 // Note that we're cheating horribly here. Ideally all of this logic is within
 // wct-sauce. The trouble is that we also want WCT's configuration lookup logic,
 // and that's not (yet) cleanly exposed.
-export async function runSauceTunnel(env: void, args: string[], output: NodeJS.WritableStream) {
+export async function runSauceTunnel(
+      env: void, args: string[], output: NodeJS.WritableStream) {
   await wrap(output, _runSauceTunnel(args, output));
 }
 
 async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   const diskOptions = config.fromDisk();
-  const baseOptions: config.Config = diskOptions.plugins && diskOptions.plugins['sauce'] || diskOptions.sauce || {};
+  const baseOptions: config.Config =
+      (diskOptions.plugins && diskOptions.plugins['sauce'])
+      || diskOptions.sauce
+      || {};
 
   const plugin = await Plugin.get('sauce');
   const parser = require('nomnom');
@@ -78,15 +84,16 @@ async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   const emitter = new events.EventEmitter();
   new CliReporter(emitter, output, <config.Config>{});
   const tunnelId = await new Promise<string>((resolve, reject) => {
-    wctSauce.startTunnel(
-      options, emitter,
-      (error: any, tunnelId: string) => error ? reject(error) : resolve(tunnelId)
-    );
+    wctSauce.startTunnel(options, emitter, (error: any, tunnelId: string) => {
+      error ? reject(error) : resolve(tunnelId);
+    });
   });
 
   output.write('\n');
-  output.write('The tunnel will remain active while this process is running.\n');
-  output.write('To use this tunnel for other WCT runs, export the following:\n');
+  output.write(
+      'The tunnel will remain active while this process is running.\n');
+  output.write(
+      'To use this tunnel for other WCT runs, export the following:\n');
   output.write('\n');
   output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
 }
@@ -98,7 +105,6 @@ async function wrap(output: NodeJS.WritableStream, promise: Promise<void>) {
   } catch (e) {
     error = e;
   }
-
   if (!process.env.CI) {
     updateNotifier.notify();
   }

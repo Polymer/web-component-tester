@@ -7,24 +7,26 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
+
 import * as findup from 'findup-sync';
 import * as fs from 'fs';
+import * as _ from 'lodash';
 import * as nomnom from 'nomnom';
 import * as path from 'path';
 import * as serveWaterfall from 'serve-waterfall';
-
 import {Capabilities} from 'wd';
+
+import {BrowserDef} from './browserrunner';
+import {Context} from './context';
 import * as paths from './paths';
 import {Plugin} from './plugin';
-import {Context} from './context';
-import {BrowserDef} from './browserrunner';
 
 
-const HOME_DIR       = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
-const JSON_MATCHER   = 'wct.conf.json';
+const HOME_DIR = path.resolve(
+    process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
+const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
-const WCT_ROOT       = path.resolve(__dirname, '..');
+const WCT_ROOT = path.resolve(__dirname, '..');
 
 type Browser = string | {browserName: string, platform: string};
 
@@ -169,12 +171,15 @@ export function defaults(): Config {
       pathMappings: serveWaterfall.mappings.WEB_COMPONENT.concat([
         // We also expose built in WCT dependencies, but with lower priority
         // than the project's components.
-        {'/components/sinonjs': path.join(WCT_ROOT, 'node_modules', 'sinon', 'pkg')},
-        {'/components/lodash/lodash.js': path.join(WCT_ROOT, 'node_modules', 'lodash', 'index.js')},
+        {'/components/sinonjs':
+            path.join(WCT_ROOT, 'node_modules', 'sinon', 'pkg')},
+        {'/components/lodash/lodash.js':
+            path.join(WCT_ROOT, 'node_modules', 'lodash', 'index.js')},
         {'/components': path.join(WCT_ROOT, 'node_modules')},
         // npm 3 paths
         {'/components/sinonjs': path.join(WCT_ROOT, '..', 'sinon', 'pkg')},
-        {'/components/lodash/lodash.js': path.join(WCT_ROOT, '..', 'lodash', 'index.js')},
+        {'/components/lodash/lodash.js':
+            path.join(WCT_ROOT, '..', 'lodash', 'index.js')},
         {'/components/': path.join(WCT_ROOT, '..')}
       ]),
       // The URL prefix that serves contents from the project root.
@@ -258,7 +263,8 @@ const ARG_CONFIG = {
 };
 
 // Values that should be extracted when pre-parsing args.
-const PREPARSE_ARGS = ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
+const PREPARSE_ARGS =
+    ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
 
 /**
  * Discovers appropriate config files (global, and for the project), merging
@@ -303,7 +309,7 @@ function loadProjectFile(file: string) {
       return require(file);
     }
   } catch (error) {
-    throw new Error('Failed to load WCT config "' + file + '": ' + error.message);
+    throw new Error(`Failed to load WCT config "${file}": ' + error.message`);
   }
 }
 
@@ -436,7 +442,7 @@ export function normalize(config: Config) {
  */
 export async function expand(context: Context) {
   const options = context.options;
-  let root    = context.options.root || process.cwd();
+  let root = context.options.root || process.cwd();
   context.options.root = root = path.resolve(root);
 
   options.origSuites = _.clone(options.suites);
@@ -456,16 +462,21 @@ function expandDeprecated(context: Context) {
   // We collect configuration fragments to be merged into the options object.
   const fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
 
-  let browsers: Browser[] = <any>(_.isArray(options.browsers) ? options.browsers : [options.browsers]);
+  let browsers: Browser[] =
+      <any>(_.isArray(options.browsers) ? options.browsers : [options.browsers]);
   browsers = <any>_.compact(<any>browsers);
   if (browsers.length > 0) {
-    context.emit('log:warn', 'The --browsers flag/option is deprecated. Please use --local and --sauce instead, or configure via plugins.[local|sauce].browsers.');
+    context.emit('log:warn',
+                 'The --browsers flag/option is deprecated. Please use ' +
+                 '--local and --sauce instead, or configure via plugins.' +
+                 '[local|sauce].browsers.');
     const fragment = {plugins: {sauce: {}, local: {}}};
     fragments.push(fragment);
 
     for (const browser of browsers) {
       const name   = (<any>browser).browserName || browser;
-      const plugin = (<any>browser).platform || name.indexOf('/') !== -1 ? 'sauce' : 'local';
+      const plugin =
+          (<any>browser).platform || name.indexOf('/') !== -1 ? 'sauce' : 'local';
       fragment.plugins[plugin].browsers = fragment.plugins[plugin].browsers || [];
       fragment.plugins[plugin].browsers.push(browser);
     }
@@ -474,7 +485,9 @@ function expandDeprecated(context: Context) {
   }
 
   if (options.sauce) {
-    context.emit('log:warn', 'The sauce configuration key is deprecated. Please use plugins.sauce instead.');
+    context.emit('log:warn',
+                 'The sauce configuration key is deprecated. Please use ' +
+                 'plugins.sauce instead.');
     fragments.push({
       plugins: {sauce: options.sauce},
     });
@@ -482,7 +495,9 @@ function expandDeprecated(context: Context) {
   }
 
   if (options.remote) {
-    context.emit('log:warn', 'The --remote flag is deprecated. Please use --sauce default instead.');
+    context.emit('log:warn',
+                 'The --remote flag is deprecated. Please use ' +
+                 '--sauce default instead.');
     fragments.push({
       plugins: {sauce: {browsers: ['default']}},
     });
@@ -500,10 +515,14 @@ function expandDeprecated(context: Context) {
  */
 export async function validate(options: Config) {
   if (options['webRunner']) {
-    throw 'webRunner is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.';
+    throw 'webRunner is no longer a supported configuration option. ' +
+          'Please list the files you wish to test as arguments, ' +
+          'or as `suites` in a configuration object.';
   }
   if (options['component']) {
-    throw 'component is no longer a supported configuration option. Please list the files you wish to test as arguments, or as `suites` in a configuration object.';
+    throw 'component is no longer a supported configuration option. ' +
+          'Please list the files you wish to test as arguments, ' +
+          'or as `suites` in a configuration object.';
   }
 
   if (options.activeBrowsers.length === 0) {

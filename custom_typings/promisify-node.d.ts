@@ -1,8 +1,7 @@
 declare module 'promisify-node' {
   interface NodeCallback<T> {
-    (err: any, value: T):void;
+    (err: any, value: T): void;
   }
-  import {Promise} from 'es6-promise';
   function promisify<T>(f: (cb: NodeCallback<T>) => void): () => Promise<T>;
   function promisify<A1, T>(f: (a: A1, cb: NodeCallback<T>) => void): (a: A1) =>
       Promise<T>;

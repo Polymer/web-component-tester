@@ -7,9 +7,9 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as glob from 'glob';
+import * as _ from 'lodash';
 import * as path from 'path';
 import * as promisify from 'promisify-node';
 
@@ -21,7 +21,8 @@ import * as promisify from 'promisify-node';
  * @param {!Array<string>} patterns The patterns to expand.
  * @returns {Promise<Array<string>} The expanded paths.
  */
-export async function expand(baseDir: string, patterns: string[]): Promise<string[]> {
+export async function expand(
+      baseDir: string, patterns: string[]): Promise<string[]> {
   return expandDirectories(baseDir, await unglob(baseDir, patterns));
 }
 
@@ -51,29 +52,29 @@ async function unglob(baseDir: string, patterns: string[]): Promise<string[]> {
  * @param {string} baseDir
  * @param {!Array<string>} patterns
  */
-async function expandDirectories(baseDir: string, paths: string[]): Promise<string[]> {
+
+async function expandDirectories(
+      baseDir: string, paths: string[]): Promise<string[]> {
   const listsOfPaths: string[][] = [];
   for (const aPath of paths) {
-    const paths = await Promise.resolve().then(() => {
-      return promisify(fs.stat)(path.resolve(baseDir, aPath));
-    }).then((stat) => {
-      if (!stat.isDirectory()) {
-        return [aPath];
-      }
-      return promisify(fs.readdir)(path.resolve(baseDir, aPath)).then((files) => {
-        // We have an index; defer to that.
-        if (_.includes(files, 'index.html')) {
-          return [path.join(aPath, 'index.html')];
-        }
-        return expandDirectories(path.join(baseDir, aPath), files).then((children) => {
-          return children.map((child) => path.join(aPath, child));
-        });
-      });
-    });
-    listsOfPaths.push(paths);
+    listsOfPaths.push(await expandDirectory(baseDir, aPath));
   }
-
 
   const files = _.union(_.flatten(listsOfPaths));
   return files.filter((file) => /\.(js|html)$/.test(file));
+}
+
+async function expandDirectory(
+      baseDir: string, aPath: string): Promise<string[]> {
+  const stat = await promisify(fs.stat)(path.resolve(baseDir, aPath));
+  if (!stat.isDirectory()) {
+    return [aPath];
+  }
+  const files = await promisify(fs.readdir)(path.resolve(baseDir, aPath));
+  // We have an index; defer to that.
+  if (_.includes(files, 'index.html')) {
+    return [path.join(aPath, 'index.html')];
+  }
+  const children = await expandDirectories(path.join(baseDir, aPath), files);
+  return children.map((child) => path.join(aPath, child));
 }

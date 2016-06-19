@@ -7,11 +7,12 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+
 import * as _ from 'lodash';
 import * as path from 'path';
+
 import {Context} from './context';
 import {Config} from './config';
-import * as util from 'util';
 
 // Plugin module names can be prefixed by the following:
 const PREFIXES = [
@@ -29,7 +30,11 @@ interface Metadata {
 export class Plugin {
   name: string;
   cliConfig: Config;
-  constructor(public packageName: string, public metadata: Metadata) {
+  packageName: string;
+  metadata: Metadata;
+  constructor(packageName: string, metadata: Metadata) {
+    this.packageName = packageName;
+    this.metadata = metadata;
     this.name = Plugin.shortName(packageName);
 
     this.cliConfig = this.metadata['cli-options'] || {};
@@ -113,7 +118,8 @@ function _tryLoadPluginPackage(packageName: string) {
   // Plugins must have a (truthy) wct-plugin field.
   if (!packageInfo['wct-plugin']) return null;
   // Allow {"wct-plugin": true} as a shorthand.
-  const metadata = _.isObject(packageInfo['wct-plugin']) ? packageInfo['wct-plugin'] : {};
+  const metadata =
+      _.isObject(packageInfo['wct-plugin']) ? packageInfo['wct-plugin'] : {};
 
   return new Plugin(packageName, metadata);
 }
