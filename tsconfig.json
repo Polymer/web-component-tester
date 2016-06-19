@@ -17,6 +17,7 @@
     ],
     "filesGlob": [
         "runner/*.ts",
+        "test/**/*.ts",
         "!node_modules/**",
         "custom_typings/*.d.ts",
         "typings/index.d.ts",
@@ -36,6 +37,7 @@
         "runner/steps.ts",
         "runner/test.ts",
         "runner/webserver.ts",
+        "test/unit/cli.ts",
         "custom_typings/cleankill.d.ts",
         "custom_typings/findup-sync.d.ts",
         "custom_typings/promisify-node.d.ts",
