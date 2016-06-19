@@ -7,15 +7,17 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-'use strict';
 
-const _      = require('lodash');
-const expect = require('chai').expect;
-const sinon  = require('sinon');
-const path   = require('path');
+import * as _ from 'lodash';
+import * as chai from 'chai';
+import * as sinon from 'sinon';
+import * as path from 'path';
 
-const cli   = require('../../runner/cli');
-const steps = require('../../runner/steps');
+import * as context from '../../runner/context';
+import * as cli from '../../runner/cli';
+import * as steps from '../../runner/steps';
+
+const expect = chai.expect;
 
 const wctLocalBrowsers = require('wct-local/lib/browsers');
 
@@ -30,11 +32,13 @@ const LOCAL_BROWSERS = {
 
 describe('cli', () => {
 
-  let sandbox;
+  let sandbox: sinon.SinonSandbox;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
-    sandbox.stub(steps, 'runTests', (context) => Promise.resolve());
+    sandbox.stub(
+        steps, 'prepare',  (context: context.Context) => Promise.resolve());
+    sandbox.stub(
+        steps, 'runTests', (context: context.Context) => Promise.resolve());
 
     sandbox.stub(
         wctLocalBrowsers, 'detect',
@@ -47,33 +51,40 @@ describe('cli', () => {
   });
 
   describe('.run', () => {
-    const expectRun = function(env, args, logInput) {
+    const expectRun = function(args: string[], logInput?: string[]) {
       const log = logInput || [];
-      return cli.run(env, args, {write: log.push.bind(log)}).then(
-          () => steps.runTests.getCall(0),
+      const stream = <NodeJS.WritableStream><any>{write: log.push.bind(log)};
+      return cli.run({}, args, stream).then(
+          () => {
+            type call = {args: [context.Context]};
+            const call: call = steps.runTests['getCall'](0);
+            return call;
+          },
           (error) => {
             log.forEach((line) => process.stderr.write(line));
             throw error;
           });
-    }
+    };
 
-    it('expands test/ by default, and serves from /components/<basename>', () => {
+    it('expands test/ by default, ' +
+       'and serves from /components/<basename>', () => {
       process.chdir(path.join(FIXTURES, 'standard'));
-      return expectRun({}, []).then((call) => {
+      return expectRun([]).then((call) => {
         const options = call.args[0].options;
         expect(options.suites).to.have.members([
           'test/a.html',
           'test/b.js',
         ]);
         expect(options.root).to.equal(path.join(FIXTURES, 'standard'));
-        expect(options.webserver.webRunnerPath).to.equal('/components/standard/generated-index.html');
+        expect(options.webserver.webRunnerPath).to.equal(
+            '/components/standard/generated-index.html');
       });
     });
 
     it('honors globs', () => {
       process.chdir(path.join(FIXTURES, 'standard'));
 
-      return expectRun({}, ['**/*.html']).then((call) => {
+      return expectRun(['**/*.html']).then((call) => {
         expect(call.args[0].options.suites).to.have.members([
           'test/a.html',
           'x-foo.html',
@@ -84,7 +95,7 @@ describe('cli', () => {
     it('honors expanded files', () => {
       process.chdir(path.join(FIXTURES, 'standard'));
 
-      return expectRun({}, ['test/b.js', 'x-foo.html']).then((call) => {
+      return expectRun(['test/b.js', 'x-foo.html']).then((call) => {
         expect(call.args[0].options.suites).to.have.members([
           'test/b.js',
           'x-foo.html',
@@ -96,7 +107,7 @@ describe('cli', () => {
       process.chdir(__dirname);
 
       const root = path.join(FIXTURES, 'standard');
-      return expectRun({}, ['--root', root]).then((call) => {
+      return expectRun(['--root', root]).then((call) => {
         expect(call.args[0].options.suites).to.have.members([
           'test/a.html',
           'test/b.js',
@@ -109,43 +120,45 @@ describe('cli', () => {
       process.chdir(__dirname);
 
       const root = path.join(FIXTURES, 'standard');
-      return expectRun({}, ['--root', root, '**/*.html']).then((call) => {
+      return expectRun(['--root', root, '**/*.html']).then((call) => {
         const options = call.args[0].options;
         expect(options.suites).to.have.members([
           'test/a.html',
           'x-foo.html',
         ]);
         expect(options.root).to.equal(root);
-        expect(options.webserver.webRunnerPath).to.equal('/components/standard/generated-index.html');
+        expect(options.webserver.webRunnerPath).to.equal(
+            '/components/standard/generated-index.html');
       });
     });
 
     it('throws an error if no suites could be found', () => {
-      return cli.run({}, ['404'], {write: () => {}}).then(
-        () => fail('cli.run should have failed'),
+      return cli.run({}, ['404'], <any>{write: () => {}}).then(
+        () => { throw new Error('cli.run should have failed'); },
         (error) => expect(error).to.match(/no.*suites.*found/i));
     });
 
     it('loads the local and sauce plugins by default', () => {
       process.chdir(path.join(FIXTURES, 'standard'));
 
-      return expectRun({}, []).then((call) => {
-        expect(call.args[0].enabledPlugins()).to.have.members(['local', 'sauce']);
+      return expectRun([]).then((call) => {
+        expect(
+            call.args[0].enabledPlugins()).to.have.members(['local', 'sauce']);
       });
     });
 
     it('allows plugins to be diabled via --skip-plugin', () => {
       process.chdir(path.join(FIXTURES, 'standard'));
 
-      return expectRun({}, ['--skip-plugin', 'sauce']).then((call) => {
+      return expectRun(['--skip-plugin', 'sauce']).then((call) => {
         expect(call.args[0].enabledPlugins()).to.have.members(['local']);
       });
     });
 
     // TODO(nevir): Remove after deprecation period.
     it('throws an error when --webRunner is set', () => {
-      return cli.run({}, ['--webRunner', 'foo'], {write: () => {}}).then(
-        () => fail('cli.run should have failed'),
+      return cli.run({}, ['--webRunner', 'foo'], <any>{write: () => {}}).then(
+        () => { throw new Error('cli.run should have failed'); },
         (error) => {
           expect(error.message).to.include('webRunner');
           expect(error.message).to.include('suites');
@@ -158,47 +171,51 @@ describe('cli', () => {
       it('serves from /components/<basename>', () => {
         process.chdir(ROOT);
 
-        return expectRun({}, []).then((call) => {
+        return expectRun([]).then((call) => {
           const options = call.args[0].options;
           expect(options.suites).to.have.members([
             'test/foo.js',
           ]);
           expect(options.root).to.equal(ROOT);
-          expect(options.webserver.webRunnerPath).to.equal('/components/conf/generated-index.html');
+          expect(options.webserver.webRunnerPath).to.equal(
+              '/components/conf/generated-index.html');
         });
       });
 
       it('walks the ancestry', () => {
         process.chdir(path.join(ROOT, 'branch/leaf'));
 
-        return expectRun({}, []).then((call) => {
+        return expectRun([]).then((call) => {
           const options = call.args[0].options;
           expect(options.suites).to.have.members([
             'test/foo.js',
           ]);
           expect(options.root).to.equal(ROOT);
-          expect(options.webserver.webRunnerPath).to.equal('/components/conf/generated-index.html');
+          expect(options.webserver.webRunnerPath).to.equal(
+              '/components/conf/generated-index.html');
         });
       });
 
       it('honors specified values', () => {
         process.chdir(ROOT);
 
-        return expectRun({}, []).then((call) => {
-          expect(call.args[0].options.plugins.sauce.username).to.eq('abc123');
+        return expectRun([]).then((call) => {
+          expect(call.args[0].options.plugins['sauce'].username).to.eq(
+              'abc123');
         });
       });
 
       it('honors root', () => {
         process.chdir(path.join(ROOT, 'rooted'));
 
-        return expectRun({}, []).then((call) => {
+        return expectRun([]).then((call) => {
           const options = call.args[0].options;
           expect(options.suites).to.have.members([
             'integration/conf/test/foo.js',
           ]);
           expect(options.root).to.equal(path.dirname(FIXTURES));
-          expect(options.webserver.webRunnerPath).to.equal('/components/fixtures/generated-index.html');
+          expect(options.webserver.webRunnerPath).to.equal(
+              '/components/fixtures/generated-index.html');
         });
       });
 
@@ -213,29 +230,33 @@ describe('cli', () => {
       describe('--browsers', () => {
 
         it('warns when used', () => {
-          const log = [];
-          return expectRun({}, ['--browsers', 'firefox'], log).then((call) => {
-            const hasWarning = _.any(log, (l) => /--browsers.*deprecated/i.test(l));
-            expect(hasWarning).to.eq(true, 'Expected a warning that --browsers is deprecated');
+          const log: string[] = [];
+          return expectRun(['--browsers', 'firefox'], log).then((call) => {
+            const hasWarning = _.some(
+                log, (l) => /--browsers.*deprecated/i.test(l));
+            expect(hasWarning).to.eq(
+                true, 'Expected a warning that --browsers is deprecated');
           });
         });
 
-        // Semi-integration test; this also checks that wct-local (mostly) works.
+        // Semi-integration test.
+        // This also checks that wct-local (mostly) works.
         it('supports local browsers', () => {
-          return expectRun({}, ['--browsers', 'firefox', '-b', 'chrome']).then((call) => {
-            const names = _.map(call.args[0].options.activeBrowsers, function(browser) {
-              return browser.browserName;
-            });
-            expect(names).to.have.members(['firefox', 'chrome']);
-          });
+          return expectRun(['--browsers', 'firefox', '-b', 'chrome'])
+              .then((call) => {
+                const names = call.args[0].options.activeBrowsers.map(
+                    (browser) => browser.browserName);
+                expect(names).to.have.members(['firefox', 'chrome']);
+              });
         });
 
-        // Semi-integration test; this also checks that wct-sauce (mostly) works.
+        // Semi-integration test.
+        // This also checks that wct-sauce (mostly) works.
         it('supports sauce browsers', () => {
-          return expectRun({}, ['--browsers', 'linux/firefox', '-b', 'linux/chrome']).then((call) => {
-            const names = _.map(call.args[0].options.activeBrowsers, function(browser) {
-              return browser.browserName;
-            });
+          const args = ['--browsers', 'linux/firefox', '-b', 'linux/chrome'];
+          return expectRun(args).then((call) => {
+            const names = call.args[0].options.activeBrowsers.map(
+                (browser) => browser.browserName);
             expect(names).to.have.members(['firefox', 'chrome']);
           });
         });
@@ -245,16 +266,18 @@ describe('cli', () => {
       describe('--remote', () => {
 
         it('warns when used', () => {
-          const log = [];
-          return expectRun({}, ['--remote'], log).then((call) => {
-            const hasWarning = _.any(log, (l) => /--remote.*--sauce/.test(l));
-            expect(hasWarning).to.eq(true, 'Expected a warning that --remote is deprecated');
+          const log: string[] = [];
+          return expectRun(['--remote'], log).then((call) => {
+            const hasWarning = _.some(log, (l) => /--remote.*--sauce/.test(l));
+            expect(hasWarning).to.eq(
+                true, 'Expected a warning that --remote is deprecated');
           });
         });
 
-        // Semi-integration test; this also checks that wct-sauce (mostly) works.
+        // Semi-integration test.
+        // This also checks that wct-sauce (mostly) works.
         it('sets up default sauce browsers', () => {
-          return expectRun({}, ['--remote']).then((call) => {
+          return expectRun(['--remote']).then((call) => {
             const platforms = call.args[0].options.activeBrowsers
                 .map((browser) => browser.platform);
             expect(_.compact(platforms).length).to.be.gt(0);
