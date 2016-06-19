@@ -38,9 +38,9 @@ export class Context extends events.EventEmitter {
   _httpServer: http.Server;
   _testRunners: BrowserRunner[];
 
-  constructor(options: config.Config) {
+  constructor(options?: config.Config) {
     super();
-    options = options || <config.Config>{};
+    options = options || {};
 
     /**
      * The configuration for the current WCT run.
