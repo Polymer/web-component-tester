@@ -42,7 +42,7 @@ export interface Config {
   persistent?: boolean;
   extraScripts?: string[];
   clientOptions?: {
-    root: string;
+    root?: string;
     verbose?: boolean;
   };
   activeBrowsers?: BrowserDef[];
