@@ -166,7 +166,7 @@ export class Context extends events.EventEmitter {
       plugins.push(await Plugin.get(name));
     }
     return plugins;
-  };
+  }
 
   /**
    * @return {!Array<string>} The names of enabled plugins.
