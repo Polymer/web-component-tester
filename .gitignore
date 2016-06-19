@@ -4,3 +4,4 @@ node_modules
 npm-debug.log
 typings/
 runner/*.js
+test/unit/cli.js

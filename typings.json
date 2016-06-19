@@ -2,18 +2,21 @@
   "name": "web-component-tester",
   "version": false,
   "dependencies": {
+    "chai": "registry:npm/chai#3.5.0+20160415060238",
     "chalk": "registry:npm/chalk#1.0.0+20160211003958",
     "es6-promise": "registry:npm/es6-promise#3.0.0+20160211003958",
     "glob": "registry:npm/glob#6.0.0+20160211003958",
     "gulp": "registry:npm/gulp#3.8.0+20160211003958",
     "lodash": "registry:npm/lodash#4.0.0+20160416211519",
     "mime": "registry:npm/mime#1.3.0+20160423043021",
-    "minimatch": "registry:npm/minimatch#3.0.0+20160211003958"
+    "minimatch": "registry:npm/minimatch#3.0.0+20160211003958",
+    "sinon": "registry:npm/sinon#1.16.0+20160427193336"
   },
   "globalDependencies": {
     "body-parser": "registry:dt/body-parser#0.0.0+20160317120654",
     "express": "registry:dt/express#4.0.0+20160317120654",
     "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160322035842",
+    "mocha": "registry:dt/mocha#2.2.5+20160619032855",
     "multer": "registry:dt/multer#0.0.0+20160317120654",
     "node": "registry:env/node#4.0.0+20160507210304",
     "nomnom": "registry:dt/nomnom#0.0.0+20160317120654",
