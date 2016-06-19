@@ -10,7 +10,8 @@
     "lodash": "registry:npm/lodash#4.0.0+20160416211519",
     "mime": "registry:npm/mime#1.3.0+20160423043021",
     "minimatch": "registry:npm/minimatch#3.0.0+20160211003958",
-    "sinon": "registry:npm/sinon#1.16.0+20160427193336"
+    "sinon": "registry:npm/sinon#1.16.0+20160427193336",
+    "sinon-chai": "registry:npm/sinon-chai#2.8.0+20160310030142"
   },
   "globalDependencies": {
     "body-parser": "registry:dt/body-parser#0.0.0+20160317120654",
