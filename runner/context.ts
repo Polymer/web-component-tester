@@ -18,7 +18,13 @@ import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
 
-type Handler = (o: {}) => Promise<any>;
+type Handler =
+    ((...args: any[]) => Promise<any>) |
+    ((done: (err?: any) => void) => void) |
+    ((arg1: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void)
+;
 
 
 /**
@@ -39,9 +45,9 @@ export class Context extends events.EventEmitter {
   _httpServer: http.Server;
   _testRunners: BrowserRunner[];
 
-  constructor(options: config.Config) {
+  constructor(options?: config.Config) {
     super();
-    options = options || <config.Config>{};
+    options = options || {};
 
     /**
      * The configuration for the current WCT run.
