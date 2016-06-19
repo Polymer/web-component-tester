@@ -17,6 +17,7 @@
     "body-parser": "registry:dt/body-parser#0.0.0+20160317120654",
     "express": "registry:dt/express#4.0.0+20160317120654",
     "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160322035842",
+    "gruntjs": "registry:dt/gruntjs#0.4.0+20160602153508",
     "mocha": "registry:dt/mocha#2.2.5+20160619032855",
     "multer": "registry:dt/multer#0.0.0+20160317120654",
     "node": "registry:env/node#4.0.0+20160507210304",
