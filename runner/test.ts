@@ -70,7 +70,11 @@ export async function test(options: (Config|Context)): Promise<void> {
   }
 
   try {
-    await testActual(context);
+    await steps.setupOverrides(context);
+    await steps.loadPlugins(context);
+    await steps.configure(context);
+    await steps.prepare(context);
+    await steps.runTests(context);
   } finally {
     if (!context.options.skipCleanup) {
       await new Promise((resolve, reject) => {
@@ -79,15 +83,6 @@ export async function test(options: (Config|Context)): Promise<void> {
     }
   }
 };
-
-async function testActual(context: Context) {
-  await steps.setupOverrides(context);
-  await steps.loadPlugins(context);
-  await steps.configure(context);
-
-  await steps.prepare(context);
-  await steps.runTests(context);
-}
 
 // HACK
 test['test'] = test;

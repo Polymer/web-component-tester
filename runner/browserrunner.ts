@@ -203,11 +203,7 @@ export class BrowserRunner {
 
     // Nothing to quit.
     if (!this.sessionId) {
-      if (error) {
-        return this._reject(error);
-      } else {
-        return this._resolve();
-      }
+      error ? this._reject(error) : this._resolve();
     }
 
     browser.quit((quitError) => {
