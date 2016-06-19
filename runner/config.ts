@@ -31,28 +31,28 @@ const WCT_ROOT = path.resolve(__dirname, '..');
 type Browser = string | {browserName: string, platform: string};
 
 export interface Config {
-  suites: string[];
-  output: NodeJS.WritableStream;
-  ttyOutput: boolean;
-  verbose: boolean;
+  suites?: string[];
+  output?: NodeJS.WritableStream;
+  ttyOutput?: boolean;
+  verbose?: boolean;
   quiet?: boolean;
-  expanded: boolean;
-  root: string;
-  testTimeout: number;
-  persistent: boolean;
-  extraScripts: string[];
-  clientOptions: {
-    root: string;
+  expanded?: boolean;
+  root?: string;
+  testTimeout?: number;
+  persistent?: boolean;
+  extraScripts?: string[];
+  clientOptions?: {
+    root?: string;
     verbose?: boolean;
   };
-  activeBrowsers: BrowserDef[];
-  browserOptions: {
+  activeBrowsers?: BrowserDef[];
+  browserOptions?: {
     [name: string]: Capabilities
   };
-  plugins: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
-  registerHooks: (wct: Context) => void;
-  enforceJsonConf: boolean;
-  webserver: {
+  plugins?: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
+  registerHooks?: (wct: Context) => void;
+  enforceJsonConf?: boolean;
+  webserver?: {
     // The port that the webserver should run on. A port will be determined at
     // runtime if none is provided.
     port: number;
