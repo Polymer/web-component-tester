@@ -81,16 +81,21 @@ export async function runTests(context: Context): Promise<void> {
 
   const result = runBrowsers(context);
   const runners = result.runners;
+  context._testRunners = runners;
 
   context._socketIOServer = socketIO(context._httpServer);
   context._socketIOServer.on('connection', function(socket) {
     context.emit('log:debug', 'Test client opened sideband socket');
     socket.on('client-event', function(data: ClientMessage<any>) {
-      runners[data.browserId].onEvent(data.event, data.data);
+      const runner = runners[data.browserId];
+      if (!runner) {
+        throw new Error(`Unable to find browser runner for ` +
+                        `browser with id: ${data.browserId}`);
+      }
+      runner.onEvent(data.event, data.data);
     });
   });
 
-  context._testRunners = runners;
 
   await result.completionPromise;
 }
