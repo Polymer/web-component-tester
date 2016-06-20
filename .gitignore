@@ -7,3 +7,4 @@ npm-debug.log
 typings/
 runner/*.js
 test/unit/*.js
+test/integration/*.js
