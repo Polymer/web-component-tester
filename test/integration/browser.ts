@@ -504,8 +504,10 @@ function runsIntegrationSuite(suiteName: string, contextFunction: (context: Test
           name: 'web-component-tester',
           tags: ['org:Polymer', 'repo:web-component-tester'],
         },
+
+        // persistent: true,
         plugins: <any>{
-          local: {browsers: ['chrome', 'safari']},
+          local: {browsers: ['chrome']},
         }
       };
       const context = new Context(options);
@@ -555,6 +557,7 @@ function runsIntegrationSuite(suiteName: string, contextFunction: (context: Test
       try {
         await test(context);
       } catch (error) {
+        console.error(error.stack);
         // Some tests fail. This is intended.
       }
     });

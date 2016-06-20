@@ -42,7 +42,6 @@ type ValidHost =
 
 
 function getUrl(url: ValidHost): string {
-  console.log(url);
   if (typeof url === 'string') {
     return url;
   }
@@ -50,7 +49,7 @@ function getUrl(url: ValidHost): string {
     scheme: url['scheme'] || 'http',
     host: url['host'] || url['hostname'],
     port: url['port'] || 80,
-    path: url['path'] || '/'
+    path: url['path'] || '/wd/hub'
   };
   return `${normalized.scheme}://${normalized.host}:${normalized.port}${normalized.path}`;
 }
@@ -87,7 +86,7 @@ export class BrowserRunner {
     delete webdriverCapabilities.url;
     delete webdriverCapabilities.sessionId;
 
-    this.browser = new webdriver.Builder()
+    this.browser = new selenium.Builder()
         .forBrowser(this.def.browserName, this.def.version)
         .withCapabilities(webdriverCapabilities)
         .usingServer(getUrl(this.def.url))
@@ -156,7 +155,6 @@ export class BrowserRunner {
         // debugger;
         try {
           const data = JSON.parse(error.data);
-          console.log(data.value.message);
           if (data.value &&
               data.value.message &&
               /Failed to connect to SafariDriver/i.test(data.value.message)) {
@@ -185,7 +183,8 @@ export class BrowserRunner {
     const extra =
         (path.indexOf('?') === -1 ? '?' : '&') +
         `cli_browser_id=${this.def.id}`;
-    this.browser.get(host + path + extra).then(
+    const url = host + path + extra;
+    this.browser.get(url).then(
       () => this.extendTimeout(),
       (error) => this.done(error.data || error)
     );
@@ -228,8 +227,8 @@ export class BrowserRunner {
       error = this.stats.failing + ' failed tests';
     }
 
-    // this.emitter.emit(
-    //     'browser-end', this.def, error, this.stats, this.sessionId, browser);
+    this.emitter.emit(
+        'browser-end', this.def, error, this.stats, this.sessionId, browser);
 
     // Nothing to quit.
     if (!this.sessionId) {

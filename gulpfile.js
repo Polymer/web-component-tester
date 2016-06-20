@@ -79,7 +79,7 @@ gulp.task('test:all', function(done) {
 });
 
 gulp.task('build-all', (done) => {
-  runSequence('clean', 'init', 'lint', 'build', 'test', done);
+  runSequence('clean', 'init', 'lint', 'build', 'test:all', done);
 });
 
 gulp.task('build', ['build:typescript', 'build:browser']);
@@ -148,6 +148,9 @@ commonTools.depcheck({
     'test-fixture',
     'async',
 
+    // ??? DO NOT SUBMIT.
+    'wd',
+    'selenium-webdriver',
 
     // Used in the wct binary
     'resolve'
