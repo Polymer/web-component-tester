@@ -31,7 +31,8 @@ const STACKY_CONFIG = {
   ]
 };
 
-type State = 'passing' | 'pending' | 'failing' | 'unknown' | 'error';
+export type State = 'passing' | 'pending' | 'failing' | 'unknown' | 'error';
+export type CompletedState = 'passing' | 'failing' | 'pending' | 'unknown';
 type Formatter = (value: string) => string;
 
 const STATE_ICONS = {
@@ -57,8 +58,9 @@ const SHORT = {
 const BROWSER_PAD = 24;
 const STATUS_PAD  = 38;
 
-interface TestEndData {
-  state: 'passing'|'failing'|'pending'|'unknown';
+
+export interface TestEndData {
+  state: CompletedState;
   /**
    * The titles of the tests that ran.
    */

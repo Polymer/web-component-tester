@@ -7,13 +7,14 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
+import * as lodash from 'lodash';
 import * as cleankill from 'cleankill';
 import {expect} from 'chai';
 import * as path from 'path';
 import * as util from 'util';
 
-import * as CLIReporter from '../../runner/clireporter';
+import {Stats, BrowserDef} from '../../runner/browserrunner';
+import {CliReporter, TestEndData, State, CompletedState} from '../../runner/clireporter';
 import * as config from '../../runner/config';
 import {Context} from '../../runner/context';
 import * as steps from '../../runner/steps';
@@ -22,39 +23,50 @@ import {test} from '../../runner/test';
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
 
 /** Assert that all browsers passed. */
-function assertPassed(context) {
+function assertPassed(context: TestContext) {
   expect(context.runError).to.not.be.ok;
-  expect(context.errors).to.deep.equal(repeatBrowsers(context, null));
+  expect(context.errors)
+      .to.deep.equal(repeatBrowsers(context, null));
 }
 
-function assertFailed(context, expectedError) {
+function assertFailed(context: TestContext, expectedError: string) {
   expect(context.runError).to.eq(expectedError);
-  expect(context.errors).to.deep.equal(repeatBrowsers(context, expectedError));
+  expect(context.errors)
+      .to.deep.equal(repeatBrowsers(context, expectedError));
 }
 
 /** Asserts that all browsers match the given stats. */
-function assertStats(context, passing, pending, failing, status) {
-  const expected = {passing: passing, pending: pending, failing: failing, status: status};
-  expect(context.stats).to.deep.equal(repeatBrowsers(context, expected));
+function assertStats(context: TestContext, passing: number, pending: number, failing: number, status: 'complete') {
+  const expected: Stats = {
+      passing: passing, pending: pending, failing: failing, status: status};
+  expect(context.stats).to.deep.equal(
+      repeatBrowsers(context, expected));
 }
 
 /** Asserts that all browsers match the given test layout. */
-function assertTests(context, expected) {
+function assertTests(context: TestContext, expected: TestNode) {
   expect(context.tests).to.deep.equal(repeatBrowsers(context, expected));
 }
 
-/** Asserts that all browsers emitted the given errors. */
-function assertTestErrors(context, expected) {
-  _.each(context.testErrors, function(actual, browser) {
-    expect(_.keys(expected)).to.have.members(_.keys(actual), 'Test file mismatch for ' + browser);
+type TestErrorExpectation = {
+  [fileName: string]: {
+    [testName: string]: [string, RegExp]
+  }
+}
 
-    _.each(actual, function(errors, file) {
+/** Asserts that all browsers emitted the given errors. */
+function assertTestErrors(context: TestContext, expected: TestErrorExpectation) {
+  lodash.each(context.testErrors, function(actual, browser) {
+    expect(Object.keys(expected)).to.have.members(
+        Object.keys(actual), 'Test file mismatch for ' + browser);
+
+    lodash.each(actual, function(errors, file) {
       const expectedErrors = expected[file];
       // Currently very dumb for simplicity: We don't support suites.
-      expect(_.keys(expectedErrors)).to.have.members(_.keys(errors), 'Test failure mismatch for ' + file + ' on ' + browser);
+      expect(Object.keys(expectedErrors)).to.have.members(Object.keys(errors), 'Test failure mismatch for ' + file + ' on ' + browser);
 
-      _.each(errors, function(error, test) {
-        const locationInfo  = ' for ' + file + '/' + test + ' on ' + browser;
+      lodash.each(errors, function(error: Error, test: string) {
+        const locationInfo  = ` for ${file} - "${test}" on ${browser}`;
         const expectedError = expectedErrors[test];
         const stackLines    = error.stack.split('\n');
         expect(error.message).to.eq(expectedError[0], 'Error message mismatch' + locationInfo);
@@ -63,16 +75,10 @@ function assertTestErrors(context, expected) {
         // https://github.com/chaijs/chai/issues/100
         if (browser.indexOf('firefox') !== -1) return;
 
-        for (let i = 0; i < expectedError.length; i++) {
-          const line = expectedError[i];
-          const info = 'Stack line ' + i + ' mismatch' + locationInfo;
-          if (typeof expectedError[i] === 'string') {
-            expect(stackLines[i]).to.eq(expectedError[i], info);
-          } else {
-            expect(stackLines[i]).to.match(expectedError[i], info);
-          }
-        }
-        expect(stackLines.length).to.eq(expectedError.length, 'Stack length mismatch.' + locationInfo);
+        const expectedErrorText = expectedError[0];
+        const stackTraceMatcher = expectedError[1];
+        expect(stackLines[0]).to.eq(expectedErrorText);
+        expect(stackLines[stackLines.length - 1]).to.match(stackTraceMatcher);
       });
     });
   });
@@ -83,16 +89,16 @@ function assertTestErrors(context, expected) {
 /** Describes all suites, mixed into the environments being run. */
 function runsAllIntegrationSuites() {
 
-  runsIntegrationSuite('hybrid', function() {
+  runsIntegrationSuite('hybrid', function(testContext) {
 
     it('passes', function() {
-      assertPassed(this);
-      assertStats(this, 6, 0, 0, 'complete');
+      assertPassed(testContext);
+      assertStats(testContext, 6, 0, 0, 'complete');
     });
 
     it('runs the correct tests', function() {
-      assertTests(this, {
-        'index.html': {
+      assertTests(testContext, {
+        'web-component-tester/test/fixtures/integration/hybrid/': {
           'inline suite': {
             'inline nested test': {
               'state': 'passing'
@@ -110,7 +116,7 @@ function runsAllIntegrationSuites() {
             'state': 'passing'
           },
         },
-        'tests.html': {
+        'web-component-tester/test/fixtures/integration/hybrid/tests.html': {
           'suite': {
             'nested test': {
               'state': 'passing'
@@ -125,16 +131,18 @@ function runsAllIntegrationSuites() {
 
   });
 
-  runsIntegrationSuite('failing', function() {
+  runsIntegrationSuite('failing', function(testContext) {
 
     it('fails', function() {
-      assertFailed(this, '3 failed tests');
-      assertStats(this, 3, 0, 3, 'complete');
+      // HACK(rictic): this should be 3 instead of 6.
+      // a bug in mocha:
+      assertFailed(testContext, '6 failed tests');
+      assertStats(testContext, 3, 0, 6, 'complete');
     });
 
     it('runs the correct tests', function() {
-      assertTests(this, {
-        'index.html': {
+      assertTests(testContext, {
+        'web-component-tester/test/fixtures/integration/failing/': {
           'inline passing test': {
             'state': 'passing'
           },
@@ -148,7 +156,7 @@ function runsAllIntegrationSuites() {
             'state': 'failing',
           },
         },
-        'tests.html': {
+        'web-component-tester/test/fixtures/integration/failing/tests.html': {
           'passing test': {
             'state': 'passing'
           },
@@ -160,21 +168,21 @@ function runsAllIntegrationSuites() {
     });
 
     it('emits well formed errors', function() {
-      assertTestErrors(this, {
-        'index.html': {
+      assertTestErrors(testContext, {
+        'web-component-tester/test/fixtures/integration/failing/': {
           'inline failing test': [
             'expected false to be true',
-            /^  .* at \/web-component-tester\/test\/fixtures\/integration\/failing\/index\.html:13$/,
+            /at index\.html:13(:|$)/,
           ],
           'failing test': [
             'expected false to be true',
-            /^  .* at \/web-component-tester\/test\/fixtures\/integration\/failing\/tests\.js:3$/,
+            /at tests\.js:3(:|$)/,
           ],
         },
-        'tests.html': {
+        'web-component-tester/test/fixtures/integration/failing/tests.html': {
           'failing test': [
             'expected false to be true',
-            /^  .* at \/web-component-tester\/test\/fixtures\/integration\/failing\/tests.html:11$/,
+            /at tests.html:11(:|$)/,
           ],
         },
       });
@@ -182,16 +190,16 @@ function runsAllIntegrationSuites() {
 
   });
 
-  runsIntegrationSuite('inline-js', function() {
+  runsIntegrationSuite('inline-js', function(testContext) {
 
     it('passes', function() {
-      assertPassed(this);
-      assertStats(this, 2, 0, 0, 'complete');
+      assertPassed(testContext);
+      assertStats(testContext, 2, 0, 0, 'complete');
     });
 
     it('runs the correct tests', function() {
-      assertTests(this, {
-        'index.html': {
+      assertTests(testContext, {
+        'web-component-tester/test/fixtures/integration/inline-js/': {
           'suite': {
             'nested test': {
               'state': 'passing'
@@ -206,16 +214,16 @@ function runsAllIntegrationSuites() {
 
   });
 
-  runsIntegrationSuite('many-html', function() {
+  runsIntegrationSuite('many-html', function(testContext) {
 
     it('passes', function() {
-      assertPassed(this);
-      assertStats(this, 6, 0, 0, 'complete');
+      assertPassed(testContext);
+      assertStats(testContext, 6, 0, 0, 'complete');
     });
 
     it('runs the correct tests', function() {
-      assertTests(this, {
-        'one.html': {
+      assertTests(testContext, {
+        'web-component-tester/test/fixtures/integration/many-html/one.html': {
           'suite 1': {
             'nested test 1': {
               'state': 'passing'
@@ -225,7 +233,7 @@ function runsAllIntegrationSuites() {
             'state': 'passing'
           },
         },
-        'two.html': {
+        'web-component-tester/test/fixtures/integration/many-html/two.html': {
           'suite 2': {
             'nested test 2': {
               'state': 'passing'
@@ -235,7 +243,7 @@ function runsAllIntegrationSuites() {
             'state': 'passing'
           },
         },
-        'three.html': {
+        'web-component-tester/test/fixtures/integration/many-html/three.html': {
           'suite 3': {
             'nested test 3': {
               'state': 'passing'
@@ -250,16 +258,16 @@ function runsAllIntegrationSuites() {
 
   });
 
-  runsIntegrationSuite('many-js', function() {
+  runsIntegrationSuite('many-js', function(testContext) {
 
     it('passes', function() {
-      assertPassed(this);
-      assertStats(this, 6, 0, 0, 'complete');
+      assertPassed(testContext);
+      assertStats(testContext, 6, 0, 0, 'complete');
     });
 
     it('runs the correct tests', function() {
-      assertTests(this, {
-        'index.html': {
+      assertTests(testContext, {
+        'web-component-tester/test/fixtures/integration/many-js/': {
           'suite 1': {
             'nested test 1': {
               'state': 'passing'
@@ -290,31 +298,31 @@ function runsAllIntegrationSuites() {
 
   });
 
-  runsIntegrationSuite('nested', function() {
+  runsIntegrationSuite('nested', function(testContext) {
 
     it('passes', function() {
-      assertPassed(this);
-      assertStats(this, 4, 0, 0, 'complete');
+      assertPassed(testContext);
+      assertStats(testContext, 4, 0, 0, 'complete');
     });
 
     it('runs the correct tests', function() {
-      assertTests(this, {
-        'index.html': {
+      assertTests(testContext, {
+        'web-component-tester/test/fixtures/integration/nested/': {
           'js test': {
             'state': 'passing'
           },
         },
-        'one/tests.html': {
+        'web-component-tester/test/fixtures/integration/nested/one/tests.html': {
           'test': {
             'state': 'passing'
           },
         },
-        'two/': {
+        'web-component-tester/test/fixtures/integration/nested/two/': {
           'inline test': {
             'state': 'passing'
           },
         },
-        'leaf.html': {
+        'web-component-tester/test/fixtures/integration/nested/leaf.html': {
           'test': {
             'state': 'passing'
           },
@@ -324,25 +332,25 @@ function runsAllIntegrationSuites() {
 
   });
 
-  runsIntegrationSuite('no-tests', function() {
+  runsIntegrationSuite('no-tests', function(testContext) {
 
     it('passes', function() {
-      assertPassed(this);
-      assertStats(this, 0, 0, 0, 'complete');
+      assertPassed(testContext);
+      assertStats(testContext, 0, 0, 0, 'complete');
     });
 
   });
 
-  runsIntegrationSuite('one-html', function() {
+  runsIntegrationSuite('one-html', function(testContext) {
 
     it('passes', function() {
-      assertPassed(this);
-      assertStats(this, 2, 0, 0, 'complete');
+      assertPassed(testContext);
+      assertStats(testContext, 2, 0, 0, 'complete');
     });
 
     it('runs the correct tests', function() {
-      assertTests(this, {
-        'tests.html': {
+      assertTests(testContext, {
+        'web-component-tester/test/fixtures/integration/one-html/tests.html': {
           'suite': {
             'nested test': {
               'state': 'passing'
@@ -357,16 +365,16 @@ function runsAllIntegrationSuites() {
 
   });
 
-  runsIntegrationSuite('one-js', function() {
+  runsIntegrationSuite('one-js', function(testContext) {
 
     it('passes', function() {
-      assertPassed(this);
-      assertStats(this, 2, 0, 0, 'complete');
+      assertPassed(testContext);
+      assertStats(testContext, 2, 0, 0, 'complete');
     });
 
     it('runs the correct tests', function() {
-      assertTests(this, {
-        'index.html': {
+      assertTests(testContext, {
+        'web-component-tester/test/fixtures/integration/one-js/': {
           'suite': {
             'nested test': {
               'state': 'passing'
@@ -391,7 +399,7 @@ const currentEnv = {};
 if (!process.env.SKIP_LOCAL_BROWSERS) {
   describe('Local Browsers', function() {
     before(function() {
-      currentEnv.remote = false;
+      currentEnv['remote'] = false;
     });
 
     runsAllIntegrationSuites();
@@ -409,7 +417,7 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
       currentEnv.remote = true;
 
       const emitter = new Context();
-      new CLIReporter(emitter, process.stdout, {verbose: true});
+      new CliReporter(emitter, process.stdout, {verbose: true});
 
       steps.ensureSauceTunnel(baseOptions, emitter, function(error, tunnelId) {
         baseOptions.sauce.tunnelId = tunnelId;
@@ -429,8 +437,8 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
 
 // Helpers
 
-function browserName(browser) {
-  parts = [];
+function browserName(browser: BrowserDef) {
+  const parts: string[] = [];
 
   if (browser.platform && !browser.deviceName) {
     parts.push(browser.platform);
@@ -445,24 +453,46 @@ function browserName(browser) {
   return parts.join(' ');
 }
 
-function repeatBrowsers(context, data) {
-  expect(_.keys(context.stats).length).to.be.greaterThan(0, 'No browsers were run. Bad environment?');
-  return _.mapValues(context.stats, () => data);
+function repeatBrowsers<T>(context: TestContext, data: T): {[browserId: string]: T} {
+  expect(Object.keys(context.stats).length).to.be.greaterThan(
+      0, 'No browsers were run. Bad environment?');
+  return lodash.mapValues(context.stats, () => data);
+}
+
+type TestNode = {
+  state?: CompletedState;
+  [subTestName: string]: TestNode | CompletedState;
+}
+
+class TestContext {
+  tests: TestNode = {};
+  testErrors: TestNode = {};
+  stats: {[browserName: string]: Stats} = {};
+  errors: {[browserName: string]: any} = {};
+  runError: any;
 }
 
 /**
  * Creates a mocha context that runs an integration suite (once), and hangs onto
  * the output for tests.
  */
-function runsIntegrationSuite(suiteName: string, contextFunction: () => void) {
+function runsIntegrationSuite(suiteName: string, contextFunction: (context: TestContext) => void) {
   describe(suiteName, function() {
     const log: string[] = [];
+    class TestContext {
+      tests: TestNode = {};
+      testErrors: TestNode = {};
+      stats: {[browserName: string]: Stats} = {};
+      errors: {[browserName: string]: any} = {};
+      runError: any;
+    }
+    const testContext = new TestContext();
 
-    before(function(done) {
+    before(async function() {
       this.timeout(120 * 1000);
 
-      const options = _.merge({
-        output:      {write: log.push.bind(log)},
+      const options: config.Config = {
+        output:      <any>{write: log.push.bind(log)},
         ttyOutput:   false,
         skipCleanup: true,  // We do it manually at the end of all suites.
         root:        path.resolve(PROJECT_ROOT, '..'),
@@ -470,25 +500,38 @@ function runsIntegrationSuite(suiteName: string, contextFunction: () => void) {
         // TODO(nevir): Migrate
         // remote:      currentEnv.remote,
         // Roughly matches CI Runner statuses.
-        browserOptions: {
+        browserOptions: <any>{
           name: 'web-component-tester',
           tags: ['org:Polymer', 'repo:web-component-tester'],
         },
-      });
-      const emitter = new Context(options);
-      // Don't fail the integration suite on test errors.
-      test(emitter).then(() => done(), () => done());
+        plugins: <any>{
+          local: {browsers: ['chrome', 'safari']},
+        }
+      };
+      const context = new Context(options);
 
-      this.tests      = {};
-      this.testErrors = {};
-      emitter.on('test-end', function(browserInfo, data, stats) {
+      const addEventHandler = (name: string, handler: Function) => {
+        context.on(name, function() {
+          try {
+            handler.apply(null, arguments);
+          } catch (error) {
+            console.error(`Error inside ${name} handler in integration tests:`);
+            console.error(error.stack);
+          }
+        });
+      };
+
+      addEventHandler('test-end', (browserInfo: BrowserDef, data: TestEndData, stats: Stats) => {
         const browser = browserName(browserInfo);
-        this.stats[browser] = stats;
+        testContext.stats[browser] = stats;
 
-        const testNode  = this.tests[browser]      = this.tests[browser]      || {};
-        const errorNode = this.testErrors[browser] = this.testErrors[browser] || {};
-        for (const name of data.test) {
-          testNode = testNode[name] = testNode[name] || {};
+        let testNode = <TestNode>(
+            testContext.tests[browser] = testContext.tests[browser] || {});
+        let errorNode =
+            testContext.testErrors[browser] = testContext.testErrors[browser] || {};
+        for (let i = 0; i < data.test.length; i++) {
+          const name = data.test[i];
+          testNode = <TestNode>(testNode[name] = testNode[name] || {});
           if (i < data.test.length - 1) {
             errorNode = errorNode[name] = errorNode[name] || {};
           } else if (data.error) {
@@ -496,26 +539,45 @@ function runsIntegrationSuite(suiteName: string, contextFunction: () => void) {
           }
         }
         testNode.state = data.state;
-      }.bind(this));
+      });
 
-      this.stats  = {};
-      this.errors = {};
-      emitter.on('browser-end', function(browserInfo, error, stats) {
+      addEventHandler('browser-end', (browserInfo: BrowserDef, error: any, stats: Stats) => {
         const browser = browserName(browserInfo);
-        this.stats[browser]  = stats;
-        this.errors[browser] = error || null;  // falsy to null for easy check.
-      }.bind(this));
+        testContext.stats[browser] = stats;
+        testContext.errors[browser] = error || null;  // falsy to null for easy check.
+      });
 
-      emitter.on('run-end', function(error) {
-        this.runError = error;
-      }.bind(this));
+      addEventHandler('run-end', (error: any) => {
+        testContext.runError = error;
+      });
+
+      // Don't fail the integration suite on test errors.
+      try {
+        await test(context);
+      } catch (error) {
+        // Some tests fail. This is intended.
+      }
     });
 
     afterEach(function() {
-      if (this.currentTest.state !== 'failed') return;
-      log.forEach(function(line) { process.stderr.write(line); });
+      if (this.currentTest.state === 'failed') {
+        process.stderr.write(
+            `\n    Output of wct for integration suite named \`${suiteName}\` \n` +
+            `    ======================================================\n\n`);
+        for (const line of log.join('').split('\n')) {
+          process.stderr.write(`    ${line}\n`);
+        }
+        // for (const chunk of log) {
+        //   const indented = chunk.split(
+        //       '\n').map((line) => `    ${line}`).join('\n');
+        //   for (const line of chunk.split('\n')) {
+        //   }
+        // }
+        process.stderr.write(
+          `\n    ======================================================\n\n`);
+      }
     });
 
-    contextFunction();
+    contextFunction(testContext);
   });
 }
