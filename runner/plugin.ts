@@ -43,40 +43,38 @@ export class Plugin {
   /**
    * @param {!Context} context The context that this plugin should be evaluated
    *     within.
-   * @param {function(*)} done
    */
-  execute(context: Context, done: (message?: string) => void): void {
+  async execute(context: Context): Promise<void> {
     try {
-      require(this.packageName)(
-            context, context.pluginOptions(this.name), this);
+      const plugin = require(this.packageName);
+      plugin(context, context.pluginOptions(this.name), this);
     } catch (error) {
-      return done('Failed to load plugin "' + this.name + '": ' + error);
+      throw `Failed to load plugin "${this.name}": ${error}`;
     }
-    done();
   };
 
   /**
    * Retrieves a plugin by shorthand or module name (loading it as necessary).
    *
    * @param {string} name
-   * @param {function(*, Plugin)} done
    */
-  static get(name: string, done: (err: any, plugin?: Plugin) => void): void {
+  static async get(name: string): Promise<Plugin> {
     const shortName = Plugin.shortName(name);
     if (_loadedPlugins[shortName]) {
-      return done(null, _loadedPlugins[shortName]);
+      return _loadedPlugins[shortName];
     }
 
     const names = [shortName].concat(PREFIXES.map((p) => p + shortName));
     const loaded = _.compact(names.map(_tryLoadPluginPackage));
     if (loaded.length > 1) {
       const prettyNames = loaded.map((p) => p.packageName).join(' ');
-      done('Loaded conflicting WCT plugin packages: ' + prettyNames);
-    } else if (loaded.length < 1) {
-      done('Could not find WCT plugin named "' + name + '"');
-    } else {
-      done(null, loaded[0]);
+      throw `Loaded conflicting WCT plugin packages: ${prettyNames}`;
     }
+    if (loaded.length < 1) {
+      throw `Could not find WCT plugin named "${name}"`;
+    }
+
+    return loaded[0];
   };
 
   /**

@@ -14,14 +14,10 @@ var test = require('../runner/test');
 module.exports = function(grunt) {
   grunt.registerMultiTask('wct-test', 'Runs tests via web-component-tester', function() {
     var done = this.async();
-    test(this.options(), function(error) {
-      if (error) {
-        console.log(chalk.red(error));
-        // Grunt only errors on `false` and instances of `Error`.
-        done(new Error(error));
-      } else {
-        done();
-      }
+    test(this.options()).then(() => done(), (error) => {
+      console.log(chalk.red(error));
+      // Grunt only errors on `false` and instances of `Error`.
+      done(new Error(error));
     });
   });
 };

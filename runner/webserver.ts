@@ -50,10 +50,10 @@ const DEFAULT_HEADERS = {
 // - 80, 443, 888: these ports must have root access
 // - 5555, 8080: not forwarded on Android
 const SAUCE_PORTS = [
-2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333, 4000, 4001,
-4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000, 6001, 6060, 6666,
-6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031, 8081, 8765, 8777, 8888,
-9000, 9001, 9080, 9090, 9876, 9877, 9999, 49221, 55001
+  2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333, 4000, 4001,
+  4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000, 6001, 6060, 6666,
+  6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031, 8081, 8765, 8777, 8888,
+  9000, 9001, 9080, 9090, 9876, 9877, 9999, 49221, 55001
 ];
 
 /**
@@ -66,7 +66,7 @@ const SAUCE_PORTS = [
 export function webserver(wct: Context) {
   const options = wct.options;
 
-  wct.hook('configure', function(done: () => void) {
+  wct.hook('configure', async function() {
     // For now, you should treat all these options as an implementation detail
     // of WCT. They may be opened up for public configuration, but we need to
     // spend some time rationalizing interactions with external webservers.
@@ -93,105 +93,98 @@ export function webserver(wct: Context) {
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
     options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
-
-    done();
   });
 
-  wct.hook('prepare', function(done: (err?: any) => void) {
+  wct.hook('prepare', async function() {
     const wsOptions = options.webserver;
 
-    getPort(function(error: any, port: number) {
-      if (error) return done(error);
-      // `port` (and `webRunnerPath`) is read down the line by `BrowserRunner`.
-      wsOptions.port = port;
+    const port = await getPort();
 
-      const app    = express();
-      const server = http.createServer(app);
-      // `runTests` needs a reference to this (for the socket.io endpoint).
-      wct._httpServer = server;
+    // `port` (and `webRunnerPath`) is read down the line by `BrowserRunner`.
+    wsOptions.port = port;
 
-      // Debugging information for each request.
-      app.use(function(request, response, next) {
-        const msg = request.url + ' (' + request.header('referer') + ')';
-        wct.emit('log:debug', chalk.magenta(request.method), msg);
-        next();
-      });
+    const app    = express();
+    const server = http.createServer(app);
+    // `runTests` needs a reference to this (for the socket.io endpoint).
+    wct._httpServer = server;
 
-      // Mapped static content (overriding files served at the root).
-      _.each(wsOptions.staticContent, function(file, url) {
-        app.get(new RegExp(url), function(request, response) {
-          response.set(DEFAULT_HEADERS);
-          send(request, file).pipe(response);
-        });
-      });
+    // Debugging information for each request.
+    app.use(function(request, response, next) {
+      const msg = request.url + ' (' + request.header('referer') + ')';
+      wct.emit('log:debug', chalk.magenta(request.method), msg);
+      next();
+    });
 
-      // The generated web runner, if present.
-      if (wsOptions.webRunnerContent) {
-        app.get(wsOptions.webRunnerPath, function(request, response) {
-          response.set(DEFAULT_HEADERS);
-          response.send(wsOptions.webRunnerContent);
-        });
-      }
-
-      // At this point, we allow other plugins to hook and configure the
-      // webserver as they please.
-      wct.emitHook('prepare:webserver', app, function(error) {
-        if (error) return done(error);
-
-        // Serve up all the static assets.
-        app.use(serveWaterfall(wsOptions.pathMappings, {
-          root:    options.root,
-          headers: DEFAULT_HEADERS,
-          log:     wct.emit.bind(wct, 'log:debug'),
-        }));
-
-        app.use('/httpbin', httpbin.httpbin);
-
-        app.get('/favicon.ico', function(request, response) {
-          response.end();
-        });
-
-        app.use(function(request, response, next) {
-          wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
-          next();
-        });
-
-        server.listen(port);
-        (<any>server).port = port;
-        serverDestroy(server);
-
-        cleankill.onInterrupt(function(done) {
-          // close the socket IO server directly if it is spun up
-          const io = wct._socketIOServer;
-          if (io) {
-            // we will close the underlying server ourselves
-            (<any>io).httpServer = null;
-            io.close();
-          }
-          server.destroy();
-          server.on('close', done);
-        });
-
-        wct.emit('log:info',
-          'Web server running on port', chalk.yellow(port.toString()),
-          'and serving from', chalk.magenta(options.root)
-        );
-        done();
+    // Mapped static content (overriding files served at the root).
+    _.each(wsOptions.staticContent, function(file, url) {
+      app.get(new RegExp(url), function(request, response) {
+        response.set(DEFAULT_HEADERS);
+        send(request, file).pipe(response);
       });
     });
+
+    // The generated web runner, if present.
+    if (wsOptions.webRunnerContent) {
+      app.get(wsOptions.webRunnerPath, function(request, response) {
+        response.set(DEFAULT_HEADERS);
+        response.send(wsOptions.webRunnerContent);
+      });
+    }
+
+    // At this point, we allow other plugins to hook and configure the
+    // webserver as they please.
+    await wct.emitHook('prepare:webserver', app);
+
+    // Serve up all the static assets.
+    app.use(serveWaterfall(wsOptions.pathMappings, {
+      root:    options.root,
+      headers: DEFAULT_HEADERS,
+      log:     wct.emit.bind(wct, 'log:debug'),
+    }));
+
+    app.use('/httpbin', httpbin.httpbin);
+
+    app.get('/favicon.ico', function(request, response) {
+      response.end();
+    });
+
+    app.use(function(request, response, next) {
+      wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
+      next();
+    });
+
+    server.listen(port);
+    (<any>server).port = port;
+    serverDestroy(server);
+
+    cleankill.onInterrupt(function(done) {
+      // close the socket IO server directly if it is spun up
+      const io = wct._socketIOServer;
+      if (io) {
+        // we will close the underlying server ourselves
+        (<any>io).httpServer = null;
+        io.close();
+      }
+      server.destroy();
+      server.on('close', done);
+    });
+
+    wct.emit('log:info',
+      'Web server running on port', chalk.yellow(port.toString()),
+      'and serving from', chalk.magenta(options.root)
+    );
   });
 
-  function getPort(done: (err: any, port?: number) => void): void {
+  async function getPort(): Promise<number> {
     if (options.webserver.port) {
-      done(null, options.webserver.port);
+      return options.webserver.port;
     } else {
-      findPort(SAUCE_PORTS, done);
+      return await findPort(SAUCE_PORTS);
     }
   }
-
 };
 
-// HACK
+// HACK(rictic): remove this ES6-compat hack and export webserver itself
 webserver['webserver'] = webserver;
 
 module.exports = webserver;

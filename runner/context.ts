@@ -18,11 +18,23 @@ import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
 
-type Handler = (o: {}, callback: (err: any) => void) => void;
+type Handler =
+    ((...args: any[]) => Promise<any>) |
+    ((done: (err?: any) => void) => void) |
+    ((arg1: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void)
+;
+
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
  * downstream to listen to.
+ *
+ * TODO(rictic): break back-compat with plugins by moving hooks entirely away
+ *     from callbacks to promises. Easiest way to do this would be to rename
+ *     the hook-related methods on this object, so that downstream callers would
+ *     break in obvious ways.
  *
  * @param {Object} options Any initially specified options.
  */
@@ -33,9 +45,9 @@ export class Context extends events.EventEmitter {
   _httpServer: http.Server;
   _testRunners: BrowserRunner[];
 
-  constructor(options: config.Config) {
+  constructor(options?: config.Config) {
     super();
-    options = options || <config.Config>{};
+    options = options || {};
 
     /**
      * The configuration for the current WCT run.
@@ -88,22 +100,26 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
-  emitHook(name: 'prepare:webserver',
-           app: Express.Application, done: (err?: any) => void): Context;
-  emitHook(name: 'configure', done: (err?: any) => void): Context;
-  emitHook(name: 'prepare', done: (err?: any) => void): Context;
-  emitHook(name: 'cleanup', done: (err?: any) => void): Context;
-  emitHook(name: string, done: (err?: any) => void): Context;
-  emitHook(name: string, ...args: any[]): Context;
-  emitHook(name: string, done: (err?: any) => void): Context {
-    done = done || ((e) => {});
+  emitHook(name: 'prepare:webserver', app: Express.Application,
+           done: (err?: any) => void): Promise<void>;
+  emitHook(name: 'configure', done: (err?: any) => void): Promise<void>;
+  emitHook(name: 'prepare', done: (err?: any) => void): Promise<void>;
+  emitHook(name: 'cleanup', done: (err?: any) => void): Promise<void>;
+  emitHook(name: string, done: (err?: any) => void): Promise<void>;
+  emitHook(name: string, ...args: any[]): Promise<void>;
+  async emitHook(name: string, done: (err?: any) => void): Promise<void> {
     this.emit('log:debug', 'hook:', name);
 
     const hooks = (this._hookHandlers[name] || []);
-    let boundHooks: ((cb: (err: any) => void) => void)[];
+    let boundHooks: ((cb: (err: any) => void) => (void|Promise<any>))[];
     if (arguments.length > 2) {
-      const hookArgs = Array.from(arguments).slice(1, arguments.length - 1);
       done = arguments[arguments.length - 1];
+      let argsEnd = arguments.length - 1;
+      if (!(done instanceof Function)) {
+        done = (e) => {};
+        argsEnd = arguments.length;
+      }
+      const hookArgs = Array.prototype.slice.call(arguments, 1, argsEnd);
       boundHooks = hooks.map(function(hook) {
         return hook.bind.apply(hook, [null].concat(hookArgs));
       });
@@ -111,6 +127,7 @@ export class Context extends events.EventEmitter {
     if (!boundHooks) {
       boundHooks = <any>hooks;
     }
+    done = done || ((e) => {});
 
     // We execute the handlers _sequentially_. This may be slower, but it gives us
     // a lighter cognitive load and more obvious logs.
@@ -118,45 +135,35 @@ export class Context extends events.EventEmitter {
     for (const hook of boundHooks) {
       promise = promise.then(() => {
         return new Promise((resolve, reject) => {
-          hook((err) => {
+          const maybePromise = hook((err) => {
             if (err) {
               reject(err);
             } else {
               resolve();
             }
           });
+          if (maybePromise) {
+            // Once typescript ≥1.9 is out I think we'll be able to get rid of
+            // this local variable.
+            const promise = <Promise<any>> maybePromise;
+            promise.then(resolve, reject);
+          }
         });
       });
     }
+    const resultPromise = promise;
     promise.then(() => done(), (err) => done(err));
-
-    return this;
+    return resultPromise;
   };
 
   /**
    * @param {function(*, Array<!Plugin>)} done Asynchronously loads the plugins
    *     requested by `options.plugins`.
    */
-  plugins(done: (err: any, plugins?: Plugin[]) => void): void {
-    this._plugins().then(
-      (plugins) => done(null, plugins),
-      (err) => done(err)
-    );
-  };
-
-  private async _plugins() {
+  async plugins(): Promise<Plugin[]> {
     const plugins: Plugin[] = [];
     for (const name of this.enabledPlugins()) {
-      const plugin = await (new Promise<Plugin>((resolve, reject) => {
-        Plugin.get(name, (err, plugin) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(plugin);
-          }
-        });
-      }));
-      plugins.push(plugin);
+      plugins.push(await Plugin.get(name));
     }
     return plugins;
   }

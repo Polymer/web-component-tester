@@ -7,7 +7,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-
 import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
 import * as events from 'events';
@@ -15,9 +14,11 @@ import * as _ from 'lodash';
 import * as stacky from 'stacky';
 import * as tty from 'tty';
 import * as util from 'util';
+
 import {BrowserDef, Stats} from './browserrunner';
 import * as config from './config';
 import * as context from './context';
+
 
 const STACKY_CONFIG = {
   indent: '    ',
@@ -30,7 +31,8 @@ const STACKY_CONFIG = {
   ]
 };
 
-type State = 'passing' | 'pending' | 'failing' | 'unknown' | 'error';
+export type State = 'passing' | 'pending' | 'failing' | 'unknown' | 'error';
+export type CompletedState = 'passing' | 'failing' | 'pending' | 'unknown';
 type Formatter = (value: string) => string;
 
 const STATE_ICONS = {
@@ -56,8 +58,9 @@ const SHORT = {
 const BROWSER_PAD = 24;
 const STATUS_PAD  = 38;
 
-interface TestEndData {
-  state: 'passing'|'failing'|'pending'|'unknown';
+
+export interface TestEndData {
+  state: CompletedState;
   /**
    * The titles of the tests that ran.
    */

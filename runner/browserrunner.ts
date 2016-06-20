@@ -7,10 +7,10 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-
 import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
 import * as _ from 'lodash';
+
 import * as wd from 'wd';
 import {Config} from './config';
 import * as selenium from 'selenium-webdriver';
@@ -51,7 +51,7 @@ function getUrl(url: ValidHost): string {
     host: url['host'] || url['hostname'],
     port: url['port'] || 80,
     path: url['path'] || '/'
-  }
+  };
   return `${normalized.scheme}://${normalized.host}:${normalized.port}${normalized.path}`;
 }
 
@@ -63,18 +63,18 @@ export class BrowserRunner {
   stats: Stats;
   sessionId: string;
   timeoutId: NodeJS.Timer;
+  donePromise: Promise<void>;
   emitter: NodeJS.EventEmitter;
   def: BrowserDef;
   options: Config;
-  doneCallback: NodeCB<BrowserRunner>;
 
-  constructor(
-        emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config,
-        doneCallback: NodeCB<BrowserRunner>) {
+  private _resolve: () => void;
+  private _reject: (err: any) => void;
+
+  constructor(emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config) {
     this.emitter = emitter;
     this.def = def;
     this.options = options;
-    this.doneCallback = doneCallback;
     this.timeout = options.testTimeout;
     this.emitter = emitter;
 
@@ -100,16 +100,17 @@ export class BrowserRunner {
     //   retries: -1
     // });
 
+    this.donePromise = new Promise<void>((resolve, reject) => {
+      this._resolve = resolve;
+      this._reject = reject;
+    });
+
     cleankill.onInterrupt((done) => {
       if (!this.browser) {
         return done();
       }
 
-      const origDoneCallback = this.doneCallback;
-      this.doneCallback = function(error, runner) {
-        done();
-        origDoneCallback(error, runner);
-      };
+      this.donePromise.then(() => done(), () => done());
       this.done('Interrupting');
     });
 
@@ -231,15 +232,15 @@ export class BrowserRunner {
     //     'browser-end', this.def, error, this.stats, this.sessionId, browser);
 
     // Nothing to quit.
-    // if (!this.sessionId) {
-    //   return this.doneCallback(error, this);
-    // }
+    if (!this.sessionId) {
+      error ? this._reject(error) : this._resolve();
+    }
 
     browser.quit().then(null, (quitError) => {
       this.emitter.emit(
           'log:warn', this.def, 'Failed to quit:',
           quitError.data || quitError);
-    }).then(() => this.doneCallback(error, this));
+    }).then(() => error ? this._reject(error) : this._resolve());
   }
 
   extendTimeout() {

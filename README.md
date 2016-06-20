@@ -198,7 +198,7 @@ custom configuration:
 }
 ```
 
-See [`runner/config.js`](runner/config.js) for the canonical reference of
+See [`runner/config.ts`](runner/config.ts) for the canonical reference of
 configuration properties.
 
 You can also specify global defaults (such as `sauce.username`, etc) via a
@@ -328,7 +328,7 @@ grunt.loadNpmTasks('web-component-tester');
 ```
 
 Gives you two grunt tasks: `wct-test:local` and `wct-test:remote`. The
-`options` you can use are specified in [`runner/config.js`](runner/config.js).
+`options` you can use are specified in [`runner/config.ts`](runner/config.ts).
 
 
 # Plugin Authoring
@@ -355,9 +355,9 @@ module.exports = function(context, pluginOptions, plugin) {
 };
 ```
 
-The plugin can subscribe to hooks via the [`Context`](runner/context.js)
+The plugin can subscribe to hooks via the [`Context`](runner/context.ts)
 object. Any options (via wct.conf.json or command line) are merged into
-`pluginOptions`. And, `plugin` is the instance of [`Plugin`](runner/plugin.js)
+`pluginOptions`. And, `plugin` is the instance of [`Plugin`](runner/plugin.ts)
 for the plugin.
 
 [wct-local](https://github.com/Polymer/wct-local) and

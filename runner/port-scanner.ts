@@ -42,6 +42,7 @@ interface PromiseGetter<T> {
 
 async function detectSeries<T>(
       values: T[], promiseGetter: PromiseGetter<T>): Promise<T> {
+  // check the ports in series so that checkPort does not stomp on itself
   for (const value of values) {
     if (await promiseGetter(value)) {
       return value;
@@ -50,12 +51,10 @@ async function detectSeries<T>(
   throw new Error('Couldn\'t find a good value in detectSeries');
 }
 
-export function findPort(
-      ports: number[], callback: (err: any, port?: number) => void): any {
-  // check the ports in series so that checkPort does not stomp on itself
-  detectSeries(ports, checkPort).then((port) => {
-    callback(null, port);
-  }, () => {
-    callback(new Error('no port found!'));
-  });
-};
+export async function findPort(ports: number[]): Promise<number> {
+  try {
+    return await detectSeries(ports, checkPort);
+  } catch (error) {
+    throw new Error('no port found!');
+  }
+}

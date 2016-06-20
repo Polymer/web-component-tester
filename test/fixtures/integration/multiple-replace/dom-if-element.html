@@ -1,12 +1,13 @@
 
 <link rel="import" href="normal-element.html">
+<link rel="import" href="exception-element.html">
 
 <dom-module id="dom-if-element">
   <template>
     <normal-element id="outside"></normal-element>
 
     <template is="dom-if" if="{{isStamped}}">
-      <normal-element id="inside"></normal-element>
+      <exception-element id="inside"></exception-element>
     </template>
   </template>
 
