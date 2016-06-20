@@ -37,6 +37,7 @@
         "runner/steps.ts",
         "runner/test.ts",
         "runner/webserver.ts",
+        "test/integration/browser.ts",
         "test/unit/cli.ts",
         "test/unit/config.ts",
         "test/unit/context.ts",
