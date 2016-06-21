@@ -86,11 +86,16 @@ export class BrowserRunner {
     delete webdriverCapabilities.url;
     delete webdriverCapabilities.sessionId;
 
-    this.browser = new selenium.Builder()
-        .forBrowser(this.def.browserName, this.def.version)
-        .withCapabilities(webdriverCapabilities)
-        .usingServer(getUrl(this.def.url))
-        .build();
+    if (def['selenium-webdriver']) {
+      // Maybe a plugin has just handed us the WebDriver object!
+      this.browser = def['selenium-webdriver'];
+    } else {
+      this.browser = new selenium.Builder()
+          .forBrowser(this.def.browserName, this.def.version)
+          .withCapabilities(webdriverCapabilities)
+          .usingServer(getUrl(this.def.url))
+          .build();
+    }
 
     // this.browser = wd.remote(this.def.url);
 

@@ -506,9 +506,9 @@ function runsIntegrationSuite(suiteName: string, contextFunction: (context: Test
         },
 
         // persistent: true,
-        plugins: <any>{
-          local: {browsers: ['chrome']},
-        }
+        // plugins: <any>{
+        //   local: {browsers: ['chrome', 'safari']},
+        // }
       };
       const context = new Context(options);
 
@@ -553,13 +553,7 @@ function runsIntegrationSuite(suiteName: string, contextFunction: (context: Test
         testContext.runError = error;
       });
 
-      // Don't fail the integration suite on test errors.
-      try {
-        await test(context);
-      } catch (error) {
-        console.error(error.stack);
-        // Some tests fail. This is intended.
-      }
+      await test(context);
     });
 
     afterEach(function() {

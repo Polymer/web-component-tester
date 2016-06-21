@@ -62,7 +62,6 @@ import * as steps from './steps';
  */
 export async function test(options: (Config|Context)): Promise<void> {
   const context = (options instanceof Context) ? options : new Context(options);
-
   // We assume that any options related to logging are passed in via the initial
   // `options`.
   if (context.options.output) {
