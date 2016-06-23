@@ -76,7 +76,11 @@ extendInterfaces('replace', function(context, teardown) {
             }
 
             if (instanceParent) {
-              instanceParent.appendChild(instanceNode);
+              Polymer.dom(instanceParent).appendChild(instanceNode);
+
+              if (instanceNode.tagName == 'CONTENT') {
+                instanceParent.appendChild(instanceNode);
+              }
             }
 
             // traverse down the tree
@@ -98,11 +102,12 @@ extendInterfaces('replace', function(context, teardown) {
               // traverse up until you can move laterally
               while (!templateNode.nextSibling) {
                 templateNode = templateNode.parentNode;
-                instanceParent = instanceParent.parentNode;
 
                 // stop traversing up if we are at the top
                 if (templateNode === dom) {
                   return instanceParent;
+                } else {
+                  instanceParent = instanceParent.parentNode;
                 }
               }
 

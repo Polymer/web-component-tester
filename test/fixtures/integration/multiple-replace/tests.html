@@ -5,6 +5,8 @@
   <script src="../../../../browser.js"></script>
   <link rel="import" href="dom-if-element.html">
   <link rel="import" href="exception-fixture.html">
+  <link rel="import" href="projection-element.html">
+  <link rel="import" href="../../../../../paper-input/paper-input.html">
 </head>
 <body>
   <test-fixture id="DomIfTemplate">
@@ -16,6 +18,14 @@
   <test-fixture id="ExceptionFixture">
     <template>
       <exception-fixture></exception-fixture>
+    </template>
+  </test-fixture>
+
+  <test-fixture id="ProjectionFixture">
+    <template>
+      <projection-element>
+        <div id="helloWorld">Hello World</div>
+      </projection-element>
     </template>
   </test-fixture>
 
@@ -87,6 +97,31 @@
 
       assert.equal(element3.nodeName, 'F');
       assert.equal(element4.nodeName, 'F');
+    });
+  });
+
+  describe('testing projected element replacement', function() {
+    var setupCorrectly = true;
+    var customElementChildren;
+
+    before(function() {
+      try {
+        replace('non-present-element').with('a-a');
+      } catch (err) {
+        setupCorrectly = false;
+      }
+
+      var template = fixture('ProjectionFixture');
+      customElementChildren = template.$.customElement.children;
+    });
+
+    after(function () {
+
+    });
+
+    it('double replace test', function() {
+      assert.isOk(setupCorrectly);
+      assert.equal(customElementChildren.length, 1);
     });
   });
   </script>
