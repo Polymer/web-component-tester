@@ -1549,6 +1549,17 @@ extendInterfaces('replace', function(context, teardown) {
             }
 
             if (instanceParent) {
+              // Polymer's shady dom implementation goes through the insertion
+              // points and checks their parents. If the parent of a content
+              // tag has been stamped already, then Polymer.dom has to be aware
+              // of this content tag's parent. Additionally,
+              // Polymer.dom.appendChild does not seem to actually append the
+              // content nodes into the document fragment, so node.appendChild
+              // must also be called to actually insert the node.
+              if (instanceNode.tagName == 'CONTENT') {
+                Polymer.dom(instanceParent).appendChild(instanceNode);
+              }
+
               instanceParent.appendChild(instanceNode);
             }
 
@@ -1557,26 +1568,18 @@ extendInterfaces('replace', function(context, teardown) {
               instanceParent = instanceNode;
               templateNode = templateNode.firstChild;
 
-            // traverse laterally if you cannot traverse down
-            } else if (templateNode.nextSibling) {
-              templateNode = templateNode.nextSibling;
-
-            // if the parent is the dom, we are done
-            } else if (templateNode.parentNode === dom) {
-              instanceParent = instanceNode.parentNode;
-              return instanceParent;
-
             // traverse up
             } else {
               // traverse up until you can move laterally
               while (!templateNode.nextSibling) {
-                templateNode = templateNode.parentNode;
-                instanceParent = instanceParent.parentNode;
-
                 // stop traversing up if we are at the top
-                if (templateNode === dom) {
+                if (templateNode.parentNode === dom) {
                   return instanceParent;
+                } else {
+                  instanceParent = instanceParent.parentNode;
                 }
+
+                templateNode = templateNode.parentNode;
               }
 
               // traverse laterally
