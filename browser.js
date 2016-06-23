@@ -1568,15 +1568,6 @@ extendInterfaces('replace', function(context, teardown) {
               instanceParent = instanceNode;
               templateNode = templateNode.firstChild;
 
-            // // traverse laterally if you cannot traverse down
-            // } else if (templateNode.nextSibling) {
-            //   templateNode = templateNode.nextSibling;
-
-            // // if the parent is the dom, we are done
-            // } else if (templateNode.parentNode === dom) {
-            //   instanceParent = instanceNode.parentNode;
-            //   return instanceParent;
-
             // traverse up
             } else {
               // traverse up until you can move laterally
