@@ -136,8 +136,16 @@ function runsAllIntegrationSuites() {
     it('fails', function() {
       // HACK(rictic): this should be 3 instead of 6.
       // a bug in mocha:
-      assertFailed(testContext, '6 failed tests');
-      assertStats(testContext, 3, 0, 6, 'complete');
+      try {
+        assertFailed(testContext, '3 failed tests');
+        assertStats(testContext, 3, 0, 3, 'complete');
+        console.log(
+            '      !!!! Mocha is reporting the correct number of failures!\n' +
+            '      !!!! Fix the test in test/integration/browser.ts');
+      } catch (error) {
+        assertFailed(testContext, '6 failed tests');
+        assertStats(testContext, 3, 0, 6, 'complete');
+      }
     });
 
     it('runs the correct tests', function() {
@@ -506,9 +514,9 @@ function runsIntegrationSuite(suiteName: string, contextFunction: (context: Test
         },
 
         // persistent: true,
-        // plugins: <any>{
-        //   local: {browsers: ['chrome', 'safari']},
-        // }
+        plugins: <any>{
+          local: {browsers: ['chrome']},
+        }
       };
       const context = new Context(options);
 
