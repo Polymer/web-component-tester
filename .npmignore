@@ -1,0 +1,9 @@
+# Update .gitignore whenever you update this file!
+
+.todo
+bower_components
+node_modules
+npm-debug.log
+typings/
+
+# Don't ignore runner/*.js
