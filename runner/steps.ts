@@ -44,7 +44,7 @@ export async function loadPlugins(context: Context): Promise<Plugin[]> {
   return plugins;
 }
 
-export async function configure(context: Context) {
+export async function configure(context: Context): Promise<void> {
   context.emit('log:debug', 'step: configure');
   const options = context.options;
   _.defaults(options, config.defaults());
@@ -95,7 +95,7 @@ export async function runTests(context: Context): Promise<void> {
   await result.completionPromise;
 }
 
-export function cancelTests(context: Context) {
+export function cancelTests(context: Context): void {
   if (!context._testRunners) {
     return;
   }

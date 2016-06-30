@@ -31,28 +31,28 @@ const WCT_ROOT = path.resolve(__dirname, '..');
 type Browser = string | {browserName: string, platform: string};
 
 export interface Config {
-  suites: string[];
-  output: NodeJS.WritableStream;
-  ttyOutput: boolean;
-  verbose: boolean;
+  suites?: string[];
+  output?: NodeJS.WritableStream;
+  ttyOutput?: boolean;
+  verbose?: boolean;
   quiet?: boolean;
-  expanded: boolean;
-  root: string;
-  testTimeout: number;
-  persistent: boolean;
-  extraScripts: string[];
-  clientOptions: {
+  expanded?: boolean;
+  root?: string;
+  testTimeout?: number;
+  persistent?: boolean;
+  extraScripts?: string[];
+  clientOptions?: {
     root: string;
     verbose?: boolean;
   };
-  activeBrowsers: BrowserDef[];
-  browserOptions: {
+  activeBrowsers?: BrowserDef[];
+  browserOptions?: {
     [name: string]: Capabilities
   };
-  plugins: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
-  registerHooks: (wct: Context) => void;
-  enforceJsonConf: boolean;
-  webserver: {
+  plugins?: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
+  registerHooks?: (wct: Context) => void;
+  enforceJsonConf?: boolean;
+  webserver?: {
     // The port that the webserver should run on. A port will be determined at
     // runtime if none is provided.
     port: number;
@@ -68,7 +68,7 @@ export interface Config {
     staticContent?: {[file: string]: string};
   };
 
-  skipPlugins?: boolean;
+  skipPlugins?: string[];
 
   sauce?: {};
   remote?: {};
@@ -266,6 +266,13 @@ const ARG_CONFIG = {
 const PREPARSE_ARGS =
     ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
 
+interface PreparsedArgs {
+  plugins?: string[];
+  skipPlugins?: string[];
+  simpleOutput?: boolean;
+  skipUpdateCheck?: boolean;
+}
+
 /**
  * Discovers appropriate config files (global, and for the project), merging
  * them, and returning them.
@@ -322,7 +329,7 @@ function loadProjectFile(file: string) {
  * @param {!Array<string>} args
  * @return {!Object}
  */
-export function preparseArgs(args: string[]) {
+export function preparseArgs(args: string[]): PreparsedArgs {
   // Don't let it short circuit on help.
   args = _.difference(args, ['--help', '-h']);
 
@@ -341,7 +348,8 @@ export function preparseArgs(args: string[]) {
  *     options to merge into.
  * @param {!Array<string>} args The args to parse.
  */
-export async function parseArgs(context: Context, args: string[]) {
+export async function parseArgs(
+      context: Context, args: string[]): Promise<void> {
   const parser = nomnom();
   parser.script('wct');
   parser.options(<any>ARG_CONFIG);
@@ -373,7 +381,7 @@ function _configurePluginOptions(parser: NomnomInternal.Parser, plugin: Plugin) 
   });
 }
 
-function _expandOptionPaths(options: Object) {
+function _expandOptionPaths(options: {[key: string]: any}): any {
   const result = {};
   _.each(options, function(value, key) {
     let target = result;
@@ -410,11 +418,7 @@ export function merge(): Config {
   return result;
 }
 
-/**
- * @param {!Object} config Configuration object to normalize.
- * @return {!Object} `config`.
- */
-export function normalize(config: Config) {
+export function normalize(config: Config): Config {
   if (_.isArray(config.plugins)) {
     const pluginConfigs = <{[key: string]: {disabled: boolean}}>{};
     for (let i = 0, name: string; name = <string>config.plugins[i]; i++) {
@@ -440,7 +444,7 @@ export function normalize(config: Config) {
  *
  * @param {!Context} context The context for the current run.
  */
-export async function expand(context: Context) {
+export async function expand(context: Context): Promise<void> {
   const options = context.options;
   let root    = context.options.root || process.cwd();
   context.options.root = root = path.resolve(root);
@@ -513,7 +517,7 @@ function expandDeprecated(context: Context) {
 /**
  * @param {!Object} options The configuration to validate.
  */
-export async function validate(options: Config) {
+export async function validate(options: Config): Promise<void> {
   if (options['webRunner']) {
     throw (
         'webRunner is no longer a supported configuration option. ' +
