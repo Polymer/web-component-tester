@@ -14,6 +14,10 @@ extendInterfaces('fixture', function(context, teardown) {
 
     // Find the test-fixture with the provided ID and create it, returning
     // the results:
-    return document.getElementById(fixtureId).create(model);
+    var fixture = document.getElementById(fixtureId);
+    if (!fixture) {
+      throw 'Could not find fixture with ID <' + fixtureId + '>'; 
+    }
+    return fixture.create(model);
   };
 });
