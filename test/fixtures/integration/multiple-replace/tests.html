@@ -24,7 +24,7 @@
   <test-fixture id="ProjectionFixture">
     <template>
       <projection-element>
-        <div id="helloWorld">Hello World</div>
+        <div class="selector"></div>
       </projection-element>
     </template>
   </test-fixture>
@@ -102,26 +102,32 @@
 
   describe('testing projected element replacement', function() {
     var setupCorrectly = true;
-    var customElementChildren;
+    var children;
+    var pE3Content;
+    var pE4Content;
 
     before(function() {
       try {
-        replace('non-present-element').with('a-a');
+        replace('projection-element-2').with('projection-element-3');
       } catch (err) {
         setupCorrectly = false;
       }
 
       var template = fixture('ProjectionFixture');
-      customElementChildren = template.$.customElement.children;
+      children = template.children;
+      pE3Content = children[0].firstElementChild.innerText;
+      pE4Content = children[1].firstElementChild.innerText;
+
     });
 
     after(function () {
 
     });
 
-    it('double replace test', function() {
+    it('projection replace test', function() {
       assert.isOk(setupCorrectly);
-      assert.equal(customElementChildren.length, 1);
+      assert.equal(pE3Content, 'three');
+      assert.equal(pE4Content, 'four');
     });
   });
   </script>
