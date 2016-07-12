@@ -43,14 +43,12 @@ extendInterfaces('replace', function(context, teardown) {
           var content = templateClone.content;
           var inertDoc = content.ownerDocument;
 
-          // appends children to templateClone
-          for (var n=origContent.firstChild; n; n=n.nextSibling) {
-            // imports node from inertDoc which holds inert nodes.
-            templateClone.content.appendChild(inertDoc.importNode(n, true));
-          }
+          // imports node from inertDoc which holds inert nodes.
+          templateClone.content.appendChild(inertDoc.importNode(origContent, true));
 
+          // optional arguments are not optional on IE.
           var nodeIterator = document.createNodeIterator(content,
-              NodeFilter.SHOW_ELEMENT);
+              NodeFilter.SHOW_ELEMENT, null, true);
           var node;
 
           // Traverses the tree. A recently-replaced node will be put next, so
@@ -60,9 +58,15 @@ extendInterfaces('replace', function(context, teardown) {
             var currentTagName = node.tagName.toLowerCase();
 
             if (replacements.hasOwnProperty(currentTagName)) {
+              currentTagName = replacements[currentTagName];
+
+              // find the final tag name.
+              while (replacements[currentTagName]) {
+                currentTagName = replacements[currentTagName];
+              }
+
               // Create a replacement:
-              var replacement = document.createElement(
-                  replacements[currentTagName]);
+              var replacement = document.createElement(currentTagName);
 
               // For all attributes in the original node..
               for (var index = 0; index < node.attributes.length; ++index) {
