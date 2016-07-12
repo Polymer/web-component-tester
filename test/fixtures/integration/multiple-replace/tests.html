@@ -24,7 +24,6 @@
   <test-fixture id="ProjectionFixture">
     <template>
       <projection-element>
-        <div class="selector"></div>
       </projection-element>
     </template>
   </test-fixture>
@@ -39,7 +38,7 @@
 
     before(function() {
       replace('normal-element').with('changed-element-name');
-      replace('exception-element').with('changed-element-name');
+      replace('exception-element').with('original-template-failure');
 
       domIfElement = fixture('DomIfTemplate');
       domIfElement.isStamped = true;
@@ -55,7 +54,7 @@
 
     it('dom-if test', function() {
       assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
-      assert.equal(insideElement.nodeName, 'CHANGED-ELEMENT-NAME');
+      assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-FAILURE');
     });
   });
 
@@ -102,7 +101,6 @@
 
   describe('testing projected element replacement', function() {
     var setupCorrectly = true;
-    var children;
     var pE3Content;
     var pE4Content;
 
@@ -114,9 +112,9 @@
       }
 
       var template = fixture('ProjectionFixture');
-      children = template.children;
-      pE3Content = children[0].firstElementChild.innerText;
-      pE4Content = children[1].firstElementChild.innerText;
+      pE3Content = template.$.replaced.$.content.innerText;
+      pE4Content =
+          Polymer.dom(template.$.projected).querySelector('#content').innerText;
 
     });
 
@@ -128,6 +126,36 @@
       assert.isOk(setupCorrectly);
       assert.equal(pE3Content, 'three');
       assert.equal(pE4Content, 'four');
+    });
+  });
+
+  describe('testing template reset after test', function() {
+    var setupCorrectly = true;
+    var insideElement;
+
+    before(function() {
+      try {
+        replace('exception-element').with('original-template-success');
+      } catch (err) {
+        setupCorrectly = false;
+      }
+
+      var template = fixture('DomIfTemplate');
+      template.isStamped = true;
+
+      Polymer.dom.flush();
+
+      insideElement = template.$$('#inside');
+    });
+
+    after(function () {
+
+    });
+
+    it('checking template is reset after replace test', function() {
+      assert.isOk(setupCorrectly);
+
+      assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-SUCCESS');
     });
   });
   </script>

@@ -1511,7 +1511,17 @@ extendInterfaces('replace', function(context, teardown) {
 
         // Use Sinon to stub `Polymer.Base.instanceTemplate`:
         sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
-          var content = template._content || template.content;
+          var origContent = template._content || template.content;
+          var templateClone = document.createElement('template');
+          var content = templateClone.content;
+          var inertDoc = content.ownerDocument;
+
+          // appends children to templateClone
+          for (var n=origContent.firstChild; n; n=n.nextSibling) {
+            // imports node from inertDoc which holds inert nodes.
+            templateClone.content.appendChild(inertDoc.importNode(n, true));
+          }
+
           var nodeIterator = document.createNodeIterator(content,
               NodeFilter.SHOW_ELEMENT);
           var node;
@@ -1539,7 +1549,7 @@ extendInterfaces('replace', function(context, teardown) {
             }
           }
 
-          return originalInstanceTemplate.apply(this, arguments);
+          return originalInstanceTemplate.call(this, templateClone);
         });
 
         // After each test...
