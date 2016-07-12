@@ -77,12 +77,8 @@ describe('grunt', function() {
       sandbox = sinon.sandbox.create();
       sandbox.stub(steps, 'prepare',  function(context, done) { done(); });
 
-      sandbox.stub(wctLocalBrowsers, 'detect', function(done) {
-        done(null, LOCAL_BROWSERS);
-      });
-      sandbox.stub(wctLocalBrowsers, 'supported', function() {
-        return _.keys(LOCAL_BROWSERS);
-      });
+      sandbox.stub(wctLocalBrowsers, 'detect', () => Promise.resolve(LOCAL_BROWSERS));
+      sandbox.stub(wctLocalBrowsers, 'supported', () => Promise.resolve(_.keys(LOCAL_BROWSERS)));
 
       process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
     });
