@@ -6,10 +6,10 @@
   <link rel="import" href="dom-if-element.html">
   <link rel="import" href="exception-fixture.html">
   <link rel="import" href="projection-element.html">
-  <link rel="import" href="../../../../../paper-input/paper-input.html">
+  <link rel="import" href="dom-repeat-fixture.html">
 </head>
 <body>
-  <test-fixture id="DomIfTemplate">
+  <test-fixture id="DomIfFixture">
     <template>
       <dom-if-element></dom-if-element>
     </template>
@@ -28,6 +28,13 @@
     </template>
   </test-fixture>
 
+  <test-fixture id="DomRepeatFixture">
+    <template>
+      <dom-repeat-fixture>
+      </dom-repeat-fixture>
+    </template>
+  </test-fixture>
+
   <script>
   'use strict';
 
@@ -40,7 +47,7 @@
       replace('normal-element').with('changed-element-name');
       replace('exception-element').with('original-template-failure');
 
-      domIfElement = fixture('DomIfTemplate');
+      domIfElement = fixture('DomIfFixture');
       domIfElement.isStamped = true;
 
       Polymer.dom.flush();
@@ -140,7 +147,7 @@
         setupCorrectly = false;
       }
 
-      var template = fixture('DomIfTemplate');
+      var template = fixture('DomIfFixture');
       template.isStamped = true;
 
       Polymer.dom.flush();
@@ -156,6 +163,48 @@
       assert.isOk(setupCorrectly);
 
       assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-SUCCESS');
+    });
+  });
+
+  describe('testing template bindings', function() {
+    var setupCorrectly = true;
+    var insideElement;
+    var template;
+
+    before(function() {
+      try {
+        replace('exception-element').with('dummy-element');
+      } catch (err) {
+        setupCorrectly = false;
+      }
+
+      template = fixture('DomRepeatFixture');
+
+      Polymer.dom.flush();
+    });
+
+    after(function () {
+
+    });
+
+    it('dom-repeat bindings exist', function() {
+      assert.isOk(setupCorrectly);
+
+      var numRepeated =
+          Polymer.dom(template.root).querySelectorAll('.repeated').length;
+
+      assert.equal(numRepeated, 5);
+
+      template.push('list', 6);
+
+      Polymer.dom.flush();
+
+      numRepeated =
+          Polymer.dom(template.root).querySelectorAll('.repeated').length;
+
+      assert.equal(numRepeated, 6);
+
+      assert
     });
   });
   </script>
