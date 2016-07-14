@@ -92,8 +92,10 @@ async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   });
 
   output.write('\n');
-  output.write('The tunnel will remain active while this process is running.\n');
-  output.write('To use this tunnel for other WCT runs, export the following:\n');
+  output.write(
+      'The tunnel will remain active while this process is running.\n');
+  output.write(
+      'To use this tunnel for other WCT runs, export the following:\n');
   output.write('\n');
   output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
 }

@@ -13,7 +13,6 @@ import * as path from 'path';
 
 import {Context} from './context';
 import {Config} from './config';
-import * as util from 'util';
 
 // Plugin module names can be prefixed by the following:
 const PREFIXES = [

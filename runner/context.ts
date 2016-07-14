@@ -106,7 +106,7 @@ export class Context extends events.EventEmitter {
     const hooks = (this._hookHandlers[name] || []);
     let boundHooks: ((cb: (err: any) => void) => (void|Promise<any>))[];
     if (arguments.length > 2) {
-      done = arguments[arguments.length - 1];  // mutates arguments in loose mode!
+      done = arguments[arguments.length - 1];
       let argsEnd = arguments.length - 1;
       if (!(done instanceof Function)) {
         done = (e) => {};

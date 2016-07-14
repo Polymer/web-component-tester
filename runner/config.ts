@@ -446,7 +446,7 @@ export function normalize(config: Config): Config {
  */
 export async function expand(context: Context): Promise<void> {
   const options = context.options;
-  let root    = context.options.root || process.cwd();
+  let root = context.options.root || process.cwd();
   context.options.root = root = path.resolve(root);
 
   options.origSuites = _.clone(options.suites);
