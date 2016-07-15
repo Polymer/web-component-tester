@@ -45,39 +45,31 @@ describe('config', function() {
 
     describe('deprecated options', function() {
 
-      it('expands local string browsers', function(done) {
+      it('expands local string browsers', function() {
         var context = new Context({browsers: ['chrome']});
-        config.expand(context, function(error) {
-          expect(error).to.not.be.ok;
+        return config.expand(context).then(() => {
           expect(context.options.plugins.local.browsers).to.have.members(['chrome']);
-          done();
         });
       });
 
-      it('expands sauce string browsers', function(done) {
+      it('expands sauce string browsers', function() {
         var context = new Context({browsers: ['linux/firefox']});
-        config.expand(context, function(error) {
-          expect(error).to.not.be.ok;
+        return config.expand(context).then(() => {
           expect(context.options.plugins.sauce.browsers).to.have.members(['linux/firefox']);
-          done();
         });
       });
 
-      it('expands local object browsers', function(done) {
+      it('expands local object browsers', function() {
         var context = new Context({browsers: [{browserName: 'firefox'}]});
-        config.expand(context, function(error) {
-          expect(error).to.not.be.ok;
+        return config.expand(context).then(() => {
           expect(context.options.plugins.local.browsers).to.deep.have.members([{browserName: 'firefox'}]);
-          done();
         });
       });
 
-      it('expands sauce object browsers', function(done) {
+      it('expands sauce object browsers', function() {
         var context = new Context({browsers: [{browserName: 'safari', platform: 'OS X'}]});
-        config.expand(context, function(error) {
-          expect(error).to.not.be.ok;
+        return config.expand(context).then(() => {
           expect(context.options.plugins.sauce.browsers).to.deep.have.members([{browserName: 'safari', platform: 'OS X'}]);
-          done();
         });
       });
     });

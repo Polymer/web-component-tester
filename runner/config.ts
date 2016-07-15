@@ -31,28 +31,28 @@ const WCT_ROOT = path.resolve(__dirname, '..');
 type Browser = string | {browserName: string, platform: string};
 
 export interface Config {
-  suites: string[];
-  output: NodeJS.WritableStream;
-  ttyOutput: boolean;
-  verbose: boolean;
+  suites?: string[];
+  output?: NodeJS.WritableStream;
+  ttyOutput?: boolean;
+  verbose?: boolean;
   quiet?: boolean;
-  expanded: boolean;
-  root: string;
-  testTimeout: number;
-  persistent: boolean;
-  extraScripts: string[];
-  clientOptions: {
+  expanded?: boolean;
+  root?: string;
+  testTimeout?: number;
+  persistent?: boolean;
+  extraScripts?: string[];
+  clientOptions?: {
     root: string;
     verbose?: boolean;
   };
-  activeBrowsers: BrowserDef[];
-  browserOptions: {
+  activeBrowsers?: BrowserDef[];
+  browserOptions?: {
     [name: string]: Capabilities
   };
-  plugins: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
-  registerHooks: (wct: Context) => void;
-  enforceJsonConf: boolean;
-  webserver: {
+  plugins?: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
+  registerHooks?: (wct: Context) => void;
+  enforceJsonConf?: boolean;
+  webserver?: {
     // The port that the webserver should run on. A port will be determined at
     // runtime if none is provided.
     port: number;
@@ -68,7 +68,7 @@ export interface Config {
     staticContent?: {[file: string]: string};
   };
 
-  skipPlugins?: boolean;
+  skipPlugins?: string[];
 
   sauce?: {};
   remote?: {};
@@ -145,9 +145,9 @@ export function defaults(): Config {
     // plugin. For example, to serve custom content via the internal webserver:
     //
     //     registerHooks: function(wct) {
-    //       wct.hook('prepare:webserver', function(app, done) {
+    //       wct.hook('prepare:webserver', function(app) {
     //         app.use(...);
-    //         done();
+    //         return Promise.resolve();
     //       });
     //     }
     //
@@ -266,6 +266,13 @@ const ARG_CONFIG = {
 const PREPARSE_ARGS =
     ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
 
+interface PreparsedArgs {
+  plugins?: string[];
+  skipPlugins?: string[];
+  simpleOutput?: boolean;
+  skipUpdateCheck?: boolean;
+}
+
 /**
  * Discovers appropriate config files (global, and for the project), merging
  * them, and returning them.
@@ -322,7 +329,7 @@ function loadProjectFile(file: string) {
  * @param {!Array<string>} args
  * @return {!Object}
  */
-export function preparseArgs(args: string[]) {
+export function preparseArgs(args: string[]): PreparsedArgs {
   // Don't let it short circuit on help.
   args = _.difference(args, ['--help', '-h']);
 
@@ -340,26 +347,21 @@ export function preparseArgs(args: string[]) {
  * @param {!Context} context The context, containing plugin state and any base
  *     options to merge into.
  * @param {!Array<string>} args The args to parse.
- * @param {function(*)} done
  */
-export function parseArgs(context: Context, args: string[],
-                          done: (err?: any) => void): void {
+export async function parseArgs(
+      context: Context, args: string[]): Promise<void> {
   const parser = nomnom();
   parser.script('wct');
   parser.options(<any>ARG_CONFIG);
 
-  context.plugins(function(error: any, plugins: Plugin[]) {
-    if (error) return done(error);
+  const plugins = await context.plugins();
+  plugins.forEach(_configurePluginOptions.bind(null, parser));
+  const options = <any>_expandOptionPaths(normalize(parser.parse(args)));
+  if (options._ && options._.length > 0) {
+    options.suites = options._;
+  }
 
-    plugins.forEach(_configurePluginOptions.bind(null, parser));
-    const options = <any>_expandOptionPaths(normalize(parser.parse(args)));
-    if (options._ && options._.length > 0) {
-      options.suites = options._;
-    }
-
-    context.options = merge(context.options, options);
-    done();
-  });
+  context.options = merge(context.options, options);
 }
 
 function _configurePluginOptions(parser: NomnomInternal.Parser, plugin: Plugin) {
@@ -379,7 +381,7 @@ function _configurePluginOptions(parser: NomnomInternal.Parser, plugin: Plugin) 
   });
 }
 
-function _expandOptionPaths(options: Object) {
+function _expandOptionPaths(options: {[key: string]: any}): any {
   const result = {};
   _.each(options, function(value, key) {
     let target = result;
@@ -416,11 +418,7 @@ export function merge(): Config {
   return result;
 }
 
-/**
- * @param {!Object} config Configuration object to normalize.
- * @return {!Object} `config`.
- */
-export function normalize(config: Config) {
+export function normalize(config: Config): Config {
   if (_.isArray(config.plugins)) {
     const pluginConfigs = <{[key: string]: {disabled: boolean}}>{};
     for (let i = 0, name: string; name = <string>config.plugins[i]; i++) {
@@ -445,24 +443,17 @@ export function normalize(config: Config) {
  * Expands values within the configuration based on the current environment.
  *
  * @param {!Context} context The context for the current run.
- * @param {function(*)} done
  */
-export function expand(context: Context, done: (err?: any) => void): void {
+export async function expand(context: Context): Promise<void> {
   const options = context.options;
-  let root    = context.options.root || process.cwd();
+  let root = context.options.root || process.cwd();
   context.options.root = root = path.resolve(root);
 
   options.origSuites = _.clone(options.suites);
 
-  expandDeprecated(context, function(error) {
-    if (error) return done(error);
+  expandDeprecated(context);
 
-    paths.expand(root, options.suites, function(error, suites) {
-      if (error) return done(error);
-      options.suites = suites;
-      done();
-    });
-  });
+  options.suites = await paths.expand(root, options.suites);
 }
 
 /**
@@ -470,7 +461,7 @@ export function expand(context: Context, done: (err?: any) => void): void {
  *
  * @param {!Context} context The context for the current run.
  */
-function expandDeprecated(context: Context, done: (err?: any) => void): void {
+function expandDeprecated(context: Context) {
   const options = context.options;
   // We collect configuration fragments to be merged into the options object.
   const fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
@@ -521,41 +512,35 @@ function expandDeprecated(context: Context, done: (err?: any) => void): void {
     // We are careful to modify context.options in place.
     _.merge(context.options, merge.apply(null, fragments));
   }
-
-  done();
 }
 
 /**
  * @param {!Object} options The configuration to validate.
- * @param {function(*)} Callback indicating whether the configuration is valid.
  */
-export function validate(options: Config, done: (err?: string) => void): void {
+export async function validate(options: Config): Promise<void> {
   if (options['webRunner']) {
-    return done(
+    throw new Error(
         'webRunner is no longer a supported configuration option. ' +
         'Please list the files you wish to test as arguments, ' +
         'or as `suites` in a configuration object.');
   }
   if (options['component']) {
-    return done(
+    throw new Error(
         'component is no longer a supported configuration option. ' +
         'Please list the files you wish to test as arguments, ' +
         'or as `suites` in a configuration object.');
   }
 
   if (options.activeBrowsers.length === 0) {
-    return done('No browsers configured to run');
+    throw new Error('No browsers configured to run');
   }
   if (options.suites.length === 0) {
     const root  = options.root || process.cwd();
     const globs = options.origSuites.join(', ');
-    return done(
-        'No test suites were found matching your configuration\n' +
-        '\n' +
-        '  WCT searched for .js and .html files matching: ' + globs + '\n' +
-        '\n' +
-        '  Relative paths were resolved against: ' + root);
+    throw new Error('No test suites were found matching your configuration\n' +
+          '\n' +
+          '  WCT searched for .js and .html files matching: ' + globs + '\n' +
+          '\n' +
+          '  Relative paths were resolved against: ' + root);
   }
-
-  done(null);
 }

@@ -43,15 +43,15 @@ export class BrowserRunner {
   emitter: NodeJS.EventEmitter;
   def: BrowserDef;
   options: Config;
-  doneCallback: NodeCB<BrowserRunner>;
+  donePromise: Promise<void>;
 
-  constructor(
-        emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config,
-        doneCallback: NodeCB<BrowserRunner>) {
+  private _resolve: () => void;
+  private _reject: (err: any) => void;
+
+  constructor(emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config) {
     this.emitter = emitter;
     this.def = def;
     this.options = options;
-    this.doneCallback = doneCallback;
     this.timeout = options.testTimeout;
     this.emitter = emitter;
 
@@ -62,17 +62,17 @@ export class BrowserRunner {
     this.browser.configureHttp({
       retries: -1
     });
+    this.donePromise = new Promise<void>((resolve, reject) => {
+      this._resolve = resolve;
+      this._reject = reject;
+    });
 
     cleankill.onInterrupt((done) => {
       if (!this.browser) {
         return done();
       }
 
-      const origDoneCallback = this.doneCallback;
-      this.doneCallback = function(error, runner) {
-        done();
-        origDoneCallback(error, runner);
-      };
+      this.donePromise.then(() => done(), () => done());
       this.done('Interrupting');
     });
 
@@ -203,7 +203,7 @@ export class BrowserRunner {
 
     // Nothing to quit.
     if (!this.sessionId) {
-      return this.doneCallback(error, this);
+      error ? this._reject(error) : this._resolve();
     }
 
     browser.quit((quitError) => {
@@ -212,7 +212,11 @@ export class BrowserRunner {
             'log:warn', this.def, 'Failed to quit:',
             quitError.data || quitError);
       }
-      this.doneCallback(error, this);
+      if (error) {
+        this._reject(error);
+      } else {
+        this._resolve();
+      }
     });
   }
 

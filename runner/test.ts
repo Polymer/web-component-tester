@@ -7,7 +7,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-const async = require('async');
 import * as cleankill from 'cleankill';
 
 import {CliReporter} from './clireporter';
@@ -60,10 +59,8 @@ import * as steps from './steps';
  *
  * @param {!Config|!Context} options The configuration or an already formed
  *     `Context` object.
- * @param {function(*)} done callback indicating error or success.
  */
-export function test(
-      options: (Config|Context), done: (err: any) => void): Context {
+export async function test(options: Config | Context): Promise<void> {
   const context = (options instanceof Context) ? options : new Context(options);
 
   // We assume that any options related to logging are passed in via the initial
@@ -72,22 +69,17 @@ export function test(
     new CliReporter(context, context.options.output, context.options);
   }
 
-
-  async.series([
-    steps.setupOverrides.bind(steps, context),
-    steps.loadPlugins.bind(steps, context),
-    steps.configure.bind(steps, context),
-    steps.prepare.bind(steps, context),
-    steps.runTests.bind(steps, context),
-  ], (error: any) => {
-    if ((<Config>options).skipCleanup) {
-      done(error);
-    } else {
-     cleankill.close(done.bind(null, error));
+  try {
+    await steps.setupOverrides(context);
+    await steps.loadPlugins(context);
+    await steps.configure(context);
+    await steps.prepare(context);
+    await steps.runTests(context);
+  } finally {
+    if (!context.options.skipCleanup) {
+      await new Promise((resolve) => cleankill.close(resolve));
     }
-  });
-
-  return context;
+  }
 };
 
 // HACK

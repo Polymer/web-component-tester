@@ -30,33 +30,29 @@ describe('Context', function() {
 
   describe('.plugins', function() {
 
-    it('excludes plugins with a falsy config', function(done) {
+    it('excludes plugins with a falsy config', function() {
       var context = new Context({plugins: {local: false, sauce: {}}});
-      var stub = sandbox.stub(Plugin, 'get', function(name, callback) {
-        callback(null, name);
+      var stub = sandbox.stub(Plugin, 'get', (name) => {
+        return Promise.resolve(name)
       });
 
-      context.plugins(function(error, plugins) {
-        expect(error).to.not.be.ok;
+      return context.plugins().then((plugins) => {
         expect(stub).to.have.been.calledOnce;
-        expect(stub).to.have.been.calledWith('sauce', sinon.match.func);
+        expect(stub).to.have.been.calledWith('sauce');
         expect(plugins).to.have.members(['sauce']);
-        done();
       });
     });
 
-    it('excludes plugins disabled: true', function(done) {
+    it('excludes plugins disabled: true', function() {
       var context = new Context({plugins: {local: {}, sauce: {disabled: true}}});
-      var stub = sandbox.stub(Plugin, 'get', function(name, callback) {
-        callback(null, name);
+      var stub = sandbox.stub(Plugin, 'get', (name) => {
+        return Promise.resolve(name)
       });
 
-      context.plugins(function(error, plugins) {
-        expect(error).to.not.be.ok;
+      return context.plugins().then((plugins) => {
         expect(stub).to.have.been.calledOnce;
-        expect(stub).to.have.been.calledWith('local', sinon.match.func);
+        expect(stub).to.have.been.calledWith('local');
         expect(plugins).to.have.members(['local']);
-        done();
       });
     });
 

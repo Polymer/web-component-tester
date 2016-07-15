@@ -32,17 +32,17 @@ describe('gulp', function() {
     wctGulp.init(orch);
 
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare',  function(context, done) { done() });
-    sandbox.stub(steps, 'runTests', function(context, done) {
+    sandbox.stub(steps, 'prepare',  (context) => Promise.resolve());
+    sandbox.stub(steps, 'runTests', (context) => {
       options = context.options;
-      done();
+      return Promise.resolve();
     });
 
     pluginsCalled = [];
-    sandbox.stub(Plugin.prototype, 'execute', function(context, done) {
+    sandbox.stub(Plugin.prototype, 'execute', function(context) {
       pluginsCalled.push(this.name);
       context.options.activeBrowsers.push({browserName: 'fake for ' + this.name});
-      done()
+      return Promise.resolve();
     });
   });
 

@@ -32,11 +32,12 @@ let updateNotifier = noopNotifier;
   }
 })();
 
-export function run(
-      env: any, args: string[], output: NodeJS.WritableStream,
-      callback: (err: any) => void) {
-  const done = wrapCallback(output, callback);
+export async function run(
+      env: any, args: string[], output: NodeJS.WritableStream): Promise<void> {
+  await wrap(output, _run(args, output));
+}
 
+async function _run(args: string[], output: NodeJS.WritableStream) {
   // Options parsing is a two phase affair. First, we need an initial set of
   // configuration so that we know which plugins to load, etc:
   let options = <config.Config>config.preparseArgs(args);
@@ -52,63 +53,69 @@ export function run(
   }
 
   // `parseArgs` merges any new configuration into `context.options`.
-  config.parseArgs(context, args, function(error) {
-    if (error) return done(error);
-    test(context, done);
-  });
+  await config.parseArgs(context, args);
+  await test(context);
 }
 
 // Note that we're cheating horribly here. Ideally all of this logic is within
 // wct-sauce. The trouble is that we also want WCT's configuration lookup logic,
 // and that's not (yet) cleanly exposed.
-export function runSauceTunnel(
-      env: void, args: string[], output: NodeJS.WritableStream,
-      callback: (err: any) => void) {
-  const done = wrapCallback(output, callback);
+export async function runSauceTunnel(
+      env: any, args: string[], output: NodeJS.WritableStream): Promise<void> {
+  await wrap(output, _runSauceTunnel(args, output));
+}
 
+async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   const diskOptions = config.fromDisk();
   const baseOptions: config.Config =
       (diskOptions.plugins && diskOptions.plugins['sauce'])
       || diskOptions.sauce
       || {};
 
-  Plugin.get('sauce',  (error, plugin) => {
-    if (error) return done(error);
+  const plugin = await Plugin.get('sauce');
+  const parser = require('nomnom');
+  parser.script('wct-st');
+  parser.options(_.omit(plugin.cliConfig, 'browsers', 'tunnelId'));
+  const options = _.merge(baseOptions, parser.parse(args));
 
-    const parser = require('nomnom');
-    parser.script('wct-st');
-    parser.options(_.omit(plugin.cliConfig, 'browsers', 'tunnelId'));
-    const options = _.merge(baseOptions, parser.parse(args));
+  const wctSauce = require('wct-sauce');
+  wctSauce.expandOptions(options);
 
-    const wctSauce = require('wct-sauce');
-    wctSauce.expandOptions(options);
-
-    const emitter = new events.EventEmitter();
-    new CliReporter(emitter, output, <config.Config>{});
-    wctSauce.startTunnel(options, emitter, (error: any, tunnelId: string) => {
-      if (error) return done(error); // Otherwise, we keep at it.
-      output.write('\n');
-      output.write(
-          'The tunnel will remain active while this process is running.\n');
-      output.write(
-          'To use this tunnel for other WCT runs, export the following:\n');
-      output.write('\n');
-      output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
-    });
+  const emitter = new events.EventEmitter();
+  new CliReporter(emitter, output, <config.Config>{});
+  const tunnelId = await new Promise<string>((resolve, reject) => {
+    wctSauce.startTunnel(
+        options, emitter,
+        (error: any, tunnelId: string) =>
+            error ? reject(error) : resolve(tunnelId)
+    );
   });
+
+  output.write('\n');
+  output.write(
+      'The tunnel will remain active while this process is running.\n');
+  output.write(
+      'To use this tunnel for other WCT runs, export the following:\n');
+  output.write('\n');
+  output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
 }
 
-function wrapCallback(output: NodeJS.WritableStream, done: (err: any) => void) {
-  return (error: any) => {
-    if (!process.env.CI) {
-      updateNotifier.notify();
-    }
+async function wrap(output: NodeJS.WritableStream, promise: Promise<void>) {
+  let error: any;
+  try {
+    await promise;
+  } catch (e) {
+    error = e;
+  }
 
-    if (error) {
-      output.write('\n');
-      output.write(chalk.red(error) + '\n');
-      output.write('\n');
-    }
-    done(error);
-  };
+  if (!process.env.CI) {
+    updateNotifier.notify();
+  }
+
+  if (error) {
+    output.write('\n');
+    output.write(chalk.red(error) + '\n');
+    output.write('\n');
+    throw error;
+  }
 }

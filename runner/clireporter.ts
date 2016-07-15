@@ -15,6 +15,7 @@ import * as _ from 'lodash';
 import * as stacky from 'stacky';
 import * as tty from 'tty';
 import * as util from 'util';
+
 import {BrowserDef, Stats} from './browserrunner';
 import * as config from './config';
 import * as context from './context';
