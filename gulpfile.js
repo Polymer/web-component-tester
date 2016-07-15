@@ -13,7 +13,7 @@ const depcheck = require('depcheck');
 const fs = require('fs');
 const glob = require('glob');
 const gulp = require('gulp');
-const mocha = require('gulp-mocha');
+const mocha = require('gulp-spawn-mocha');
 const jshint = require('gulp-jshint');
 const tslint = require('gulp-tslint');
 const ts = require('gulp-typescript');
@@ -72,10 +72,8 @@ gulp.task('clean', (done) => {
 });
 
 gulp.task('test', function(done) {
-  runSequence(['build:typescript', 'lint'], 'test:unit', done);
-});
-gulp.task('test:all', function(done) {
-  runSequence('test', 'test:integration', done);
+  runSequence(
+      ['build:typescript', 'lint'], 'test:unit', 'test:integration', done);
 });
 
 gulp.task('build-all', (done) => {
