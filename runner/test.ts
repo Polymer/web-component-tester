@@ -60,7 +60,7 @@ import * as steps from './steps';
  * @param {!Config|!Context} options The configuration or an already formed
  *     `Context` object.
  */
-export async function test(options: (Config|Context)): Promise<void> {
+export async function test(options: Config | Context): Promise<void> {
   const context = (options instanceof Context) ? options : new Context(options);
 
   // We assume that any options related to logging are passed in via the initial

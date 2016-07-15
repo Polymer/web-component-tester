@@ -147,8 +147,8 @@ describe('cli', () => {
       return cli.run({}, ['--webRunner', 'foo'], {write: () => {}}).then(
         () => fail('cli.run should have failed'),
         (error) => {
-          expect(error).to.include('webRunner');
-          expect(error).to.include('suites');
+          expect(error.message).to.include('webRunner');
+          expect(error.message).to.include('suites');
         });
     });
 

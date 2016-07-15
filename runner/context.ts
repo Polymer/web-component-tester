@@ -18,7 +18,7 @@ import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
 
-type Handler = (o: {}) => Promise<any>;
+type Handler = (o: any) => Promise<any>;
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -104,7 +104,8 @@ export class Context extends events.EventEmitter {
     this.emit('log:debug', 'hook:', name);
 
     const hooks = (this._hookHandlers[name] || []);
-    let boundHooks: ((cb: (err: any) => void) => (void|Promise<any>))[];
+    type BoundHook = (cb: (err: any) => void) => (void|Promise<any>);
+    let boundHooks: BoundHook[];
     if (arguments.length > 2) {
       done = arguments[arguments.length - 1];
       let argsEnd = arguments.length - 1;
@@ -122,31 +123,37 @@ export class Context extends events.EventEmitter {
     }
     done = done || ((e) => {});
 
-    // We execute the handlers _sequentially_. This may be slower, but it gives us
-    // a lighter cognitive load and more obvious logs.
-    let promise = Promise.resolve(null);
-    for (const hook of boundHooks) {
-      promise = promise.then(() => {
-        return new Promise((resolve, reject) => {
-          const maybePromise = hook((err) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-          if (maybePromise) {
-            // Once typescript ≥1.9 is out I think we'll be able to get rid of
-            // this local variable.
-            const promise = <Promise<any>> maybePromise;
-            promise.then(resolve, reject);
+    // A hook may return a promise or it may call a callback. We want to
+    // treat hooks as though they always return promises, so this converts.
+    const hookToPromise = (hook: BoundHook) => {
+      return new Promise((resolve, reject) => {
+        const maybePromise = hook((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
           }
         });
+        if (maybePromise && maybePromise.then) {
+          // Once typescript ≥1.9 is out I think we'll be able to get rid of
+          // this local variable.
+          const promise = <Promise<any>> maybePromise;
+          promise.then(resolve, reject);
+        }
       });
+    };
+
+    // We execute the handlers _sequentially_. This may be slower, but it gives us
+    // a lighter cognitive load and more obvious logs.
+    try {
+      for (const hook of boundHooks) {
+        await hookToPromise(hook);
+      }
+    } catch (e) {
+      done(e);
+      throw e;
     }
-    const resultPromise = promise;
-    promise.then(() => done(), (err) => done(err));
-    return resultPromise;
+    done();
   };
 
   /**

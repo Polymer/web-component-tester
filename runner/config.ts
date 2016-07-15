@@ -519,28 +519,28 @@ function expandDeprecated(context: Context) {
  */
 export async function validate(options: Config): Promise<void> {
   if (options['webRunner']) {
-    throw (
+    throw new Error(
         'webRunner is no longer a supported configuration option. ' +
         'Please list the files you wish to test as arguments, ' +
         'or as `suites` in a configuration object.');
   }
   if (options['component']) {
-    throw (
+    throw new Error(
         'component is no longer a supported configuration option. ' +
         'Please list the files you wish to test as arguments, ' +
         'or as `suites` in a configuration object.');
   }
 
   if (options.activeBrowsers.length === 0) {
-    throw 'No browsers configured to run';
+    throw new Error('No browsers configured to run');
   }
   if (options.suites.length === 0) {
     const root  = options.root || process.cwd();
     const globs = options.origSuites.join(', ');
-    throw 'No test suites were found matching your configuration\n' +
+    throw new Error('No test suites were found matching your configuration\n' +
           '\n' +
           '  WCT searched for .js and .html files matching: ' + globs + '\n' +
           '\n' +
-          '  Relative paths were resolved against: ' + root;
+          '  Relative paths were resolved against: ' + root);
   }
 }
