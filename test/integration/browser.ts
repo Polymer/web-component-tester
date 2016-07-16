@@ -25,6 +25,15 @@ const PROJECT_ROOT = path.resolve(__dirname, '../..');
 
 /** Assert that all browsers passed. */
 function assertPassed(context: TestContext) {
+  if (context.runError) {
+    console.error(
+        context.runError.stack || context.runError.message || context.runError);
+  }
+  if (context.testRunnerError) {
+    console.error(
+        context.testRunnerError.stack || context.testRunnerError.message ||
+        context.testRunnerError);
+  }
   expect(context.runError).to.not.be.ok;
   expect(context.testRunnerError).to.not.be.ok;
   expect(context.errors)
@@ -474,8 +483,11 @@ function runsIntegrationSuite(
         },
         // Uncomment to customize the browsers to test when debugging.
         // plugins: <any>{
-        //   local: {browsers: ['chrome', /*'safari'*/]},
-        // }
+        //   local: {
+        //     browsers: [/*'firefox'*/, 'chrome', /*'safari'*/],
+        //     skipSeleniumInstall: true
+        //   },
+        // },
       };
       const context = new Context(options);
 

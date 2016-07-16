@@ -45,7 +45,7 @@
     "init": "gulp init",
     "build": "gulp build",
     "test": "gulp test",
-    "prepublish": "gulp build-all",
+    "prepublish": "gulp prepublish",
     "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/"
   },
   "dependencies": {
