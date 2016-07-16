@@ -4,7 +4,7 @@ node_js:
   - "6"
 sudo: 'required'
 script:
-  - npm install # Also builds and runs tests.
+  - xvfb-run npm install # Also builds and runs tests.
 addons:
   firefox: '46.0'
   apt:
