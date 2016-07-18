@@ -380,6 +380,15 @@ function runsAllIntegrationSuites() {
 
   });
 
+  runsIntegrationSuite('setup-throws', function() {
+
+    it('fails', function() {
+      assertFailed(this);
+      assertStats(this, 0, 0, 0, 'complete');
+    });
+
+  });
+
 }
 
 // Environments
