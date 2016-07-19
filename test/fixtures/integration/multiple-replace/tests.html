@@ -170,10 +170,27 @@
     var setupCorrectly = true;
     var insideElement;
     var template;
+    var annotationsBefore;
+    var annotationsAfter;
 
     before(function() {
+      template = fixture('DomRepeatFixture');
+
+      Polymer.dom.flush();
+
+      annotationsBefore = JSON.stringify(template._notes);
+
+      var bindingElements = Polymer.dom(template.root)
+          .querySelectorAll('binding-element');
+
+      for(var i = 0; i < bindingElements.length; i++) {
+        var element = bindingElements[i];
+
+        annotationsBefore += JSON.stringify(element._notes);
+      }
+
       try {
-        replace('exception-element').with('dummy-element');
+        replace('div').with('span');
       } catch (err) {
         setupCorrectly = false;
       }
@@ -181,6 +198,17 @@
       template = fixture('DomRepeatFixture');
 
       Polymer.dom.flush();
+
+      annotationsAfter = JSON.stringify(template._notes);
+
+      bindingElements = Polymer.dom(template.root)
+          .querySelectorAll('binding-element');
+
+      for(var i = 0; i < bindingElements.length; i++) {
+        var element = bindingElements[i];
+
+        annotationsAfter += JSON.stringify(element._notes);
+      }
     });
 
     after(function () {
@@ -190,21 +218,7 @@
     it('dom-repeat bindings exist', function() {
       assert.isOk(setupCorrectly);
 
-      var numRepeated =
-          Polymer.dom(template.root).querySelectorAll('.repeated').length;
-
-      assert.equal(numRepeated, 5);
-
-      template.push('list', 6);
-
-      Polymer.dom.flush();
-
-      numRepeated =
-          Polymer.dom(template.root).querySelectorAll('.repeated').length;
-
-      assert.equal(numRepeated, 6);
-
-      assert
+      assert.equal(annotationsBefore, annotationsAfter);
     });
   });
   </script>

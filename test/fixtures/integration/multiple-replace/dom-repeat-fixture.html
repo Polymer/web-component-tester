@@ -1,9 +1,25 @@
 <link rel="import" href="exception-element.html">
 
+<dom-module id="binding-element">
+  <template>
+    <div>
+      <span>{{boundValue}}</span>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'binding-element',
+      properties: {
+        boundValue: String
+      }
+    });
+  </script>
+</dom-module>
+
 <dom-module id="dom-repeat-fixture">
   <template>
     <template is="dom-repeat" items="{{list}}">
-      <exception-element class="repeated"></exception-element>
+      <binding-element bound-value="[[item]]"></binding-element>
     </template>
   </template>
   <script>
