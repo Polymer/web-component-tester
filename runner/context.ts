@@ -18,7 +18,13 @@ import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
 
-type Handler = (o: any) => Promise<any>;
+type Handler =
+    ((...args: any[]) => Promise<any>) |
+    ((done: (err?: any) => void) => void) |
+    ((arg1: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void)
+;
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone

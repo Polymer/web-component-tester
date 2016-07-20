@@ -482,12 +482,12 @@ function runsIntegrationSuite(
           tags: ['org:Polymer', 'repo:web-component-tester'],
         },
         // Uncomment to customize the browsers to test when debugging.
-        // plugins: <any>{
-        //   local: {
+        plugins: <any>{
+          local: {
         //     browsers: [/*'firefox'*/, 'chrome', /*'safari'*/],
-        //     skipSeleniumInstall: true
-        //   },
-        // },
+            skipSeleniumInstall: true
+          },
+        },
       };
       const context = new Context(options);
 

@@ -11,7 +11,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-import {Context, ZeroArgCallbackHandler} from '../../runner/context';
+import {Context} from '../../runner/context';
 import {Plugin} from '../../runner/plugin';
 
 const expect = chai.expect;

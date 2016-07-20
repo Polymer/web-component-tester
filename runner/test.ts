@@ -63,18 +63,11 @@ import * as steps from './steps';
 export async function test(options: Config | Context): Promise<void> {
   const context = (options instanceof Context) ? options : new Context(options);
 
-  try {
-    await steps.setupOverrides(context);
-    await steps.loadPlugins(context);
-    await steps.configure(context);
-    await steps.prepare(context);
-    await steps.runTests(context);
-  } finally {
-    if (!context.options.skipCleanup) {
-      await new Promise((resolve) => cleankill.close(resolve));
-    }
+  // We assume that any options related to logging are passed in via the initial
+  // `options`.
+  if (context.options.output) {
+    new CliReporter(context, context.options.output, context.options);
   }
-};
 
   try {
     await steps.setupOverrides(context);
