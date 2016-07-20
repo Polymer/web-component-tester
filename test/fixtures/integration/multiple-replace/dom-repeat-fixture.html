@@ -1,0 +1,40 @@
+<link rel="import" href="exception-element.html">
+
+<dom-module id="binding-element">
+  <template>
+    <div>
+      <span>{{boundValue}}</span>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'binding-element',
+      properties: {
+        boundValue: String
+      }
+    });
+  </script>
+</dom-module>
+
+<dom-module id="dom-repeat-fixture">
+  <template>
+    <template is="dom-repeat" items="{{list}}">
+      <binding-element bound-value="[[item]]"></binding-element>
+    </template>
+  </template>
+  <script>
+    Polymer({
+      is: 'dom-repeat-fixture',
+
+      properties: {
+        list: {
+          type: Array
+        }
+      },
+
+      ready: function() {
+        this.list = [1,2,3,4,5];
+      }
+    });
+  </script>
+</dom-module>

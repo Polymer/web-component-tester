@@ -1505,87 +1505,55 @@ extendInterfaces('replace', function(context, teardown) {
           return;
         }
 
+        // Keep a reference to the original `Polymer.Base.instanceTemplate`
+        // implementation for later:
+        var originalInstanceTemplate = Polymer.Base.instanceTemplate;
+
         // Use Sinon to stub `Polymer.Base.instanceTemplate`:
         sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
-          // dom to be replaced. _content is used for templatize calls the
-          // content is used for every other occasion of template instantiation
-          var dom = template._content || template.content;
-          var templateNode = dom;
-          var instanceNode;
-          var instanceParent;
+          var origContent = template._content || template.content;
+          var templateClone = document.createElement('template');
+          var content = templateClone.content;
+          var inertDoc = content.ownerDocument;
 
-          // Traverses the tree. And places the new nodes (after replacing) into
-          // a new template.
-          while (templateNode) {
-            if (templateNode.nodeType === Node.ELEMENT_NODE) {
-              var originalTagName = templateNode.tagName.toLowerCase();
-              var currentTagName = originalTagName;
+          // imports node from inertDoc which holds inert nodes.
+          templateClone.content.appendChild(inertDoc.importNode(origContent, true));
 
-              // determines the name of the element in the new template
-              while (replacements.hasOwnProperty(currentTagName)) {
+          // optional arguments are not optional on IE.
+          var nodeIterator = document.createNodeIterator(content,
+              NodeFilter.SHOW_ELEMENT, null, true);
+          var node;
+
+          // Traverses the tree. A recently-replaced node will be put next, so
+          // if a node is replaced, it will be checked if it needs to be
+          // replaced again.
+          while (node = nodeIterator.nextNode()) {
+            var currentTagName = node.tagName.toLowerCase();
+
+            if (replacements.hasOwnProperty(currentTagName)) {
+              currentTagName = replacements[currentTagName];
+
+              // find the final tag name.
+              while (replacements[currentTagName]) {
                 currentTagName = replacements[currentTagName];
               }
 
-              // if we have not changed this element, copy it over
-              if (currentTagName === originalTagName) {
-                instanceNode = document.importNode(templateNode);
+              // Create a replacement:
+              var replacement = document.createElement(currentTagName);
 
-              } else {
-                // create the new node
-                instanceNode = document.createElement(currentTagName);
-
-                var numAttributes = templateNode.attributes.length;
-                // For all attributes in the original node..
-                for (var index=0; index<numAttributes; ++index) {
-                  // Set that attribute on the new node:
-                  instanceNode.setAttribute(templateNode.attributes[index].name,
-                      templateNode.attributes[index].value);
-                }
+              // For all attributes in the original node..
+              for (var index = 0; index < node.attributes.length; ++index) {
+                // Set that attribute on the replacement:
+                replacement.setAttribute(
+                  node.attributes[index].name, node.attributes[index].value);
               }
 
-            } else {
-              // if it is not an element node, simply import it.
-              instanceNode = document.importNode(templateNode);
-            }
-
-            if (instanceParent) {
-              // Polymer's shady dom implementation goes through the insertion
-              // points and checks their parents. If the parent of a content
-              // tag has been stamped already, then Polymer.dom has to be aware
-              // of this content tag's parent. Additionally,
-              // Polymer.dom.appendChild does not seem to actually append the
-              // content nodes into the document fragment, so node.appendChild
-              // must also be called to actually insert the node.
-              if (instanceNode.tagName == 'CONTENT') {
-                Polymer.dom(instanceParent).appendChild(instanceNode);
-              }
-
-              instanceParent.appendChild(instanceNode);
-            }
-
-            // traverse down the tree
-            if (templateNode.firstChild) {
-              instanceParent = instanceNode;
-              templateNode = templateNode.firstChild;
-
-            // traverse up
-            } else {
-              // traverse up until you can move laterally
-              while (!templateNode.nextSibling) {
-                // stop traversing up if we are at the top
-                if (templateNode.parentNode === dom) {
-                  return instanceParent;
-                } else {
-                  instanceParent = instanceParent.parentNode;
-                }
-
-                templateNode = templateNode.parentNode;
-              }
-
-              // traverse laterally
-              templateNode = templateNode.nextSibling;
+              // Replace the original node with the replacement node:
+              node.parentNode.replaceChild(replacement, node);
             }
           }
+
+          return originalInstanceTemplate.call(this, templateClone);
         });
 
         // After each test...

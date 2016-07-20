@@ -6,10 +6,10 @@
   <link rel="import" href="dom-if-element.html">
   <link rel="import" href="exception-fixture.html">
   <link rel="import" href="projection-element.html">
-  <link rel="import" href="../../../../../paper-input/paper-input.html">
+  <link rel="import" href="dom-repeat-fixture.html">
 </head>
 <body>
-  <test-fixture id="DomIfTemplate">
+  <test-fixture id="DomIfFixture">
     <template>
       <dom-if-element></dom-if-element>
     </template>
@@ -24,8 +24,14 @@
   <test-fixture id="ProjectionFixture">
     <template>
       <projection-element>
-        <div id="helloWorld">Hello World</div>
       </projection-element>
+    </template>
+  </test-fixture>
+
+  <test-fixture id="DomRepeatFixture">
+    <template>
+      <dom-repeat-fixture>
+      </dom-repeat-fixture>
     </template>
   </test-fixture>
 
@@ -39,9 +45,9 @@
 
     before(function() {
       replace('normal-element').with('changed-element-name');
-      replace('exception-element').with('changed-element-name');
+      replace('exception-element').with('original-template-failure');
 
-      domIfElement = fixture('DomIfTemplate');
+      domIfElement = fixture('DomIfFixture');
       domIfElement.isStamped = true;
 
       Polymer.dom.flush();
@@ -55,7 +61,7 @@
 
     it('dom-if test', function() {
       assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
-      assert.equal(insideElement.nodeName, 'CHANGED-ELEMENT-NAME');
+      assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-FAILURE');
     });
   });
 
@@ -102,26 +108,117 @@
 
   describe('testing projected element replacement', function() {
     var setupCorrectly = true;
-    var customElementChildren;
+    var pE3Content;
+    var pE4Content;
 
     before(function() {
       try {
-        replace('non-present-element').with('a-a');
+        replace('projection-element-2').with('projection-element-3');
       } catch (err) {
         setupCorrectly = false;
       }
 
       var template = fixture('ProjectionFixture');
-      customElementChildren = template.$.customElement.children;
+      pE3Content = template.$.replaced.$.content.innerText;
+      pE4Content =
+          Polymer.dom(template.$.projected).querySelector('#content').innerText;
+
     });
 
     after(function () {
 
     });
 
-    it('double replace test', function() {
+    it('projection replace test', function() {
       assert.isOk(setupCorrectly);
-      assert.equal(customElementChildren.length, 1);
+      assert.equal(pE3Content, 'three');
+      assert.equal(pE4Content, 'four');
+    });
+  });
+
+  describe('testing template reset after test', function() {
+    var setupCorrectly = true;
+    var insideElement;
+
+    before(function() {
+      try {
+        replace('exception-element').with('original-template-success');
+      } catch (err) {
+        setupCorrectly = false;
+      }
+
+      var template = fixture('DomIfFixture');
+      template.isStamped = true;
+
+      Polymer.dom.flush();
+
+      insideElement = template.$$('#inside');
+    });
+
+    after(function () {
+
+    });
+
+    it('checking template is reset after replace test', function() {
+      assert.isOk(setupCorrectly);
+
+      assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-SUCCESS');
+    });
+  });
+
+  describe('testing template bindings', function() {
+    var setupCorrectly = true;
+    var insideElement;
+    var template;
+    var annotationsBefore;
+    var annotationsAfter;
+
+    before(function() {
+      template = fixture('DomRepeatFixture');
+
+      Polymer.dom.flush();
+
+      annotationsBefore = JSON.stringify(template._notes);
+
+      var bindingElements = Polymer.dom(template.root)
+          .querySelectorAll('binding-element');
+
+      for(var i = 0; i < bindingElements.length; i++) {
+        var element = bindingElements[i];
+
+        annotationsBefore += JSON.stringify(element._notes);
+      }
+
+      try {
+        replace('div').with('span');
+      } catch (err) {
+        setupCorrectly = false;
+      }
+
+      template = fixture('DomRepeatFixture');
+
+      Polymer.dom.flush();
+
+      annotationsAfter = JSON.stringify(template._notes);
+
+      bindingElements = Polymer.dom(template.root)
+          .querySelectorAll('binding-element');
+
+      for(var i = 0; i < bindingElements.length; i++) {
+        var element = bindingElements[i];
+
+        annotationsAfter += JSON.stringify(element._notes);
+      }
+    });
+
+    after(function () {
+
+    });
+
+    it('dom-repeat bindings exist', function() {
+      assert.isOk(setupCorrectly);
+
+      assert.equal(annotationsBefore, annotationsAfter);
     });
   });
   </script>
