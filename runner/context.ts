@@ -140,26 +140,27 @@ export class Context extends events.EventEmitter {
             resolve();
           }
         });
-        if (maybePromise && maybePromise.then) {
-          // Once typescript ≥1.9 is out I think we'll be able to get rid of
-          // this local variable.
-          const promise = <Promise<any>> maybePromise;
-          promise.then(resolve, reject);
+        if (maybePromise) {
+          maybePromise.then(resolve, reject);
         }
       });
     };
 
-    // We execute the handlers _sequentially_. This may be slower, but it gives us
-    // a lighter cognitive load and more obvious logs.
+    // We execute the handlers _sequentially_. This may be slower, but it gives
+    // us a lighter cognitive load and more obvious logs.
+    await Promise.resolve();
     try {
       for (const hook of boundHooks) {
         await hookToPromise(hook);
       }
-    } catch (e) {
-      done(e);
-      throw e;
+    } catch (err) {
+      // TODO(rictic): stop silently swallowing the error here and just below.
+      //     Looks like we'll need to track down some error being thrown from
+      //     deep inside the express router.
+      try {done(err); } catch (_) {}
+      throw err;
     }
-    done();
+    try {done(); } catch (_) {}
   };
 
   /**
