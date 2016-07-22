@@ -1686,6 +1686,12 @@ CLISocket.prototype.observe = function observe(runner) {
     });
   }.bind(this));
 
+  runner.on('fail', function(test, err) {
+    if (err.uncaught || test.type == 'hook') {
+      runner.emit('test end', test);
+    }
+  }.bind(this));
+
   runner.on('childRunner start', function(childRunner) {
     this.emitEvent('sub-suite-start', childRunner.share);
   }.bind(this));
