@@ -10,8 +10,8 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as sinon from 'sinon';
 import * as path from 'path';
+import * as sinon from 'sinon';
 
 import * as context from '../../runner/context';
 import * as cli from '../../runner/cli';

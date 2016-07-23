@@ -18,8 +18,8 @@ describe('config', function() {
   describe('.merge', function() {
 
     it('avoids modifying the input', function() {
-      const one    = <any>{foo: 1};
-      const two    = <any>{foo: 2};
+      const one = <any>{foo: 1};
+      const two = <any>{foo: 2};
       const merged = <any>config.merge(one, two);
 
       expect(one.foo).to.eq(1);

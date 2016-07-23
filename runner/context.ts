@@ -148,7 +148,6 @@ export class Context extends events.EventEmitter {
 
     // We execute the handlers _sequentially_. This may be slower, but it gives
     // us a lighter cognitive load and more obvious logs.
-    await Promise.resolve();
     try {
       for (const hook of boundHooks) {
         await hookToPromise(hook);

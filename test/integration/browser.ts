@@ -7,9 +7,9 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as lodash from 'lodash';
-import * as cleankill from 'cleankill';
 import {expect} from 'chai';
+import * as cleankill from 'cleankill';
+import * as lodash from 'lodash';
 import * as path from 'path';
 import * as util from 'util';
 
