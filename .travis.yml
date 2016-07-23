@@ -1,21 +1,20 @@
 language: node_js
 node_js:
-  - "6"
-  - "5"
   - "4"
-sudo: false
+  - "6"
 before_script:
   - npm install
-  - npm run init
-  - npm run build
 script:
-  - npm run test
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.8
-env:
-  global:
-    - CXX=g++-4.8
+  - xvfb-run npm test
+
+# TODO(rictic): Uncomment the below when trying to get the integration tests
+# working on travis.
+# sudo: required
+# dist: trusty
+# addons:
+#   firefox: '46.0'
+#   apt:
+#     sources:
+#       - google-chrome
+#     packages:
+#       - google-chrome-stable

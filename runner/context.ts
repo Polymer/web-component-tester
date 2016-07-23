@@ -18,7 +18,13 @@ import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
 
-type Handler = (o: any) => Promise<any>;
+type Handler =
+    ((...args: any[]) => Promise<any>) |
+    ((done: (err?: any) => void) => void) |
+    ((arg1: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void)
+;
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -38,9 +44,9 @@ export class Context extends events.EventEmitter {
   _httpServer: http.Server;
   _testRunners: BrowserRunner[];
 
-  constructor(options: config.Config) {
+  constructor(options?: config.Config) {
     super();
-    options = options || <config.Config>{};
+    options = options || {};
 
     /**
      * The configuration for the current WCT run.
@@ -134,26 +140,26 @@ export class Context extends events.EventEmitter {
             resolve();
           }
         });
-        if (maybePromise && maybePromise.then) {
-          // Once typescript ≥1.9 is out I think we'll be able to get rid of
-          // this local variable.
-          const promise = <Promise<any>> maybePromise;
-          promise.then(resolve, reject);
+        if (maybePromise) {
+          maybePromise.then(resolve, reject);
         }
       });
     };
 
-    // We execute the handlers _sequentially_. This may be slower, but it gives us
-    // a lighter cognitive load and more obvious logs.
+    // We execute the handlers _sequentially_. This may be slower, but it gives
+    // us a lighter cognitive load and more obvious logs.
     try {
       for (const hook of boundHooks) {
         await hookToPromise(hook);
       }
-    } catch (e) {
-      done(e);
-      throw e;
+    } catch (err) {
+      // TODO(rictic): stop silently swallowing the error here and just below.
+      //     Looks like we'll need to track down some error being thrown from
+      //     deep inside the express router.
+      try {done(err); } catch (_) {}
+      throw err;
     }
-    done();
+    try {done(); } catch (_) {}
   };
 
   /**

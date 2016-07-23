@@ -45,7 +45,7 @@
     "init": "gulp init",
     "build": "gulp build",
     "test": "gulp test",
-    "prepublish": "gulp build-all",
+    "prepublish": "gulp prepublish",
     "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/"
   },
   "dependencies": {
@@ -84,7 +84,7 @@
     "grunt": "^0.4.5",
     "gulp": "^3.8.8",
     "gulp-jshint": "^2.0.0",
-    "gulp-mocha": "^2.0.0",
+    "gulp-spawn-mocha": "^2.2.2",
     "gulp-tslint": "^5.0.0",
     "gulp-typescript": "^2.13.4",
     "gulp-typings": "^2.0.0",

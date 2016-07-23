@@ -13,8 +13,8 @@ const depcheck = require('depcheck');
 const fs = require('fs');
 const glob = require('glob');
 const gulp = require('gulp');
-const mocha = require('gulp-mocha');
 const jshint = require('gulp-jshint');
+const mocha = require('gulp-spawn-mocha');
 const tslint = require('gulp-tslint');
 const ts = require('gulp-typescript');
 const typings = require('gulp-typings');
@@ -72,14 +72,17 @@ gulp.task('clean', (done) => {
 });
 
 gulp.task('test', function(done) {
-  runSequence(['build:typescript', 'lint'], 'test:unit', done);
-});
-gulp.task('test:all', function(done) {
-  runSequence('test', 'test:integration', done);
+  runSequence(
+      ['build:typescript', 'lint'],
+      'test:unit',
+      // TODO(rictic): uncomment the below when we've got integration tests
+      // working on travis.
+      // 'test:integration',
+      done);
 });
 
 gulp.task('build-all', (done) => {
-  runSequence('clean', 'init', 'lint', 'build', 'test', done);
+  runSequence('clean', 'init', 'lint', 'build', done);
 });
 
 gulp.task('build', ['build:typescript', 'build:browser']);
@@ -126,7 +129,7 @@ gulp.task('test:integration', function() {
 });
 
 gulp.task('tslint', () =>
-  gulp.src(['runner/*.ts', 'custom_typings/*.d.ts'])
+  gulp.src(['runner/**/*.ts', 'test/**/*.ts', 'custom_typings/*.d.ts'])
     .pipe(tslint({
       configuration: 'tslint.json',
     }))
@@ -183,3 +186,7 @@ function commonDepCheck(options) {
     });
   });
 }
+
+gulp.task('prepublish', function(done) {
+  runSequence('build-all', 'test', done);
+});
