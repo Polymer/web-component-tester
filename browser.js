@@ -1411,17 +1411,22 @@ function applyExtensions() {
   });
 }
 
+var fixtureTeardownAttached = false;
+
 extendInterfaces('fixture', function(context, teardown) {
 
   // Return context.fixture if it is already a thing, for backwards
   // compatibility with `test-fixture-mocha.js`:
   return context.fixture || function fixture(fixtureId, model) {
 
-    // Automatically register a teardown callback that will restore the
-    // test-fixture:
-    teardown(function() {
-      document.getElementById(fixtureId).restore();
-    });
+    if (!fixtureTeardownAttached) {
+      // Automatically register a teardown callback that will restore the
+      // test-fixture:
+      teardown(function() {
+        fixtureTeardownAttached = true;
+        document.getElementById(fixtureId).restore();
+      });
+    }
 
     // Find the test-fixture with the provided ID and create it, returning
     // the results:
@@ -1475,6 +1480,7 @@ extendInterfaces('stub', function(context, teardown) {
 
 // replacement map stores what should be
 var replacements = {};
+var replaceTeardownAttached = false;
 
 /**
  * replace
@@ -1556,16 +1562,19 @@ extendInterfaces('replace', function(context, teardown) {
           return originalInstanceTemplate.call(this, templateClone);
         });
 
-        // After each test...
-        teardown(function() {
-          // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
-          if (Polymer.Base.instanceTemplate.isSinonProxy) {
-            Polymer.Base.instanceTemplate.restore();
-          }
+        if (!replaceTeardownAttached) {
+          // After each test...
+          teardown(function() {
+            replaceTeardownAttached = true;
+            // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
+            if (Polymer.Base.instanceTemplate.isSinonProxy) {
+              Polymer.Base.instanceTemplate.restore();
+            }
 
-          // Empty the replacement map
-          replacements = {};
-        });
+            // Empty the replacement map
+            replacements = {};
+          });
+        }
       }
     };
   };
