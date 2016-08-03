@@ -2,6 +2,7 @@ import { extendInterfaces } from './extend';
 
 // replacement map stores what should be
 var replacements = {};
+var replaceTeardownAttached = false;
 
 /**
  * replace
@@ -83,16 +84,19 @@ extendInterfaces('replace', function(context, teardown) {
           return originalInstanceTemplate.call(this, templateClone);
         });
 
-        // After each test...
-        teardown(function() {
-          // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
-          if (Polymer.Base.instanceTemplate.isSinonProxy) {
-            Polymer.Base.instanceTemplate.restore();
-          }
+        if (!replaceTeardownAttached) {
+          // After each test...
+          teardown(function() {
+            replaceTeardownAttached = true;
+            // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
+            if (Polymer.Base.instanceTemplate.isSinonProxy) {
+              Polymer.Base.instanceTemplate.restore();
+            }
 
-          // Empty the replacement map
-          replacements = {};
-        });
+            // Empty the replacement map
+            replacements = {};
+          });
+        }
       }
     };
   };
