@@ -2,13 +2,14 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="../../../../browser.js"></script>
+    <script src="../../../browser.js"></script>
   </head>
   <body>
     <script>
       WCT.loadSuites([
-        'bdd.html',
-        'tdd.html',
+        'tests.html?foo=bar',
+        'tests.js?fizz=buzz',
+        'tests.js?fizz=buzz&foo=bar',
       ]);
     </script>
   </body>

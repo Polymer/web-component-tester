@@ -1,0 +1,15 @@
+{
+  "passing": 3,
+  "pending": 0,
+  "failing": 0,
+  "status": "complete",
+  "tests": {
+    "test/tests.html": {
+      "preserves query strings": {"state": "passing"}
+    },
+    "test/": {
+      "preserves query strings (?fizz=buzz&foo=bar)": {"state": "passing"},
+      "preserves query strings (?fizz=buzz)": {"state": "passing"}
+    }
+  }
+}

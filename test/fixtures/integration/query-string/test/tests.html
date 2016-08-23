@@ -6,7 +6,9 @@
   </head>
   <body>
     <script>
-      WCT.loadSuites(['one.js', 'two.js', 'three.js']);
+      test('preserves query strings', function() {
+        expect(window.location.search).to.eq('?foo=bar');
+      });
     </script>
   </body>
 </html>

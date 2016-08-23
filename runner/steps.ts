@@ -140,7 +140,8 @@ function runBrowsers(context: Context) {
     browser.id = id;
     _.defaults(browser, options.browserOptions);
 
-    const runner = new BrowserRunner(context, browser, options);
+    const runner = new BrowserRunner(
+        context, browser, options, options.webserver.webRunnerPath);
     promises.push(runner.donePromise.then(
         () => {
           context.emit('log:debug', browser, 'BrowserRunner complete');

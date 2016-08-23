@@ -49,15 +49,23 @@ export class BrowserRunner {
   options: Config;
   donePromise: Promise<void>;
 
+  /**
+   * The path to the initial page to load in the browser when starting tests.
+   */
+  path: string;
+
   private _resolve: () => void;
   private _reject: (err: any) => void;
 
-  constructor(emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config) {
+  constructor(
+      emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config,
+      path: string) {
     this.emitter = emitter;
     this.def = def;
     this.options = options;
     this.timeout = options.testTimeout;
     this.emitter = emitter;
+    this.path = path;
 
     this.stats = {status: 'initializing'};
     this.browser = wd.remote(this.def.url);
@@ -153,7 +161,7 @@ export class BrowserRunner {
   startTest() {
     const webserver = this.options.webserver;
     const host = `http://${webserver.hostname}:${webserver.port}`;
-    const path = this.options.webserver.webRunnerPath;
+    const path = this.path;
     const extra = (path.indexOf('?') === -1 ? '?' : '&') +
         `cli_browser_id=${this.def.id}`;
     this.browser.get(host + path + extra, (error) => {

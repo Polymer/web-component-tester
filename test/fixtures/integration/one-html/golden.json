@@ -1,0 +1,12 @@
+{
+  "passing": 2,
+  "pending": 0,
+  "failing": 0,
+  "status": "complete",
+  "tests": {
+    "test/tests.html": {
+      "suite": {"nested test": {"state": "passing"}},
+      "test": {"state": "passing"}
+    }
+  }
+}
