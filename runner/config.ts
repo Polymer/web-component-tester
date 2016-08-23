@@ -1,11 +1,15 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 
 import * as findup from 'findup-sync';
@@ -28,7 +32,7 @@ const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 const WCT_ROOT = path.resolve(__dirname, '..');
 
-type Browser = string | {browserName: string, platform: string};
+type Browser = string|{browserName: string, platform: string};
 
 export interface Config {
   suites?: string[];
@@ -41,15 +45,10 @@ export interface Config {
   testTimeout?: number;
   persistent?: boolean;
   extraScripts?: string[];
-  clientOptions?: {
-    root?: string;
-    verbose?: boolean;
-  };
+  clientOptions?: {root?: string; verbose?: boolean};
   activeBrowsers?: BrowserDef[];
-  browserOptions?: {
-    [name: string]: Capabilities
-  };
-  plugins?: (string|boolean)[]|{[key: string]: ({disabled: boolean}|boolean)};
+  browserOptions?: {[name: string]: Capabilities};
+  plugins?: (string|boolean)[]|{[key: string]: ({disabled: boolean} | boolean)};
   registerHooks?: (wct: Context) => void;
   enforceJsonConf?: boolean;
   webserver?: {
@@ -74,7 +73,7 @@ export interface Config {
   remote?: {};
   origSuites?: string[];
   /** A deprecated option */
-  browsers?: Browser[] | Browser;
+  browsers?: Browser[]|Browser;
   skipCleanup?: boolean;
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
@@ -84,27 +83,27 @@ export interface Config {
 export function defaults(): Config {
   return {
     // The test suites that should be run.
-    suites:      ['test/'],
+    suites: ['test/'],
     // Output stream to write log messages to.
-    output:      process.stdout,
+    output: process.stdout,
     // Whether the output stream should be treated as a TTY (and be given more
     // complex output formatting). Defaults to `output.isTTY`.
-    ttyOutput:   undefined,
+    ttyOutput: undefined,
     // Spew all sorts of debugging messages.
-    verbose:     false,
+    verbose: false,
     // Silence output
-    quiet:     false,
+    quiet: false,
     // Display test results in expanded form. Verbose implies expanded.
-    expanded:    false,
+    expanded: false,
     // The on-disk path where tests & static files should be served from. Paths
     // (such as `suites`) are evaluated relative to this.
     //
     // Defaults to the project directory.
-    root:        undefined,
+    root: undefined,
     // Idle timeout for tests.
     testTimeout: 90 * 1000,
     // Whether the browser should be closed after the tests run.
-    persistent:  false,
+    persistent: false,
     // Additional .js files to include in *generated* test indexes.
     extraScripts: [],
     // Configuration options passed to the browser client.
@@ -171,15 +170,20 @@ export function defaults(): Config {
       pathMappings: serveWaterfall.mappings.WEB_COMPONENT.concat([
         // We also expose built in WCT dependencies, but with lower priority
         // than the project's components.
-        {'/components/sinonjs':
-            path.join(WCT_ROOT, 'node_modules', 'sinon', 'pkg')},
-        {'/components/lodash/lodash.js':
-            path.join(WCT_ROOT, 'node_modules', 'lodash', 'index.js')},
+        {
+          '/components/sinonjs':
+              path.join(WCT_ROOT, 'node_modules', 'sinon', 'pkg')
+        },
+        {
+          '/components/lodash/lodash.js':
+              path.join(WCT_ROOT, 'node_modules', 'lodash', 'index.js')
+        },
         {'/components': path.join(WCT_ROOT, 'node_modules')},
         // npm 3 paths
-        {'/components/sinonjs': path.join(WCT_ROOT, '..', 'sinon', 'pkg')},
-        {'/components/lodash/lodash.js':
-            path.join(WCT_ROOT, '..', 'lodash', 'index.js')},
+        {'/components/sinonjs': path.join(WCT_ROOT, '..', 'sinon', 'pkg')}, {
+          '/components/lodash/lodash.js':
+              path.join(WCT_ROOT, '..', 'lodash', 'index.js')
+        },
         {'/components/': path.join(WCT_ROOT, '..')}
       ]),
       // The URL prefix that serves contents from the project root.
@@ -196,54 +200,54 @@ export function defaults(): Config {
  */
 const ARG_CONFIG = {
   persistent: {
-    help:      'Keep browsers active (refresh to rerun tests).',
-    abbr:      'p',
-    flag:      true,
+    help: 'Keep browsers active (refresh to rerun tests).',
+    abbr: 'p',
+    flag: true,
   },
   root: {
-    help:      'The root directory to serve tests from.',
+    help: 'The root directory to serve tests from.',
     transform: path.resolve,
   },
   plugins: {
-    help:      'Plugins that should be loaded.',
-    metavar:   'NAME',
-    full:      'plugin',
-    list:       true,
+    help: 'Plugins that should be loaded.',
+    metavar: 'NAME',
+    full: 'plugin',
+    list: true,
   },
   skipPlugins: {
-    help:      'Configured plugins that should _not_ be loaded.',
-    metavar:   'NAME',
-    full:      'skip-plugin',
-    list:      true,
+    help: 'Configured plugins that should _not_ be loaded.',
+    metavar: 'NAME',
+    full: 'skip-plugin',
+    list: true,
   },
   expanded: {
-    help:      'Log a status line for each test run.',
-    flag:      true,
+    help: 'Log a status line for each test run.',
+    flag: true,
   },
   verbose: {
-    help:      'Turn on debugging output.',
-    flag:      true,
+    help: 'Turn on debugging output.',
+    flag: true,
   },
   quiet: {
-    help:      'Silence output.',
-    flag:      true,
+    help: 'Silence output.',
+    flag: true,
   },
   simpleOutput: {
-    help:      'Avoid fancy terminal output.',
-    flag:      true,
+    help: 'Avoid fancy terminal output.',
+    flag: true,
   },
   skipUpdateCheck: {
-    help:      'Don\'t check for updates.',
-    full:      'skip-update-check',
-    flag:      true,
+    help: 'Don\'t check for updates.',
+    full: 'skip-update-check',
+    flag: true,
   },
   'webserver.port': {
-    help:      'A port to use for the test webserver.',
-    full:      'webserver-port',
+    help: 'A port to use for the test webserver.',
+    full: 'webserver-port',
   },
   'webserver.hostname': {
-    full:      'webserver-hostname',
-    hidden:    true,
+    full: 'webserver-hostname',
+    hidden: true,
   },
   // Managed by supports-color; let's not freak out if we see it.
   color: {flag: true},
@@ -251,14 +255,14 @@ const ARG_CONFIG = {
   // Deprecated
 
   browsers: {
-    abbr:   'b',
+    abbr: 'b',
     hidden: true,
-    list:   true,
+    list: true,
   },
   remote: {
-    abbr:   'r',
+    abbr: 'r',
     hidden: true,
-    flag:   true,
+    flag: true,
   },
 };
 
@@ -284,11 +288,11 @@ interface PreparsedArgs {
 export function fromDisk(jsonOnly?: boolean, root?: string): Config {
   const matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
 
-  const globalFile  = path.join(HOME_DIR, matcher);
+  const globalFile = path.join(HOME_DIR, matcher);
   const projectFile = findup(matcher, {nocase: true, cwd: root});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
-  const paths   = _.union([globalFile, projectFile]);
+  const paths = _.union([globalFile, projectFile]);
   const configs = _.filter(paths, fs.existsSync).map(loadProjectFile);
   const options: Config = merge.apply(null, configs);
 
@@ -349,7 +353,7 @@ export function preparseArgs(args: string[]): PreparsedArgs {
  * @param {!Array<string>} args The args to parse.
  */
 export async function parseArgs(
-      context: Context, args: string[]): Promise<void> {
+    context: Context, args: string[]): Promise<void> {
   const parser = nomnom();
   parser.script('wct');
   parser.options(<any>ARG_CONFIG);
@@ -364,9 +368,12 @@ export async function parseArgs(
   context.options = merge(context.options, options);
 }
 
-function _configurePluginOptions(parser: NomnomInternal.Parser, plugin: Plugin) {
+function _configurePluginOptions(
+    parser: NomnomInternal.Parser, plugin: Plugin) {
   /** HACK(rictic): this looks wrong, cliConfig shouldn't have a length. */
-  if (!plugin.cliConfig || (<any>plugin.cliConfig).length === 0) return;
+  if (!plugin.cliConfig || (<any>plugin.cliConfig).length === 0) {
+    return;
+  }
 
   // Group options per plugin. It'd be nice to also have a header, but that ends
   // up shifting all the options over.
@@ -385,7 +392,7 @@ function _expandOptionPaths(options: {[key: string]: any}): any {
   const result = {};
   _.each(options, function(value, key) {
     let target = result;
-    const parts  = key.split('.');
+    const parts = key.split('.');
     for (const part of parts.slice(0, -1)) {
       target = target[part] = target[part] || {};
     }
@@ -466,22 +473,24 @@ function expandDeprecated(context: Context) {
   // We collect configuration fragments to be merged into the options object.
   const fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
 
-  let browsers: Browser[] =
-      <any>(_.isArray(options.browsers) ? options.browsers : [options.browsers]);
+  let browsers: Browser[] = <any>(
+      _.isArray(options.browsers) ? options.browsers : [options.browsers]);
   browsers = <any>_.compact(<any>browsers);
   if (browsers.length > 0) {
-    context.emit('log:warn',
-                 'The --browsers flag/option is deprecated. Please use ' +
-                 '--local and --sauce instead, or configure via plugins.' +
-                 '[local|sauce].browsers.');
+    context.emit(
+        'log:warn', 'The --browsers flag/option is deprecated. Please use ' +
+            '--local and --sauce instead, or configure via plugins.' +
+            '[local|sauce].browsers.');
     const fragment = {plugins: {sauce: {}, local: {}}};
     fragments.push(fragment);
 
     for (const browser of browsers) {
-      const name   = (<any>browser).browserName || browser;
-      const plugin =
-          (<any>browser).platform || name.indexOf('/') !== -1 ? 'sauce' : 'local';
-      fragment.plugins[plugin].browsers = fragment.plugins[plugin].browsers || [];
+      const name = (<any>browser).browserName || browser;
+      const plugin = (<any>browser).platform || name.indexOf('/') !== -1 ?
+          'sauce' :
+          'local';
+      fragment.plugins[plugin].browsers =
+          fragment.plugins[plugin].browsers || [];
       fragment.plugins[plugin].browsers.push(browser);
     }
 
@@ -489,9 +498,9 @@ function expandDeprecated(context: Context) {
   }
 
   if (options.sauce) {
-    context.emit('log:warn',
-                 'The sauce configuration key is deprecated. Please use ' +
-                 'plugins.sauce instead.');
+    context.emit(
+        'log:warn', 'The sauce configuration key is deprecated. Please use ' +
+            'plugins.sauce instead.');
     fragments.push({
       plugins: {sauce: options.sauce},
     });
@@ -499,9 +508,9 @@ function expandDeprecated(context: Context) {
   }
 
   if (options.remote) {
-    context.emit('log:warn',
-                 'The --remote flag is deprecated. Please use ' +
-                 '--sauce default instead.');
+    context.emit(
+        'log:warn', 'The --remote flag is deprecated. Please use ' +
+            '--sauce default instead.');
     fragments.push({
       plugins: {sauce: {browsers: ['default']}},
     });
@@ -535,12 +544,13 @@ export async function validate(options: Config): Promise<void> {
     throw new Error('No browsers configured to run');
   }
   if (options.suites.length === 0) {
-    const root  = options.root || process.cwd();
+    const root = options.root || process.cwd();
     const globs = options.origSuites.join(', ');
-    throw new Error('No test suites were found matching your configuration\n' +
-          '\n' +
-          '  WCT searched for .js and .html files matching: ' + globs + '\n' +
-          '\n' +
-          '  Relative paths were resolved against: ' + root);
+    throw new Error(
+        'No test suites were found matching your configuration\n' +
+        '\n' +
+        '  WCT searched for .js and .html files matching: ' + globs + '\n' +
+        '\n' +
+        '  Relative paths were resolved against: ' + root);
   }
 }

@@ -1,0 +1,10 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+  "clang-format.style": "file",
+  "clang-format.formatOnSave": true,
+  "files.exclude": {
+    "runner/*.js": true,
+    "test/unit/*.js": true,
+    "test/integration/*.js": true
+  },
+}

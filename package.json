@@ -46,7 +46,8 @@
     "build": "gulp build",
     "test": "gulp test",
     "prepublish": "gulp prepublish",
-    "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/"
+    "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/",
+    "format": "find runner test | grep '\\.js$\\|\\.ts$' | xargs ./node_modules/.bin/clang-format --style=file -i"
   },
   "dependencies": {
     "accessibility-developer-tools": "^2.10.0",
@@ -80,6 +81,7 @@
     "wct-sauce": "^1.8.2"
   },
   "devDependencies": {
+    "clang-format": "^1.0.43",
     "depcheck": "^0.6.3",
     "grunt": "^0.4.5",
     "gulp": "^3.8.8",

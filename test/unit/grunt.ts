@@ -1,15 +1,19 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
-import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as grunt from 'grunt';
+import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
 
@@ -22,9 +26,9 @@ const expect = chai.expect;
 chai.use(require('sinon-chai'));
 
 const LOCAL_BROWSERS = {
-  aurora:  {browserName: 'aurora',  version: '1'},
-  canary:  {browserName: 'canary',  version: '2'},
-  chrome:  {browserName: 'chrome',  version: '3'},
+  aurora: {browserName: 'aurora', version: '1'},
+  canary: {browserName: 'canary', version: '2'},
+  chrome: {browserName: 'chrome', version: '3'},
   firefox: {browserName: 'firefox', version: '4'},
 };
 
@@ -33,7 +37,7 @@ describe('grunt', function() {
   // Sinon doesn't stub process.env very well.
   let origEnv: any, origArgv: any;
   beforeEach(function() {
-    origEnv  = _.clone(process.env);
+    origEnv = _.clone(process.env);
     origArgv = process.argv;
   });
   afterEach(function() {
@@ -73,12 +77,13 @@ describe('grunt', function() {
     let sandbox: sinon.SinonSandbox;
     beforeEach(function() {
       sandbox = sinon.sandbox.create();
-      sandbox.stub(steps, 'prepare',  async (context: Context) => undefined);
+      sandbox.stub(steps, 'prepare', async(context: Context) => undefined);
 
-      sandbox.stub(wctLocalBrowsers, 'detect', async () => LOCAL_BROWSERS);
+      sandbox.stub(wctLocalBrowsers, 'detect', async() => LOCAL_BROWSERS);
       sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));
 
-      process.chdir(path.resolve(__dirname, '../fixtures/integration/standard'));
+      process.chdir(
+          path.resolve(__dirname, '../fixtures/integration/standard'));
     });
 
     afterEach(function() {
@@ -88,10 +93,10 @@ describe('grunt', function() {
     describe('with a passing suite', function() {
 
       beforeEach(function() {
-        sandbox.stub(steps, 'runTests', async () => undefined);
+        sandbox.stub(steps, 'runTests', async() => undefined);
       });
 
-      it('passes configuration through', async () => {
+      it('passes configuration through', async() => {
         const call = await runTask('passthrough');
         expect(call.args[0].options).to.include({foo: 1, bar: 'asdf'});
       });
@@ -99,14 +104,16 @@ describe('grunt', function() {
 
     describe('with a failing suite', function() {
       beforeEach(function() {
-        sandbox.stub(steps, 'runTests', async () => { throw 'failures'; });
+        sandbox.stub(steps, 'runTests', async() => {
+          throw 'failures';
+        });
       });
 
-      it('passes errors out', async () => {
+      it('passes errors out', async() => {
         try {
           await runTask('passthrough');
         } catch (error) {
-          return; // All's well!
+          return;  // All's well!
         }
         throw new Error('Expected runTask to fail!');
       });

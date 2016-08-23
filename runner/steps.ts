@@ -1,11 +1,15 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 import * as http from 'http';
 import * as _ from 'lodash';
@@ -89,8 +93,9 @@ export async function runTests(context: Context): Promise<void> {
     socket.on('client-event', function(data: ClientMessage<any>) {
       const runner = runners[data.browserId];
       if (!runner) {
-        throw new Error(`Unable to find browser runner for ` +
-                        `browser with id: ${data.browserId}`);
+        throw new Error(
+            `Unable to find browser runner for ` +
+            `browser with id: ${data.browserId}`);
       }
       runner.onEvent(data.event, data.data);
     });
@@ -136,24 +141,27 @@ function runBrowsers(context: Context) {
     _.defaults(browser, options.browserOptions);
 
     const runner = new BrowserRunner(context, browser, options);
-    promises.push(
-      runner.donePromise.then(() => {
-        context.emit('log:debug', browser, 'BrowserRunner complete');
-      }, (error) => {
-        context.emit('log:debug', browser, 'BrowserRunner complete');
-        errors.push(error);
-      })
-    );
+    promises.push(runner.donePromise.then(
+        () => {
+          context.emit('log:debug', browser, 'BrowserRunner complete');
+        },
+        (error) => {
+          context.emit('log:debug', browser, 'BrowserRunner complete');
+          errors.push(error);
+        }));
     return runner;
   });
 
-  return {runners, completionPromise: (async function() {
-    await Promise.all(promises);
-    const error = errors.length > 0 ? _.union(errors).join(', ') : null;
-    context.emit('run-end', error);
-    // TODO(nevir): Better rationalize run-end and hook.
-    await context.emitHook('cleanup');
+  return {
+    runners,
+    completionPromise: (async function() {
+      await Promise.all(promises);
+      const error = errors.length > 0 ? _.union(errors).join(', ') : null;
+      context.emit('run-end', error);
+      // TODO(nevir): Better rationalize run-end and hook.
+      await context.emitHook('cleanup');
 
-    return error;
-  }())};
+      return error;
+    }())
+  };
 }

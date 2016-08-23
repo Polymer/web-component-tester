@@ -1,11 +1,15 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 
 import * as fs from 'fs';
@@ -18,29 +22,27 @@ import * as promisify from 'promisify-node';
  * Expands a series of path patterns (globs, files, directories) into a set of
  * files that represent those patterns.
  *
- * @param {string} baseDir The directory that patterns are relative to.
- * @param {!Array<string>} patterns The patterns to expand.
- * @returns {Promise<Array<string>} The expanded paths.
+ * @param baseDir The directory that patterns are relative to.
+ * @param patterns The patterns to expand.
+ * @returns The expanded paths.
  */
 export async function expand(
-      baseDir: string, patterns: string[]): Promise<string[]> {
+    baseDir: string, patterns: string[]): Promise<string[]> {
   return expandDirectories(baseDir, await unglob(baseDir, patterns));
 }
 
 /**
  * Expands any glob expressions in `patterns`.
- *
- * @param {string} baseDir
- * @param {!Array<string>} patterns
  */
-async function unglob(baseDir: string, patterns: string[]): Promise<string[]> {
-  const strs: string[][] = [];
-  const pGlob: any = promisify(glob);
-  for (const pattern of patterns) {
-    strs.push(await pGlob(String(pattern), {cwd: baseDir, root: baseDir}));
-  }
-  return  _.union(_.flatten(strs));
-}
+async function unglob(baseDir: string, patterns: string[]):
+    Promise<string[]> {
+      const strs: string[][] = [];
+      const pGlob: any = promisify(glob);
+      for (const pattern of patterns) {
+        strs.push(await pGlob(String(pattern), {cwd: baseDir, root: baseDir}));
+      }
+      return _.union(_.flatten(strs));
+    }
 
 /**
  * Expands any directories in `patterns`, following logic similar to a web
@@ -49,12 +51,8 @@ async function unglob(baseDir: string, patterns: string[]): Promise<string[]> {
  * If a pattern resolves to a directory, that directory is expanded. If the
  * directory contains an `index.html`, it is expanded to that. Otheriwse, the
  * it expands into its children (recursively).
- *
- * @param {string} baseDir
- * @param {!Array<string>} patterns
  */
-async function expandDirectories(
-      baseDir: string, paths: string[]): Promise<string[]> {
+async function expandDirectories(baseDir: string, paths: string[]) {
   const listsOfPaths: string[][] = [];
   for (const aPath of paths) {
     listsOfPaths.push(await expandDirectory(baseDir, aPath));
@@ -65,7 +63,7 @@ async function expandDirectories(
 }
 
 async function expandDirectory(
-      baseDir: string, aPath: string): Promise<string[]> {
+    baseDir: string, aPath: string): Promise<string[]> {
   const stat = await promisify(fs.stat)(path.resolve(baseDir, aPath));
   if (!stat.isDirectory()) {
     return [aPath];

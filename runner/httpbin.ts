@@ -1,11 +1,15 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 
 'use strict';
@@ -22,8 +26,7 @@ import {findPort} from './port-scanner';
 export const httpbin = express.Router();
 
 function capWords(s: string) {
-  return s
-      .split('-')
+  return s.split('-')
       .map((word) => word[0].toUpperCase() + word.slice(1))
       .join('-');
 }
@@ -44,9 +47,9 @@ function formatRequest(req: express.Request) {
   const contentType =
       (headers['Content-Type'] || '').toLowerCase().split(';')[0];
   const field = {
-      'application/json': 'json',
-      'application/x-www-form-urlencoded': 'form',
-      'multipart/form-data': 'form'
+    'application/json': 'json',
+    'application/x-www-form-urlencoded': 'form',
+    'multipart/form-data': 'form'
   }[contentType];
   if (field) {
     formatted[field] = req.body;
@@ -57,19 +60,19 @@ function formatRequest(req: express.Request) {
 httpbin.use(bodyParser.urlencoded({extended: false}));
 httpbin.use(bodyParser.json());
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({storage: storage});
 httpbin.use(upload.any());
 httpbin.use(bodyParser.text());
 httpbin.use(bodyParser.text({type: 'html'}));
 httpbin.use(bodyParser.text({type: 'xml'}));
 
-httpbin.get('/delay/:seconds', function (req, res) {
+httpbin.get('/delay/:seconds', function(req, res) {
   setTimeout(function() {
     res.json(formatRequest(req));
   }, (req.params.seconds || 0) * 1000);
 });
 
-httpbin.post('/post', function (req, res) {
+httpbin.post('/post', function(req, res) {
   res.json(formatRequest(req));
 });
 
@@ -96,6 +99,7 @@ async function main() {
 
   console.log('Server running at http://localhost:' + port + '/httpbin/');
 }
+
 if (require.main === module) {
   main().catch((err) => {
     console.error(err);

@@ -1,11 +1,15 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 
 import * as events from 'events';
@@ -19,12 +23,10 @@ import * as config from './config';
 import {Plugin} from './plugin';
 
 type Handler =
-    ((...args: any[]) => Promise<any>) |
-    ((done: (err?: any) => void) => void) |
-    ((arg1: any, done: (err?: any) => void) => void) |
-    ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
-    ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void)
-;
+    ((...args: any[]) => Promise<any>)|((done: (err?: any) => void) => void)|
+    ((arg1: any, done: (err?: any) => void) => void)|
+    ((arg1: any, arg2: any, done: (err?: any) => void) => void)|
+    ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void);
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -51,14 +53,12 @@ export class Context extends events.EventEmitter {
     /**
      * The configuration for the current WCT run.
      *
-     * We guarantee that this object is never replaced (e.g. you are free to hold
-     * a reference to it, and make changes to it).
+     * We guarantee that this object is never replaced (e.g. you are free to
+     * hold a reference to it, and make changes to it).
      */
     this.options = config.merge(
-      config.defaults(),
-      config.fromDisk(options.enforceJsonConf, options.root),
-      options
-    );
+        config.defaults(),
+        config.fromDisk(options.enforceJsonConf, options.root), options);
   }
 
   // Hooks
@@ -67,8 +67,8 @@ export class Context extends events.EventEmitter {
   // interested parties can use to inject behavior.
 
   /**
-   * Registers a handler for a particular hook. Hooks are typically configured to
-   * run _before_ a particular behavior.
+   * Registers a handler for a particular hook. Hooks are typically configured
+   * to run _before_ a particular behavior.
    */
   hook(name: string, handler: Handler) {
     this._hookHandlers[name] = this._hookHandlers[name] || [];
@@ -99,8 +99,9 @@ export class Context extends events.EventEmitter {
    * @param {function(*)} done
    * @return {!Context}
    */
-  emitHook(name: 'prepare:webserver',
-           app: Express.Application, done: (err?: any) => void): Promise<void>;
+  emitHook(
+      name: 'prepare:webserver', app: Express.Application,
+      done: (err?: any) => void): Promise<void>;
   emitHook(name: 'configure', done: (err?: any) => void): Promise<void>;
   emitHook(name: 'prepare', done: (err?: any) => void): Promise<void>;
   emitHook(name: 'cleanup', done: (err?: any) => void): Promise<void>;
@@ -156,10 +157,16 @@ export class Context extends events.EventEmitter {
       // TODO(rictic): stop silently swallowing the error here and just below.
       //     Looks like we'll need to track down some error being thrown from
       //     deep inside the express router.
-      try {done(err); } catch (_) {}
+      try {
+        done(err);
+      } catch (_) {
+      }
       throw err;
     }
-    try {done(); } catch (_) {}
+    try {
+      done();
+    } catch (_) {
+    }
   };
 
   /**
@@ -194,7 +201,6 @@ export class Context extends events.EventEmitter {
   };
 
   static Context = Context;
-
 }
 
 module.exports = Context;
