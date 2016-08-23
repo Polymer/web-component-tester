@@ -1,18 +1,22 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 
 import * as _ from 'lodash';
 import * as path from 'path';
 
-import {Context} from './context';
 import {Config} from './config';
+import {Context} from './context';
 
 // Plugin module names can be prefixed by the following:
 const PREFIXES = [
@@ -20,8 +24,7 @@ const PREFIXES = [
   'wct-',
 ];
 
-interface Metadata {
-};
+interface Metadata {}
 
 /**
  * A WCT plugin. This constructor is private. Plugins can be retrieved via
@@ -116,7 +119,9 @@ function _tryLoadPluginPackage(packageName: string) {
   }
 
   // Plugins must have a (truthy) wct-plugin field.
-  if (!packageInfo['wct-plugin']) return null;
+  if (!packageInfo['wct-plugin']) {
+    return null;
+  }
   // Allow {"wct-plugin": true} as a shorthand.
   const metadata =
       _.isObject(packageInfo['wct-plugin']) ? packageInfo['wct-plugin'] : {};

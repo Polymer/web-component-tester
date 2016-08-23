@@ -1,22 +1,26 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 import * as chai from 'chai';
 import * as gulp from 'gulp';
 import * as path from 'path';
 import * as sinon from 'sinon';
 
-import {Context} from '../../runner/context';
 import {Config} from '../../runner/config';
+import {Context} from '../../runner/context';
+import * as wctGulp from '../../runner/gulp';
 import {Plugin} from '../../runner/plugin';
 import * as steps from '../../runner/steps';
-import * as wctGulp from '../../runner/gulp';
 
 const expect = chai.expect;
 chai.use(require('sinon-chai'));
@@ -34,8 +38,8 @@ describe('gulp', function() {
     wctGulp.init(orch);
 
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare',  async (context: Context) => undefined);
-    sandbox.stub(steps, 'runTests', async (context: Context) => {
+    sandbox.stub(steps, 'prepare', async(context: Context) => undefined);
+    sandbox.stub(steps, 'runTests', async(context: Context) => {
       options = context.options;
     });
 
@@ -57,13 +61,13 @@ describe('gulp', function() {
     });
   }
 
-  it('honors wcf.conf.js', async () => {
+  it('honors wcf.conf.js', async() => {
     process.chdir(path.join(FIXTURES, 'conf'));
     await runGulpTask('wct:sauce');
     expect(options.plugins['sauce'].username).to.eq('abc123');
   });
 
-  it('prefers wcf.conf.json', async () => {
+  it('prefers wcf.conf.json', async() => {
     process.chdir(path.join(FIXTURES, 'conf', 'json'));
     await runGulpTask('wct:sauce');
     expect(options.plugins['sauce'].username).to.eq('jsonconf');
@@ -71,7 +75,7 @@ describe('gulp', function() {
 
   describe('wct:local', function() {
 
-    it('kicks off local tests', async () => {
+    it('kicks off local tests', async() => {
       await runGulpTask('wct:local');
       expect(steps.runTests).to.have.been.calledOnce;
       expect(pluginsCalled).to.have.members(['local']);
@@ -81,7 +85,7 @@ describe('gulp', function() {
 
   describe('wct:sauce', function() {
 
-    it('kicks off sauce tests', async () => {
+    it('kicks off sauce tests', async() => {
       await runGulpTask('wct:sauce');
       expect(steps.runTests).to.have.been.calledOnce;
       expect(pluginsCalled).to.have.members(['sauce']);

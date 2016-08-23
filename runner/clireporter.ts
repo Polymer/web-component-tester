@@ -1,11 +1,15 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 
 import * as chalk from 'chalk';
@@ -47,7 +51,7 @@ const STATE_COLORS: {[state: string]: Formatter} = {
   pending: chalk.yellow,
   failing: chalk.red,
   unknown: chalk.red,
-  error:   chalk.red,
+  error: chalk.red,
 };
 
 
@@ -56,7 +60,7 @@ const SHORT = {
 };
 
 const BROWSER_PAD = 24;
-const STATUS_PAD  = 38;
+const STATUS_PAD = 38;
 
 
 export interface TestEndData {
@@ -82,8 +86,8 @@ export class CliReporter {
   private linesWritten: number;
 
   constructor(
-        emitter: events.EventEmitter, stream: NodeJS.WritableStream,
-        options: config.Config) {
+      emitter: events.EventEmitter, stream: NodeJS.WritableStream,
+      options: config.Config) {
     this.emitter = emitter;
     this.stream = stream;
     this.options = options;
@@ -95,8 +99,8 @@ export class CliReporter {
     emitter.on('log:error', this.log.bind(this, chalk.red));
 
     if (!this.options.quiet) {
-      emitter.on('log:warn',  this.log.bind(this, chalk.yellow));
-      emitter.on('log:info',  this.log.bind(this));
+      emitter.on('log:warn', this.log.bind(this, chalk.yellow));
+      emitter.on('log:info', this.log.bind(this));
       if (this.options.verbose) {
         emitter.on('log:debug', this.log.bind(this, chalk.dim));
       }
@@ -108,34 +112,36 @@ export class CliReporter {
       this.updateStatus();
     });
 
-    emitter.on('browser-start', (browser: BrowserDef,
-                                 data: {url: string}, stats: Stats) => {
-      this.browserStats[browser.id] = stats;
-      this.log(browser, 'Beginning tests via', chalk.magenta(data.url));
-      this.updateStatus();
-    });
+    emitter.on(
+        'browser-start',
+        (browser: BrowserDef, data: {url: string}, stats: Stats) => {
+          this.browserStats[browser.id] = stats;
+          this.log(browser, 'Beginning tests via', chalk.magenta(data.url));
+          this.updateStatus();
+        });
 
-    emitter.on('test-end', (browser: BrowserDef,
-                            data: TestEndData, stats: Stats) => {
-      this.browserStats[browser.id] = stats;
-      if (data.state === 'failing') {
-        this.writeTestError(browser, data);
-      } else if (this.options.expanded || this.options.verbose) {
-        this.log(browser, this.stateIcon(data.state), this.prettyTest(data));
-      }
+    emitter.on(
+        'test-end', (browser: BrowserDef, data: TestEndData, stats: Stats) => {
+          this.browserStats[browser.id] = stats;
+          if (data.state === 'failing') {
+            this.writeTestError(browser, data);
+          } else if (this.options.expanded || this.options.verbose) {
+            this.log(
+                browser, this.stateIcon(data.state), this.prettyTest(data));
+          }
 
-      this.updateStatus();
-    });
+          this.updateStatus();
+        });
 
-    emitter.on('browser-end', (browser: BrowserDef,
-                               error: any, stats: Stats) => {
-      this.browserStats[browser.id] = stats;
-      if (error) {
-        this.log(chalk.red, browser, 'Tests failed:', error);
-      } else {
-        this.log(chalk.green, browser, 'Tests passed');
-      }
-    });
+    emitter.on(
+        'browser-end', (browser: BrowserDef, error: any, stats: Stats) => {
+          this.browserStats[browser.id] = stats;
+          if (error) {
+            this.log(chalk.red, browser, 'Tests failed:', error);
+          } else {
+            this.log(chalk.green, browser, 'Tests passed');
+          }
+        });
 
     emitter.on('run-end', (error: any) => {
       if (error) {
@@ -152,7 +158,9 @@ export class CliReporter {
 
   // Specialized Reporting
   updateStatus(force?: boolean) {
-    if (!this.options.ttyOutput && !force) return;
+    if (!this.options.ttyOutput && !force) {
+      return;
+    }
     // EXTREME TERMINOLOGY FAIL, but here's a glossary:
     //
     // stats:  An object containing test stats (total, passing, failing, etc).
@@ -161,14 +169,20 @@ export class CliReporter {
     const statuses = Object.keys(this.browserStats).map((browserIdStr) => {
       const browserId = parseInt(browserIdStr, 10);
       const pretty = this.prettyBrowsers[browserId];
-      const stats  = this.browserStats[browserId];
+      const stats = this.browserStats[browserId];
 
       let status = '';
       const counts = [stats.passing, stats.pending, stats.failing];
       if (counts[0] > 0 || counts[1] > 0 || counts[2] > 0) {
-        if (counts[0] > 0) counts[0] = <any>chalk.green(counts[0].toString());
-        if (counts[1] > 0) counts[1] = <any>chalk.yellow(counts[1].toString());
-        if (counts[2] > 0) counts[2] = <any>chalk.red(counts[2].toString());
+        if (counts[0] > 0) {
+          counts[0] = <any>chalk.green(counts[0].toString());
+        }
+        if (counts[1] > 0) {
+          counts[1] = <any>chalk.yellow(counts[1].toString());
+        }
+        if (counts[2] > 0) {
+          counts[2] = <any>chalk.red(counts[2].toString());
+        }
         status = counts.join('/');
       }
       if (stats.status === 'error') {
@@ -247,21 +261,26 @@ export class CliReporter {
       values[0] = padRight(this.prettyBrowser(values[0]), BROWSER_PAD);
     }
 
-    let line = _.toArray(values).map(function(value) {
-      return _.isString(value) ? value : util.inspect(value);
-    }).join(' ');
+    let line =
+        _.toArray(values)
+            .map((value) => _.isString(value) ? value : util.inspect(value))
+            .join(' ');
     line = line.replace(/[\s\n\r]+$/, '');
-    if (format) line = format(line);
+    if (format) {
+      line = format(line);
+    }
     this.write(line);
   };
 
   writeWrapped(blocks: string[], separator: string) {
-    if (blocks.length === 0) return;
+    if (blocks.length === 0) {
+      return;
+    }
 
     const lines = [''];
     const width = (<tty.WriteStream>this.stream).columns || 0;
     for (const block of blocks) {
-      const line     = lines[lines.length - 1];
+      const line = lines[lines.length - 1];
       const combined = line + separator + block;
       if (line === '') {
         lines[lines.length - 1] = block;
@@ -298,14 +317,16 @@ export class CliReporter {
   };
 
   flush() {
-    if (!this.options.ttyOutput) return;
+    if (!this.options.ttyOutput) {
+      return;
+    }
     // Add an extra line for padding.
     for (let i = 0; i <= this.linesWritten; i++) {
       this.stream.write('\n');
     }
   };
 
-  //HACK
+  // HACK
   static CliReporter = CliReporter;
 }
 // Yeah, yeah.

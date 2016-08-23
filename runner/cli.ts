@@ -1,11 +1,15 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
  * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
  */
 
 import * as chalk from 'chalk';
@@ -18,23 +22,23 @@ import {Context} from './context';
 import {Plugin} from './plugin';
 import {test} from './test';
 
-const PACKAGE_INFO   = require('../package.json');
-const noopNotifier = {notify: () => {}};
+const PACKAGE_INFO = require('../package.json');
+const noopNotifier = {
+  notify: () => {}
+};
 let updateNotifier = noopNotifier;
 
 (function() {
   try {
-    updateNotifier = require('update-notifier')({
-      pkg: PACKAGE_INFO
-    });
+    updateNotifier = require('update-notifier')({pkg: PACKAGE_INFO});
   } catch (error) {
     // S'ok if we don't have update-notifier. It's optional.
   }
 })();
 
 export async function run(
-      env: any, args: string[], output: NodeJS.WritableStream): Promise<void> {
-  await wrap(output, _run(args, output));
+    env: any, args: string[], output: NodeJS.WritableStream): Promise<void> {
+  await wrapResult(output, _run(args, output));
 }
 
 async function _run(args: string[], output: NodeJS.WritableStream) {
@@ -42,8 +46,8 @@ async function _run(args: string[], output: NodeJS.WritableStream) {
   // configuration so that we know which plugins to load, etc:
   let options = <config.Config>config.preparseArgs(args);
   // Depends on values from the initial merge:
-  options = config.merge(options, <config.Config> {
-    output:    output,
+  options = config.merge(options, <config.Config>{
+    output: output,
     ttyOutput: !process.env.CI && output['isTTY'] && !options.simpleOutput,
   });
   const context = new Context(options);
@@ -61,16 +65,16 @@ async function _run(args: string[], output: NodeJS.WritableStream) {
 // wct-sauce. The trouble is that we also want WCT's configuration lookup logic,
 // and that's not (yet) cleanly exposed.
 export async function runSauceTunnel(
-      env: any, args: string[], output: NodeJS.WritableStream): Promise<void> {
-  await wrap(output, _runSauceTunnel(args, output));
-}
+    env: any, args: string[], output: NodeJS.WritableStream):
+    Promise<void> {
+      await wrapResult(output, _runSauceTunnel(args, output));
+    }
 
 async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   const diskOptions = config.fromDisk();
   const baseOptions: config.Config =
-      (diskOptions.plugins && diskOptions.plugins['sauce'])
-      || diskOptions.sauce
-      || {};
+      (diskOptions.plugins && diskOptions.plugins['sauce']) ||
+      diskOptions.sauce || {};
 
   const plugin = await Plugin.get('sauce');
   const parser = require('nomnom');
@@ -85,10 +89,8 @@ async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   new CliReporter(emitter, output, <config.Config>{});
   const tunnelId = await new Promise<string>((resolve, reject) => {
     wctSauce.startTunnel(
-        options, emitter,
-        (error: any, tunnelId: string) =>
-            error ? reject(error) : resolve(tunnelId)
-    );
+        options, emitter, (error: any, tunnelId: string) =>
+                              error ? reject(error) : resolve(tunnelId));
   });
 
   output.write('\n');
@@ -100,7 +102,8 @@ async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
 }
 
-async function wrap(output: NodeJS.WritableStream, promise: Promise<void>) {
+async function
+wrapResult(output: NodeJS.WritableStream, promise: Promise<void>) {
   let error: any;
   try {
     await promise;
