@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../../browser.js"></script>
+  </head>
+  <body>
+    <script src="../../foo-element/foo-element.js"></script>
+    <script>
+      test('inline passing test', function() {
+        assert.equal(window.fooElementLoaded, 'yes');
+      });
+    </script>
+  </body>
+</html>

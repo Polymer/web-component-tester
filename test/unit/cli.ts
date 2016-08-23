@@ -25,7 +25,7 @@ const expect = chai.expect;
 
 const wctLocalBrowsers = require('wct-local/lib/browsers');
 
-const FIXTURES = path.resolve(__dirname, '../fixtures/integration');
+const FIXTURES = path.resolve(__dirname, '../fixtures/cli');
 
 const LOCAL_BROWSERS = {
   aurora: {browserName: 'aurora', version: '1'},
@@ -202,7 +202,7 @@ describe('cli', () => {
 
         const options = (await expectRun([])).options;
         expect(options.suites).to.have.members([
-          'integration/conf/test/foo.js',
+          'cli/conf/test/foo.js',
         ]);
         expect(options.root).to.equal(path.dirname(FIXTURES));
         expect(options.webserver.webRunnerPath)
