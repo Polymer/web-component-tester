@@ -26,10 +26,247 @@ import {Context} from '../../runner/context';
 import * as steps from '../../runner/steps';
 import {test} from '../../runner/test';
 
+interface TestErrorExpectation {
+  [fileName: string]: {
+    // The test name mapped to the error
+    [testName: string]: [string, string];
+  };
+}
 
+type Golden = VariantsGolden|VariantResultGolden;
+
+function isVariantsGolden(golden: Golden): golden is VariantsGolden {
+  return golden['variants'];
+}
+
+interface VariantsGolden {
+  variants: {[variantName: string]: VariantResultGolden};
+}
+
+
+interface VariantResultGolden {
+  passing: number;
+  pending: number;
+  failing: number;
+  status: string;
+  tests: TestNode;
+  errors: TestErrorExpectation;
+}
+type TestNode = {
+  state?: CompletedState; [subTestName: string]: TestNode | CompletedState;
+}
+
+class TestResults {
+  variants: {[variantName: string]: VariantResults} = {};
+  runError: any = null;
+  testRunnerError: any = null;
+
+  getVariantResults(variantName: string): VariantResults {
+    this.variants[variantName] =
+        this.variants[variantName] || new VariantResults();
+    return this.variants[variantName];
+  }
+}
+
+class VariantResults {
+  tests: TestNode = {};
+  testErrors: TestNode = {};
+  stats: {[browserName: string]: Stats} = {};
+  errors: {[browserName: string]: any} = {};
+}
+
+// Tests
+
+/** Describes all suites, mixed into the environments being run. */
+function runsAllIntegrationSuites() {
+  // TODO(rictic): `missing` should fail.
+
+  for (const fn of fs.readdirSync(integrationDir)) {
+    runIntegrationSuiteForDir(fn);
+  }
+}
+
+
+function runIntegrationSuiteForDir(dirname: string) {
+  runsIntegrationSuite(dirname, function(testResults) {
+    const golden: Golden = JSON.parse(fs.readFileSync(
+        path.join(integrationDir, dirname, 'golden.json'), 'utf-8'));
+
+    let variantsGolden: VariantsGolden;
+    if (isVariantsGolden(golden)) {
+      variantsGolden = golden;
+    } else {
+      variantsGolden = {variants: {'': golden}};
+    }
+
+    it('ran the correct variants', function() {
+      expect(Object.keys(testResults.variants).sort())
+          .to.deep.equal(Object.keys(variantsGolden.variants).sort());
+    });
+    for (const variantName in variantsGolden.variants) {
+      const run = () => assertVariantResultsConformToGolden(
+          variantsGolden.variants[variantName],
+          testResults.getVariantResults(variantName));
+      if (variantName !== '') {
+        describe(`the variant with bower_components-${variantName}`, run);
+      } else {
+        run();
+      }
+    }
+  });
+}
+
+
+
+const integrationDir = path.resolve(__dirname, '../fixtures/integration');
+/**
+ * Creates a mocha context that runs an integration suite (once), and hangs onto
+ * the output for tests.
+ */
+function runsIntegrationSuite(
+    suiteName: string, contextFunction: (context: TestResults) => void) {
+  describe(suiteName, function() {
+    const log: string[] = [];
+    const testResults = new TestResults();
+
+    before(async function() {
+      this.timeout(120 * 1000);
+
+      const suiteRoot = path.join(integrationDir, suiteName);
+      const options: config.Config = {
+        output: <any>{write: log.push.bind(log)},
+        ttyOutput: false,
+        skipCleanup: true,  // We do it manually at the end of all suites.
+        root: suiteRoot,
+        // TODO(nevir): Migrate
+        // remote:      currentEnv.remote,
+        // Roughly matches CI Runner statuses.
+        browserOptions: <any>{
+          name: 'web-component-tester',
+          tags: ['org:Polymer', 'repo:web-component-tester'],
+        },
+        // Uncomment to customize the browsers to test when debugging.
+        plugins: <any>{
+          local: {
+            browsers: ['firefox', 'chrome', /*'safari'*/],
+            skipSeleniumInstall: true
+          },
+        },
+      };
+      const context = new Context(options);
+
+      const addEventHandler = (name: string, handler: Function) => {
+        context.on(name, function() {
+          try {
+            handler.apply(null, arguments);
+          } catch (error) {
+            console.error(`Error inside ${name} handler in integration tests:`);
+            console.error(error.stack);
+          }
+        });
+      };
+
+      addEventHandler(
+          'test-end',
+          (browserDef: BrowserDef, data: TestEndData, stats: Stats) => {
+            const variantResults =
+                testResults.getVariantResults(browserDef.variant || '');
+            const browserName = getBrowserName(browserDef);
+            variantResults.stats[browserName] = stats;
+
+            let testNode = <TestNode>(
+                variantResults.tests[browserName] =
+                    variantResults.tests[browserName] || {});
+            let errorNode = variantResults.testErrors[browserName] =
+                variantResults.testErrors[browserName] || {};
+            for (let i = 0; i < data.test.length; i++) {
+              const name = data.test[i];
+              testNode = <TestNode>(testNode[name] = testNode[name] || {});
+              if (i < data.test.length - 1) {
+                errorNode = errorNode[name] = errorNode[name] || {};
+              } else if (data.error) {
+                errorNode[name] = data.error;
+              }
+            }
+            testNode.state = data.state;
+          });
+
+      addEventHandler(
+          'browser-end', (browserDef: BrowserDef, error: any, stats: Stats) => {
+            const variantResults =
+                testResults.getVariantResults(browserDef.variant || '');
+            const browserName = getBrowserName(browserDef);
+            variantResults.stats[browserName] = stats;
+            variantResults.errors[browserName] = error || null;
+          });
+
+      addEventHandler('run-end', (error: any) => {
+        testResults.runError = error;
+      });
+
+      // Don't fail the integration suite on test errors.
+      try {
+        await test(context);
+      } catch (error) {
+        testResults.testRunnerError = error.message;
+      }
+    });
+
+    afterEach(function() {
+      if (this.currentTest.state === 'failed') {
+        process.stderr.write(
+            `\n    Output of wct for integration suite named \`${suiteName}\`` +
+            `\n` +
+            `    ======================================================\n\n`);
+        for (const line of log.join('').split('\n')) {
+          process.stderr.write(`    ${line}\n`);
+        }
+        process.stderr.write(
+            `\n    ======================================================\n\n`);
+      }
+    });
+
+    contextFunction(testResults);
+  });
+}
+
+if (!process.env.SKIP_LOCAL_BROWSERS) {
+  describe('Local Browsers', function() {
+    runsAllIntegrationSuites();
+  });
+}
+
+// TODO(nevir): Re-enable support for integration in sauce.
+/*
+if (!process.env.SKIP_REMOTE_BROWSERS) {
+  describe('Remote Browsers', function() {
+    // Boot up a sauce tunnel w/ whatever the environment gives us.
+
+    before(function(done) {
+      this.timeout(300 * 1000);
+      currentEnv.remote = true;
+
+      const emitter = new Context();
+      new CliReporter(emitter, process.stdout, {verbose: true});
+
+      steps.ensureSauceTunnel(baseOptions, emitter, function(error, tunnelId) {
+        baseOptions.sauce.tunnelId = tunnelId;
+        done(error);
+      });
+    });
+
+    runsAllIntegrationSuites();
+  });
+
+  after(function(done) {
+    this.timeout(120 * 1000);
+    cleankill.close(done);
+  });
+}
+*/
 
 /** Assert that all browsers passed. */
-function assertPassed(context: TestContext) {
+function assertPassed(context: TestResults) {
   if (context.runError) {
     console.error(
         context.runError.stack || context.runError.message || context.runError);
@@ -41,36 +278,32 @@ function assertPassed(context: TestContext) {
   }
   expect(context.runError).to.not.be.ok;
   expect(context.testRunnerError).to.not.be.ok;
-  expect(context.errors).to.deep.equal(repeatBrowsers(context, null));
+  // expect(context.errors).to.deep.equal(repeatBrowsers(context, null));
 }
 
-function assertFailed(context: TestContext, expectedError: string) {
-  expect(context.runError).to.eq(expectedError);
-  expect(context.testRunnerError).to.be.eq(expectedError);
+function assertFailed(context: VariantResults, expectedError: string) {
+  // expect(context.runError).to.eq(expectedError);
+  // expect(context.testRunnerError).to.be.eq(expectedError);
   expect(context.errors).to.deep.equal(repeatBrowsers(context, expectedError));
 }
 
 /** Asserts that all browsers match the given stats. */
 function assertStats(
-    context: TestContext, passing: number, pending: number, failing: number,
+    context: VariantResults, passing: number, pending: number, failing: number,
     status: 'complete') {
   const expected: Stats = {passing, pending, failing, status};
   expect(context.stats).to.deep.equal(repeatBrowsers(context, expected));
 }
 
 /** Asserts that all browsers match the given test layout. */
-function assertTests(context: TestContext, expected: TestNode) {
+function assertTests(context: VariantResults, expected: TestNode) {
   expect(context.tests).to.deep.equal(repeatBrowsers(context, expected));
 }
 
-type TestErrorExpectation =
-    {
-      [fileName: string]: {[testName: string]: [string, string]}
-    }
 
 /** Asserts that all browsers emitted the given errors. */
-function
-assertTestErrors(context: TestContext, expected: TestErrorExpectation) {
+function assertTestErrors(
+    context: VariantResults, expected: TestErrorExpectation) {
   lodash.each(context.testErrors, function(actual, browser) {
     expect(Object.keys(expected))
         .to.have.members(
@@ -110,68 +343,43 @@ assertTestErrors(context: TestContext, expected: TestErrorExpectation) {
   });
 }
 
-// Tests
-
-/** Describes all suites, mixed into the environments being run. */
-function
-runsAllIntegrationSuites() {
-
-  // TODO(rictic): `missing` should fail.
-
-  for (const fn of fs.readdirSync(integrationDir)) {
-    runIntegrationSuiteForDir(fn);
-  }
-}
-
-interface Golden {
-  passing: number;
-  pending: number;
-  failing: number;
-  status: string;
-  tests: TestNode;
-  errors: TestErrorExpectation;
-}
-
-function runIntegrationSuiteForDir(dirname: string) {
-  runsIntegrationSuite(dirname, function(testContext) {
-    const golden: Golden = JSON.parse(fs.readFileSync(
-        path.join(integrationDir, dirname, 'golden.json'), 'utf-8'));
-
-    it('records the correct result stats', function() {
-      try {
-        assertStats(
-            testContext, golden.passing, golden.pending, golden.failing,
-            <any>golden.status);
-      } catch (_) {
-        // mocha reports twice the failures because reasons
-        // https://github.com/mochajs/mocha/issues/2083
-        assertStats(
-            testContext, golden.passing, golden.pending, golden.failing * 2,
-            <any>golden.status);
-      }
-    });
-
-    if (golden.passing + golden.pending + golden.failing === 0 &&
-        !golden.tests) {
-      return;
+function assertVariantResultsConformToGolden(
+    golden: VariantResultGolden, variantResults: VariantResults) {
+  // const variantResults = testResults.getVariantResults('');
+  it('records the correct result stats', function() {
+    try {
+      assertStats(
+          variantResults, golden.passing, golden.pending, golden.failing,
+          <any>golden.status);
+    } catch (_) {
+      // mocha reports twice the failures because reasons
+      // https://github.com/mochajs/mocha/issues/2083
+      assertStats(
+          variantResults, golden.passing, golden.pending, golden.failing * 2,
+          <any>golden.status);
     }
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, golden.tests);
-    });
-
-    if (!golden.errors) {
-      return;
-    }
-    it('emits well formed errors', function() {
-      assertTestErrors(testContext, golden.errors);
-    });
   });
+
+  if (golden.passing + golden.pending + golden.failing === 0 && !golden.tests) {
+    return;
+  }
+
+  it('runs the correct tests', function() {
+    assertTests(variantResults, golden.tests);
+  });
+
+  if (golden.errors || golden.failing > 0) {
+    it('emits well formed errors', function() {
+      assertTestErrors(variantResults, golden.errors);
+    });
+  }
+  // it('passed the test', function() {
+  //   assertPassed(testResults);
+  // });
 }
 
-function browserName(browser: BrowserDef) {
+function getBrowserName(browser: BrowserDef) {
   const parts: string[] = [];
-
   if (browser.platform && !browser.deviceName) {
     parts.push(browser.platform);
   }
@@ -182,177 +390,16 @@ function browserName(browser: BrowserDef) {
     parts.push(browser.version);
   }
 
+  if (browser.variant) {
+    parts.push(`[${browser.variant}]`);
+  }
+
   return parts.join(' ');
 }
 
 function repeatBrowsers<T>(
-    context: TestContext, data: T): {[browserId: string]: T} {
+    context: VariantResults, data: T): {[browserId: string]: T} {
   expect(Object.keys(context.stats).length)
       .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
   return lodash.mapValues(context.stats, () => data);
 }
-
-type TestNode = {
-  state?: CompletedState; [subTestName: string]: TestNode | CompletedState;
-}
-
-class TestContext {
-  tests: TestNode = {};
-  testErrors: TestNode = {};
-  stats: {[browserName: string]: Stats} = {};
-  errors: {[browserName: string]: any} = {};
-  runError: any = null;
-  testRunnerError: any = null;
-}
-
-const integrationDir = path.resolve(__dirname, '../fixtures/integration');
-/**
- * Creates a mocha context that runs an integration suite (once), and hangs onto
- * the output for tests.
- */
-function runsIntegrationSuite(
-    suiteName: string, contextFunction: (context: TestContext) => void) {
-  describe(suiteName, function() {
-    const log: string[] = [];
-    const testContext = new TestContext();
-
-    before(async function() {
-      this.timeout(120 * 1000);
-
-      const suiteRoot = path.join(integrationDir, suiteName);
-      const options: config.Config = {
-        output: <any>{write: log.push.bind(log)},
-        ttyOutput: false,
-        skipCleanup: true,  // We do it manually at the end of all suites.
-        root: suiteRoot,
-        // TODO(nevir): Migrate
-        // remote:      currentEnv.remote,
-        // Roughly matches CI Runner statuses.
-        browserOptions: <any>{
-          name: 'web-component-tester',
-          tags: ['org:Polymer', 'repo:web-component-tester'],
-        },
-        // Uncomment to customize the browsers to test when debugging.
-        plugins: <any>{
-          local: {
-            // browsers: [/*'firefox'*/, 'chrome', /*'safari'*/],
-            skipSeleniumInstall: true
-          },
-        },
-      };
-      const context = new Context(options);
-
-      const addEventHandler = (name: string, handler: Function) => {
-        context.on(name, function() {
-          try {
-            handler.apply(null, arguments);
-          } catch (error) {
-            console.error(`Error inside ${name} handler in integration tests:`);
-            console.error(error.stack);
-          }
-        });
-      };
-
-      addEventHandler(
-          'test-end',
-          (browserInfo: BrowserDef, data: TestEndData, stats: Stats) => {
-            const browser = browserName(browserInfo);
-            testContext.stats[browser] = stats;
-
-            let testNode = <TestNode>(
-                testContext.tests[browser] = testContext.tests[browser] || {});
-            let errorNode = testContext.testErrors[browser] =
-                testContext.testErrors[browser] || {};
-            for (let i = 0; i < data.test.length; i++) {
-              const name = data.test[i];
-              testNode = <TestNode>(testNode[name] = testNode[name] || {});
-              if (i < data.test.length - 1) {
-                errorNode = errorNode[name] = errorNode[name] || {};
-              } else if (data.error) {
-                errorNode[name] = data.error;
-              }
-            }
-            testNode.state = data.state;
-          });
-
-      addEventHandler(
-          'browser-end',
-          (browserInfo: BrowserDef, error: any, stats: Stats) => {
-            const browser = browserName(browserInfo);
-            testContext.stats[browser] = stats;
-            testContext.errors[browser] = error || null;
-          });
-
-      addEventHandler('run-end', (error: any) => {
-        testContext.runError = error;
-      });
-
-      // Don't fail the integration suite on test errors.
-      try {
-        await test(context);
-      } catch (error) {
-        testContext.testRunnerError = error.message;
-      }
-    });
-
-    afterEach(function() {
-      if (this.currentTest.state === 'failed') {
-        process.stderr.write(
-            `\n    Output of wct for integration suite named \`${suiteName}\`` +
-            `\n` +
-            `    ======================================================\n\n`);
-        for (const line of log.join('').split('\n')) {
-          process.stderr.write(`    ${line}\n`);
-        }
-        process.stderr.write(
-            `\n    ======================================================\n\n`);
-      }
-    });
-
-    contextFunction(testContext);
-  });
-}
-
-
-
-// Hacktastic state used in environments & helpers.
-const currentEnv = {};
-
-if (!process.env.SKIP_LOCAL_BROWSERS) {
-  describe('Local Browsers', function() {
-    before(function() {
-      currentEnv['remote'] = false;
-    });
-
-    runsAllIntegrationSuites();
-  });
-}
-
-// TODO(nevir): Re-enable support for integration in sauce.
-/*
-if (!process.env.SKIP_REMOTE_BROWSERS) {
-  describe('Remote Browsers', function() {
-    // Boot up a sauce tunnel w/ whatever the environment gives us.
-
-    before(function(done) {
-      this.timeout(300 * 1000);
-      currentEnv.remote = true;
-
-      const emitter = new Context();
-      new CliReporter(emitter, process.stdout, {verbose: true});
-
-      steps.ensureSauceTunnel(baseOptions, emitter, function(error, tunnelId) {
-        baseOptions.sauce.tunnelId = tunnelId;
-        done(error);
-      });
-    });
-
-    runsAllIntegrationSuites();
-  });
-
-  after(function(done) {
-    this.timeout(120 * 1000);
-    cleankill.close(done);
-  });
-}
-*/

@@ -34,6 +34,7 @@ export interface BrowserDef extends wd.Capabilities {
   url: string;
   sessionId: string;
   deviceName?: string;
+  variant?: string;
 }
 
 // Browser abstraction, responsible for spinning up a browser instance via wd.js
@@ -136,7 +137,6 @@ export class BrowserRunner {
         // debugger;
         try {
           const data = JSON.parse(error.data);
-          console.log(data.value.message);
           if (data.value && data.value.message &&
               /Failed to connect to SafariDriver/i.test(data.value.message)) {
             error = 'Until Selenium\'s SafariDriver supports ' +
@@ -175,7 +175,6 @@ export class BrowserRunner {
 
   onEvent(event: string, data: any) {
     this.extendTimeout();
-
     if (event === 'browser-start') {
       // Always assign, to handle re-runs (no browser-init).
       this.stats = {

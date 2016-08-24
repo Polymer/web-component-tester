@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../../../browser.js"></script>
+  </head>
+  <body>
+    <script src="../../package/index.js"></script>
+    <script>
+      test('only works with mainline components', function() {
+        expect(window.nameOfThing).to.be.equals('mainline');
+      });
+    </script>
+  </body>
+</html>

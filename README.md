@@ -162,8 +162,8 @@ any desired tests:
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="../bower_components/web-component-tester/browser.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
     <script src="../awesome.js"></script>
   </head>
   <body>
