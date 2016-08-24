@@ -14,6 +14,10 @@ process.title = 'wct-st';
 
 resolve('web-component-tester', {basedir: process.cwd()}, function(error, path) {
   var wct = path ? require(path) : require('..');
-  wct.cli.runSauceTunnel(process.env, process.argv.slice(2), process.stdout)
-    .then(() => process.exit(0), () => process.exit(1));
+  var promise = wct.cli.runSauceTunnel(process.env, process.argv.slice(2), process.stdout, function (error) {
+    process.exit(error ? 1 : 0);
+  });
+  if (promise) {
+    promise.then(() => process.exit(0), () => process.exit(1));
+  }
 });
