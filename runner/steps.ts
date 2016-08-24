@@ -11,6 +11,7 @@
  * subject to an additional IP rights grant found at
  * http://polymer.github.io/PATENTS.txt
  */
+import * as fs from 'fs';
 import * as http from 'http';
 import * as _ from 'lodash';
 import * as socketIO from 'socket.io';
@@ -51,7 +52,6 @@ export async function loadPlugins(context: Context): Promise<Plugin[]> {
 export async function configure(context: Context): Promise<void> {
   context.emit('log:debug', 'step: configure');
   const options = context.options;
-  _.defaults(options, config.defaults());
 
   await config.expand(context);
 
@@ -135,23 +135,33 @@ function runBrowsers(context: Context) {
   const errors: any[] = [];
 
   const promises: Promise<void>[] = [];
-  const runners = options.activeBrowsers.map(function(browser, id) {
-    // Needed by both `BrowserRunner` and `CliReporter`.
-    browser.id = id;
-    _.defaults(browser, options.browserOptions);
 
-    const runner = new BrowserRunner(
-        context, browser, options, options.webserver.webRunnerPath);
-    promises.push(runner.donePromise.then(
-        () => {
-          context.emit('log:debug', browser, 'BrowserRunner complete');
-        },
-        (error) => {
-          context.emit('log:debug', browser, 'BrowserRunner complete');
-          errors.push(error);
-        }));
-    return runner;
-  });
+  let runners: BrowserRunner[] = [];
+  let id = 0;
+  for (let i = 0; i < options.webserver._webRunnerPaths.length; i++) {
+    const path = options.webserver._webRunnerPaths[i];
+    const variant = options._variants[i];
+    for (const originalBrowserDef of options.activeBrowsers) {
+      // Needed by both `BrowserRunner` and `CliReporter`.
+      const browserDef = _.clone(originalBrowserDef);
+      browserDef.id = id++;
+      if (path !== '') {
+        browserDef.variant = variant;
+      }
+      _.defaults(browserDef, options.browserOptions);
+
+      const runner = new BrowserRunner(context, browserDef, options, path);
+      promises.push(runner.donePromise.then(
+          () => {
+            context.emit('log:debug', browserDef, 'BrowserRunner complete');
+          },
+          (error) => {
+            context.emit('log:debug', browserDef, 'BrowserRunner complete');
+            errors.push(error);
+          }));
+      runners.push(runner);
+    }
+  }
 
   return {
     runners,

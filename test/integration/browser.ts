@@ -26,103 +26,24 @@ import {Context} from '../../runner/context';
 import * as steps from '../../runner/steps';
 import {test} from '../../runner/test';
 
-
-
-/** Assert that all browsers passed. */
-function assertPassed(context: TestContext) {
-  if (context.runError) {
-    console.error(
-        context.runError.stack || context.runError.message || context.runError);
-  }
-  if (context.testRunnerError) {
-    console.error(
-        context.testRunnerError.stack || context.testRunnerError.message ||
-        context.testRunnerError);
-  }
-  expect(context.runError).to.not.be.ok;
-  expect(context.testRunnerError).to.not.be.ok;
-  expect(context.errors).to.deep.equal(repeatBrowsers(context, null));
+interface TestErrorExpectation {
+  [fileName: string]: {
+    // The test name mapped to the error
+    [testName: string]: [string, string];
+  };
 }
 
-function assertFailed(context: TestContext, expectedError: string) {
-  expect(context.runError).to.eq(expectedError);
-  expect(context.errors).to.deep.equal(repeatBrowsers(context, expectedError));
+type Golden = VariantsGolden|VariantResultGolden;
+
+function isVariantsGolden(golden: Golden): golden is VariantsGolden {
+  return golden['variants'];
 }
 
-/** Asserts that all browsers match the given stats. */
-function assertStats(
-    context: TestContext, passing: number, pending: number, failing: number,
-    status: 'complete') {
-  const expected: Stats = {passing, pending, failing, status};
-  expect(context.stats).to.deep.equal(repeatBrowsers(context, expected));
+interface VariantsGolden {
+  variants: {[variantName: string]: VariantResultGolden};
 }
 
-/** Asserts that all browsers match the given test layout. */
-function assertTests(context: TestContext, expected: TestNode) {
-  expect(context.tests).to.deep.equal(repeatBrowsers(context, expected));
-}
-
-type TestErrorExpectation =
-    {
-      [fileName: string]: {[testName: string]: [string, string]}
-    }
-
-/** Asserts that all browsers emitted the given errors. */
-function
-assertTestErrors(context: TestContext, expected: TestErrorExpectation) {
-  lodash.each(context.testErrors, function(actual, browser) {
-    expect(Object.keys(expected))
-        .to.have.members(
-            Object.keys(actual), 'Test file mismatch for ' + browser +
-                `: expected ${JSON
-                    .stringify(Object.keys(expected))} - got ${JSON.stringify(
-                        Object.keys(actual))}`);
-
-    lodash.each(actual, function(errors, file) {
-      const expectedErrors = expected[file];
-      // Currently very dumb for simplicity: We don't support suites.
-      expect(Object.keys(expectedErrors))
-          .to.have.members(
-              Object.keys(errors),
-              `Test failure mismatch for ${file} on ${browser}`);
-
-      lodash.each(errors, function(error: Error, test: string) {
-        const locationInfo = `for ${file} - "${test}" on ${browser}`;
-        const expectedError = expectedErrors[test];
-        const stackLines = error.stack.split('\n');
-        expect(error.message)
-            .to.eq(expectedError[0], `Error message mismatch ${locationInfo}`);
-
-        // Chai fails to emit stacks for Firefox.
-        // https://github.com/chaijs/chai/issues/100
-        if (browser.indexOf('firefox') !== -1) {
-          return;
-        }
-
-        const expectedErrorText = expectedError[0];
-        const stackTraceMatcher = expectedError[1];
-        expect(stackLines[0]).to.eq(expectedErrorText);
-        expect(stackLines[stackLines.length - 1])
-            .to.match(new RegExp(stackTraceMatcher));
-      });
-    });
-  });
-}
-
-// Tests
-
-/** Describes all suites, mixed into the environments being run. */
-function
-runsAllIntegrationSuites() {
-
-  // TODO(rictic): `missing` should fail.
-
-  for (const fn of fs.readdirSync(integrationDir)) {
-    runIntegrationSuiteForDir(fn);
-  }
-}
-
-interface Golden {
+interface VariantResultGolden {
   passing: number;
   pending: number;
   failing: number;
@@ -130,79 +51,71 @@ interface Golden {
   tests: TestNode;
   errors: TestErrorExpectation;
 }
-
-function runIntegrationSuiteForDir(dirname: string) {
-  runsIntegrationSuite(dirname, function(testContext) {
-    const golden: Golden = JSON.parse(fs.readFileSync(
-        path.join(integrationDir, dirname, 'golden.json'), 'utf-8'));
-
-    it('records the correct result stats', function() {
-      try {
-        assertStats(
-            testContext, golden.passing, golden.pending, golden.failing,
-            <any>golden.status);
-      } catch (_) {
-        // mocha reports twice the failures because reasons
-        // https://github.com/mochajs/mocha/issues/2083
-        assertStats(
-            testContext, golden.passing, golden.pending, golden.failing * 2,
-            <any>golden.status);
-      }
-    });
-
-    if (golden.passing + golden.pending + golden.failing === 0 &&
-        !golden.tests) {
-      return;
-    }
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, golden.tests);
-    });
-
-    if (!golden.errors) {
-      return;
-    }
-    it('emits well formed errors', function() {
-      assertTestErrors(testContext, golden.errors);
-    });
-  });
-}
-
-function browserName(browser: BrowserDef) {
-  const parts: string[] = [];
-
-  if (browser.platform && !browser.deviceName) {
-    parts.push(browser.platform);
-  }
-
-  parts.push(browser.deviceName || browser.browserName);
-
-  if (browser.version) {
-    parts.push(browser.version);
-  }
-
-  return parts.join(' ');
-}
-
-function repeatBrowsers<T>(
-    context: TestContext, data: T): {[browserId: string]: T} {
-  expect(Object.keys(context.stats).length)
-      .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
-  return lodash.mapValues(context.stats, () => data);
-}
-
 type TestNode = {
   state?: CompletedState; [subTestName: string]: TestNode | CompletedState;
 }
 
-class TestContext {
+class TestResults {
+  variants: {[variantName: string]: VariantResults} = {};
+  runError: any = null;
+  testRunnerError: any = null;
+
+  getVariantResults(variantName: string): VariantResults {
+    this.variants[variantName] =
+        this.variants[variantName] || new VariantResults();
+    return this.variants[variantName];
+  }
+}
+
+class VariantResults {
   tests: TestNode = {};
   testErrors: TestNode = {};
   stats: {[browserName: string]: Stats} = {};
   errors: {[browserName: string]: any} = {};
-  runError: any = null;
-  testRunnerError: any = null;
 }
+
+// Tests
+
+/** Describes all suites, mixed into the environments being run. */
+function runsAllIntegrationSuites() {
+  // TODO(rictic): `missing` should fail.
+
+  for (const fn of fs.readdirSync(integrationDir)) {
+    runIntegrationSuiteForDir(fn);
+  }
+}
+
+
+function runIntegrationSuiteForDir(dirname: string) {
+  runsIntegrationSuite(dirname, function(testResults) {
+    const golden: Golden = JSON.parse(fs.readFileSync(
+        path.join(integrationDir, dirname, 'golden.json'), 'utf-8'));
+
+    let variantsGolden: VariantsGolden;
+    if (isVariantsGolden(golden)) {
+      variantsGolden = golden;
+    } else {
+      variantsGolden = {variants: {'': golden}};
+    }
+
+    it('ran the correct variants', function() {
+      expect(Object.keys(testResults.variants).sort())
+          .to.deep.equal(Object.keys(variantsGolden.variants).sort());
+    });
+    for (const variantName in variantsGolden.variants) {
+      const run = () => assertVariantResultsConformToGolden(
+          variantsGolden.variants[variantName],
+          testResults.getVariantResults(variantName));
+      if (variantName !== '') {
+        describe(`the variant with bower_components-${variantName}`, run);
+      } else {
+        run();
+      }
+    }
+  });
+}
+
+
 
 const integrationDir = path.resolve(__dirname, '../fixtures/integration');
 /**
@@ -210,10 +123,10 @@ const integrationDir = path.resolve(__dirname, '../fixtures/integration');
  * the output for tests.
  */
 function runsIntegrationSuite(
-    suiteName: string, contextFunction: (context: TestContext) => void) {
+    suiteName: string, contextFunction: (context: TestResults) => void) {
   describe(suiteName, function() {
     const log: string[] = [];
-    const testContext = new TestContext();
+    const testResults = new TestResults();
 
     before(async function() {
       this.timeout(120 * 1000);
@@ -254,14 +167,17 @@ function runsIntegrationSuite(
 
       addEventHandler(
           'test-end',
-          (browserInfo: BrowserDef, data: TestEndData, stats: Stats) => {
-            const browser = browserName(browserInfo);
-            testContext.stats[browser] = stats;
+          (browserDef: BrowserDef, data: TestEndData, stats: Stats) => {
+            const variantResults =
+                testResults.getVariantResults(browserDef.variant || '');
+            const browserName = getBrowserName(browserDef);
+            variantResults.stats[browserName] = stats;
 
             let testNode = <TestNode>(
-                testContext.tests[browser] = testContext.tests[browser] || {});
-            let errorNode = testContext.testErrors[browser] =
-                testContext.testErrors[browser] || {};
+                variantResults.tests[browserName] =
+                    variantResults.tests[browserName] || {});
+            let errorNode = variantResults.testErrors[browserName] =
+                variantResults.testErrors[browserName] || {};
             for (let i = 0; i < data.test.length; i++) {
               const name = data.test[i];
               testNode = <TestNode>(testNode[name] = testNode[name] || {});
@@ -275,22 +191,23 @@ function runsIntegrationSuite(
           });
 
       addEventHandler(
-          'browser-end',
-          (browserInfo: BrowserDef, error: any, stats: Stats) => {
-            const browser = browserName(browserInfo);
-            testContext.stats[browser] = stats;
-            testContext.errors[browser] = error || null;
+          'browser-end', (browserDef: BrowserDef, error: any, stats: Stats) => {
+            const variantResults =
+                testResults.getVariantResults(browserDef.variant || '');
+            const browserName = getBrowserName(browserDef);
+            variantResults.stats[browserName] = stats;
+            variantResults.errors[browserName] = error || null;
           });
 
       addEventHandler('run-end', (error: any) => {
-        testContext.runError = error;
+        testResults.runError = error;
       });
 
       // Don't fail the integration suite on test errors.
       try {
         await test(context);
       } catch (error) {
-        testContext.testRunnerError = error;
+        testResults.testRunnerError = error;
       }
     });
 
@@ -308,21 +225,12 @@ function runsIntegrationSuite(
       }
     });
 
-    contextFunction(testContext);
+    contextFunction(testResults);
   });
 }
 
-
-
-// Hacktastic state used in environments & helpers.
-const currentEnv = {};
-
 if (!process.env.SKIP_LOCAL_BROWSERS) {
   describe('Local Browsers', function() {
-    before(function() {
-      currentEnv['remote'] = false;
-    });
-
     runsAllIntegrationSuites();
   });
 }
@@ -355,3 +263,141 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
   });
 }
 */
+
+/** Assert that all browsers passed. */
+function assertPassed(context: TestResults) {
+  if (context.runError) {
+    console.error(
+        context.runError.stack || context.runError.message || context.runError);
+  }
+  if (context.testRunnerError) {
+    console.error(
+        context.testRunnerError.stack || context.testRunnerError.message ||
+        context.testRunnerError);
+  }
+  expect(context.runError).to.not.be.ok;
+  expect(context.testRunnerError).to.not.be.ok;
+  // expect(context.errors).to.deep.equal(repeatBrowsers(context, null));
+}
+
+function assertFailed(context: VariantResults, expectedError: string) {
+  // expect(context.runError).to.eq(expectedError);
+  expect(context.errors).to.deep.equal(repeatBrowsers(context, expectedError));
+}
+
+/** Asserts that all browsers match the given stats. */
+function assertStats(
+    context: VariantResults, passing: number, pending: number, failing: number,
+    status: 'complete') {
+  const expected: Stats = {passing, pending, failing, status};
+  expect(context.stats).to.deep.equal(repeatBrowsers(context, expected));
+}
+
+/** Asserts that all browsers match the given test layout. */
+function assertTests(context: VariantResults, expected: TestNode) {
+  expect(context.tests).to.deep.equal(repeatBrowsers(context, expected));
+}
+
+
+/** Asserts that all browsers emitted the given errors. */
+function assertTestErrors(
+    context: VariantResults, expected: TestErrorExpectation) {
+  lodash.each(context.testErrors, function(actual, browser) {
+    expect(Object.keys(expected))
+        .to.have.members(
+            Object.keys(actual), 'Test file mismatch for ' + browser +
+                `: expected ${JSON
+                    .stringify(Object.keys(expected))} - got ${JSON.stringify(
+                        Object.keys(actual))}`);
+
+    lodash.each(actual, function(errors, file) {
+      const expectedErrors = expected[file];
+      // Currently very dumb for simplicity: We don't support suites.
+      expect(Object.keys(expectedErrors))
+          .to.have.members(
+              Object.keys(errors),
+              `Test failure mismatch for ${file} on ${browser}`);
+
+      lodash.each(errors, function(error: Error, test: string) {
+        const locationInfo = `for ${file} - "${test}" on ${browser}`;
+        const expectedError = expectedErrors[test];
+        const stackLines = error.stack.split('\n');
+        expect(error.message)
+            .to.eq(expectedError[0], `Error message mismatch ${locationInfo}`);
+
+        // Chai fails to emit stacks for Firefox.
+        // https://github.com/chaijs/chai/issues/100
+        if (browser.indexOf('firefox') !== -1) {
+          return;
+        }
+
+        const expectedErrorText = expectedError[0];
+        const stackTraceMatcher = expectedError[1];
+        expect(stackLines[0]).to.eq(expectedErrorText);
+        expect(stackLines[stackLines.length - 1])
+            .to.match(new RegExp(stackTraceMatcher));
+      });
+    });
+  });
+}
+
+function assertVariantResultsConformToGolden(
+    golden: VariantResultGolden, variantResults: VariantResults) {
+  // const variantResults = testResults.getVariantResults('');
+  it('records the correct result stats', function() {
+    try {
+      assertStats(
+          variantResults, golden.passing, golden.pending, golden.failing,
+          <any>golden.status);
+    } catch (_) {
+      // mocha reports twice the failures because reasons
+      // https://github.com/mochajs/mocha/issues/2083
+      assertStats(
+          variantResults, golden.passing, golden.pending, golden.failing * 2,
+          <any>golden.status);
+    }
+  });
+
+  if (golden.passing + golden.pending + golden.failing === 0 && !golden.tests) {
+    return;
+  }
+
+  it('runs the correct tests', function() {
+    assertTests(variantResults, golden.tests);
+  });
+
+  if (golden.errors || golden.failing > 0) {
+    it('emits well formed errors', function() {
+      assertTestErrors(variantResults, golden.errors);
+    });
+  }
+  // it('passed the test', function() {
+  //   assertPassed(testResults);
+  // });
+}
+
+function getBrowserName(browser: BrowserDef) {
+  const parts: string[] = [];
+  if (browser.platform && !browser.deviceName) {
+    parts.push(browser.platform);
+  }
+
+  parts.push(browser.deviceName || browser.browserName);
+
+  if (browser.version) {
+    parts.push(browser.version);
+  }
+
+  if (browser.variant) {
+    parts.push(`[${browser.variant}]`);
+  }
+
+  return parts.join(' ');
+}
+
+function repeatBrowsers<T>(
+    context: VariantResults, data: T): {[browserId: string]: T} {
+  expect(Object.keys(context.stats).length)
+      .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
+  return lodash.mapValues(context.stats, () => data);
+}
