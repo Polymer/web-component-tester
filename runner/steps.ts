@@ -161,7 +161,9 @@ function runBrowsers(context: Context) {
       // TODO(nevir): Better rationalize run-end and hook.
       await context.emitHook('cleanup');
 
-      return error;
+      if (error) {
+        throw new Error(error);
+      }
     }())
   };
 }
