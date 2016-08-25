@@ -162,7 +162,7 @@ function runBrowsers(context: Context) {
       await context.emitHook('cleanup');
 
       if (error) {
-        throw error;
+        throw new Error(error);
       }
     }())
   };

@@ -444,7 +444,7 @@ function runsIntegrationSuite(
       try {
         await test(context);
       } catch (error) {
-        testContext.testRunnerError = error;
+        testContext.testRunnerError = error.message;
       }
     });
 
