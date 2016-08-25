@@ -44,6 +44,7 @@ function assertPassed(context: TestContext) {
 
 function assertFailed(context: TestContext, expectedError: string) {
   expect(context.runError).to.eq(expectedError);
+  expect(context.testRunnerError).to.be.eq(expectedError);
   expect(context.errors).to.deep.equal(repeatBrowsers(context, expectedError));
 }
 
