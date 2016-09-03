@@ -72,7 +72,7 @@
     "sinon-chai": "^2.6.0",
     "socket.io": "^1.3.7",
     "stacky": "^1.3.1",
-    "test-fixture": "PolymerElements/test-fixture",
+    "@polymer/test-fixture": "^0.0.3",
     "wd": "^0.3.8"
   },
   "optionalDependencies": {
