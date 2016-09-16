@@ -77,6 +77,7 @@ export interface Config {
   skipCleanup?: boolean;
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
+  configFile?: string;
 }
 
 // The full set of options, as a reference.
@@ -241,6 +242,10 @@ const ARG_CONFIG = {
     full: 'skip-update-check',
     flag: true,
   },
+  configFile: {
+    help: 'Config file that needs to be used by wct. ie: wct.config-sauce.js',
+    full: 'configFile',
+  },
   'webserver.port': {
     help: 'A port to use for the test webserver.',
     full: 'webserver-port',
@@ -268,7 +273,7 @@ const ARG_CONFIG = {
 
 // Values that should be extracted when pre-parsing args.
 const PREPARSE_ARGS =
-    ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
+    ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck', 'configFile'];
 
 interface PreparsedArgs {
   plugins?: string[];
@@ -285,11 +290,11 @@ interface PreparsedArgs {
  * @param {string} root
  * @return {!Object} The merged configuration.
  */
-export function fromDisk(jsonOnly?: boolean, root?: string): Config {
+export function fromDisk(jsonOnly?: boolean, root?: string, definedConfigFile?: string): Config {
   const matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
 
   const globalFile = path.join(HOME_DIR, matcher);
-  const projectFile = findup(matcher, {nocase: true, cwd: root});
+  const projectFile = findup(definedConfigFile || matcher, {nocase: true, cwd: root});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
   const paths = _.union([globalFile, projectFile]);
@@ -328,7 +333,7 @@ function loadProjectFile(file: string) {
  * Runs a simplified options parse over the command line arguments, extracting
  * any values that are necessary for a full parse.
  *
- * At the moment, the only values extracted are `--plugin` and `--simpleOutput`.
+ * See const: PREPARSE_ARGS for the values that are extracted.
  *
  * @param {!Array<string>} args
  * @return {!Object}

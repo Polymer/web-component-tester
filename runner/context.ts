@@ -49,7 +49,6 @@ export class Context extends events.EventEmitter {
   constructor(options?: config.Config) {
     super();
     options = options || {};
-
     /**
      * The configuration for the current WCT run.
      *
@@ -58,7 +57,7 @@ export class Context extends events.EventEmitter {
      */
     this.options = config.merge(
         config.defaults(),
-        config.fromDisk(options.enforceJsonConf, options.root), options);
+        config.fromDisk(options.enforceJsonConf, options.root, options.configFile), options);
   }
 
   // Hooks
