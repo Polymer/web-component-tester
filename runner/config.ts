@@ -290,11 +290,11 @@ interface PreparsedArgs {
  * @param {string} root
  * @return {!Object} The merged configuration.
  */
-export function fromDisk(jsonOnly?: boolean, root?: string, definedConfigFile?: string): Config {
+export function fromDisk(jsonOnly?: boolean, root?: string, configFile?: string): Config {
   const matcher = jsonOnly ? JSON_MATCHER : CONFIG_MATCHER;
 
   const globalFile = path.join(HOME_DIR, matcher);
-  const projectFile = findup(definedConfigFile || matcher, {nocase: true, cwd: root});
+  const projectFile = findup(configFile || matcher, {nocase: true, cwd: root});
   // Load a shared config from the user's home dir, if they have one, and then
   // try the project-specific path (starting at the current working directory).
   const paths = _.union([globalFile, projectFile]);
