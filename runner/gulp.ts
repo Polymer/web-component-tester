@@ -20,24 +20,30 @@ import {test} from './test';
 
 
 export function init(gulp: Gulp, dependencies?: string[]): void {
+  // Compatibility with Gulp 3 and 4.
+  function compat(name, ...tasks) {
+    return gulp.series ? [name, gulp.series(...tasks)] : arguments;
+  }
+
   if (!dependencies) {
     dependencies = [];
   }
 
   // TODO(nevir): Migrate fully to wct:local/etc.
-  gulp.task('test', ['wct:local']);
-  gulp.task('test:local', ['wct:local']);
-  gulp.task('test:remote', ['wct:sauce']);
+  gulp.task.apply(gulp, compat('wct:local', dependencies, testLocal));
+  gulp.task.apply(gulp, compat('wct:sauce', dependencies, testRemote));
+  gulp.task.apply(gulp, compat('wct', ['wct:local']));
+  gulp.task.apply(gulp, compat('test:local', ['wct:local']));
+  gulp.task.apply(gulp, compat('test:remote', ['wct:sauce']));
+  gulp.task.apply(gulp, compat('test', ['wct:local']));
+}
 
-  gulp.task('wct', ['wct:local']);
+function testLocal() {
+  return test(<any>{plugins: {local: {}, sauce: false}}).catch(cleanError);
+}
 
-  gulp.task('wct:local', dependencies, () => {
-    return test(<any>{plugins: {local: {}, sauce: false}}).catch(cleanError);
-  });
-
-  gulp.task('wct:sauce', dependencies, () => {
-    return test(<any>{plugins: {local: false, sauce: {}}}).catch(cleanError);
-  });
+function testRemote() {
+  return test(<any>{plugins: {local: false, sauce: {}}}).catch(cleanError);
 }
 
 // Utility
