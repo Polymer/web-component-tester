@@ -21,7 +21,7 @@ import {test} from './test';
 
 export function init(gulp: Gulp, dependencies?: string[]): void {
   // Compatibility with Gulp 3 and 4.
-  function compat(name, ...tasks) {
+  function compat(name: string, ...tasks: (string[]|Function)[]) {
     return gulp.series ? [name, gulp.series(...tasks)] : arguments;
   }
 
@@ -30,12 +30,12 @@ export function init(gulp: Gulp, dependencies?: string[]): void {
   }
 
   // TODO(nevir): Migrate fully to wct:local/etc.
-  gulp.task.apply(gulp, compat('wct:local', dependencies, testLocal));
-  gulp.task.apply(gulp, compat('wct:sauce', dependencies, testRemote));
-  gulp.task.apply(gulp, compat('wct', ['wct:local']));
-  gulp.task.apply(gulp, compat('test:local', ['wct:local']));
-  gulp.task.apply(gulp, compat('test:remote', ['wct:sauce']));
-  gulp.task.apply(gulp, compat('test', ['wct:local']));
+  gulp.task(...compat('wct:local', dependencies, testLocal));
+  gulp.task(...compat('wct:sauce', dependencies, testRemote));
+  gulp.task(...compat('wct', ['wct:local']));
+  gulp.task(...compat('test:local', ['wct:local']));
+  gulp.task(...compat('test:remote', ['wct:sauce']));
+  gulp.task(...compat('test', ['wct:local']));
 }
 
 function testLocal() {
