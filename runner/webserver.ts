@@ -140,7 +140,7 @@ export function webserver(wct: Context): void {
 
     // At this point, we allow other plugins to hook and configure the
     // webserver as they please.
-    await wct.emitHook('prepare:webserver', app);
+    await wct.emitHook('prepare:webserver', app, () => { });
 
     // Serve up all the static assets.
     app.use(serveWaterfall(wsOptions.pathMappings, {

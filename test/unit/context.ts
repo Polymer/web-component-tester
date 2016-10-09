@@ -59,6 +59,19 @@ describe('Context', () => {
       expect(plugins).to.have.members(['local']);
     });
 
+    describe('hook handlers with only one argument', () => {
+      it('are passed the "done" callback function instead of the argument passed to emitHook', async() => {
+        const context = new Context();
+          context.hook('foo', function(arg1: any) {
+            expect(arg1).to.not.eq('hookArg');
+            // arg1 has been replaced with 'done'
+            arg1();
+        });
+
+        await context.emitHook('foo', 'hookArg');
+      });
+    });
+
     describe('hook handlers written to call callbacks', () => {
       it('passes additional arguments through', async() => {
         const context = new Context();
