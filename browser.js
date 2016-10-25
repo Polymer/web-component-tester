@@ -1690,6 +1690,13 @@ CLISocket.prototype.observe = function observe(runner) {
     });
   }.bind(this));
 
+  runner.on('fail', function(test, err) {
+    // fail the test run if we catch errors outside of a test function
+    if (test.type !== 'test') {
+      this.emitEvent('browser-fail', 'Error thrown outside of test function: ' + err.stack);
+    }
+  }.bind(this));
+
   runner.on('childRunner start', function(childRunner) {
     this.emitEvent('sub-suite-start', childRunner.share);
   }.bind(this));
