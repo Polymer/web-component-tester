@@ -1,7 +1,7 @@
 {
   "name": "web-component-tester",
   "description": "web-component-tester makes testing your web components a breeze!",
-  "version": "4.3.5",
+  "version": "4.3.6",
   "main": [
     "browser.js"
   ],
