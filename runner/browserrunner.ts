@@ -180,7 +180,7 @@ export class BrowserRunner {
       this.stats[data.state] = this.stats[data.state] + 1;
     }
 
-    if (event === 'browser-end') {
+    if (event === 'browser-end' || event === 'browser-fail') {
       this.done(data);
     } else {
       this.emitter.emit(event, this.def, data, this.stats, this.browser);
