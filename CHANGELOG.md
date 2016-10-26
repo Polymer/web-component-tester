@@ -1,3 +1,7 @@
+# 5.x
+## 5.0.0
+* Mocha upgraded to `v3.1.2`. This shouldn't require any new code, but make sure your tests still pass as there were some more subtle changes made to Mocha behavior for v3 (Add IE7 support, update dependencies). See https://github.com/mochajs/mocha/pull/2350 for more info.
+
 # 4.x
 ## 4.2.2
 * Update bower dependencies to match node dependencies
