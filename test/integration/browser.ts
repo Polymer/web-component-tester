@@ -36,7 +36,7 @@ interface TestErrorExpectation {
 type Golden = VariantsGolden|VariantResultGolden;
 
 function isVariantsGolden(golden: Golden): golden is VariantsGolden {
-  return golden['variants'];
+  return !!golden['variants'];
 }
 
 interface VariantsGolden {
@@ -79,16 +79,22 @@ class VariantResults {
 
 /** Describes all suites, mixed into the environments being run. */
 function runsAllIntegrationSuites() {
-  // TODO(rictic): `missing` should fail.
+  let integrationDirnames = fs.readdirSync(integrationDir);
+  // Overwrite integrationDirnames to run tests in isolation while developing:
+  // integrationDirnames = ['missing'];
 
-  for (const fn of fs.readdirSync(integrationDir)) {
-    runIntegrationSuiteForDir(fn);
+  // TODO(#421): `missing` correctly fails, but currently it times out which
+  //     takes ~2 minutes.
+  const suitesToSkip = new Set(['missing']);
+
+  for (const fn of integrationDirnames) {
+    runIntegrationSuiteForDir(fn, suitesToSkip.has(fn));
   }
 }
 
 
-function runIntegrationSuiteForDir(dirname: string) {
-  runsIntegrationSuite(dirname, function(testResults) {
+function runIntegrationSuiteForDir(dirname: string, skip: boolean) {
+  runsIntegrationSuite(dirname, skip, function(testResults) {
     const golden: Golden = JSON.parse(fs.readFileSync(
         path.join(integrationDir, dirname, 'golden.json'), 'utf-8'));
 
@@ -124,15 +130,20 @@ const integrationDir = path.resolve(__dirname, '../fixtures/integration');
  * the output for tests.
  */
 function runsIntegrationSuite(
-    suiteName: string, contextFunction: (context: TestResults) => void) {
-  describe(suiteName, function() {
+    dirName: string, skip: boolean, contextFunction: (context: TestResults) => void) {
+  const suiteName = `integration fixture dir '${dirName}'`;
+  let describer: (suiteName: string, spec: ()=>void)=>void = describe;
+  if (skip) {
+    describer = describe.skip;
+  }
+  describer(suiteName, function() {
     const log: string[] = [];
     const testResults = new TestResults();
 
     before(async function() {
       this.timeout(120 * 1000);
 
-      const suiteRoot = path.join(integrationDir, suiteName);
+      const suiteRoot = path.join(integrationDir, dirName);
       const options: config.Config = {
         output: <any>{write: log.push.bind(log)},
         ttyOutput: false,
@@ -215,7 +226,7 @@ function runsIntegrationSuite(
     afterEach(function() {
       if (this.currentTest.state === 'failed') {
         process.stderr.write(
-            `\n    Output of wct for integration suite named \`${suiteName}\`` +
+            `\n    Output of wct for integration suite named \`${dirName}\`` +
             `\n` +
             `    ======================================================\n\n`);
         for (const line of log.join('').split('\n')) {
