@@ -1,7 +1,7 @@
 # Update .npmignore whenever you update this file!
 
 .todo
-bower_components
+/bower_components
 node_modules
 npm-debug.log
 typings/
