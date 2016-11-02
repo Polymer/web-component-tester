@@ -1,0 +1,48 @@
+{
+  "passing": 3,
+  "pending": 0,
+  "failing": 3,
+  "status": "complete",
+  "tests": {
+    "test/": {
+      "failing test": {
+        "state": "failing"
+      },
+      "inline failing test": {
+        "state": "failing"
+      },
+      "inline passing test": {
+        "state": "passing"
+      },
+      "passing test": {
+        "state": "passing"
+      }
+    },
+    "test/tests.html": {
+      "failing test": {
+        "state": "failing"
+      },
+      "passing test": {
+        "state": "passing"
+      }
+    }
+  },
+  "errors": {
+    "test/": {
+      "inline failing test": [
+        "expected false to be true",
+        "at index\\.html:13(:|$)"
+      ],
+      "failing test": [
+        "expected false to be true",
+        "at tests\\.js:3(:|$)"
+      ]
+    },
+    "test/tests.html": {
+      "failing test": [
+        "expected false to be true",
+        "at tests\\.html:11(:|$)"
+      ]
+    }
+  }
+}

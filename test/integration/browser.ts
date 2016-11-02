@@ -11,8 +11,10 @@
  * subject to an additional IP rights grant found at
  * http://polymer.github.io/PATENTS.txt
  */
+
 import {expect} from 'chai';
 import * as cleankill from 'cleankill';
+import * as fs from 'fs';
 import * as lodash from 'lodash';
 import * as path from 'path';
 import * as util from 'util';
@@ -24,360 +26,129 @@ import {Context} from '../../runner/context';
 import * as steps from '../../runner/steps';
 import {test} from '../../runner/test';
 
-const PROJECT_ROOT = path.resolve(__dirname, '../..');
+interface TestErrorExpectation {
+  [fileName: string]: {
+    // The test name mapped to the error
+    [testName: string]: [string, string];
+  };
+}
 
-/** Assert that all browsers passed. */
-function assertPassed(context: TestContext) {
-  if (context.runError) {
-    console.error(
-        context.runError.stack || context.runError.message || context.runError);
+type Golden = VariantsGolden|VariantResultGolden;
+
+function isVariantsGolden(golden: Golden): golden is VariantsGolden {
+  return !!golden['variants'];
+}
+
+interface VariantsGolden {
+  variants: {[variantName: string]: VariantResultGolden};
+}
+
+
+interface VariantResultGolden {
+  passing: number;
+  pending: number;
+  failing: number;
+  status: string;
+  tests: TestNode;
+  errors: TestErrorExpectation;
+}
+type TestNode = {
+  state?: CompletedState; [subTestName: string]: TestNode | CompletedState;
+}
+
+class TestResults {
+  variants: {[variantName: string]: VariantResults} = {};
+  runError: any = null;
+  testRunnerError: any = null;
+
+  getVariantResults(variantName: string): VariantResults {
+    this.variants[variantName] =
+        this.variants[variantName] || new VariantResults();
+    return this.variants[variantName];
   }
-  if (context.testRunnerError) {
-    console.error(
-        context.testRunnerError.stack || context.testRunnerError.message ||
-        context.testRunnerError);
-  }
-  expect(context.runError).to.not.be.ok;
-  expect(context.testRunnerError).to.not.be.ok;
-  expect(context.errors).to.deep.equal(repeatBrowsers(context, null));
 }
 
-function assertFailed(context: TestContext, expectedError: string) {
-  expect(context.runError).to.eq(expectedError);
-  expect(context.testRunnerError).to.be.eq(expectedError);
-  expect(context.errors).to.deep.equal(repeatBrowsers(context, expectedError));
-}
-
-/** Asserts that all browsers match the given stats. */
-function assertStats(
-    context: TestContext, passing: number, pending: number, failing: number,
-    status: 'complete') {
-  const expected: Stats = {passing, pending, failing, status};
-  expect(context.stats).to.deep.equal(repeatBrowsers(context, expected));
-}
-
-/** Asserts that all browsers match the given test layout. */
-function assertTests(context: TestContext, expected: TestNode) {
-  expect(context.tests).to.deep.equal(repeatBrowsers(context, expected));
-}
-
-type TestErrorExpectation =
-    {
-      [fileName: string]: {[testName: string]: [string, RegExp]}
-    }
-
-/** Asserts that all browsers emitted the given errors. */
-function
-assertTestErrors(context: TestContext, expected: TestErrorExpectation) {
-  lodash.each(context.testErrors, function(actual, browser) {
-    expect(Object.keys(expected))
-        .to.have.members(
-            Object.keys(actual), 'Test file mismatch for ' + browser);
-
-    lodash.each(actual, function(errors, file) {
-      const expectedErrors = expected[file];
-      // Currently very dumb for simplicity: We don't support suites.
-      expect(Object.keys(expectedErrors))
-          .to.have.members(
-              Object.keys(errors),
-              `Test failure mismatch for ${file} on ${browser}`);
-
-      lodash.each(errors, function(error: Error, test: string) {
-        const locationInfo = `for ${file} - "${test}" on ${browser}`;
-        const expectedError = expectedErrors[test];
-        const stackLines = error.stack.split('\n');
-        expect(error.message)
-            .to.eq(expectedError[0], `Error message mismatch ${locationInfo}`);
-
-        // Chai fails to emit stacks for Firefox.
-        // https://github.com/chaijs/chai/issues/100
-        if (browser.indexOf('firefox') !== -1)
-          return;
-
-        const expectedErrorText = expectedError[0];
-        const stackTraceMatcher = expectedError[1];
-        expect(stackLines[0]).to.eq(expectedErrorText);
-        expect(stackLines[stackLines.length - 1]).to.match(stackTraceMatcher);
-      });
-    });
-  });
+class VariantResults {
+  tests: TestNode = {};
+  testErrors: TestNode = {};
+  stats: {[browserName: string]: Stats} = {};
+  errors: {[browserName: string]: any} = {};
 }
 
 // Tests
 
 /** Describes all suites, mixed into the environments being run. */
-function
-runsAllIntegrationSuites() {
+function runsAllIntegrationSuites() {
+  let integrationDirnames = fs.readdirSync(integrationDir);
+  // Overwrite integrationDirnames to run tests in isolation while developing:
+  // integrationDirnames = ['missing'];
 
-  runsIntegrationSuite('hybrid', function(testContext) {
+  // TODO(#421): `missing` correctly fails, but currently it times out which
+  //     takes ~2 minutes.
+  const suitesToSkip = new Set(['missing']);
 
-    it('passes', function() {
-      assertPassed(testContext);
-      assertStats(testContext, 6, 0, 0, 'complete');
+  for (const fn of integrationDirnames) {
+    runIntegrationSuiteForDir(fn, suitesToSkip.has(fn));
+  }
+}
+
+
+function runIntegrationSuiteForDir(dirname: string, skip: boolean) {
+  runsIntegrationSuite(dirname, skip, function(testResults) {
+    const golden: Golden = JSON.parse(fs.readFileSync(
+        path.join(integrationDir, dirname, 'golden.json'), 'utf-8'));
+
+    let variantsGolden: VariantsGolden;
+    if (isVariantsGolden(golden)) {
+      variantsGolden = golden;
+    } else {
+      variantsGolden = {variants: {'': golden}};
+    }
+
+    it('ran the correct variants', function() {
+      expect(Object.keys(testResults.variants).sort())
+          .to.deep.equal(Object.keys(variantsGolden.variants).sort());
     });
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, {
-        'web-component-tester/test/fixtures/integration/hybrid/': {
-          'inline suite': {'inline nested test': {'state': 'passing'}},
-          'inline test': {'state': 'passing'},
-          'suite': {'nested test': {'state': 'passing'}},
-          'test': {'state': 'passing'},
-        },
-        'web-component-tester/test/fixtures/integration/hybrid/tests.html': {
-          'suite': {'nested test': {'state': 'passing'}},
-          'test': {'state': 'passing'},
-        },
-      });
-    });
-
-  });
-
-  runsIntegrationSuite('failing', function(testContext) {
-
-    it('fails', function() {
-      // HACK(rictic): this should be 3 instead of 6.
-      // a bug in mocha:
-      try {
-        assertFailed(testContext, '6 failed tests');
-        assertStats(testContext, 3, 0, 6, 'complete');
-      } catch (_) {
-        assertFailed(testContext, '3 failed tests');
-        assertStats(testContext, 3, 0, 3, 'complete');
+    for (const variantName in variantsGolden.variants) {
+      const run = () => assertVariantResultsConformToGolden(
+          variantsGolden.variants[variantName],
+          testResults.getVariantResults(variantName));
+      if (variantName !== '') {
+        describe(`the variant with bower_components-${variantName}`, run);
+      } else {
+        run();
       }
-    });
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, {
-        'web-component-tester/test/fixtures/integration/failing/': {
-          'inline passing test': {'state': 'passing'},
-          'inline failing test': {'state': 'failing'},
-          'passing test': {'state': 'passing'},
-          'failing test': {'state': 'failing'},
-        },
-        'web-component-tester/test/fixtures/integration/failing/tests.html': {
-          'passing test': {'state': 'passing'},
-          'failing test': {'state': 'failing'},
-        },
-      });
-    });
-
-    it('emits well formed errors', function() {
-      assertTestErrors(testContext, {
-        'web-component-tester/test/fixtures/integration/failing/': {
-          'inline failing test': [
-            'expected false to be true',
-            /at index\.html:13(:|$)/,
-          ],
-          'failing test': [
-            'expected false to be true',
-            /at tests\.js:3(:|$)/,
-          ],
-        },
-        'web-component-tester/test/fixtures/integration/failing/tests.html': {
-          'failing test': [
-            'expected false to be true',
-            /at tests.html:11(:|$)/,
-          ],
-        },
-      });
-    });
-
+    }
   });
-
-  runsIntegrationSuite('inline-js', function(testContext) {
-
-    it('passes', function() {
-      assertPassed(testContext);
-      assertStats(testContext, 2, 0, 0, 'complete');
-    });
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, {
-        'web-component-tester/test/fixtures/integration/inline-js/': {
-          'suite': {'nested test': {'state': 'passing'}},
-          'test': {'state': 'passing'},
-        },
-      });
-    });
-
-  });
-
-  runsIntegrationSuite('many-html', function(testContext) {
-
-    it('passes', function() {
-      assertPassed(testContext);
-      assertStats(testContext, 6, 0, 0, 'complete');
-    });
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, {
-        'web-component-tester/test/fixtures/integration/many-html/one.html': {
-          'suite 1': {'nested test 1': {'state': 'passing'}},
-          'test 1': {'state': 'passing'},
-        },
-        'web-component-tester/test/fixtures/integration/many-html/two.html': {
-          'suite 2': {'nested test 2': {'state': 'passing'}},
-          'test 2': {'state': 'passing'},
-        },
-        'web-component-tester/test/fixtures/integration/many-html/three.html': {
-          'suite 3': {'nested test 3': {'state': 'passing'}},
-          'test 3': {'state': 'passing'},
-        },
-      });
-    });
-
-  });
-
-  runsIntegrationSuite('many-js', function(testContext) {
-
-    it('passes', function() {
-      assertPassed(testContext);
-      assertStats(testContext, 6, 0, 0, 'complete');
-    });
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, {
-        'web-component-tester/test/fixtures/integration/many-js/': {
-          'suite 1': {'nested test 1': {'state': 'passing'}},
-          'test 1': {'state': 'passing'},
-          'suite 2': {'nested test 2': {'state': 'passing'}},
-          'test 2': {'state': 'passing'},
-          'suite 3': {'nested test 3': {'state': 'passing'}},
-          'test 3': {'state': 'passing'},
-        },
-      });
-    });
-
-  });
-
-  runsIntegrationSuite('nested', function(testContext) {
-
-    it('passes', function() {
-      assertPassed(testContext);
-      assertStats(testContext, 4, 0, 0, 'complete');
-    });
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, {
-        'web-component-tester/test/fixtures/integration/nested/':
-            {'js test': {'state': 'passing'}},
-        'web-component-tester/test/fixtures/integration/nested/one/tests.html':
-            {'test': {'state': 'passing'}},
-        'web-component-tester/test/fixtures/integration/nested/two/':
-            {'inline test': {'state': 'passing'}},
-        'web-component-tester/test/fixtures/integration/nested/leaf.html':
-            {'test': {'state': 'passing'}},
-      });
-    });
-
-  });
-
-  runsIntegrationSuite('no-tests', function(testContext) {
-
-    it('passes', function() {
-      assertPassed(testContext);
-      assertStats(testContext, 0, 0, 0, 'complete');
-    });
-
-  });
-
-  runsIntegrationSuite('one-html', function(testContext) {
-
-    it('passes', function() {
-      assertPassed(testContext);
-      assertStats(testContext, 2, 0, 0, 'complete');
-    });
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, {
-        'web-component-tester/test/fixtures/integration/one-html/tests.html': {
-          'suite': {'nested test': {'state': 'passing'}},
-          'test': {'state': 'passing'},
-        },
-      });
-    });
-
-  });
-
-  runsIntegrationSuite('one-js', function(testContext) {
-
-    it('passes', function() {
-      assertPassed(testContext);
-      assertStats(testContext, 2, 0, 0, 'complete');
-    });
-
-    it('runs the correct tests', function() {
-      assertTests(testContext, {
-        'web-component-tester/test/fixtures/integration/one-js/': {
-          'suite': {'nested test': {'state': 'passing'}},
-          'test': {'state': 'passing'},
-        },
-      });
-    });
-
-  });
-
 }
 
-function
-browserName(browser: BrowserDef) {
-  const parts: string[] = [];
 
-  if (browser.platform && !browser.deviceName) {
-    parts.push(browser.platform);
-  }
 
-  parts.push(browser.deviceName || browser.browserName);
-
-  if (browser.version) {
-    parts.push(browser.version);
-  }
-
-  return parts.join(' ');
-}
-
-function
-repeatBrowsers<T>(context: TestContext, data: T): {[browserId: string]: T} {
-  expect(Object.keys(context.stats).length)
-      .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
-  return lodash.mapValues(context.stats, () => data);
-}
-
-type TestNode = {
-  state?: CompletedState; [subTestName: string]: TestNode | CompletedState;
-}
-
-class TestContext {
-  tests: TestNode = {};
-  testErrors: TestNode = {};
-  stats: {[browserName: string]: Stats} = {};
-  errors: {[browserName: string]: any} = {};
-  runError: any = null;
-  testRunnerError: any = null;
-}
-
+const integrationDir = path.resolve(__dirname, '../fixtures/integration');
 /**
  * Creates a mocha context that runs an integration suite (once), and hangs onto
  * the output for tests.
  */
 function runsIntegrationSuite(
-    suiteName: string, contextFunction: (context: TestContext) => void) {
-  describe(suiteName, function() {
+    dirName: string, skip: boolean, contextFunction: (context: TestResults) => void) {
+  const suiteName = `integration fixture dir '${dirName}'`;
+  let describer: (suiteName: string, spec: () => void) => void = describe;
+  if (skip) {
+    describer = describe.skip;
+  }
+  describer(suiteName, function() {
     const log: string[] = [];
-    const testContext = new TestContext();
+    const testResults = new TestResults();
 
     before(async function() {
       this.timeout(120 * 1000);
 
+      const suiteRoot = path.join(integrationDir, dirName);
       const options: config.Config = {
         output: <any>{write: log.push.bind(log)},
         ttyOutput: false,
         skipCleanup: true,  // We do it manually at the end of all suites.
-        root: path.resolve(PROJECT_ROOT, '..'),
-        suites: [path.join(
-            path.basename(PROJECT_ROOT), 'test/fixtures/integration',
-            suiteName)],
+        root: suiteRoot,
         // TODO(nevir): Migrate
         // remote:      currentEnv.remote,
         // Roughly matches CI Runner statuses.
@@ -388,7 +159,7 @@ function runsIntegrationSuite(
         // Uncomment to customize the browsers to test when debugging.
         plugins: <any>{
           local: {
-            //     browsers: [/*'firefox'*/, 'chrome', /*'safari'*/],
+            browsers: ['firefox', 'chrome', /*'safari'*/],
             skipSeleniumInstall: true
           },
         },
@@ -408,14 +179,17 @@ function runsIntegrationSuite(
 
       addEventHandler(
           'test-end',
-          (browserInfo: BrowserDef, data: TestEndData, stats: Stats) => {
-            const browser = browserName(browserInfo);
-            testContext.stats[browser] = stats;
+          (browserDef: BrowserDef, data: TestEndData, stats: Stats) => {
+            const variantResults =
+                testResults.getVariantResults(/*browserDef.variant || */ '');
+            const browserName = getBrowserName(browserDef);
+            variantResults.stats[browserName] = stats;
 
             let testNode = <TestNode>(
-                testContext.tests[browser] = testContext.tests[browser] || {});
-            let errorNode = testContext.testErrors[browser] =
-                testContext.testErrors[browser] || {};
+                variantResults.tests[browserName] =
+                    variantResults.tests[browserName] || {});
+            let errorNode = variantResults.testErrors[browserName] =
+                variantResults.testErrors[browserName] || {};
             for (let i = 0; i < data.test.length; i++) {
               const name = data.test[i];
               testNode = <TestNode>(testNode[name] = testNode[name] || {});
@@ -429,29 +203,30 @@ function runsIntegrationSuite(
           });
 
       addEventHandler(
-          'browser-end',
-          (browserInfo: BrowserDef, error: any, stats: Stats) => {
-            const browser = browserName(browserInfo);
-            testContext.stats[browser] = stats;
-            testContext.errors[browser] = error || null;
+          'browser-end', (browserDef: BrowserDef, error: any, stats: Stats) => {
+            const variantResults =
+                testResults.getVariantResults(/*browserDef.variant || */ '');
+            const browserName = getBrowserName(browserDef);
+            variantResults.stats[browserName] = stats;
+            variantResults.errors[browserName] = error || null;
           });
 
       addEventHandler('run-end', (error: any) => {
-        testContext.runError = error;
+        testResults.runError = error;
       });
 
       // Don't fail the integration suite on test errors.
       try {
         await test(context);
       } catch (error) {
-        testContext.testRunnerError = error.message;
+        testResults.testRunnerError = error.message;
       }
     });
 
     afterEach(function() {
       if (this.currentTest.state === 'failed') {
         process.stderr.write(
-            `\n    Output of wct for integration suite named \`${suiteName}\`` +
+            `\n    Output of wct for integration suite named \`${dirName}\`` +
             `\n` +
             `    ======================================================\n\n`);
         for (const line of log.join('').split('\n')) {
@@ -462,21 +237,12 @@ function runsIntegrationSuite(
       }
     });
 
-    contextFunction(testContext);
+    contextFunction(testResults);
   });
 }
 
-
-
-// Hacktastic state used in environments & helpers.
-const currentEnv = {};
-
 if (!process.env.SKIP_LOCAL_BROWSERS) {
   describe('Local Browsers', function() {
-    before(function() {
-      currentEnv['remote'] = false;
-    });
-
     runsAllIntegrationSuites();
   });
 }
@@ -509,3 +275,144 @@ if (!process.env.SKIP_REMOTE_BROWSERS) {
   });
 }
 */
+
+/** Assert that all browsers passed. */
+function assertPassed(context: TestResults) {
+  if (context.runError) {
+    console.error(
+        context.runError.stack || context.runError.message || context.runError);
+  }
+  if (context.testRunnerError) {
+    console.error(
+        context.testRunnerError.stack || context.testRunnerError.message ||
+        context.testRunnerError);
+  }
+  expect(context.runError).to.not.be.ok;
+  expect(context.testRunnerError).to.not.be.ok;
+  // expect(context.errors).to.deep.equal(repeatBrowsers(context, null));
+}
+
+function assertFailed(context: VariantResults, expectedError: string) {
+  // expect(context.runError).to.eq(expectedError);
+  // expect(context.testRunnerError).to.be.eq(expectedError);
+  expect(context.errors).to.deep.equal(repeatBrowsers(context, expectedError));
+}
+
+/** Asserts that all browsers match the given stats. */
+function assertStats(
+    context: VariantResults, passing: number, pending: number, failing: number,
+    status: 'complete') {
+  const expected: Stats = {passing, pending, failing, status};
+  expect(context.stats).to.deep.equal(repeatBrowsers(context, expected));
+}
+
+/** Asserts that all browsers match the given test layout. */
+function assertTests(context: VariantResults, expected: TestNode) {
+  expect(context.tests).to.deep.equal(repeatBrowsers(context, expected));
+}
+
+
+/** Asserts that all browsers emitted the given errors. */
+function assertTestErrors(
+    context: VariantResults, expected: TestErrorExpectation) {
+  lodash.each(context.testErrors, function(actual, browser) {
+    expect(Object.keys(expected))
+        .to.have.members(
+            Object.keys(actual), 'Test file mismatch for ' + browser +
+                `: expected ${JSON
+                    .stringify(Object.keys(expected))} - got ${JSON.stringify(
+                        Object.keys(actual))}`);
+
+    lodash.each(actual, function(errors, file) {
+      const expectedErrors = expected[file];
+      // Currently very dumb for simplicity: We don't support suites.
+      expect(Object.keys(expectedErrors))
+          .to.have.members(
+              Object.keys(errors),
+              `Test failure mismatch for ${file} on ${browser}`);
+
+      lodash.each(errors, function(error: Error, test: string) {
+        const locationInfo = `for ${file} - "${test}" on ${browser}`;
+        const expectedError = expectedErrors[test];
+        const stackLines = error.stack.split('\n');
+        expect(error.message)
+            .to.eq(expectedError[0], `Error message mismatch ${locationInfo}`);
+
+        // Chai fails to emit stacks for Firefox.
+        // https://github.com/chaijs/chai/issues/100
+        if (browser.indexOf('firefox') !== -1) {
+          return;
+        }
+
+        const expectedErrorText = expectedError[0];
+        const stackTraceMatcher = expectedError[1];
+        expect(stackLines[0]).to.eq(expectedErrorText);
+        expect(stackLines[stackLines.length - 1])
+            .to.match(new RegExp(stackTraceMatcher));
+      });
+    });
+  });
+}
+
+function assertVariantResultsConformToGolden(
+    golden: VariantResultGolden, variantResults: VariantResults) {
+  // const variantResults = testResults.getVariantResults('');
+  it('records the correct result stats', function() {
+    try {
+      assertStats(
+          variantResults, golden.passing, golden.pending, golden.failing,
+          <any>golden.status);
+    } catch (_) {
+      // mocha reports twice the failures because reasons
+      // https://github.com/mochajs/mocha/issues/2083
+      assertStats(
+          variantResults, golden.passing, golden.pending, golden.failing * 2,
+          <any>golden.status);
+    }
+  });
+
+  if (golden.passing + golden.pending + golden.failing === 0 && !golden.tests) {
+    return;
+  }
+
+  it('runs the correct tests', function() {
+    assertTests(variantResults, golden.tests);
+  });
+
+  if (golden.errors || golden.failing > 0) {
+    it('emits well formed errors', function() {
+      assertTestErrors(variantResults, golden.errors);
+    });
+  }
+  // it('passed the test', function() {
+  //   assertPassed(testResults);
+  // });
+}
+
+function getBrowserName(browser: BrowserDef) {
+  const parts: string[] = [];
+  if (browser.platform && !browser.deviceName) {
+    parts.push(browser.platform);
+  }
+
+  parts.push(browser.deviceName || browser.browserName);
+
+  if (browser.version) {
+    parts.push(browser.version);
+  }
+
+  /*
+  if (browser.variant) {
+    parts.push(`[${browser.variant}]`);
+  }
+  */
+
+  return parts.join(' ');
+}
+
+function repeatBrowsers<T>(
+    context: VariantResults, data: T): {[browserId: string]: T} {
+  expect(Object.keys(context.stats).length)
+      .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
+  return lodash.mapValues(context.stats, () => data);
+}

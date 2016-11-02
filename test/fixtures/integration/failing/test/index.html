@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../../browser.js"></script>
+  </head>
+  <body>
+    <script>
+      WCT.loadSuites(['tests.html', 'tests.js']);
+
+      test('inline passing test', function() {});
+      test('inline failing test', function() {
+        assert.isTrue(false);
+      });
+    </script>
+  </body>
+</html>

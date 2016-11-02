@@ -42,7 +42,7 @@
   ],
   "scripts": {
     "lint": "gulp lint",
-    "init": "gulp init",
+    "init": "bower install && gulp init",
     "build": "gulp build",
     "test": "gulp test",
     "prepublish": "gulp prepublish",
@@ -81,6 +81,7 @@
     "wct-sauce": "^1.8.2"
   },
   "devDependencies": {
+    "bower": "^1.7.9",
     "clang-format": "^1.0.43",
     "depcheck": "^0.6.3",
     "grunt": "^0.4.5",
