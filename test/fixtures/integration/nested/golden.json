@@ -1,0 +1,12 @@
+{
+  "passing": 4,
+  "pending": 0,
+  "failing": 0,
+  "status": "complete",
+  "tests": {
+    "test/": {"js test": {"state": "passing"}},
+    "test/one/tests.html": {"test": {"state": "passing"}},
+    "test/two/": {"inline test": {"state": "passing"}},
+    "test/leaf.html": {"test": {"state": "passing"}}
+  }
+}

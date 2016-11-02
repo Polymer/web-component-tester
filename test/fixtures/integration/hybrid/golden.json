@@ -1,0 +1,18 @@
+{
+  "passing": 6,
+  "pending": 0,
+  "failing": 0,
+  "status": "complete",
+  "tests": {
+    "test/": {
+      "inline suite": {"inline nested test": {"state": "passing"}},
+      "inline test": {"state": "passing"},
+      "suite": {"nested test": {"state": "passing"}},
+      "test": {"state": "passing"}
+    },
+    "test/tests.html": {
+      "suite": {"nested test": {"state": "passing"}},
+      "test": {"state": "passing"}
+    }
+  }
+}

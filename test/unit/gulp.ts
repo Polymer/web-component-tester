@@ -25,7 +25,7 @@ import * as steps from '../../runner/steps';
 const expect = chai.expect;
 chai.use(require('sinon-chai'));
 
-const FIXTURES = path.resolve(__dirname, '../fixtures/integration');
+const FIXTURES = path.resolve(__dirname, '../fixtures/cli');
 
 describe('gulp', function() {
 

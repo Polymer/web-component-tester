@@ -1,0 +1,25 @@
+{
+  "passing": 5,
+  "pending": 0,
+  "failing": 0,
+  "status": "complete",
+  "tests": {
+    "test/tests.html": {
+      "testing projected element replacement": {
+        "projection replace test": {"state": "passing"}
+      },
+      "testing standard multiple replace": {
+        "double replace test": {"state": "passing"}
+      },
+      "testing template bindings": {
+        "dom-repeat bindings exist": {"state": "passing"}
+      },
+      "testing template reset after test": {
+        "checking template is reset after replace test": {"state": "passing"}
+      },
+      "testing templatized multiple replace": {
+        "dom-if test": {"state": "passing"}
+      }
+    }
+  }
+}
