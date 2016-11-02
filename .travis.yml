@@ -1,20 +1,18 @@
+sudo: required
+dist: trusty
+addons:
+  firefox: 'latest'
+  apt:
+    sources:
+      - google-chrome
+    packages:
+      - google-chrome-stable
 language: node_js
 node_js:
   - "4"
   - "6"
 before_script:
-  - npm install
+  - npm run init
 script:
   - xvfb-run npm test
 
-# TODO(rictic): Uncomment the below when trying to get the integration tests
-# working on travis.
-# sudo: required
-# dist: trusty
-# addons:
-#   firefox: '46.0'
-#   apt:
-#     sources:
-#       - google-chrome
-#     packages:
-#       - google-chrome-stable

@@ -5,6 +5,8 @@
   "files.exclude": {
     "runner/*.js": true,
     "test/unit/*.js": true,
-    "test/integration/*.js": true
-  },
+    "test/integration/*.js": true,
+    "browser.js": true,
+    "browser.js.map": true
+  }
 }

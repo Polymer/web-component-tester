@@ -82,8 +82,7 @@ describe('grunt', function() {
       sandbox.stub(wctLocalBrowsers, 'detect', async() => LOCAL_BROWSERS);
       sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));
 
-      process.chdir(
-          path.resolve(__dirname, '../fixtures/integration/standard'));
+      process.chdir(path.resolve(__dirname, '../fixtures/cli/standard'));
     });
 
     afterEach(function() {

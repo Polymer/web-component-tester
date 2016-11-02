@@ -75,9 +75,7 @@ gulp.task('test', function(done) {
   runSequence(
       ['build:typescript', 'lint'],
       'test:unit',
-      // TODO(rictic): uncomment the below when we've got integration tests
-      // working on travis.
-      // 'test:integration',
+      'test:integration',
       done);
 });
 
@@ -188,5 +186,5 @@ function commonDepCheck(options) {
 }
 
 gulp.task('prepublish', function(done) {
-  runSequence('build-all', 'test', done);
+  runSequence('build-all', 'test:unit', done);
 });
