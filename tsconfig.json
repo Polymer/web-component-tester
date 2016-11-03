@@ -3,15 +3,19 @@
         "target": "es6",
         "module": "commonjs",
         "moduleResolution": "node",
-        "isolatedModules": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "declaration": false,
+        "isolatedModules": false,
         "noImplicitAny": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noImplicitThis": false,
+        "strictNullChecks": false,
         "removeComments": false,
         "preserveConstEnums": true,
         "suppressImplicitAnyIndexErrors": true,
-        "lib": ["es2017"]
+        "lib": ["es2017"],
+        "declaration": false,
+        "sourceMap": true,
+        "pretty": true
     },
     "exclude": [
         "node_modules"
