@@ -13,7 +13,7 @@
  */
 
 import * as events from 'events';
-import * as http from 'http';
+import * as http from 'spdy';
 import * as _ from 'lodash';
 import * as socketIO from 'socket.io';
 import * as util from 'util';
@@ -42,8 +42,8 @@ export type Handler = ((...args: any[]) => Promise<any>) |
 export class Context extends events.EventEmitter {
   options: config.Config;
   private _hookHandlers: {[key: string]: Handler[]} = {};
-  _socketIOServer: SocketIO.Server;
-  _httpServer: http.Server;
+  _socketIOServers: SocketIO.Server[];
+  _httpServers: http.Server[];
   _testRunners: BrowserRunner[];
 
   constructor(options?: config.Config) {

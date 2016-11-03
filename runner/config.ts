@@ -50,16 +50,14 @@ export interface Config {
   registerHooks?: (wct: Context) => void;
   enforceJsonConf?: boolean;
   webserver?: {
-    // The port that the webserver should run on. A port will be determined at
-    // runtime if none is provided.
+    // The port that the main webserver should run on. A port will be
+    // determined at runtime if none is provided.
     port: number;
-    // The hostname used when generating URLs for the webdriver client.
-    hostname: string;
-    // The URL prefix that serves contents from the project root.
-    urlPrefix: string;
-    webRunnerPath?: string;
-    webRunnerContent?: string;
+
     staticContent?: {[file: string]: string};
+
+    _generatedIndexContent?: string;
+    _servers?: {variant: string, url: string}[];
   };
 
   skipPlugins?: string[];
@@ -157,10 +155,6 @@ export function defaults(): Config {
       // The port that the webserver should run on. A port will be determined at
       // runtime if none is provided.
       port: undefined,
-      // The hostname used when generating URLs for the webdriver client.
-      hostname: 'localhost',
-      // The URL prefix that serves contents from the project root.
-      urlPrefix: '/components/<basename>',
     },
   };
 }

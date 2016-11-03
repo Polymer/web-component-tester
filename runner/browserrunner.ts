@@ -34,6 +34,7 @@ export interface BrowserDef extends wd.Capabilities {
   url: string;
   sessionId: string;
   deviceName?: string;
+  variant?: string;
 }
 
 // Browser abstraction, responsible for spinning up a browser instance via wd.js
@@ -49,15 +50,23 @@ export class BrowserRunner {
   options: Config;
   donePromise: Promise<void>;
 
+  /**
+   * The url of the initial page to load in the browser when starting tests.
+   */
+  url: string;
+
   private _resolve: () => void;
   private _reject: (err: any) => void;
 
-  constructor(emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config) {
+  constructor(
+      emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config,
+      url: string) {
     this.emitter = emitter;
     this.def = def;
     this.options = options;
     this.timeout = options.testTimeout;
     this.emitter = emitter;
+    this.url = url;
 
     this.stats = {status: 'initializing'};
     this.browser = wd.remote(this.def.url);
@@ -128,7 +137,6 @@ export class BrowserRunner {
         // debugger;
         try {
           const data = JSON.parse(error.data);
-          console.log(data.value.message);
           if (data.value && data.value.message &&
               /Failed to connect to SafariDriver/i.test(data.value.message)) {
             error = 'Until Selenium\'s SafariDriver supports ' +
@@ -151,12 +159,10 @@ export class BrowserRunner {
   }
 
   startTest() {
-    const webserver = this.options.webserver;
-    const host = `http://${webserver.hostname}:${webserver.port}`;
-    const path = this.options.webserver.webRunnerPath;
-    const extra = (path.indexOf('?') === -1 ? '?' : '&') +
-        `cli_browser_id=${this.def.id}`;
-    this.browser.get(host + path + extra, (error) => {
+    const url = this.url;
+    const extra =
+        (url.indexOf('?') === -1 ? '?' : '&') + `cli_browser_id=${this.def.id}`;
+    this.browser.get(this.url + extra, (error) => {
       if (error) {
         this.done(error.data || error);
       } else {
@@ -167,7 +173,6 @@ export class BrowserRunner {
 
   onEvent(event: string, data: any) {
     this.extendTimeout();
-
     if (event === 'browser-start') {
       // Always assign, to handle re-runs (no browser-init).
       this.stats = {

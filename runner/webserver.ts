@@ -18,7 +18,7 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {RequestHandler, ServerInfo, startServers} from 'polyserve';
+import {MainlineServer, RequestHandler, ServerInfo, startServers, VariantServer} from 'polyserve';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
@@ -79,16 +79,11 @@ export function webserver(wct: Context): void {
       options.clientOptions.verbose = true;
     }
 
-    // Prefix our web runner URL with the base path.
-    let urlPrefix = options.webserver.urlPrefix;
-    urlPrefix = urlPrefix.replace('<basename>', path.basename(options.root));
-    options.webserver.webRunnerPath = urlPrefix + '/generated-index.html';
-
     // Hacky workaround for Firefox + Windows issue where FF screws up pathing.
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
-    options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
+    options.webserver._generatedIndexContent = INDEX_TEMPLATE(options);
   });
 
   wct.hook('prepare', async function() {
@@ -111,75 +106,101 @@ export function webserver(wct: Context): void {
         `);
         hasWarnedBrowserJs = true;
       }
-      send(request, path.join(options.root, 'bower_components', 'web-component-tester', 'browser.js')).pipe(response);
+      const browserJsPath = path.join(
+          options.root, 'bower_components', 'web-component-tester',
+          'browser.js');
+      send(request, browserJsPath).pipe(response);
     });
     // TODO(rictic): detect that the user hasn't bower installed wct and die.
 
-    // Mapped static content (overriding files served at the root).
-    if (wsOptions.webRunnerContent) {
-      additionalRoutes.set(
-          wsOptions.webRunnerPath, function(request, response) {
-            response.set(DEFAULT_HEADERS);
-            response.send(wsOptions.webRunnerContent);
-          });
-    }
     _.each(wsOptions.staticContent, function(file, url) {
-      additionalRoutes.set(url, function(request, response) {
+      additionalRoutes.set(url, (request, response) => {
         response.set(DEFAULT_HEADERS);
         send(request, file).pipe(response);
       });
     });
 
+    const pathToGeneratedIndex =
+        `/components/${path.basename(options.root)}/generated-index.html`;
+    additionalRoutes.set(pathToGeneratedIndex, (request, response) => {
+      response.set(DEFAULT_HEADERS);
+      response.send(options.webserver._generatedIndexContent);
+    });
+
     // Serve up project & dependencies via polyserve
-    const polyserveServers = await startServers({
+    const polyserveResult = await startServers({
       root: options.root,
       headers: DEFAULT_HEADERS,
       packageName: path.basename(options.root),
       additionalRoutes: additionalRoutes,
     });
-    if (polyserveServers.kind !== 'mainline') {
-      throw new Error('Internal Error: got multiple servers back from polyserve');
+    let servers: Array<MainlineServer|VariantServer>;
+    if (polyserveResult.kind === 'mainline') {
+      servers = [polyserveResult];
+      wsOptions.port = polyserveResult.server.address().port;
+    } else if (polyserveResult.kind === 'MultipleServers') {
+      servers = [polyserveResult.mainline];
+      servers = servers.concat(polyserveResult.variants);
+      wsOptions.port = polyserveResult.mainline.server.address().port;
+    } else {
+      const never: never = polyserveResult;
+      throw new Error(
+          'Internal error: Got unknown response from polyserve.startServers');
     }
-    const app = polyserveServers.app;
-    // enableDestroy monkeypatches a destroy() method onto the server.
-    type DestroyableServer = typeof polyserveServers.server & {destroy(): void};
-    const server = polyserveServers.server as DestroyableServer;
-    wsOptions.port = server.address().port;
 
-    wct._httpServer = server as any;
+    const onDestroyHandlers: Array<() => Promise<void>> = [];
+    for (const server of servers) {
+      const destroyableServer = server.server as any;
+      serverDestroy(destroyableServer);
+      onDestroyHandlers.push(() => {
+        destroyableServer.destroy();
+        return new Promise<void>(
+            (resolve) => server.server.on('close', () => resolve()));
+      });
+    }
+
+    wct._httpServers = servers.map(s => s.server);
 
     // At this point, we allow other plugins to hook and configure the
-    // webserver as they please.
-    await wct.emitHook('prepare:webserver', app);
+    // webservers as they please.
+    for (const server of servers) {
+      await wct.emitHook('prepare:webserver', server.app);
+    }
 
-    app.use('/httpbin', httpbin.httpbin);
-
-    app.get('/favicon.ico', function(request, response) {
-      response.end();
+    options.webserver._servers = servers.map(s => {
+      return {
+        url: `http://localhost:${s.server.address().port}${pathToGeneratedIndex
+                                                        }`,
+        variant: s.kind === 'mainline' ? '' : s.variantName
+      };
     });
 
-    app.use(function(request, response, next) {
-      wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
-      next();
-    });
+    // TODO(rictic): re-enable this stuff. need to either move this code into
+    //     polyserve or let the polyserve API expose this stuff.
+    // app.use('/httpbin', httpbin.httpbin);
 
-    serverDestroy(server as any);
+    // app.get('/favicon.ico', function(request, response) {
+    //   response.end();
+    // });
 
-    cleankill.onInterrupt(function(done) {
+    // app.use(function(request, response, next) {
+    //   wct.emit('log:warn', '404', chalk.magenta(request.method),
+    //   request.url);
+    //   next();
+    // });
+
+    async function interruptHandler() {
       // close the socket IO server directly if it is spun up
-      const io = wct._socketIOServer;
-      if (io) {
+      for (const io of (wct._socketIOServers || [])) {
         // we will close the underlying server ourselves
         (<any>io).httpServer = null;
         io.close();
       }
-      server.destroy();
-      server.on('close', done);
+      await Promise.all(onDestroyHandlers.map((f) => f()));
+    };
+    cleankill.onInterrupt((done) => {
+      interruptHandler().then(() => done(), done);
     });
-
-    wct.emit(
-        'log:info', 'Web server running on port', chalk.yellow(server.address().port.toString()),
-        'and serving from', chalk.magenta(options.root));
   });
 };
 
