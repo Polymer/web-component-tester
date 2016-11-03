@@ -1,7 +1,7 @@
 declare module 'findup-sync' {
   import * as minimatch from 'minimatch';
 
-  interface IOptions extends minimatch.Options {
+  interface IOptions extends minimatch.IOptions {
     cwd?: string;
   }
 

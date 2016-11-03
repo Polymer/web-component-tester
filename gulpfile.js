@@ -13,19 +13,19 @@ const depcheck = require('depcheck');
 const fs = require('fs');
 const glob = require('glob');
 const gulp = require('gulp');
+const bower = require('gulp-bower');
 const jshint = require('gulp-jshint');
 const mocha = require('gulp-spawn-mocha');
 const tslint = require('gulp-tslint');
 const ts = require('gulp-typescript');
-const typings = require('gulp-typings');
 const lazypipe = require('lazypipe');
 const path = require('path');
 const rollup = require('rollup');
 const runSequence = require('run-sequence');
 
+
 // const commonTools = require('tools-common/gulpfile');
 const commonTools = {
-  init: commonInit,
   depcheck: commonDepCheck
 };
 
@@ -33,7 +33,6 @@ const tsProject = ts.createProject('tsconfig.json', {
   typescript: require('typescript')
 });
 
-commonTools.init();
 
 gulp.task('lint', ['tslint', 'test:style', 'depcheck']);
 
@@ -80,13 +79,15 @@ gulp.task('test', function(done) {
 });
 
 gulp.task('build-all', (done) => {
-  runSequence('clean', 'init', 'lint', 'build', done);
+  runSequence('clean', 'lint', 'build', done);
 });
 
 gulp.task('build', ['build:typescript', 'build:browser']);
 
 gulp.task('build:typescript', function() {
-  return tsProject.src().pipe(ts(tsProject)).js.pipe(gulp.dest('./'));
+  // Ignore typescript errors, because gulp-typescript, like most things
+  // gulp, can't be trusted.
+  return tsProject.src().pipe(tsProject(ts.reporter.nullReporter())).js.pipe(gulp.dest('./'));
 });
 
 // Specific tasks
@@ -121,7 +122,11 @@ gulp.task('test:unit', function() {
       .pipe(mocha({reporter: 'spec'}));
 });
 
-gulp.task('test:integration', function() {
+gulp.task('bower', function() {
+  return bower();
+});
+
+gulp.task('test:integration', ['bower'], function() {
   return gulp.src('test/integration/*.js', {read: false})
       .pipe(mocha({reporter: 'spec'}));
 });
@@ -153,17 +158,14 @@ commonTools.depcheck({
   ])
 });
 
-function commonInit() {
-  gulp.task('init', () => gulp.src('./typings.json').pipe(typings()));
-}
-
 function commonDepCheck(options) {
   const defaultOptions = {stickyDeps: new Set()};
   options = Object.assign({}, defaultOptions, options);
 
   gulp.task('depcheck', () => {
     return new Promise((resolve, reject) => {
-      depcheck(__dirname, {ignoreDirs: []}, resolve);
+      depcheck(
+          __dirname, {ignoreDirs: [], ignoreMatches: ['@types/*']}, resolve);
     }).then((result) => {
       const invalidFiles = Object.keys(result.invalidFiles) || [];
       const invalidJsFiles = invalidFiles.filter((f) => f.endsWith('.js'));
