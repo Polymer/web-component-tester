@@ -24,7 +24,7 @@ const PREFIXES = [
   'wct-',
 ];
 
-interface Metadata {}
+export interface Metadata {}
 
 /**
  * A WCT plugin. This constructor is private. Plugins can be retrieved via

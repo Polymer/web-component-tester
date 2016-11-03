@@ -32,7 +32,7 @@ const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 const WCT_ROOT = path.resolve(__dirname, '..');
 
-type Browser = string|{browserName: string, platform: string};
+export type Browser = string|{browserName: string, platform: string};
 
 export interface Config {
   suites?: string[];
@@ -270,7 +270,7 @@ const ARG_CONFIG = {
 const PREPARSE_ARGS =
     ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck'];
 
-interface PreparsedArgs {
+export interface PreparsedArgs {
   plugins?: string[];
   skipPlugins?: string[];
   simpleOutput?: boolean;

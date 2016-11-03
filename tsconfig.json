@@ -13,7 +13,7 @@
         "preserveConstEnums": true,
         "suppressImplicitAnyIndexErrors": true,
         "lib": ["es2017"],
-        "declaration": false,
+        "declaration": true,
         "sourceMap": true,
         "pretty": true
     },
