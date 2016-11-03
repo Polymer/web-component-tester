@@ -89,11 +89,14 @@ export function webserver(wct: Context): void {
       options.clientOptions.verbose = true;
     }
 
-    // Prefix our web runner URL with the base path.
-    let urlPrefix = options.webserver.urlPrefix;
-    urlPrefix = urlPrefix.replace('<basename>', path.basename(options.root));
-    options.webserver.webRunnerPath = urlPrefix + '/generated-index.html';
-
+    options.webserver._webRunnerPaths = [];
+    for (const option of options._variants) {
+      const componentsDir =
+          option === '' ? '/components/' : `/components-${option}/`;
+      const urlPrefix = `${componentsDir}${path.basename(options.root)}`;
+      options.webserver._webRunnerPaths.push(
+          urlPrefix + '/generated-index.html');
+    }
     // Hacky workaround for Firefox + Windows issue where FF screws up pathing.
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
 
@@ -132,18 +135,30 @@ export function webserver(wct: Context): void {
 
     // The generated web runner, if present.
     if (wsOptions.webRunnerContent) {
-      app.get(wsOptions.webRunnerPath, function(request, response) {
-        response.set(DEFAULT_HEADERS);
-        response.send(wsOptions.webRunnerContent);
-      });
+      for (const path of wsOptions._webRunnerPaths) {
+        app.get(path, function(request, response) {
+          response.set(DEFAULT_HEADERS);
+          response.send(wsOptions.webRunnerContent);
+        });
+      }
     }
 
     // At this point, we allow other plugins to hook and configure the
     // webserver as they please.
     await wct.emitHook('prepare:webserver', app);
 
+    const alternatesMappings: {[url: string]: string}[] = [];
+    for (const option of options._variants) {
+      if (option === '') {
+        continue;
+      }
+      alternatesMappings.push(
+          {[`/components-${option}/${path.basename(options.root)}`]: '.'},
+          {[`/components-${option}`]: `bower_components-${option}`},
+          {[`/components-${option}`]: '..'});
+    }
     // Serve up all the static assets.
-    app.use(serveWaterfall(wsOptions.pathMappings, {
+    app.use(serveWaterfall(alternatesMappings.concat(wsOptions.pathMappings), {
       root: options.root,
       headers: DEFAULT_HEADERS,
       log: wct.emit.bind(wct, 'log:debug'),

@@ -1,14 +1,26 @@
-# 5.x
+## Unreleased
+
+### Added
+
+* Added first pass of _variants_. Variants different configurations of testing the same code.
+  * Add support for _variant dependencies_.
+    * wct already supports loading dependencies from your `bower_components` directory, mapping them to `../` in your code. You can now add variant dependency directories named like `bower_components-foo`. Your tests will then run separately for each such dependency directory, mapping `../` appropriately. See README for more details.
+
+### Removed
+
+* `webserver.webRunnerPath` and `webserver.urlPrefix` were internal properties that were exposed on the `config` object. They have been refactored and their replacement has been prefixed with an underscore to clarify that they're internal implementation details.
+
 ## 5.0.0
 * Mocha upgraded to `v3.1.2`. This shouldn't require any new code, but make sure your tests still pass as there were some more subtle changes made to Mocha behavior for v3 (Add IE7 support, update dependencies). See https://github.com/mochajs/mocha/pull/2350 for more info.
 
-# 4.x
 ## 4.2.2
 * Update bower dependencies to match node dependencies
 * Update rollup to 0.25
 * Update README to point to webcomponents-lite.js
+
 ## 4.2.1
 * Fix `grep` for upstream mocha bug
+
 ## 4.2.0
 * Add `httpbin` functionality to check `POST` requests
   * `POST` to `/httpbin`, response will be contents of `POST`

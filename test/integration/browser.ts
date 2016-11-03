@@ -181,7 +181,7 @@ function runsIntegrationSuite(
           'test-end',
           (browserDef: BrowserDef, data: TestEndData, stats: Stats) => {
             const variantResults =
-                testResults.getVariantResults(/*browserDef.variant || */ '');
+                testResults.getVariantResults(browserDef.variant || '');
             const browserName = getBrowserName(browserDef);
             variantResults.stats[browserName] = stats;
 
@@ -205,7 +205,7 @@ function runsIntegrationSuite(
       addEventHandler(
           'browser-end', (browserDef: BrowserDef, error: any, stats: Stats) => {
             const variantResults =
-                testResults.getVariantResults(/*browserDef.variant || */ '');
+                testResults.getVariantResults(browserDef.variant || '');
             const browserName = getBrowserName(browserDef);
             variantResults.stats[browserName] = stats;
             variantResults.errors[browserName] = error || null;
@@ -401,11 +401,9 @@ function getBrowserName(browser: BrowserDef) {
     parts.push(browser.version);
   }
 
-  /*
   if (browser.variant) {
     parts.push(`[${browser.variant}]`);
   }
-  */
 
   return parts.join(' ');
 }
