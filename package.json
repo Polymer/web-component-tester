@@ -97,6 +97,7 @@
     "wct-sauce": "^1.8.2"
   },
   "devDependencies": {
+    "@types/express-serve-static-core": "^4.0.39",
     "bower": "^1.7.9",
     "clang-format": "^1.0.43",
     "depcheck": "^0.6.3",
