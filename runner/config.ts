@@ -30,7 +30,6 @@ const HOME_DIR = path.resolve(
     process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
-const WCT_ROOT = path.resolve(__dirname, '..');
 
 export type Browser = string | {browserName: string, platform: string};
 
@@ -57,9 +56,6 @@ export interface Config {
     port: number;
     // The hostname used when generating URLs for the webdriver client.
     hostname: string;
-    // mappings of URL prefix to on disk paths that the web server should
-    // serve via https://github.com/PolymerLabs/serve-waterfall
-    pathMappings: {[urlPath: string]: string}[];
     // The URL prefix that serves contents from the project root.
     urlPrefix: string;
     webRunnerPath?: string;
@@ -108,7 +104,6 @@ export function defaults(): Config {
     extraScripts: [],
     // Configuration options passed to the browser client.
     clientOptions: {
-      // Also see `webserver.pathMappings` below.
       root: '/components/',
     },
     // Webdriver capabilities objects for each browser that should be run.
@@ -165,27 +160,6 @@ export function defaults(): Config {
       port: undefined,
       // The hostname used when generating URLs for the webdriver client.
       hostname: 'localhost',
-      // mappings of URL prefix to on disk paths that the web server should
-      // serve via https://github.com/PolymerLabs/serve-waterfall
-      pathMappings: serveWaterfall.mappings.WEB_COMPONENT.concat([
-        // We also expose built in WCT dependencies, but with lower priority
-        // than the project's components.
-        {
-          '/components/sinonjs':
-              path.join(WCT_ROOT, 'node_modules', 'sinon', 'pkg')
-        },
-        {
-          '/components/lodash/lodash.js':
-              path.join(WCT_ROOT, 'node_modules', 'lodash', 'index.js')
-        },
-        {'/components': path.join(WCT_ROOT, 'node_modules')},
-        // npm 3 paths
-        {'/components/sinonjs': path.join(WCT_ROOT, '..', 'sinon', 'pkg')}, {
-          '/components/lodash/lodash.js':
-              path.join(WCT_ROOT, '..', 'lodash', 'index.js')
-        },
-        {'/components/': path.join(WCT_ROOT, '..')}
-      ]),
       // The URL prefix that serves contents from the project root.
       urlPrefix: '/components/<basename>',
     },

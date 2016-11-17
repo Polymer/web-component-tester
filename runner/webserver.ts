@@ -19,6 +19,7 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as _ from 'lodash';
 import * as path from 'path';
+import {makeApp} from 'polyserve';
 import * as send from 'send';
 import * as serveWaterfall from 'serve-waterfall';
 import * as serverDestroy from 'server-destroy';
@@ -32,21 +33,21 @@ const INDEX_TEMPLATE = _.template(fs.readFileSync(
     path.resolve(__dirname, '../data/index.html'), {encoding: 'utf-8'}));
 
 // We prefer serving local assets over bower assets.
-const PACKAGE_ROOT = path.resolve(__dirname, '..');
+const WCT_ROOT = path.resolve(__dirname, '..');
 const SERVE_STATIC = {
   // Keys are regexps.
   '^(.*/web-component-tester|)/browser\\.js$':
-      path.join(PACKAGE_ROOT, 'browser.js'),
+      path.join(WCT_ROOT, 'browser.js'),
   '^(.*/web-component-tester|)/browser\\.js\\.map$':
-      path.join(PACKAGE_ROOT, 'browser.js.map'),
+      path.join(WCT_ROOT, 'browser.js.map'),
   '^(.*/web-component-tester|)/data/a11ySuite\\.js$':
-      path.join(PACKAGE_ROOT, 'data', 'a11ySuite.js'),
+      path.join(WCT_ROOT, 'data', 'a11ySuite.js'),
 };
 
 const DEFAULT_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
   'Pragma': 'no-cache',
-  'Expires': 0,
+  'Expires': '0',
 };
 
 // Sauce Labs compatible ports
@@ -142,12 +143,13 @@ export function webserver(wct: Context): void {
     // webserver as they please.
     await wct.emitHook('prepare:webserver', app);
 
-    // Serve up all the static assets.
-    app.use(serveWaterfall(wsOptions.pathMappings, {
+    // Serve up project & dependencies via polyserve
+    const polyserve = makeApp({
       root: options.root,
       headers: DEFAULT_HEADERS,
-      log: wct.emit.bind(wct, 'log:debug'),
-    }));
+      packageName: path.basename(options.root),
+    });
+    app.use('/components/', polyserve);
 
     app.use('/httpbin', httpbin.httpbin);
 
