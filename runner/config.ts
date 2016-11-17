@@ -60,11 +60,14 @@ export interface Config {
     // mappings of URL prefix to on disk paths that the web server should
     // serve via https://github.com/PolymerLabs/serve-waterfall
     pathMappings: {[urlPath: string]: string}[];
-    // The URL prefix that serves contents from the project root.
-    urlPrefix: string;
-    webRunnerPath?: string;
     webRunnerContent?: string;
     staticContent?: {[file: string]: string};
+
+    /**
+     * Corresponds to _variants, an array of entry point urls that we want to
+     * open each browser to.
+     */
+    _webRunnerPaths?: string[];
   };
 
   skipPlugins?: string[];
@@ -77,6 +80,14 @@ export interface Config {
   skipCleanup?: boolean;
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
+
+  /**
+   * Used internally. An array corresponding to other component directories that
+   * we should test with. e.g. if we see `bower_components-foo` and
+   * `bower_components-bar` in the root dir then this array will be
+   * ['', 'foo', 'bar']
+   */
+  _variants?: string[];
 }
 
 // The full set of options, as a reference.
@@ -185,9 +196,7 @@ export function defaults(): Config {
               path.join(WCT_ROOT, '..', 'lodash', 'index.js')
         },
         {'/components/': path.join(WCT_ROOT, '..')}
-      ]),
-      // The URL prefix that serves contents from the project root.
-      urlPrefix: '/components/<basename>',
+      ])
     },
   };
 }
@@ -455,6 +464,22 @@ export async function expand(context: Context): Promise<void> {
   const options = context.options;
   let root = context.options.root || process.cwd();
   context.options.root = root = path.resolve(root);
+
+  const alternateComponentDirs =
+      fs.readdirSync(options.root)
+          .filter(f => f.startsWith('bower_components-'))
+          .map(f => f.match(/bower_components-(.*)/)[1]);
+
+  const altMappings = alternateComponentDirs.map(alt => {
+    return {[`/components-${alt}`]: `bower_components-${alt}`};
+  });
+  for (const alt of altMappings) {
+    context.options.webserver.pathMappings.unshift(alt);
+  }
+
+
+  const componentOptions = [''].concat(alternateComponentDirs);
+  context.options._variants = componentOptions;
 
   options.origSuites = _.clone(options.suites);
 

@@ -240,6 +240,26 @@ For more information on Sauce configuration, [see their Wiki](https://wiki.sauce
 Requesting that plugin via `--plugin` on the command line (or overriding the
 plugin's configuration to `disabled: false`) will cause the plugin to kick in.
 
+## Variant dependencies
+
+Sometimes you want to run your project's tests against different versions of
+your dependencies. For example, suppose there was a significant change in
+paper-button version `v1.5` and you want to confirm that your code works with
+`v1.4` and `v1.5`.
+
+WCT will serve from the `bower_components` directory in your project's root
+directory as siblings of your project's root directory. So if you depend on
+paper-button, you can import it with the url
+`../paper-button/paper-button.html`.
+
+For each directory that WCT detects with a name like
+`bower_components-${variantName}`, it will also run your tests separately
+against that variant of your dependencies. So you could use the [`directory`
+environment variable](https://bower.io/docs/config/) option with bower to set
+up a `bower_components-button-v1.4` directory while developing. WCT would
+notice that directory and run your tests in two different variations, one where
+`../paper-button/paper-button.html` gets `v1.4`, the other where it gets
+`v1.5`.
 
 # Nitty Gritty
 

@@ -76,8 +76,9 @@ describe('cli', () => {
            'test/b.js',
          ]);
          expect(options.root).to.equal(path.join(FIXTURES, 'standard'));
-         expect(options.webserver.webRunnerPath)
-             .to.equal('/components/standard/generated-index.html');
+         expect(options.webserver._webRunnerPaths).to.deep.equal([
+           '/components/standard/generated-index.html'
+         ]);
        });
 
     it('honors globs', async() => {
@@ -122,8 +123,9 @@ describe('cli', () => {
         'x-foo.html',
       ]);
       expect(options.root).to.equal(root);
-      expect(options.webserver.webRunnerPath)
-          .to.equal('/components/standard/generated-index.html');
+      expect(options.webserver._webRunnerPaths).to.deep.equal([
+        '/components/standard/generated-index.html'
+      ]);
     });
 
     it('throws an error if no suites could be found', async() => {
@@ -174,8 +176,9 @@ describe('cli', () => {
           'test/foo.js',
         ]);
         expect(options.root).to.equal(ROOT);
-        expect(options.webserver.webRunnerPath)
-            .to.equal('/components/conf/generated-index.html');
+        expect(options.webserver._webRunnerPaths).to.deep.equal([
+          '/components/conf/generated-index.html'
+        ]);
       });
 
       it('walks the ancestry', async() => {
@@ -186,8 +189,9 @@ describe('cli', () => {
           'test/foo.js',
         ]);
         expect(options.root).to.equal(ROOT);
-        expect(options.webserver.webRunnerPath)
-            .to.equal('/components/conf/generated-index.html');
+        expect(options.webserver._webRunnerPaths).to.deep.equal([
+          '/components/conf/generated-index.html'
+        ]);
       });
 
       it('honors specified values', async() => {
@@ -205,8 +209,9 @@ describe('cli', () => {
           'cli/conf/test/foo.js',
         ]);
         expect(options.root).to.equal(path.dirname(FIXTURES));
-        expect(options.webserver.webRunnerPath)
-            .to.equal('/components/fixtures/generated-index.html');
+        expect(options.webserver._webRunnerPaths).to.deep.equal([
+          '/components/fixtures/generated-index.html'
+        ]);
       });
     });
 
