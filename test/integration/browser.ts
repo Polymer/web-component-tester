@@ -130,7 +130,8 @@ const integrationDir = path.resolve(__dirname, '../fixtures/integration');
  * the output for tests.
  */
 function runsIntegrationSuite(
-    dirName: string, skip: boolean, contextFunction: (context: TestResults) => void) {
+    dirName: string, skip: boolean,
+    contextFunction: (context: TestResults) => void) {
   const suiteName = `integration fixture dir '${dirName}'`;
   let describer: (suiteName: string, spec: () => void) => void = describe;
   if (skip) {
