@@ -15,4 +15,6 @@
     "browser.js": true,
     "browser.js.map": true
   }
+,
+"typescript.tsdk": "./node_modules/typescript/lib"
 }
