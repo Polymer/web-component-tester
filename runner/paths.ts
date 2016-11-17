@@ -43,7 +43,8 @@ async function unglob(baseDir: string, patterns: string[]):
       }
 
       // for non-POSIX support, replacing path separators
-      return _.union(_.flatten(strs)).map((str) => str.replace(/\//g, path.sep));
+      return _.union(_.flatten(strs))
+          .map((str) => str.replace(/\//g, path.sep));
     }
 
 /**

@@ -22,10 +22,10 @@ import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
 
-export type Handler =
-    ((...args: any[]) => Promise<any>)|((done: (err?: any) => void) => void)|
-    ((arg1: any, done: (err?: any) => void) => void)|
-    ((arg1: any, arg2: any, done: (err?: any) => void) => void)|
+export type Handler = ((...args: any[]) => Promise<any>) |
+    ((done: (err?: any) => void) => void) |
+    ((arg1: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
     ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void);
 
 /**

@@ -24,7 +24,7 @@ describe('paths', function() {
     async function expectExpands(patterns: string[], expected: string[]) {
       const actual = await paths.expand(baseDir, patterns);
 
-      // for non-POSIX support 
+      // for non-POSIX support
       expected = expected.map((str) => str.replace(/\//g, path.sep));
       expect(actual).to.have.members(expected);
     }
