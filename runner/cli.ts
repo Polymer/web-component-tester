@@ -71,7 +71,10 @@ export async function runSauceTunnel(
     }
 
 async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
-  const diskOptions = config.fromDisk();
+  let cmdOptions = <config.Config>config.preparseArgs(args);
+  const context = new Context(cmdOptions);
+
+  const diskOptions = context.options;
   const baseOptions: config.Config =
       (diskOptions.plugins && diskOptions.plugins['sauce']) ||
       diskOptions.sauce || {};
