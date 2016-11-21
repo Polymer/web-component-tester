@@ -21,6 +21,8 @@ import * as util from 'util';
 import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
+const JSON_MATCHER = 'wct.conf.json';
+const CONFIG_MATCHER = 'wct.conf.*';
 
 type Handler =
     ((...args: any[]) => Promise<any>)|((done: (err?: any) => void) => void)|
@@ -49,6 +51,16 @@ export class Context extends events.EventEmitter {
   constructor(options?: config.Config) {
     super();
     options = options || {};
+
+    let matcher : string;
+    if (options.configFile) {
+      matcher = options.configFile;
+    } else if (options.enforceJsonConf) {
+      matcher = JSON_MATCHER;
+    } else {
+      matcher = CONFIG_MATCHER;
+    }
+    
     /**
      * The configuration for the current WCT run.
      *
@@ -57,7 +69,7 @@ export class Context extends events.EventEmitter {
      */
     this.options = config.merge(
         config.defaults(),
-        config.fromDisk(options.enforceJsonConf, options.root, options.configFile), options);
+        config.fromDisk(matcher, options.root), options);
   }
 
   // Hooks

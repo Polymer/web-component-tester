@@ -185,7 +185,9 @@ you based on the suites you ask it to load._
 
 The `wct` command line tool will pick up custom configuration from a
 `wct.conf.json` file located in the root of your project.  
-Or you can specify your own file via the commandline option: --configFile my.wct.conf.js  
+Or, you can specify your own file via the `--configFile` command line option.   
+Example: `--configFile my.wct.conf.js`   
+
  It should export the custom configuration:
 
 ```js
