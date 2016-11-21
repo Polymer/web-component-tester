@@ -52,7 +52,7 @@ export class Context extends events.EventEmitter {
     super();
     options = options || {};
 
-    let matcher : string;
+    let matcher: string;
     if (options.configFile) {
       matcher = options.configFile;
     } else if (options.enforceJsonConf) {
@@ -60,7 +60,7 @@ export class Context extends events.EventEmitter {
     } else {
       matcher = CONFIG_MATCHER;
     }
-    
+
     /**
      * The configuration for the current WCT run.
      *
