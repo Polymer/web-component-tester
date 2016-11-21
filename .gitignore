@@ -1,10 +1,17 @@
 # Update .npmignore whenever you update this file!
 
 .todo
-bower_components
-node_modules
+/bower_components
+/node_modules
 npm-debug.log
 typings/
 runner/*.js
+runner/*.d.ts
+runner/*.js.map
 test/unit/*.js
+test/unit/*.d.ts
+test/unit/*.js.map
 test/integration/*.js
+test/integration/*.d.ts
+test/integration/*.js.map
+

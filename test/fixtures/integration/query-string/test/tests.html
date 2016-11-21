@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../../../browser.js"></script>
+  </head>
+  <body>
+    <script>
+      test('preserves query strings', function() {
+        expect(window.location.search).to.eq('?foo=bar');
+      });
+    </script>
+  </body>
+</html>

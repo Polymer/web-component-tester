@@ -4,7 +4,17 @@
   "clang-format.formatOnSave": true,
   "files.exclude": {
     "runner/*.js": true,
+    "runner/*.d.ts": true,
+    "runner/*.js.map": true,
     "test/unit/*.js": true,
-    "test/integration/*.js": true
-  },
+    "test/unit/*.d.ts": true,
+    "test/unit/*.js.map": true,
+    "test/integration/*.js": true,
+    "test/integration/*.d.ts": true,
+    "test/integration/*.js.map": true,
+    "browser.js": true,
+    "browser.js.map": true
+  }
+,
+"typescript.tsdk": "./node_modules/typescript/lib"
 }

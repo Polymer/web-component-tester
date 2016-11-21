@@ -41,7 +41,10 @@ async function unglob(baseDir: string, patterns: string[]):
       for (const pattern of patterns) {
         strs.push(await pGlob(String(pattern), {cwd: baseDir, root: baseDir}));
       }
-      return _.union(_.flatten(strs));
+
+      // for non-POSIX support, replacing path separators
+      return _.union(_.flatten(strs))
+          .map((str) => str.replace(/\//g, path.sep));
     }
 
 /**

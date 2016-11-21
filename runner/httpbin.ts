@@ -22,8 +22,10 @@ import * as multer from 'multer';
 import * as serverDestroy from 'server-destroy';
 
 import {findPort} from './port-scanner';
+import {Router} from 'express';
+export {Router} from 'express';
 
-export const httpbin = express.Router();
+export const httpbin: Router = express.Router();
 
 function capWords(s: string) {
   return s.split('-')

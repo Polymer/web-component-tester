@@ -24,10 +24,10 @@ import {Plugin} from './plugin';
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 
-type Handler =
-    ((...args: any[]) => Promise<any>)|((done: (err?: any) => void) => void)|
-    ((arg1: any, done: (err?: any) => void) => void)|
-    ((arg1: any, arg2: any, done: (err?: any) => void) => void)|
+export type Handler = ((...args: any[]) => Promise<any>) |
+    ((done: (err?: any) => void) => void) |
+    ((arg1: any, done: (err?: any) => void) => void) |
+    ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
     ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void);
 
 /**

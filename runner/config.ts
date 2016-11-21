@@ -30,7 +30,7 @@ const HOME_DIR = path.resolve(
     process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
 const WCT_ROOT = path.resolve(__dirname, '..');
 
-type Browser = string|{browserName: string, platform: string};
+export type Browser = string | {browserName: string, platform: string};
 
 export interface Config {
   suites?: string[];
@@ -273,7 +273,7 @@ const ARG_CONFIG = {
 const PREPARSE_ARGS =
     ['plugins', 'skipPlugins', 'simpleOutput', 'skipUpdateCheck', 'configFile'];
 
-interface PreparsedArgs {
+export interface PreparsedArgs {
   plugins?: string[];
   skipPlugins?: string[];
   simpleOutput?: boolean;
