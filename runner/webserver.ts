@@ -19,7 +19,7 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {makeApp} from 'polyserve';
+import {ServerInfo, startServers} from 'polyserve';
 import * as send from 'send';
 import * as serveWaterfall from 'serve-waterfall';
 import * as serverDestroy from 'server-destroy';
@@ -34,15 +34,6 @@ const INDEX_TEMPLATE = _.template(fs.readFileSync(
 
 // We prefer serving local assets over bower assets.
 const WCT_ROOT = path.resolve(__dirname, '..');
-const SERVE_STATIC = {
-  // Keys are regexps.
-  '^(.*/web-component-tester|)/browser\\.js$':
-      path.join(WCT_ROOT, 'browser.js'),
-  '^(.*/web-component-tester|)/browser\\.js\\.map$':
-      path.join(WCT_ROOT, 'browser.js.map'),
-  '^(.*/web-component-tester|)/data/a11ySuite\\.js$':
-      path.join(WCT_ROOT, 'data', 'a11ySuite.js'),
-};
 
 const DEFAULT_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -83,7 +74,7 @@ export function webserver(wct: Context): void {
       webRunnerContent: undefined,
       // Map of route expressions (regular expressions) to local file paths that
       // should be served by the webserver.
-      staticContent: SERVE_STATIC,
+      staticContent: [],
     });
 
     if (options.verbose) {
@@ -97,7 +88,6 @@ export function webserver(wct: Context): void {
 
     // Hacky workaround for Firefox + Windows issue where FF screws up pathing.
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
-
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
     options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
@@ -105,51 +95,40 @@ export function webserver(wct: Context): void {
 
   wct.hook('prepare', async function() {
     const wsOptions = options.webserver;
-
-    const port = await getPort();
-
-    // `port` (and `webRunnerPath`) is read down the line by `BrowserRunner`.
-    wsOptions.port = port;
-
-    const app = express();
-    const server = http.createServer(app);
-    // `runTests` needs a reference to this (for the socket.io endpoint).
-    wct._httpServer = server;
-
-    // Debugging information for each request.
-    app.use(function(request, response, next) {
-      const msg = request.url + ' (' + request.header('referer') + ')';
-      wct.emit('log:debug', chalk.magenta(request.method), msg);
-      next();
-    });
+    const additionalRoutes = new Map<string, express.RequestHandler>();
 
     // Mapped static content (overriding files served at the root).
+    if (wsOptions.webRunnerContent) {
+      additionalRoutes.set(
+          wsOptions.webRunnerPath, function(request, response) {
+            response.set(DEFAULT_HEADERS);
+            response.send(wsOptions.webRunnerContent);
+          });
+    }
     _.each(wsOptions.staticContent, function(file, url) {
-      app.get(new RegExp(url), function(request, response) {
+      additionalRoutes.set(url, function(request, response) {
         response.set(DEFAULT_HEADERS);
         send(request, file).pipe(response);
       });
     });
 
-    // The generated web runner, if present.
-    if (wsOptions.webRunnerContent) {
-      app.get(wsOptions.webRunnerPath, function(request, response) {
-        response.set(DEFAULT_HEADERS);
-        response.send(wsOptions.webRunnerContent);
-      });
-    }
+    // Serve up project & dependencies via polyserve
+    const polyserveServers = await startServers({
+      root: options.root,
+      headers: DEFAULT_HEADERS,
+      packageName: path.basename(options.root),
+      additionalRoutes: additionalRoutes,
+    });
+    console.assert(polyserveServers.length === 1);
+    const polyserve: ServerInfo = polyserveServers[0];
+    const {app, server} = polyserve;
+    const port = wsOptions.port = server.address().port;
+
+    wct._httpServer = server;
 
     // At this point, we allow other plugins to hook and configure the
     // webserver as they please.
     await wct.emitHook('prepare:webserver', app);
-
-    // Serve up project & dependencies via polyserve
-    const polyserve = makeApp({
-      root: options.root,
-      headers: DEFAULT_HEADERS,
-      packageName: path.basename(options.root),
-    });
-    app.use('/components/', polyserve);
 
     app.use('/httpbin', httpbin.httpbin);
 
