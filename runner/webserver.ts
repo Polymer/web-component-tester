@@ -14,12 +14,11 @@
 
 import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
-import * as express from 'express';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {ServerInfo, startServers} from 'polyserve';
+import {RequestHandler, ServerInfo, startServers} from 'polyserve';
 import * as send from 'send';
 import * as serveWaterfall from 'serve-waterfall';
 import * as serverDestroy from 'server-destroy';
@@ -95,7 +94,7 @@ export function webserver(wct: Context): void {
 
   wct.hook('prepare', async function() {
     const wsOptions = options.webserver;
-    const additionalRoutes = new Map<string, express.RequestHandler>();
+    const additionalRoutes = new Map<string, RequestHandler>();
 
     // Mapped static content (overriding files served at the root).
     if (wsOptions.webRunnerContent) {
