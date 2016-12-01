@@ -4,7 +4,7 @@
 
 * Added first pass of _variants_. Variants different configurations of testing the same code.
   * Add support for _variant dependencies_.
-    * wct already supports loading dependencies from your `bower_components` directory, mapping them to `../` in your code. You can now add variant dependency directories named like `bower_components-foo`. Your tests will then run separately for each such dependency directory, mapping `../` appropriately. See README for more details.
+    * wct already supports loading dependencies from your `bower_components` directory, mapping them to `../` in your code. You can now add variant dependency directories named like `bower_components-foo`. When these are detected, tests will then run separately for each such dependency directory, mapping `../` appropriately. See README for more details.
 
 ### Removed
 

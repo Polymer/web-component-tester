@@ -46,13 +46,9 @@ Your test suites can be `.html` documents. For example,
 </html>
 ```
 
-Note that it is _critical_ that you include `web-component-tester/browser.js` in
-your test suites. `browser.js` contains all of WCT's client logic (and loads
+Note that it is _critical_ that you include `../web-component-tester/browser.js`
+in your test suites. `browser.js` contains all of WCT's client logic (and loads
 bundled libraries like mocha and chai).
-
-If you are using [WCT via the command line](#wct), it will automatically serve
-its local copy of `browser.js` on any URL that ends with
-`/web-component-tester/browser.js`.
 
 
 ## `.js` Suites
@@ -260,6 +256,8 @@ up a `bower_components-button-v1.4` directory while developing. WCT would
 notice that directory and run your tests in two different variations, one where
 `../paper-button/paper-button.html` gets `v1.4`, the other where it gets
 `v1.5`.
+
+This is implemented by starting one test server per variant, and one copy of each launched browser per test server.
 
 # Nitty Gritty
 
