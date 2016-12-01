@@ -81,7 +81,7 @@ class VariantResults {
 function runsAllIntegrationSuites() {
   let integrationDirnames = fs.readdirSync(integrationDir);
   // Overwrite integrationDirnames to run tests in isolation while developing:
-  // integrationDirnames = ['missing'];
+  // integrationDirnames = ['components_dir'];
 
   // TODO(#421): `missing` correctly fails, but currently it times out which
   //     takes ~2 minutes.

@@ -20,7 +20,6 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import {RequestHandler, ServerInfo, startServers} from 'polyserve';
 import * as send from 'send';
-import * as serveWaterfall from 'serve-waterfall';
 import * as serverDestroy from 'server-destroy';
 
 import {Context} from './context';
@@ -96,6 +95,26 @@ export function webserver(wct: Context): void {
     const wsOptions = options.webserver;
     const additionalRoutes = new Map<string, RequestHandler>();
 
+    let hasWarnedBrowserJs = false;
+    additionalRoutes.set('/browser.js', function(request, response) {
+      if (!hasWarnedBrowserJs) {
+        console.warn(`
+
+          WARNING:
+          Loading WCT's browser.js from /browser.js is deprecated.
+
+          Instead load it from ../web-component-tester/browser.js
+          (or with the absolute url /components/web-component-tester/browser.js)
+
+          Also be sure to \`bower install web-component-tester\`
+
+        `);
+        hasWarnedBrowserJs = true;
+      }
+      send(request, path.join(options.root, 'bower_components', 'web-component-tester', 'browser.js')).pipe(response);
+    });
+    // TODO(rictic): detect that the user hasn't bower installed wct and die.
+
     // Mapped static content (overriding files served at the root).
     if (wsOptions.webRunnerContent) {
       additionalRoutes.set(
@@ -118,12 +137,16 @@ export function webserver(wct: Context): void {
       packageName: path.basename(options.root),
       additionalRoutes: additionalRoutes,
     });
-    console.assert(polyserveServers.length === 1);
-    const polyserve: ServerInfo = polyserveServers[0];
-    const {app, server} = polyserve;
-    const port = wsOptions.port = server.address().port;
+    if (polyserveServers.kind !== 'mainline') {
+      throw new Error('Internal Error: got multiple servers back from polyserve');
+    }
+    const app = polyserveServers.app;
+    // enableDestroy monkeypatches a destroy() method onto the server.
+    type DestroyableServer = typeof polyserveServers.server & {destroy(): void};
+    const server = polyserveServers.server as DestroyableServer;
+    wsOptions.port = server.address().port;
 
-    wct._httpServer = server;
+    wct._httpServer = server as any;
 
     // At this point, we allow other plugins to hook and configure the
     // webserver as they please.
@@ -140,9 +163,7 @@ export function webserver(wct: Context): void {
       next();
     });
 
-    server.listen(port);
-    (<any>server).port = port;
-    serverDestroy(server);
+    serverDestroy(server as any);
 
     cleankill.onInterrupt(function(done) {
       // close the socket IO server directly if it is spun up
@@ -157,17 +178,9 @@ export function webserver(wct: Context): void {
     });
 
     wct.emit(
-        'log:info', 'Web server running on port', chalk.yellow(port.toString()),
+        'log:info', 'Web server running on port', chalk.yellow(server.address().port.toString()),
         'and serving from', chalk.magenta(options.root));
   });
-
-  async function getPort(): Promise<number> {
-    if (options.webserver.port) {
-      return options.webserver.port;
-    } else {
-      return await findPort(SAUCE_PORTS);
-    }
-  }
 };
 
 // HACK(rictic): remove this ES6-compat hack and export webserver itself

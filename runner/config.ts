@@ -17,7 +17,6 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as nomnom from 'nomnom';
 import * as path from 'path';
-import * as serveWaterfall from 'serve-waterfall';
 import {Capabilities} from 'wd';
 
 import {BrowserDef} from './browserrunner';
