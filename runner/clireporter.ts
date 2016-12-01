@@ -244,6 +244,10 @@ export class CliReporter {
       parts.push(browser.version);
     }
 
+    if (browser.variant) {
+      parts.push(`[${browser.variant}]`);
+    }
+
     return chalk.blue(parts.join(' '));
   };
 
