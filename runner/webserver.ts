@@ -98,8 +98,9 @@ export function webserver(wct: Context): void {
     });
     // TODO(rictic): detect that the user hasn't bower installed wct and die.
 
+    const packageName = path.basename(options.root);
     const pathToGeneratedIndex =
-        `/components/${path.basename(options.root)}/generated-index.html`;
+        `/components/${packageName}/generated-index.html`;
     additionalRoutes.set(pathToGeneratedIndex, (_request, response) => {
       response.set(DEFAULT_HEADERS);
       response.send(options.webserver._generatedIndexContent);
@@ -109,7 +110,7 @@ export function webserver(wct: Context): void {
     const polyserveResult = await startServers({
       root: options.root,
       headers: DEFAULT_HEADERS,
-      packageName: path.basename(options.root),
+      packageName,
       additionalRoutes: additionalRoutes,
     });
     let servers: Array<MainlineServer|VariantServer>;
