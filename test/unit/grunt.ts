@@ -77,7 +77,7 @@ describe('grunt', function() {
     let sandbox: sinon.SinonSandbox;
     beforeEach(function() {
       sandbox = sinon.sandbox.create();
-      sandbox.stub(steps, 'prepare', async(context: Context) => undefined);
+      sandbox.stub(steps, 'prepare', async(_context: Context) => undefined);
 
       sandbox.stub(wctLocalBrowsers, 'detect', async() => LOCAL_BROWSERS);
       sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));

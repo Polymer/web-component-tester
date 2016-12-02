@@ -13,17 +13,14 @@
  */
 
 import {expect} from 'chai';
-import * as cleankill from 'cleankill';
 import * as fs from 'fs';
 import * as lodash from 'lodash';
 import * as path from 'path';
-import * as util from 'util';
 
 import {BrowserDef, Stats} from '../../runner/browserrunner';
-import {CliReporter, CompletedState, State, TestEndData} from '../../runner/clireporter';
+import {CompletedState, TestEndData} from '../../runner/clireporter';
 import * as config from '../../runner/config';
 import {Context} from '../../runner/context';
-import * as steps from '../../runner/steps';
 import {test} from '../../runner/test';
 
 interface TestErrorExpectation {

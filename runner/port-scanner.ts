@@ -20,18 +20,18 @@ function checkPort(port: number): Promise<boolean> {
     let hasPort = false;
 
     // if server is listening, we have the port!
-    server.on('listening', function(err: any) {
+    server.on('listening', function(_err: any) {
       hasPort = true;
       server.close();
     });
 
     // callback on server close to free up the port before report it can be used
-    server.on('close', function(err: any) {
+    server.on('close', function(_err: any) {
       resolve(hasPort);
     });
 
     // our port is busy, ignore it
-    server.on('error', function(err: any) {
+    server.on('error', function(_err: any) {
       // docs say the server should close, this doesn't seem to be the case :(
       server.close();
     });

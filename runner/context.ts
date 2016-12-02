@@ -117,7 +117,7 @@ export class Context extends events.EventEmitter {
       done = arguments[arguments.length - 1];
       let argsEnd = arguments.length - 1;
       if (!(done instanceof Function)) {
-        done = (e) => {};
+        done = (_e) => {};
         argsEnd = arguments.length;
       }
       const hookArgs = Array.from(arguments).slice(1, argsEnd);
@@ -128,7 +128,7 @@ export class Context extends events.EventEmitter {
     if (!boundHooks) {
       boundHooks = <any>hooks;
     }
-    done = done || ((e) => {});
+    done = done || ((_e) => {});
 
     // A hook may return a promise or it may call a callback. We want to
     // treat hooks as though they always return promises, so this converts.

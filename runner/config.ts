@@ -142,7 +142,7 @@ export function defaults(): Config {
     //       });
     //     }
     //
-    registerHooks: function(wct) {},
+    registerHooks: function(_wct) {},
     // Whether `wct.conf.*` is allowed, or only `wct.conf.json`.
     //
     // Handy for CI suites that want to be locked down.

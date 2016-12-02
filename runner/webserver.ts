@@ -12,26 +12,19 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
-import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
 import * as fs from 'fs';
-import * as http from 'http';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {MainlineServer, RequestHandler, ServerInfo, startServers, VariantServer} from 'polyserve';
+import {MainlineServer, RequestHandler, startServers, VariantServer} from 'polyserve';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
 import {Context} from './context';
-import * as httpbin from './httpbin';
-import {findPort} from './port-scanner';
 
 // Template for generated indexes.
 const INDEX_TEMPLATE = _.template(fs.readFileSync(
     path.resolve(__dirname, '../data/index.html'), {encoding: 'utf-8'}));
-
-// We prefer serving local assets over bower assets.
-const WCT_ROOT = path.resolve(__dirname, '..');
 
 const DEFAULT_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -44,12 +37,12 @@ const DEFAULT_HEADERS = {
 // https://docs.saucelabs.com/reference/sauce-connect/#can-i-access-applications-on-localhost-
 // - 80, 443, 888: these ports must have root access
 // - 5555, 8080: not forwarded on Android
-const SAUCE_PORTS = [
-  2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333,  4000,
-  4001, 4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000,  6001,
-  6060, 6666, 6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031,  8081,
-  8765, 8777, 8888, 9000, 9001, 9080, 9090, 9876, 9877, 9999, 49221, 55001
-];
+// const SAUCE_PORTS = [
+//   2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333,  4000,
+//   4001, 4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000,  6001,
+//   6060, 6666, 6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031,  8081,
+//   8765, 8777, 8888, 9000, 9001, 9080, 9090, 9876, 9877, 9999, 49221, 55001
+// ];
 
 /**
  * The webserver module is a quasi-plugin. This ensures that it is hooked in a
@@ -122,7 +115,7 @@ export function webserver(wct: Context): void {
 
     const pathToGeneratedIndex =
         `/components/${path.basename(options.root)}/generated-index.html`;
-    additionalRoutes.set(pathToGeneratedIndex, (request, response) => {
+    additionalRoutes.set(pathToGeneratedIndex, (_request, response) => {
       response.set(DEFAULT_HEADERS);
       response.send(options.webserver._generatedIndexContent);
     });
@@ -145,7 +138,7 @@ export function webserver(wct: Context): void {
     } else {
       const never: never = polyserveResult;
       throw new Error(
-          'Internal error: Got unknown response from polyserve.startServers');
+          `Internal error: Got unknown response from polyserve.startServers: ${never}`);
     }
 
     const onDestroyHandlers: Array<() => Promise<void>> = [];

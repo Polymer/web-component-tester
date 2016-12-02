@@ -38,7 +38,7 @@ describe('gulp', function() {
     wctGulp.init(orch);
 
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare', async(context: Context) => undefined);
+    sandbox.stub(steps, 'prepare', async(_context: Context) => undefined);
     sandbox.stub(steps, 'runTests', async(context: Context) => {
       options = context.options;
     });

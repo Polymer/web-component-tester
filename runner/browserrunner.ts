@@ -25,10 +25,6 @@ export interface Stats {
   failing?: number;
 }
 
-interface NodeCB<T> {
-  (err: any, value?: T): void;
-}
-
 export interface BrowserDef extends wd.Capabilities {
   id: number;
   url: string;
