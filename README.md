@@ -48,8 +48,7 @@ Your test suites can be `.html` documents. For example,
 
 Note that it is _critical_ that you include `../web-component-tester/browser.js`
 in your test suites. `browser.js` contains all of WCT's client logic (and loads
-bundled libraries like mocha and chai).
-
+bundled libraries like mocha and chai). You can also load it from the absolute URL `/components/web-component-tester/browser.js`.
 
 ## `.js` Suites
 
