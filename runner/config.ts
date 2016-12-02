@@ -54,8 +54,6 @@ export interface Config {
     // determined at runtime if none is provided.
     port: number;
 
-    staticContent?: {[file: string]: string};
-
     _generatedIndexContent?: string;
     _servers?: {variant: string, url: string}[];
   };

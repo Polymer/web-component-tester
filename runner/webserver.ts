@@ -58,15 +58,7 @@ export function webserver(wct: Context): void {
     // For now, you should treat all these options as an implementation detail
     // of WCT. They may be opened up for public configuration, but we need to
     // spend some time rationalizing interactions with external webservers.
-    options.webserver = _.merge(options.webserver, {
-      // The URL path that each test run should target.
-      webRunnerPath: undefined,
-      // If present, HTML content that should be served at `webRunner`.
-      webRunnerContent: undefined,
-      // Map of route expressions (regular expressions) to local file paths that
-      // should be served by the webserver.
-      staticContent: [],
-    });
+    options.webserver = _.merge(options.webserver, {});
 
     if (options.verbose) {
       options.clientOptions.verbose = true;
@@ -105,13 +97,6 @@ export function webserver(wct: Context): void {
       send(request, browserJsPath).pipe(response);
     });
     // TODO(rictic): detect that the user hasn't bower installed wct and die.
-
-    _.each(wsOptions.staticContent, function(file, url) {
-      additionalRoutes.set(url, (request, response) => {
-        response.set(DEFAULT_HEADERS);
-        send(request, file).pipe(response);
-      });
-    });
 
     const pathToGeneratedIndex =
         `/components/${path.basename(options.root)}/generated-index.html`;
