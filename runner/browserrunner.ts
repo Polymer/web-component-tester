@@ -159,9 +159,8 @@ export class BrowserRunner {
   }
 
   startTest() {
-    const url = this.url;
-    const extra =
-        (url.indexOf('?') === -1 ? '?' : '&') + `cli_browser_id=${this.def.id}`;
+    const paramDelim = (this.url.indexOf('?') === -1 ? '?' : '&');
+    const extra = `${paramDelim}cli_browser_id=${this.def.id}`;
     this.browser.get(this.url + extra, (error) => {
       if (error) {
         this.done(error.data || error);
