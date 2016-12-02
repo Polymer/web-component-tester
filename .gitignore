@@ -14,4 +14,4 @@ test/unit/*.js.map
 test/integration/*.js
 test/integration/*.d.ts
 test/integration/*.js.map
-
+test/fixtures/integration/temp

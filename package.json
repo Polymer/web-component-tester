@@ -98,6 +98,7 @@
   },
   "devDependencies": {
     "@types/express-serve-static-core": "^4.0.39",
+    "@types/rimraf": "0.0.28",
     "bower": "^1.7.9",
     "clang-format": "^1.0.43",
     "depcheck": "^0.6.3",
@@ -111,6 +112,7 @@
     "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
+    "rimraf": "^2.5.4",
     "rollup": "^0.25.1",
     "run-sequence": "^1.0.1",
     "tslint": "^3.10.2",
