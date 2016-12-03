@@ -127,8 +127,8 @@ export function webserver(wct: Context): void {
     } else {
       const never: never = polyserveResult;
       throw new Error(
-          `Internal error: Got unknown response from polyserve.startServers: ${never
-          }`);
+          `Internal error: Got unknown response from polyserve.startServers:` +
+          `${never}`);
     }
 
     wct._httpServers = servers.map(s => s.server);
@@ -140,9 +140,9 @@ export function webserver(wct: Context): void {
     }
 
     options.webserver._servers = servers.map(s => {
+      const port = s.server.address().port;
       return {
-        url: `http://localhost:${s.server.address().port}${pathToGeneratedIndex
-                                                        }`,
+        url: `http://localhost:${port}${pathToGeneratedIndex}`,
         variant: s.kind === 'mainline' ? '' : s.variantName
       };
     });
