@@ -16,7 +16,7 @@ import * as cleankill from 'cleankill';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {MainlineServer, RequestHandler, startServers, VariantServer} from 'polyserve';
+import {MainlineServer, PolyserveServer, RequestHandler, startServers, VariantServer} from 'polyserve';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
@@ -31,18 +31,6 @@ const DEFAULT_HEADERS = {
   'Pragma': 'no-cache',
   'Expires': '0',
 };
-
-// Sauce Labs compatible ports
-// taken from
-// https://docs.saucelabs.com/reference/sauce-connect/#can-i-access-applications-on-localhost-
-// - 80, 443, 888: these ports must have root access
-// - 5555, 8080: not forwarded on Android
-// const SAUCE_PORTS = [
-//   2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333,  4000,
-//   4001, 4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000,  6001,
-//   6060, 6666, 6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031,  8081,
-//   8765, 8777, 8888, 9000, 9001, 9080, 9090, 9876, 9877, 9999, 49221, 55001
-// ];
 
 /**
  * The webserver module is a quasi-plugin. This ensures that it is hooked in a
@@ -109,33 +97,38 @@ export function webserver(wct: Context): void {
     // Serve up project & dependencies via polyserve
     const polyserveResult = await startServers({
       root: options.root,
-      headers: DEFAULT_HEADERS,
-      packageName,
+      headers: DEFAULT_HEADERS, packageName,
       additionalRoutes: additionalRoutes,
     });
     let servers: Array<MainlineServer|VariantServer>;
+
+    const onDestroyHandlers: Array<() => Promise<void>> = [];
+    const registerServerTeardown = (serverInfo: PolyserveServer) => {
+      const destroyableServer = serverInfo.server as any;
+      serverDestroy(destroyableServer);
+      onDestroyHandlers.push(() => {
+        destroyableServer.destroy();
+        return new Promise<void>(
+            (resolve) => serverInfo.server.on('close', () => resolve()));
+      });
+    };
+
     if (polyserveResult.kind === 'mainline') {
       servers = [polyserveResult];
+      registerServerTeardown(polyserveResult);
       wsOptions.port = polyserveResult.server.address().port;
     } else if (polyserveResult.kind === 'MultipleServers') {
       servers = [polyserveResult.mainline];
       servers = servers.concat(polyserveResult.variants);
       wsOptions.port = polyserveResult.mainline.server.address().port;
+      for (const server of polyserveResult.servers) {
+        registerServerTeardown(server);
+      }
     } else {
       const never: never = polyserveResult;
       throw new Error(
-          `Internal error: Got unknown response from polyserve.startServers: ${never}`);
-    }
-
-    const onDestroyHandlers: Array<() => Promise<void>> = [];
-    for (const server of servers) {
-      const destroyableServer = server.server as any;
-      serverDestroy(destroyableServer);
-      onDestroyHandlers.push(() => {
-        destroyableServer.destroy();
-        return new Promise<void>(
-            (resolve) => server.server.on('close', () => resolve()));
-      });
+          `Internal error: Got unknown response from polyserve.startServers: ${never
+          }`);
     }
 
     wct._httpServers = servers.map(s => s.server);

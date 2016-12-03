@@ -22,6 +22,7 @@ import {CompletedState, TestEndData} from '../../runner/clireporter';
 import * as config from '../../runner/config';
 import {Context} from '../../runner/context';
 import {test} from '../../runner/test';
+import {makeProperTestDir} from './setup_test_dir';
 
 interface TestErrorExpectation {
   [fileName: string]: {
@@ -76,7 +77,8 @@ class VariantResults {
 
 /** Describes all suites, mixed into the environments being run. */
 function runsAllIntegrationSuites() {
-  let integrationDirnames = fs.readdirSync(integrationDir);
+  let integrationDirnames =
+      fs.readdirSync(integrationDir).filter(fn => fn !== 'temp');
   // Overwrite integrationDirnames to run tests in isolation while developing:
   // integrationDirnames = ['components_dir'];
 
@@ -141,11 +143,10 @@ function runsIntegrationSuite(
     before(async function() {
       this.timeout(120 * 1000);
 
-      const suiteRoot = path.join(integrationDir, dirName);
+      const suiteRoot = await makeProperTestDir(dirName);
       const options: config.Config = {
         output: <any>{write: log.push.bind(log)},
         ttyOutput: false,
-        skipCleanup: true,  // We do it manually at the end of all suites.
         root: suiteRoot,
         // TODO(nevir): Migrate
         // remote:      currentEnv.remote,

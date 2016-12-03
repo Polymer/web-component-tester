@@ -12,9 +12,4 @@ node_js:
   - "4"
   - "6"
 script:
-  # TODO(rictic): reenable integration tests by uncommenting this
-  # - xvfb-run npm test
-
-  # temporary, just run unit tests
-  - npm run build && ./node_modules/.bin/gulp test:unit
-
+  - xvfb-run npm test

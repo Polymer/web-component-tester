@@ -1,7 +1,7 @@
 // Place your settings in this file to overwrite default and user settings.
 {
   "clang-format.style": "file",
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
   "editor.formatOnType": true,
   "files.exclude": {
     "runner/*.js": true,
