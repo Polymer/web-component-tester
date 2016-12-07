@@ -16,6 +16,9 @@
 
 * `webserver.webRunnerPath`, `webserver.host`, `webserver.webRunnerContent`, and `webserver.urlPrefix`, `webserver.staticContent` were internal properties that were exposed on the `config` object. They have been refactored and their replacement has been prefixed with an underscore to clarify that they're internal implementation details.
 
+### Fixed
+* Fixed #373 and #383 which were caused by `emitHook` not handling argumnts correctly.
+
 ## 5.0.0
 * Mocha upgraded to `v3.1.2`. This shouldn't require any new code, but make sure your tests still pass as there were some more subtle changes made to Mocha behavior for v3 (Add IE7 support, update dependencies). See https://github.com/mochajs/mocha/pull/2350 for more info.
 
