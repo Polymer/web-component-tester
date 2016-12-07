@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 import {MainlineServer, PolyserveServer, RequestHandler, startServers, VariantServer} from 'polyserve';
+import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
@@ -66,7 +67,8 @@ export function webserver(wct: Context): void {
     const packageName = path.basename(options.root);
     const pathToLocalWct =
         path.join(options.root, 'bower_components', 'web-component-tester');
-    if (!exists(pathToLocalWct)) {
+    const pathToPackage = path.join(pathToLocalWct, 'package.json');
+    if (!exists(pathToPackage)) {
       throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${packageName
                       }).
@@ -76,8 +78,22 @@ Please run this command to install:
 
 Web Component Tester >=6.0 requires that support files needed in the browser are installed as part of the project's dependencies or dev-dependencies. This is to give projects greater control over the versions that are served, while also making Web Component Tester's behavior easier to understand.
 
-Expected location: ${pathToLocalWct}
+Expected to find its package.json at: ${pathToPackage}
 `);
+    }
+    const version = require(pathToPackage).version as string;
+    const allowedRange = require(path.join(
+        __dirname, '..',
+        'package.json'))['--private-wct--']['client-side-version-range'] as
+        string;
+    if (!semver.satisfies(version, allowedRange)) {
+      throw new Error(`
+    The web-component-tester Bower package installed is incompatible with the
+    wct node package you're using.
+
+    The test runner expects a version that satisfies ${allowedRange} but the
+    bower package you have installed is ${version}.
+    `);
     }
 
     let hasWarnedBrowserJs = false;

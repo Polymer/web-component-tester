@@ -450,4 +450,36 @@ describe('early failures', () => {
        }
      });
 
+  it('fails if the client side library is out of allowed version range',
+     async function() {
+       const log: string[] = [];
+       const options: config.Config = {
+         output: <any>{write: log.push.bind(log)},
+         ttyOutput: false,
+         root: path.join(__dirname, '..', 'fixtures', 'early-failure'),
+         // TODO(nevir): Migrate
+         // remote:      currentEnv.remote,
+         // Roughly matches CI Runner statuses.
+         browserOptions: <any>{
+           name: 'web-component-tester',
+           tags: ['org:Polymer', 'repo:web-component-tester'],
+         },
+         // Uncomment to customize the browsers to test when debugging.
+         plugins: <any>{
+           local: {
+             browsers: ['firefox', 'chrome', /*'safari'*/],
+             skipSeleniumInstall: true
+           },
+         },
+       };
+       const context = new Context(options);
+       try {
+         await test(context);
+         throw new Error('Expected test() to fail!');
+       } catch (e) {
+         expect(e.message).to.match(
+             /The web-component-tester Bower package installed is incompatible with the\n\s*wct node package you're using/);
+       }
+     });
+
 });
