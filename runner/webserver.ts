@@ -63,6 +63,23 @@ export function webserver(wct: Context): void {
     const wsOptions = options.webserver;
     const additionalRoutes = new Map<string, RequestHandler>();
 
+    const packageName = path.basename(options.root);
+    const pathToLocalWct =
+        path.join(options.root, 'bower_components', 'web-component-tester');
+    if (!exists(pathToLocalWct)) {
+      throw new Error(`
+The web-component-tester Bower package is not installed as a dependency of this project (${packageName
+                      }).
+
+Please run this command to install:
+    bower install --save-dev web-component-tester
+
+Web Component Tester >=6.0 requires that support files needed in the browser are installed as part of the project's dependencies or dev-dependencies. This is to give projects greater control over the versions that are served, while also making Web Component Tester's behavior easier to understand.
+
+Expected location: ${pathToLocalWct}
+`);
+    }
+
     let hasWarnedBrowserJs = false;
     additionalRoutes.set('/browser.js', function(request, response) {
       if (!hasWarnedBrowserJs) {
@@ -79,14 +96,10 @@ export function webserver(wct: Context): void {
         `);
         hasWarnedBrowserJs = true;
       }
-      const browserJsPath = path.join(
-          options.root, 'bower_components', 'web-component-tester',
-          'browser.js');
+      const browserJsPath = path.join(pathToLocalWct, 'browser.js');
       send(request, browserJsPath).pipe(response);
     });
-    // TODO(rictic): detect that the user hasn't bower installed wct and die.
 
-    const packageName = path.basename(options.root);
     const pathToGeneratedIndex =
         `/components/${packageName}/generated-index.html`;
     additionalRoutes.set(pathToGeneratedIndex, (_request, response) => {
@@ -175,6 +188,15 @@ export function webserver(wct: Context): void {
     });
   });
 };
+
+function exists(path: string): boolean {
+  try {
+    fs.statSync(path);
+    return true;
+  } catch (_err) {
+    return false;
+  }
+}
 
 // HACK(rictic): remove this ES6-compat hack and export webserver itself
 webserver['webserver'] = webserver;

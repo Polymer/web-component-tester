@@ -317,7 +317,8 @@ function assertTestErrors(
   lodash.each(context.testErrors, function(actual, browser) {
     expect(Object.keys(expected))
         .to.have.members(
-            Object.keys(actual), 'Test file mismatch for ' + browser +
+            Object.keys(actual),
+            'Test file mismatch for ' + browser +
                 `: expected ${JSON
                     .stringify(Object.keys(expected))} - got ${JSON.stringify(
                         Object.keys(actual))}`);
@@ -413,3 +414,40 @@ function repeatBrowsers<T>(
       .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
   return lodash.mapValues(context.stats, () => data);
 }
+
+describe('early failures', () => {
+  it(`wct doesn't start testing if it's not bower installed locally`,
+     async function() {
+       this.timeout(20 * 1000);
+       const log: string[] = [];
+       const options: config.Config = {
+         output: <any>{write: log.push.bind(log)},
+         ttyOutput: false,
+         root: path.join(
+             __dirname, '..', 'fixtures', 'integration', 'components_dir'),
+         // TODO(nevir): Migrate
+         // remote:      currentEnv.remote,
+         // Roughly matches CI Runner statuses.
+         browserOptions: <any>{
+           name: 'web-component-tester',
+           tags: ['org:Polymer', 'repo:web-component-tester'],
+         },
+         // Uncomment to customize the browsers to test when debugging.
+         plugins: <any>{
+           local: {
+             browsers: ['firefox', 'chrome', /*'safari'*/],
+             skipSeleniumInstall: true
+           },
+         },
+       };
+       const context = new Context(options);
+       try {
+         await test(context);
+         throw new Error('Expected test() to fail!');
+       } catch (e) {
+         expect(e.message).to.match(
+             /The web-component-tester Bower package is not installed as a dependency of this project/);
+       }
+     });
+
+});
