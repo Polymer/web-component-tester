@@ -101,34 +101,33 @@ export class Context extends events.EventEmitter {
    */
   emitHook(
       name: 'prepare:webserver', app: Express.Application,
-      done: (err?: any) => void): Promise<void>;
-  emitHook(name: 'configure', done: (err?: any) => void): Promise<void>;
-  emitHook(name: 'prepare', done: (err?: any) => void): Promise<void>;
-  emitHook(name: 'cleanup', done: (err?: any) => void): Promise<void>;
-  emitHook(name: string, done: (err?: any) => void): Promise<void>;
+      done?: (err?: any) => void): Promise<void>;
+  emitHook(name: 'configure', done?: (err?: any) => void): Promise<void>;
+  emitHook(name: 'prepare', done?: (err?: any) => void): Promise<void>;
+  emitHook(name: 'cleanup', done?: (err?: any) => void): Promise<void>;
+  emitHook(name: string, done?: (err?: any) => void): Promise<void>;
   emitHook(name: string, ...args: any[]): Promise<void>;
-  async emitHook(name: string, done: (err?: any) => void): Promise<void> {
+
+  async emitHook(name: string /*, ...args: any[]*/): Promise<void> {
     this.emit('log:debug', 'hook:', name);
+
+    // TODO(justinfagnani): remove and uncomment ...args when we drop node 4
+    const args = Array.from(arguments).slice(1);
 
     const hooks = (this._hookHandlers[name] || []);
     type BoundHook = (cb: (err: any) => void) => (void|Promise<any>);
     let boundHooks: BoundHook[];
-    if (arguments.length > 2) {
-      done = arguments[arguments.length - 1];
-      let argsEnd = arguments.length - 1;
-      if (!(done instanceof Function)) {
-        done = (_e) => {};
-        argsEnd = arguments.length;
-      }
-      const hookArgs = Array.from(arguments).slice(1, argsEnd);
-      boundHooks = hooks.map(function(hook) {
-        return hook.bind.apply(hook, [null].concat(hookArgs));
-      });
+    let done: (err?: any) => void = (_err: any) => {};
+    let argsEnd = args.length - 1;
+    if (args[argsEnd] instanceof Function) {
+      done = args[argsEnd];
+      argsEnd = argsEnd--;
     }
+    const hookArgs = args.slice(0, argsEnd + 1);
+    boundHooks = hooks.map((hook) => hook.bind.apply(hook, [null].concat(hookArgs)));
     if (!boundHooks) {
       boundHooks = <any>hooks;
     }
-    done = done || ((_e) => {});
 
     // A hook may return a promise or it may call a callback. We want to
     // treat hooks as though they always return promises, so this converts.
