@@ -63,6 +63,15 @@ export function webserver(wct: Context): void {
     const wsOptions = options.webserver;
     const additionalRoutes = new Map<string, RequestHandler>();
 
+    const pathToLocalWct =
+        path.join(options.root, 'bower_components', 'web-component-tester');
+    if (!exists(pathToLocalWct)) {
+      throw new Error(`WCT isn't installed locally. Run:
+    bower install --save-dev web-component-tester
+
+${pathToLocalWct} does not exist`);
+    }
+
     let hasWarnedBrowserJs = false;
     additionalRoutes.set('/browser.js', function(request, response) {
       if (!hasWarnedBrowserJs) {
@@ -79,12 +88,9 @@ export function webserver(wct: Context): void {
         `);
         hasWarnedBrowserJs = true;
       }
-      const browserJsPath = path.join(
-          options.root, 'bower_components', 'web-component-tester',
-          'browser.js');
+      const browserJsPath = path.join(pathToLocalWct, 'browser.js');
       send(request, browserJsPath).pipe(response);
     });
-    // TODO(rictic): detect that the user hasn't bower installed wct and die.
 
     const packageName = path.basename(options.root);
     const pathToGeneratedIndex =
@@ -175,6 +181,15 @@ export function webserver(wct: Context): void {
     });
   });
 };
+
+function exists(path: string): boolean {
+  try {
+    fs.statSync(path);
+    return true;
+  } catch (_err) {
+    return false;
+  }
+}
 
 // HACK(rictic): remove this ES6-compat hack and export webserver itself
 webserver['webserver'] = webserver;
