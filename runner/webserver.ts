@@ -63,13 +63,21 @@ export function webserver(wct: Context): void {
     const wsOptions = options.webserver;
     const additionalRoutes = new Map<string, RequestHandler>();
 
+    const packageName = path.basename(options.root);
     const pathToLocalWct =
         path.join(options.root, 'bower_components', 'web-component-tester');
     if (!exists(pathToLocalWct)) {
-      throw new Error(`WCT isn't installed locally. Run:
+      throw new Error(`
+The web-component-tester Bower package is not installed as a dependency of this project (${packageName
+                      }).
+
+Please run this command to install:
     bower install --save-dev web-component-tester
 
-${pathToLocalWct} does not exist`);
+Web Component Tester >=6.0 requires that support files needed in the browser are installed as part of the project's dependencies or dev-dependencies. This is to give projects greater control over the versions that are served, while also making Web Component Tester's behavior easier to understand.
+
+Expected location: ${pathToLocalWct}
+`);
     }
 
     let hasWarnedBrowserJs = false;
@@ -92,7 +100,6 @@ ${pathToLocalWct} does not exist`);
       send(request, browserJsPath).pipe(response);
     });
 
-    const packageName = path.basename(options.root);
     const pathToGeneratedIndex =
         `/components/${packageName}/generated-index.html`;
     additionalRoutes.set(pathToGeneratedIndex, (_request, response) => {

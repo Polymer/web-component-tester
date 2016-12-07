@@ -317,7 +317,8 @@ function assertTestErrors(
   lodash.each(context.testErrors, function(actual, browser) {
     expect(Object.keys(expected))
         .to.have.members(
-            Object.keys(actual), 'Test file mismatch for ' + browser +
+            Object.keys(actual),
+            'Test file mismatch for ' + browser +
                 `: expected ${JSON
                     .stringify(Object.keys(expected))} - got ${JSON.stringify(
                         Object.keys(actual))}`);
@@ -444,7 +445,8 @@ describe('early failures', () => {
          await test(context);
          throw new Error('Expected test() to fail!');
        } catch (e) {
-         expect(e.message).to.match(/WCT isn't installed locally/);
+         expect(e.message).to.match(
+             /The web-component-tester Bower package is not installed as a dependency of this project/);
        }
      });
 
