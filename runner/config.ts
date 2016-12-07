@@ -471,17 +471,20 @@ export async function expand(context: Context): Promise<void> {
 function expandDeprecated(context: Context) {
   const options = context.options;
   // We collect configuration fragments to be merged into the options object.
-  const fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
+  const fragments = [];
 
   let browsers: Browser[] = <any>(
       _.isArray(options.browsers) ? options.browsers : [options.browsers]);
   browsers = <any>_.compact(<any>browsers);
   if (browsers.length > 0) {
     context.emit(
-        'log:warn', 'The --browsers flag/option is deprecated. Please use ' +
+        'log:warn',
+        'The --browsers flag/option is deprecated. Please use ' +
             '--local and --sauce instead, or configure via plugins.' +
             '[local|sauce].browsers.');
-    const fragment = {plugins: {sauce: {}, local: {}}};
+    const fragment: {plugins: {[name: string]: {browsers?: Browser[]}}} = {
+      plugins: {sauce: {}, local: {}}
+    };
     fragments.push(fragment);
 
     for (const browser of browsers) {
@@ -499,7 +502,8 @@ function expandDeprecated(context: Context) {
 
   if (options.sauce) {
     context.emit(
-        'log:warn', 'The sauce configuration key is deprecated. Please use ' +
+        'log:warn',
+        'The sauce configuration key is deprecated. Please use ' +
             'plugins.sauce instead.');
     fragments.push({
       plugins: {sauce: options.sauce},
@@ -509,7 +513,8 @@ function expandDeprecated(context: Context) {
 
   if (options.remote) {
     context.emit(
-        'log:warn', 'The --remote flag is deprecated. Please use ' +
+        'log:warn',
+        'The --remote flag is deprecated. Please use ' +
             '--sauce default instead.');
     fragments.push({
       plugins: {sauce: {browsers: ['default']}},
