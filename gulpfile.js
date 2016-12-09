@@ -99,7 +99,7 @@ gulp.task('build:browser', function(done) {
     bundle.write({
       indent: false,
       format: 'iife',
-      banner: fs.readFileSync('license-header.txt', 'utf-8'),
+      banner: fs.readFileSync('browser-js-header.txt', 'utf-8'),
       dest: 'browser.js',
       sourceMap: true,
       sourceMapFile: path.resolve('browser.js.map')
