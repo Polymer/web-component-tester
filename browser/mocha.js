@@ -9,7 +9,6 @@
  */
 import * as config from './config.js';
 
-import './mocha/fixture.js';
 import './mocha/stub.js';
 import './mocha/replace.js';
 import { applyExtensions } from './mocha/extend.js';
