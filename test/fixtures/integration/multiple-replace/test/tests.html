@@ -1,4 +1,5 @@
 <html>
+
 <head>
   <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
   <link rel="import" href="../../test-fixture/test-fixture.html">
@@ -10,6 +11,7 @@
   <link rel="import" href="../dom-repeat-fixture.html">
   <script src="../../test-fixture/test-fixture-mocha.js"></script>
 </head>
+
 <body>
   <test-fixture id="DomIfFixture">
     <template>
@@ -40,6 +42,8 @@
   <script>
   'use strict';
 
+  var Flusher = Polymer.Templatizer.flush ? Polymer.Templatizer : Polymer.dom;
+
   describe('testing templatized multiple replace', function() {
     var domIfElement;
     var insideElement;
@@ -52,13 +56,13 @@
       domIfElement = fixture('DomIfFixture');
       domIfElement.isStamped = true;
 
-      Polymer.dom.flush();
+      Flusher.flush();
 
       insideElement = domIfElement.$$('#inside');
       outsideElement = domIfElement.$.outside;
       domIfElement.isStamped = false;
 
-      Polymer.dom.flush();
+      Flusher.flush();
     });
 
     it('dom-if test', function() {
@@ -152,7 +156,7 @@
       var template = fixture('DomIfFixture');
       template.isStamped = true;
 
-      Polymer.dom.flush();
+      Flusher.flush();
 
       insideElement = template.$$('#inside');
     });
@@ -171,18 +175,19 @@
   describe('testing template bindings', function() {
     var setupCorrectly = true;
     var insideElement;
-    var template;
+    var domRepeat;
     var annotationsBefore;
     var annotationsAfter;
 
     before(function() {
-      template = fixture('DomRepeatFixture');
+      domRepeat = fixture('DomRepeatFixture');
 
-      Polymer.dom.flush();
+      Flusher.flush();
 
-      annotationsBefore = JSON.stringify(template._notes);
+      var notes = domRepeat._notes || domRepeat._template.content._notes;
+      annotationsBefore = JSON.stringify(notes);
 
-      var bindingElements = Polymer.dom(template.root)
+      var bindingElements = Polymer.dom(domRepeat.root)
           .querySelectorAll('binding-element');
 
       for(var i = 0; i < bindingElements.length; i++) {
@@ -197,13 +202,14 @@
         setupCorrectly = false;
       }
 
-      template = fixture('DomRepeatFixture');
+      domRepeat = fixture('DomRepeatFixture');
 
-      Polymer.dom.flush();
+      Flusher.flush();
 
-      annotationsAfter = JSON.stringify(template._notes);
+      var notes = domRepeat._notes || domRepeat._template.content._notes;
+      annotationsAfter = JSON.stringify(notes);
 
-      bindingElements = Polymer.dom(template.root)
+      bindingElements = Polymer.dom(domRepeat.root)
           .querySelectorAll('binding-element');
 
       for(var i = 0; i < bindingElements.length; i++) {
@@ -226,4 +232,5 @@
   </script>
 
 </body>
+
 </html>
