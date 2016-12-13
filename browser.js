@@ -510,7 +510,6 @@ var _config = {
   ],
 
   environmentImports: [
-    'test-fixture/test-fixture.html'
   ],
 
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
