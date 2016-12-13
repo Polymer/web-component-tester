@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <script>debugger;</script>
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="../../../browser.js"></script>
-  </head>
-  <body>
-    <script>
+
+<head>
+  <meta charset="utf-8">
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../../../browser.js"></script>
+</head>
+
+<body>
+  <script>
       WCT.loadSuites([
-        'tests.html',
+        'tests.html?dom=shadow',
+        'tests.html?wc-ce=true&wc-shadydom=true',
       ]);
     </script>
-  </body>
+</body>
+
 </html>
