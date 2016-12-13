@@ -18,10 +18,10 @@ var replaceTeardownAttached = false;
  * All annotations and attributes will be set on the placement element the way
  * they were set for the original element.
  */
-extendInterfaces('replace', function(context, teardown) {
+extendInterfaces('replace', function (context, teardown) {
   return function replace(oldTagName) {
     return {
-      with: function(tagName) {
+      with: function (tagName) {
         // Standardizes our replacements map
         oldTagName = oldTagName.toLowerCase();
         tagName = tagName.toLowerCase();
@@ -29,17 +29,21 @@ extendInterfaces('replace', function(context, teardown) {
         replacements[oldTagName] = tagName;
 
         // If the function is already a stub, restore it to original
-        if (Polymer.Base.instanceTemplate.isSinonProxy) {
+        if (document.importNode.isSinonProxy) {
           return;
         }
 
-        // Keep a reference to the original `Polymer.Base.instanceTemplate`
-        // implementation for later:
-        var originalInstanceTemplate = Polymer.Base.instanceTemplate;
+        if (!Polymer.Element) {
+          Polymer.Element = function () { };
+          Polymer.Element.prototype._stampTemplate = function () { };
+        }
 
-        // Use Sinon to stub `Polymer.Base.instanceTemplate`:
-        sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
-          var origContent = template._content || template.content;
+        // Keep a reference to the original `document.importNode`
+        // implementation for later:
+        var originalImportNode = document.importNode;
+
+        // Use Sinon to stub `document.ImportNode`:
+        sinon.stub(document, 'importNode', function (origContent, deep) {
           var templateClone = document.createElement('template');
           var content = templateClone.content;
           var inertDoc = content.ownerDocument;
@@ -49,7 +53,7 @@ extendInterfaces('replace', function(context, teardown) {
 
           // optional arguments are not optional on IE.
           var nodeIterator = document.createNodeIterator(content,
-              NodeFilter.SHOW_ELEMENT, null, true);
+            NodeFilter.SHOW_ELEMENT, null, true);
           var node;
 
           // Traverses the tree. A recently-replaced node will be put next, so
@@ -81,16 +85,16 @@ extendInterfaces('replace', function(context, teardown) {
             }
           }
 
-          return originalInstanceTemplate.call(this, templateClone);
+          return originalImportNode.call(this, content, deep);
         });
 
         if (!replaceTeardownAttached) {
           // After each test...
-          teardown(function() {
+          teardown(function () {
             replaceTeardownAttached = true;
-            // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
-            if (Polymer.Base.instanceTemplate.isSinonProxy) {
-              Polymer.Base.instanceTemplate.restore();
+            // Restore the stubbed version of `document.importNode`:
+            if (document.importNode.isSinonProxy) {
+              document.importNode.restore();
             }
 
             // Empty the replacement map
