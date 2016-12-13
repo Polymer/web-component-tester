@@ -150,7 +150,6 @@ commonTools.depcheck({
     // Used in browser.js
     'accessibility-developer-tools',
     'mocha',
-    'test-fixture',
     'async',
 
     // Used in the wct binary
