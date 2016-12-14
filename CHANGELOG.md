@@ -15,6 +15,7 @@
 ### Removed
 
 * `webserver.webRunnerPath`, `webserver.host`, `webserver.webRunnerContent`, and `webserver.urlPrefix`, `webserver.staticContent` were internal properties that were exposed on the `config` object. They have been refactored and their replacement has been prefixed with an underscore to clarify that they're internal implementation details.
+* `test-fixture`-mocha integration is no longer included in web-component-tester by default. See [here](https://github.com/PolymerElements/test-fixture#even-simpler-usage-in-mocha) for `test-fixture`-mocha integration.
 
 ### Fixed
 * Fixed #373 and #383 which were caused by `emitHook` not handling argumnts correctly.
