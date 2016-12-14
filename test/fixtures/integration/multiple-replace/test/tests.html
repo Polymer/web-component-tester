@@ -1,7 +1,8 @@
 <html>
+
 <head>
-  <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
   <link rel="import" href="../../test-fixture/test-fixture.html">
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
   <link rel="import" href="../../polymer/polymer.html">
   <script src="../../../browser.js"></script>
   <link rel="import" href="../dom-if-element.html">
@@ -10,6 +11,7 @@
   <link rel="import" href="../dom-repeat-fixture.html">
   <script src="../../test-fixture/test-fixture-mocha.js"></script>
 </head>
+
 <body>
   <test-fixture id="DomIfFixture">
     <template>
@@ -39,191 +41,197 @@
 
   <script>
   'use strict';
+  window.addEventListener('WebComponentsReady', function() {
+    var Flusher = Polymer.Templatizer.flush ? Polymer.Templatizer : Polymer.dom;
 
-  describe('testing templatized multiple replace', function() {
-    var domIfElement;
-    var insideElement;
-    var outsideElement;
+    describe('testing templatized multiple replace', function() {
+      var domIfElement;
+      var insideElement;
+      var outsideElement;
 
-    before(function() {
-      replace('normal-element').with('changed-element-name');
-      replace('exception-element').with('original-template-failure');
+      before(function() {
+        replace('normal-element').with('changed-element-name');
+        replace('exception-element').with('original-template-failure');
 
-      domIfElement = fixture('DomIfFixture');
-      domIfElement.isStamped = true;
+        domIfElement = fixture('DomIfFixture');
+        domIfElement.isStamped = true;
 
-      Polymer.dom.flush();
+        Flusher.flush();
 
-      insideElement = domIfElement.$$('#inside');
-      outsideElement = domIfElement.$.outside;
-      domIfElement.isStamped = false;
+        insideElement = domIfElement.$$('#inside');
+        outsideElement = domIfElement.$.outside;
+        domIfElement.isStamped = false;
 
-      Polymer.dom.flush();
+        Flusher.flush();
+      });
+
+      it('dom-if test', function() {
+        assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
+        assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-FAILURE');
+      });
     });
 
-    it('dom-if test', function() {
-      assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
-      assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-FAILURE');
-    });
-  });
+    describe('testing standard multiple replace', function() {
+      var setupCorrectly = true;
+      var element1;
+      var element2;
+      var element3;
+      var element4;
 
-  describe('testing standard multiple replace', function() {
-    var setupCorrectly = true;
-    var element1;
-    var element2;
-    var element3;
-    var element4;
+      before(function() {
+        try {
+          replace('a').with('b');
+          replace('b').with('c');
 
-    before(function() {
-      try {
-        replace('a').with('b');
-        replace('b').with('c');
+          replace('e').with('f');
+          replace('d').with('e');
 
-        replace('e').with('f');
-        replace('d').with('e');
+          replace('exception-element').with('dummy-element');
+        } catch (err) {
+          setupCorrectly = false;
+        }
 
-        replace('exception-element').with('dummy-element');
-      } catch (err) {
-        setupCorrectly = false;
-      }
+        var template = fixture('ExceptionFixture');
+        element1 = template.$.normal.$$('#element1');
+        element2 = template.$.normal.$$('#element2');
+        element3 = template.$.normal.$$('#element3');
+        element4 = template.$.normal.$$('#element4');
+      });
 
-      var template = fixture('ExceptionFixture');
-      element1 = template.$.normal.$$('#element1');
-      element2 = template.$.normal.$$('#element2');
-      element3 = template.$.normal.$$('#element3');
-      element4 = template.$.normal.$$('#element4');
-    });
+      after(function () {
 
-    after(function () {
+      });
 
-    });
+      it('double replace test', function() {
+        assert.isOk(setupCorrectly);
+        assert.equal(element1.nodeName, 'C');
+        assert.equal(element2.nodeName, 'C');
 
-    it('double replace test', function() {
-      assert.isOk(setupCorrectly);
-      assert.equal(element1.nodeName, 'C');
-      assert.equal(element2.nodeName, 'C');
-
-      assert.equal(element3.nodeName, 'F');
-      assert.equal(element4.nodeName, 'F');
-    });
-  });
-
-  describe('testing projected element replacement', function() {
-    var setupCorrectly = true;
-    var pE3Content;
-    var pE4Content;
-
-    before(function() {
-      try {
-        replace('projection-element-2').with('projection-element-3');
-      } catch (err) {
-        setupCorrectly = false;
-      }
-
-      var template = fixture('ProjectionFixture');
-      pE3Content = template.$.replaced.$.content.innerText;
-      pE4Content =
-          Polymer.dom(template.$.projected).querySelector('#content').innerText;
-
+        assert.equal(element3.nodeName, 'F');
+        assert.equal(element4.nodeName, 'F');
+      });
     });
 
-    after(function () {
+    describe('testing projected element replacement', function() {
+      var setupCorrectly = true;
+      var pE3Content;
+      var pE4Content;
 
+      before(function() {
+        try {
+          replace('projection-element-2').with('projection-element-3');
+        } catch (err) {
+          setupCorrectly = false;
+        }
+
+        var template = fixture('ProjectionFixture');
+        pE3Content = template.$.replaced.$.content.innerText;
+        pE4Content =
+            Polymer.dom(template.$.projected).querySelector('#content').innerText;
+
+      });
+
+      after(function () {
+
+      });
+
+      it('projection replace test', function() {
+        assert.isOk(setupCorrectly);
+        assert.equal(pE3Content, 'three');
+        assert.equal(pE4Content, 'four');
+      });
     });
 
-    it('projection replace test', function() {
-      assert.isOk(setupCorrectly);
-      assert.equal(pE3Content, 'three');
-      assert.equal(pE4Content, 'four');
-    });
-  });
+    describe('testing template reset after test', function() {
+      var setupCorrectly = true;
+      var insideElement;
 
-  describe('testing template reset after test', function() {
-    var setupCorrectly = true;
-    var insideElement;
+      before(function() {
+        try {
+          replace('exception-element').with('original-template-success');
+        } catch (err) {
+          setupCorrectly = false;
+        }
 
-    before(function() {
-      try {
-        replace('exception-element').with('original-template-success');
-      } catch (err) {
-        setupCorrectly = false;
-      }
+        var template = fixture('DomIfFixture');
+        template.isStamped = true;
 
-      var template = fixture('DomIfFixture');
-      template.isStamped = true;
+        Flusher.flush();
 
-      Polymer.dom.flush();
+        insideElement = template.$$('#inside');
+      });
 
-      insideElement = template.$$('#inside');
-    });
+      after(function () {
 
-    after(function () {
+      });
 
-    });
+      it('checking template is reset after replace test', function() {
+        assert.isOk(setupCorrectly);
 
-    it('checking template is reset after replace test', function() {
-      assert.isOk(setupCorrectly);
-
-      assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-SUCCESS');
-    });
-  });
-
-  describe('testing template bindings', function() {
-    var setupCorrectly = true;
-    var insideElement;
-    var template;
-    var annotationsBefore;
-    var annotationsAfter;
-
-    before(function() {
-      template = fixture('DomRepeatFixture');
-
-      Polymer.dom.flush();
-
-      annotationsBefore = JSON.stringify(template._notes);
-
-      var bindingElements = Polymer.dom(template.root)
-          .querySelectorAll('binding-element');
-
-      for(var i = 0; i < bindingElements.length; i++) {
-        var element = bindingElements[i];
-
-        annotationsBefore += JSON.stringify(element._notes);
-      }
-
-      try {
-        replace('div').with('span');
-      } catch (err) {
-        setupCorrectly = false;
-      }
-
-      template = fixture('DomRepeatFixture');
-
-      Polymer.dom.flush();
-
-      annotationsAfter = JSON.stringify(template._notes);
-
-      bindingElements = Polymer.dom(template.root)
-          .querySelectorAll('binding-element');
-
-      for(var i = 0; i < bindingElements.length; i++) {
-        var element = bindingElements[i];
-
-        annotationsAfter += JSON.stringify(element._notes);
-      }
+        assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-SUCCESS');
+      });
     });
 
-    after(function () {
+    describe('testing template bindings', function() {
+      var setupCorrectly = true;
+      var insideElement;
+      var domRepeat;
+      var annotationsBefore;
+      var annotationsAfter;
 
-    });
+      before(function() {
+        domRepeat = fixture('DomRepeatFixture');
 
-    it('dom-repeat bindings exist', function() {
-      assert.isOk(setupCorrectly);
+        Flusher.flush();
 
-      assert.equal(annotationsBefore, annotationsAfter);
+        var notes = domRepeat._notes || domRepeat._template.content._notes;
+        annotationsBefore = JSON.stringify(notes);
+
+        var bindingElements = Polymer.dom(domRepeat.root)
+            .querySelectorAll('binding-element');
+
+        for(var i = 0; i < bindingElements.length; i++) {
+          var element = bindingElements[i];
+
+          annotationsBefore += JSON.stringify(element._notes);
+        }
+
+        try {
+          replace('div').with('span');
+        } catch (err) {
+          setupCorrectly = false;
+        }
+
+        domRepeat = fixture('DomRepeatFixture');
+
+        Flusher.flush();
+
+        var notes = domRepeat._notes || domRepeat._template.content._notes;
+        annotationsAfter = JSON.stringify(notes);
+
+        bindingElements = Polymer.dom(domRepeat.root)
+            .querySelectorAll('binding-element');
+
+        for(var i = 0; i < bindingElements.length; i++) {
+          var element = bindingElements[i];
+
+          annotationsAfter += JSON.stringify(element._notes);
+        }
+      });
+
+      after(function () {
+
+      });
+
+      it('dom-repeat bindings exist', function() {
+        assert.isOk(setupCorrectly);
+
+        assert.equal(annotationsBefore, annotationsAfter);
+      });
     });
   });
   </script>
 
 </body>
+
 </html>

@@ -5,6 +5,7 @@
 * In an effort to reduce magical behavior and make `wct` easier to understand, it no longer will automatically serve some resources from its own `npm` dependencies and some resources from the project under test. Instead, all resources are served out of the project under test. This gives the project under test control over its testing dependencies and their versions.
   * If your tests are broken by this release, simply run `bower install web-component-tester --save-dev` in your project root.
   * This also unifies the behavior of `wct` and `polyserve`, so if your code works without warnings in one it should work in the other.
+  * Calling `replace(...)` will use sinon to stub `document.importNode` until `teardown` is called.
 
 ### Added
 
