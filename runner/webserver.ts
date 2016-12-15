@@ -67,8 +67,17 @@ export function webserver(wct: Context): void {
     const packageName = path.basename(options.root);
     const pathToLocalWct =
         path.join(options.root, 'bower_components', 'web-component-tester');
-    const pathToPackage = path.join(pathToLocalWct, 'package.json');
-    if (!exists(pathToPackage)) {
+    let version: string|undefined = undefined;
+    const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
+    for (const mdFilename of mdFilenames) {
+      const pathToMetdata = path.join(pathToLocalWct, mdFilename);
+      try {
+        version = version || require(pathToMetdata).version;
+      } catch (e) {
+        // Handled below, where we check if we found a version.
+      }
+    }
+    if (!version) {
       throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${packageName
                       }).
@@ -78,10 +87,9 @@ Please run this command to install:
 
 Web Component Tester >=6.0 requires that support files needed in the browser are installed as part of the project's dependencies or dev-dependencies. This is to give projects greater control over the versions that are served, while also making Web Component Tester's behavior easier to understand.
 
-Expected to find its package.json at: ${pathToPackage}
+Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 `);
     }
-    const version = require(pathToPackage).version as string;
     const allowedRange = require(path.join(
         __dirname, '..',
         'package.json'))['--private-wct--']['client-side-version-range'] as

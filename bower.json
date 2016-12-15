@@ -10,7 +10,9 @@
     "*",
     "!/data/*",
     "!/browser.js",
-    "!/browser.js.map"
+    "!/browser.js.map",
+    "!/package.json",
+    "!/bower.json"
   ],
   "keywords": [
     "browser",
