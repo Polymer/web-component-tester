@@ -118,6 +118,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     We recommend that you run this command to add it:
         npm install --save-dev web-component-tester
 
+    or run:
+        yarn add web-component-tester --dev
+
     Doing so will ensure that your project is in control of the version of wct
     that your project is tested with, insulating you from any future breaking
     changes and making your test runs more reproducible. In a future release
