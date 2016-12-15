@@ -111,17 +111,17 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     const pathToWctNodeModule =
         path.join(options.root, 'node_modules', 'web-component-tester');
     if (!exists(pathToWctNodeModule)) {
-      throw new Error(`
+      console.warn(`
     The web-component-tester node module is not installed as a dependency of
     this project (${packageName}).
 
-    Please run this command to install:
+    We recommend that you run this command to add it:
         npm install --save-dev web-component-tester
 
-    Web Component Tester >=6.0 requires that every tested package have a
-    local install of the wct test runner so that test results are
-    reproducible, and that there is compatibility between the client-side and
-    server-side components of wct.
+    Doing so will ensure that your project is in control of the version of wct
+    that your project is tested with, insulating you from any future breaking
+    changes and making your test runs more reproducible. In a future release
+    of wct this will be required.
 
     Expected a directory to exist at: ${pathToWctNodeModule}/
 `);
