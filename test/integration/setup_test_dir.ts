@@ -31,6 +31,10 @@ export async function makeProperTestDir(dirname: string) {
   // copy dir
   const pathToTestDir = await copyDir(startingDir, tempDir);
 
+  fs.mkdirSync(path.join(pathToTestDir, 'node_modules'));
+  fs.mkdirSync(
+      path.join(pathToTestDir, 'node_modules', 'web-component-tester'));
+
   // set up symlinks into component dirs for browser.js, data/, and wct's
   // dependencies (like mocha, sinon, etc)
   const componentsDirs = new Set(['bower_components']);

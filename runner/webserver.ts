@@ -65,6 +65,8 @@ export function webserver(wct: Context): void {
     const additionalRoutes = new Map<string, RequestHandler>();
 
     const packageName = path.basename(options.root);
+
+    // Check for client-side compatibility.
     const pathToLocalWct =
         path.join(options.root, 'bower_components', 'web-component-tester');
     let version: string|undefined = undefined;
@@ -90,6 +92,7 @@ Web Component Tester >=6.0 requires that support files needed in the browser are
 Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 `);
     }
+
     const allowedRange = require(path.join(
         __dirname, '..',
         'package.json'))['--private-wct--']['client-side-version-range'] as
@@ -101,7 +104,27 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 
     The test runner expects a version that satisfies ${allowedRange} but the
     bower package you have installed is ${version}.
-    `);
+`);
+    }
+
+    // Check that there's a wct node module.
+    const pathToWctNodeModule =
+        path.join(options.root, 'node_modules', 'web-component-tester');
+    if (!exists(pathToWctNodeModule)) {
+      throw new Error(`
+    The web-component-tester node module is not installed as a dependency of
+    this project (${packageName}).
+
+    Please run this command to install:
+        npm install --save-dev web-component-tester
+
+    Web Component Tester >=6.0 requires that every tested package have a
+    local install of the wct test runner so that test results are
+    reproducible, and that there is compatibility between the client-side and
+    server-side components of wct.
+
+    Expected a directory to exist at: ${pathToWctNodeModule}/
+`);
     }
 
     let hasWarnedBrowserJs = false;
@@ -114,9 +137,6 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 
           Instead load it from ../web-component-tester/browser.js
           (or with the absolute url /components/web-component-tester/browser.js)
-
-          Also be sure to \`bower install web-component-tester\`
-
         `);
         hasWarnedBrowserJs = true;
       }
