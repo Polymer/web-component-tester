@@ -1,6 +1,6 @@
 {
   "name": "web-component-tester",
-  "version": "6.0.0-prerelease.1",
+  "version": "6.0.0-prerelease.2",
   "description": "web-component-tester makes testing your web components a breeze!",
   "keywords": [
     "browser",
@@ -80,7 +80,7 @@
     "mocha": "^3.1.2",
     "multer": "^1.1.0",
     "nomnom": "^1.8.1",
-    "polyserve": "0.16.0-prerelease.7",
+    "polyserve": "0.16.0-prerelease.8",
     "promisify-node": "^0.4.0",
     "resolve": "^1.0.0",
     "semver": "^5.3.0",
