@@ -54,9 +54,21 @@ export class BrowserRunner {
   private _resolve: () => void;
   private _reject: (err: any) => void;
 
+  /**
+   * @param emitter The emitter to send updates about test progress to.
+   * @param def A BrowserDef describing and defining the browser to be run.
+   *     Includes both metadata and a method for connecting/launching the
+   *     browser.
+   * @param options WCT options.
+   * @param url The url of the generated index.html file that the browser should
+   *     point at.
+   * @param waitFor Optional. If given, we won't try to start/connect to the
+   *     browser until this promise resolves. Used for serializing access to
+   *     Safari webdriver, which can only have one instance running at once.
+   */
   constructor(
       emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config,
-      url: string) {
+      url: string, waitFor?: Promise<void>) {
     this.emitter = emitter;
     this.def = def;
     this.options = options;
@@ -65,61 +77,67 @@ export class BrowserRunner {
     this.url = url;
 
     this.stats = {status: 'initializing'};
-    this.browser = wd.remote(this.def.url);
 
-    // never retry selenium commands
-    this.browser.configureHttp({retries: -1});
     this.donePromise = new Promise<void>((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
     });
 
-    cleankill.onInterrupt((done) => {
-      if (!this.browser) {
-        return done();
-      }
+    waitFor = waitFor || Promise.resolve();
+    waitFor.then(() => {
+      this.browser = wd.remote(this.def.url);
 
-      this.donePromise.then(() => done(), () => done());
-      this.done('Interrupting');
-    });
+      // never retry selenium commands
+      this.browser.configureHttp({retries: -1});
 
-    this.browser.on('command', (method: any, context: any) => {
-      emitter.emit('log:debug', this.def, chalk.cyan(method), context);
-    });
 
-    this.browser.on('http', (method: any, path: any, data: any) => {
-      if (data) {
-        emitter.emit(
-            'log:debug', this.def, chalk.magenta(method), chalk.cyan(path),
-            data);
-      } else {
-        emitter.emit(
-            'log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
-      }
-    });
+      cleankill.onInterrupt((done) => {
+        if (!this.browser) {
+          return done();
+        }
 
-    this.browser.on('connection', (code: any, message: any, error: any) => {
-      emitter.emit(
-          'log:warn', this.def, 'Error code ' + code + ':', message, error);
-    });
-
-    this.emitter.emit('browser-init', this.def, this.stats);
-
-    // Make sure that we are passing a pristine capabilities object to
-    // webdriver. None of our screwy custom properties!
-    const webdriverCapabilities = _.clone(this.def);
-    delete webdriverCapabilities.id;
-    delete webdriverCapabilities.url;
-    delete webdriverCapabilities.sessionId;
-
-    // Reusing a session?
-    if (this.def.sessionId) {
-      this.browser.attach(this.def.sessionId, (error) => {
-        this._init(error, this.def.sessionId);
+        this.donePromise.then(() => done(), () => done());
+        this.done('Interrupting');
       });
-    } else {
-      this.browser.init(webdriverCapabilities, this._init.bind(this));
-    }
+
+      this.browser.on('command', (method: any, context: any) => {
+        emitter.emit('log:debug', this.def, chalk.cyan(method), context);
+      });
+
+      this.browser.on('http', (method: any, path: any, data: any) => {
+        if (data) {
+          emitter.emit(
+              'log:debug', this.def, chalk.magenta(method), chalk.cyan(path),
+              data);
+        } else {
+          emitter.emit(
+              'log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
+        }
+      });
+
+      this.browser.on('connection', (code: any, message: any, error: any) => {
+        emitter.emit(
+            'log:warn', this.def, 'Error code ' + code + ':', message, error);
+      });
+
+      this.emitter.emit('browser-init', this.def, this.stats);
+
+      // Make sure that we are passing a pristine capabilities object to
+      // webdriver. None of our screwy custom properties!
+      const webdriverCapabilities = _.clone(this.def);
+      delete webdriverCapabilities.id;
+      delete webdriverCapabilities.url;
+      delete webdriverCapabilities.sessionId;
+
+      // Reusing a session?
+      if (this.def.sessionId) {
+        this.browser.attach(this.def.sessionId, (error) => {
+          this._init(error, this.def.sessionId);
+        });
+      } else {
+        this.browser.init(webdriverCapabilities, this._init.bind(this));
+      }
+    });
   }
 
   _init(error: any, sessionId: string) {

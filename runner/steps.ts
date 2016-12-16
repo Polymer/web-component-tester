@@ -138,8 +138,13 @@ function runBrowsers(context: Context) {
 
   const runners: BrowserRunner[] = [];
   let id = 0;
+
+  const partitioned =
+      partition((b) => b.browserName === 'safari', options.activeBrowsers);
+  const serialBrowsers = partitioned[0];
+  const parallelBrowsers = partitioned[1];
   for (const server of options.webserver._servers) {
-    for (const originalBrowserDef of options.activeBrowsers) {
+    for (const originalBrowserDef of parallelBrowsers) {
       // Needed by both `BrowserRunner` and `CliReporter`.
       const browserDef = _.clone(originalBrowserDef);
       browserDef.id = id++;
@@ -160,6 +165,35 @@ function runBrowsers(context: Context) {
     }
   }
 
+  for (const originalBrowserDef of serialBrowsers) {
+    let previousDone: undefined|Promise<void> = undefined;
+
+    for (const server of options.webserver._servers) {
+      // Needed by both `BrowserRunner` and `CliReporter`.
+      const browserDef = _.clone(originalBrowserDef);
+      browserDef.id = id++;
+      browserDef.variant = server.variant;
+      _.defaults(browserDef, options.browserOptions);
+
+      const runner = new BrowserRunner(
+          context, browserDef, options, server.url, previousDone);
+      promises.push(runner.donePromise.then(
+          () => {
+            context.emit('log:debug', browserDef, 'BrowserRunner complete');
+          },
+          (error) => {
+            context.emit('log:debug', browserDef, 'BrowserRunner complete');
+            errors.push(error);
+          }));
+      runners.push(runner);
+      previousDone = runner.donePromise.catch(() => {
+        // The next runner doesn't care about errors, just wants to know when
+        // it can start.
+        return null;
+      });
+    }
+  }
+
   return {
     runners,
     completionPromise: (async function() {
@@ -174,4 +208,17 @@ function runBrowsers(context: Context) {
       }
     }())
   };
+}
+
+function partition<T>(pred: (t: T) => boolean, arr: T[]): [T[], T[]] {
+  const yes = [];
+  const no = [];
+  for (const value of arr) {
+    if (pred(value)) {
+      yes.push(value);
+    } else {
+      no.push(value);
+    }
+  }
+  return [yes, no];
 }
