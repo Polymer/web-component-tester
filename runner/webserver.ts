@@ -157,8 +157,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     // Serve up project & dependencies via polyserve
     const polyserveResult = await startServers({
       root: options.root,
-      headers: DEFAULT_HEADERS, packageName,
-      additionalRoutes: additionalRoutes,
+      compile: options.compile,
+      hostname: options.webserver.hostname,
+      headers: DEFAULT_HEADERS, packageName, additionalRoutes,
     });
     let servers: Array<MainlineServer|VariantServer>;
 

@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <script src="../../../browser.js"></script>
+</head>
+
+<body>
+  <script>
+    test('ES6 works', function () {
+      // This doesn't work in Firefox 50, but it soon will...
+      // soon we'll need to test it with IE 11.
+      const funcs = [];
+      for (const foo of [1, 2, 3]) {
+        funcs.push(() => foo);
+      }
+
+      assert.deepEqual(funcs.map(f => f()), [1, 2, 3]);
+    });
+  </script>
+</body>
+
+</html>
