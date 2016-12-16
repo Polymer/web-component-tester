@@ -148,14 +148,10 @@ function runsIntegrationSuite(
         output: <any>{write: log.push.bind(log)},
         ttyOutput: false,
         root: suiteRoot,
-        // TODO(nevir): Migrate
-        // remote:      currentEnv.remote,
-        // Roughly matches CI Runner statuses.
         browserOptions: <any>{
           name: 'web-component-tester',
           tags: ['org:Polymer', 'repo:web-component-tester'],
         },
-        // Uncomment to customize the browsers to test when debugging.
         plugins: <any>{
           local: {skipSeleniumInstall: true},
         },
@@ -422,9 +418,6 @@ describe('early failures', () => {
          ttyOutput: false,
          root: path.join(
              __dirname, '..', 'fixtures', 'integration', 'components_dir'),
-         // TODO(nevir): Migrate
-         // remote:      currentEnv.remote,
-         // Roughly matches CI Runner statuses.
          browserOptions: <any>{
            name: 'web-component-tester',
            tags: ['org:Polymer', 'repo:web-component-tester'],
@@ -454,14 +447,10 @@ describe('early failures', () => {
          output: <any>{write: log.push.bind(log)},
          ttyOutput: false,
          root: path.join(__dirname, '..', 'fixtures', 'early-failure'),
-         // TODO(nevir): Migrate
-         // remote:      currentEnv.remote,
-         // Roughly matches CI Runner statuses.
          browserOptions: <any>{
            name: 'web-component-tester',
            tags: ['org:Polymer', 'repo:web-component-tester'],
          },
-         // Uncomment to customize the browsers to test when debugging.
          plugins: <any>{
            local: {skipSeleniumInstall: true},
          },
