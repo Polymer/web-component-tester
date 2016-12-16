@@ -157,10 +157,7 @@ function runsIntegrationSuite(
         },
         // Uncomment to customize the browsers to test when debugging.
         plugins: <any>{
-          local: {
-            // browsers: ['firefox', 'chrome', /*'safari'*/],
-            skipSeleniumInstall: true
-          },
+          local: {skipSeleniumInstall: true},
         },
       };
       const context = new Context(options);
@@ -432,10 +429,10 @@ describe('early failures', () => {
            name: 'web-component-tester',
            tags: ['org:Polymer', 'repo:web-component-tester'],
          },
-         // Uncomment to customize the browsers to test when debugging.
          plugins: <any>{
            local: {
-             //  browsers: ['firefox', 'chrome', /*'safari'*/],
+             // Uncomment to customize the browsers to test when debugging.
+             //  browsers: ['firefox', 'chrome', 'safari'],
              skipSeleniumInstall: true
            },
          },
@@ -466,10 +463,7 @@ describe('early failures', () => {
          },
          // Uncomment to customize the browsers to test when debugging.
          plugins: <any>{
-           local: {
-             //  browsers: ['firefox', 'chrome', 'safari'],
-             skipSeleniumInstall: true
-           },
+           local: {skipSeleniumInstall: true},
          },
        };
        const context = new Context(options);

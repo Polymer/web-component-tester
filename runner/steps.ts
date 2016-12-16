@@ -165,7 +165,7 @@ function runBrowsers(context: Context) {
         waitFor = runner.donePromise.catch(() => {
           // The next runner doesn't care about errors, just wants to know when
           // it can start.
-          return null;
+          return undefined;
         });
       }
     }
