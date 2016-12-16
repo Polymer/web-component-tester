@@ -158,7 +158,7 @@ function runsIntegrationSuite(
         // Uncomment to customize the browsers to test when debugging.
         plugins: <any>{
           local: {
-            browsers: ['firefox', 'chrome', /*'safari'*/],
+            // browsers: ['firefox', 'chrome', /*'safari'*/],
             skipSeleniumInstall: true
           },
         },
@@ -435,7 +435,7 @@ describe('early failures', () => {
          // Uncomment to customize the browsers to test when debugging.
          plugins: <any>{
            local: {
-             browsers: ['firefox', 'chrome', /*'safari'*/],
+             //  browsers: ['firefox', 'chrome', /*'safari'*/],
              skipSeleniumInstall: true
            },
          },
@@ -467,7 +467,7 @@ describe('early failures', () => {
          // Uncomment to customize the browsers to test when debugging.
          plugins: <any>{
            local: {
-             browsers: ['firefox', 'chrome', /*'safari'*/],
+             //  browsers: ['firefox', 'chrome', 'safari'],
              skipSeleniumInstall: true
            },
          },

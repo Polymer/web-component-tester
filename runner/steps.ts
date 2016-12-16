@@ -138,36 +138,8 @@ function runBrowsers(context: Context) {
 
   const runners: BrowserRunner[] = [];
   let id = 0;
-
-  const partitioned =
-      partition((b) => b.browserName === 'safari', options.activeBrowsers);
-  const serialBrowsers = partitioned[0];
-  const parallelBrowsers = partitioned[1];
-  for (const server of options.webserver._servers) {
-    for (const originalBrowserDef of parallelBrowsers) {
-      // Needed by both `BrowserRunner` and `CliReporter`.
-      const browserDef = _.clone(originalBrowserDef);
-      browserDef.id = id++;
-      browserDef.variant = server.variant;
-      _.defaults(browserDef, options.browserOptions);
-
-      const runner =
-          new BrowserRunner(context, browserDef, options, server.url);
-      promises.push(runner.donePromise.then(
-          () => {
-            context.emit('log:debug', browserDef, 'BrowserRunner complete');
-          },
-          (error) => {
-            context.emit('log:debug', browserDef, 'BrowserRunner complete');
-            errors.push(error);
-          }));
-      runners.push(runner);
-    }
-  }
-
-  for (const originalBrowserDef of serialBrowsers) {
-    let previousDone: undefined|Promise<void> = undefined;
-
+  for (const originalBrowserDef of options.activeBrowsers) {
+    let waitFor: undefined|Promise<void> = undefined;
     for (const server of options.webserver._servers) {
       // Needed by both `BrowserRunner` and `CliReporter`.
       const browserDef = _.clone(originalBrowserDef);
@@ -175,8 +147,8 @@ function runBrowsers(context: Context) {
       browserDef.variant = server.variant;
       _.defaults(browserDef, options.browserOptions);
 
-      const runner = new BrowserRunner(
-          context, browserDef, options, server.url, previousDone);
+      const runner =
+          new BrowserRunner(context, browserDef, options, server.url, waitFor);
       promises.push(runner.donePromise.then(
           () => {
             context.emit('log:debug', browserDef, 'BrowserRunner complete');
@@ -186,11 +158,16 @@ function runBrowsers(context: Context) {
             errors.push(error);
           }));
       runners.push(runner);
-      previousDone = runner.donePromise.catch(() => {
-        // The next runner doesn't care about errors, just wants to know when
-        // it can start.
-        return null;
-      });
+      if (browserDef.browserName === 'safari') {
+        // Control to Safari must be serialized. We can't launch two instances
+        // simultaneously, because security lol.
+        // https://webkit.org/blog/6900/webdriver-support-in-safari-10/
+        waitFor = runner.donePromise.catch(() => {
+          // The next runner doesn't care about errors, just wants to know when
+          // it can start.
+          return null;
+        });
+      }
     }
   }
 
@@ -208,17 +185,4 @@ function runBrowsers(context: Context) {
       }
     }())
   };
-}
-
-function partition<T>(pred: (t: T) => boolean, arr: T[]): [T[], T[]] {
-  const yes = [];
-  const no = [];
-  for (const value of arr) {
-    if (pred(value)) {
-      yes.push(value);
-    } else {
-      no.push(value);
-    }
-  }
-  return [yes, no];
 }
