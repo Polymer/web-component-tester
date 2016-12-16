@@ -138,8 +138,9 @@ function runBrowsers(context: Context) {
 
   const runners: BrowserRunner[] = [];
   let id = 0;
-  for (const server of options.webserver._servers) {
-    for (const originalBrowserDef of options.activeBrowsers) {
+  for (const originalBrowserDef of options.activeBrowsers) {
+    let waitFor: undefined|Promise<void> = undefined;
+    for (const server of options.webserver._servers) {
       // Needed by both `BrowserRunner` and `CliReporter`.
       const browserDef = _.clone(originalBrowserDef);
       browserDef.id = id++;
@@ -147,7 +148,7 @@ function runBrowsers(context: Context) {
       _.defaults(browserDef, options.browserOptions);
 
       const runner =
-          new BrowserRunner(context, browserDef, options, server.url);
+          new BrowserRunner(context, browserDef, options, server.url, waitFor);
       promises.push(runner.donePromise.then(
           () => {
             context.emit('log:debug', browserDef, 'BrowserRunner complete');
@@ -157,6 +158,16 @@ function runBrowsers(context: Context) {
             errors.push(error);
           }));
       runners.push(runner);
+      if (browserDef.browserName === 'safari') {
+        // Control to Safari must be serialized. We can't launch two instances
+        // simultaneously, because security lol.
+        // https://webkit.org/blog/6900/webdriver-support-in-safari-10/
+        waitFor = runner.donePromise.catch(() => {
+          // The next runner doesn't care about errors, just wants to know when
+          // it can start.
+          return undefined;
+        });
+      }
     }
   }
 
