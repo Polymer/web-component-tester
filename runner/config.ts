@@ -54,6 +54,9 @@ export interface Config {
     // determined at runtime if none is provided.
     port: number;
 
+    // The hostname used when generating URLs for the webdriver client.
+    hostname: string;
+
     _generatedIndexContent?: string;
     _servers?: {variant: string, url: string}[];
   };
@@ -63,11 +66,13 @@ export interface Config {
   sauce?: {};
   remote?: {};
   origSuites?: string[];
-  /** A deprecated option */
-  browsers?: Browser[]|Browser;
+  compile?: 'auto'|'always'|'never';
   skipCleanup?: boolean;
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
+
+  /** A deprecated option */
+  browsers?: Browser[]|Browser;
 }
 
 // The full set of options, as a reference.
@@ -101,6 +106,8 @@ export function defaults(): Config {
     clientOptions: {
       root: '/components/',
     },
+    compile: 'auto',
+
     // Webdriver capabilities objects for each browser that should be run.
     //
     // Capabilities can also contain a `url` value which is either a string URL
@@ -153,6 +160,7 @@ export function defaults(): Config {
       // The port that the webserver should run on. A port will be determined at
       // runtime if none is provided.
       port: undefined,
+      hostname: 'localhost',
     },
   };
 }
@@ -216,6 +224,12 @@ const ARG_CONFIG = {
   },
   // Managed by supports-color; let's not freak out if we see it.
   color: {flag: true},
+
+  compile: {
+    help: 'Whether to compile ES2015 down to ES5. ' +
+        'Options: "always", "never", "auto". Auto means that we will ' +
+        'selectively compile based on the requesting user agent.'
+  },
 
   // Deprecated
 
