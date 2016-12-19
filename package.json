@@ -98,7 +98,7 @@
   "optionalDependencies": {
     "update-notifier": "^1.0.0",
     "wct-local": "^2.0.8",
-    "wct-sauce": "^1.8.2"
+    "wct-sauce": "^2.0.0-pre.1"
   },
   "devDependencies": {
     "@types/express-serve-static-core": "^4.0.39",
