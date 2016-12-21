@@ -216,7 +216,11 @@ function runsIntegrationSuite(
     });
 
     afterEach(function() {
-      if (this.currentTest.state === 'failed') {
+      // TODO(rictic): remove once
+      // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/13480 has
+      // landed
+      const state: 'passed'|'failed'|undefined = this['currentTest'].state;
+      if (state === 'failed') {
         process.stderr.write(
             `\n    Output of wct for integration suite named \`${dirName}\`` +
             `\n` +
