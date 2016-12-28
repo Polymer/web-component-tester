@@ -20,6 +20,7 @@
 
 ### Fixed
 * Fixed #373 and #383 which were caused by `emitHook` not handling argumnts correctly.
+* Fixed error log message for loading WCT config
 
 ## 5.0.0
 * Mocha upgraded to `v3.1.2`. This shouldn't require any new code, but make sure your tests still pass as there were some more subtle changes made to Mocha behavior for v3 (Add IE7 support, update dependencies). See https://github.com/mochajs/mocha/pull/2350 for more info.

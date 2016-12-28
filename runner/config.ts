@@ -299,7 +299,7 @@ function loadProjectFile(file: string) {
       return require(file);
     }
   } catch (error) {
-    throw new Error(`Failed to load WCT config "${file}": ' + error.message`);
+    throw new Error(`Failed to load WCT config "${file}": ${error.message}`);
   }
 }
 
