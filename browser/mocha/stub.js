@@ -14,6 +14,14 @@ import { extendInterfaces } from './extend';
  *     otherMethod: function() {
  *       // More custom implementation..
  *     },
+ *     getterSetterProperty: {
+ *       get: function() {
+ *         // Custom getter implementation..
+ *       },
+ *       set: function() {
+ *         // Custom setter implementation..
+ *       }
+ *     },
  *     // etc..
  *   });
  * });
@@ -25,20 +33,17 @@ extendInterfaces('stub', function(context, teardown) {
     var proto = document.createElement(tagName).constructor.prototype;
 
     // For all keys in the implementation to stub with..
-    var keys = Object.keys(implementation);
-    keys.forEach(function(key) {
+    var stubs = Object.keys(implementation).forEach(function(key) {
       // Stub the method on the element prototype with Sinon:
-      sinon.stub(proto, key, implementation[key]);
+      return sinon.stub(proto, key, implementation[key]);
     });
 
     // After all tests..
     teardown(function() {
       // For all of the keys in the implementation we stubbed..
-      keys.forEach(function(key) {
+      stubs.forEach(function(stub) {
         // Restore the stub:
-        if (proto[key].isSinonProxy) {
-          proto[key].restore();
-        }
+        stub.restore();
       });
     });
   };
