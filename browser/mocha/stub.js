@@ -33,7 +33,7 @@ extendInterfaces('stub', function(context, teardown) {
     var proto = document.createElement(tagName).constructor.prototype;
 
     // For all keys in the implementation to stub with..
-    var stubs = Object.keys(implementation).forEach(function(key) {
+    var stubs = Object.keys(implementation).map(function(key) {
       // Stub the method on the element prototype with Sinon:
       return sinon.stub(proto, key, implementation[key]);
     });
