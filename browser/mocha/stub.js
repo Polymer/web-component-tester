@@ -40,9 +40,7 @@ extendInterfaces('stub', function(context, teardown) {
 
     // After all tests..
     teardown(function() {
-      // For all of the keys in the implementation we stubbed..
       stubs.forEach(function(stub) {
-        // Restore the stub:
         stub.restore();
       });
     });
