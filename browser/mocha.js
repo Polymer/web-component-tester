@@ -9,6 +9,7 @@
  */
 import * as config from './config.js';
 
+import './mocha/fixture.js';
 import './mocha/stub.js';
 import './mocha/replace.js';
 import { applyExtensions } from './mocha/extend.js';
@@ -20,27 +21,27 @@ import { applyExtensions } from './mocha/extend.js';
 var MOCHA_EXPORTS = {
   // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
   tdd: {
-    'setup':         '"before"',
-    'teardown':      '"after"',
-    'suiteSetup':    '"beforeEach"',
+    'setup': '"before"',
+    'teardown': '"after"',
+    'suiteSetup': '"beforeEach"',
     'suiteTeardown': '"afterEach"',
-    'suite':         '"describe" or "context"',
-    'test':          '"it" or "specify"',
+    'suite': '"describe" or "context"',
+    'test': '"it" or "specify"',
   },
   // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/bdd.js
   bdd: {
-    'before':     '"setup"',
-    'after':      '"teardown"',
+    'before': '"setup"',
+    'after': '"teardown"',
     'beforeEach': '"suiteSetup"',
-    'afterEach':  '"suiteTeardown"',
-    'describe':   '"suite"',
-    'context':    '"suite"',
-    'xdescribe':  '"suite.skip"',
-    'xcontext':   '"suite.skip"',
-    'it':         '"test"',
-    'xit':        '"test.skip"',
-    'specify':    '"test"',
-    'xspecify':   '"test.skip"',
+    'afterEach': '"suiteTeardown"',
+    'describe': '"suite"',
+    'context': '"suite"',
+    'xdescribe': '"suite.skip"',
+    'xcontext': '"suite.skip"',
+    'it': '"test"',
+    'xit': '"test.skip"',
+    'specify': '"test"',
+    'xspecify': '"test.skip"',
   },
 };
 
@@ -51,8 +52,8 @@ var MOCHA_EXPORTS = {
  * The assumption is that it is a one-off (sub-)suite of tests being run.
  */
 export function stubInterfaces() {
-  Object.keys(MOCHA_EXPORTS).forEach(function(ui) {
-    Object.keys(MOCHA_EXPORTS[ui]).forEach(function(key) {
+  Object.keys(MOCHA_EXPORTS).forEach(function (ui) {
+    Object.keys(MOCHA_EXPORTS[ui]).forEach(function (key) {
       window[key] = function wrappedMochaFunction() {
         _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
         if (!window[key] || window[key] === wrappedMochaFunction) {
@@ -76,7 +77,7 @@ function _setupMocha(ui, key, alternate) {
   var mochaOptions = config.get('mochaOptions');
   if (mochaOptions.ui && mochaOptions.ui !== ui) {
     var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. ' +
-                  'You called "' + key + '". Did you mean ' + alternate + '?';
+      'You called "' + key + '". Did you mean ' + alternate + '?';
     throw new Error(message);
   }
   if (_mochaIsSetup) return;
