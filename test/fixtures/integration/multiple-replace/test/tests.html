@@ -9,7 +9,6 @@
   <link rel="import" href="../exception-fixture.html">
   <link rel="import" href="../projection-element.html">
   <link rel="import" href="../dom-repeat-fixture.html">
-  <script src="../../test-fixture/test-fixture-mocha.js"></script>
 </head>
 
 <body>
@@ -40,196 +39,196 @@
   </test-fixture>
 
   <script>
-  'use strict';
-  window.addEventListener('WebComponentsReady', function() {
-    var Flusher = Polymer.Templatizer.flush ? Polymer.Templatizer : Polymer.dom;
+    'use strict';
+    window.addEventListener('WebComponentsReady', function () {
+      var Flusher = Polymer.Templatizer.flush ? Polymer.Templatizer : Polymer.dom;
 
-    describe('testing templatized multiple replace', function() {
-      var domIfElement;
-      var insideElement;
-      var outsideElement;
+      describe('testing templatized multiple replace', function () {
+        var domIfElement;
+        var insideElement;
+        var outsideElement;
 
-      before(function() {
-        replace('normal-element').with('changed-element-name');
-        replace('exception-element').with('original-template-failure');
+        before(function () {
+          replace('normal-element').with('changed-element-name');
+          replace('exception-element').with('original-template-failure');
 
-        domIfElement = fixture('DomIfFixture');
-        domIfElement.isStamped = true;
+          domIfElement = fixture('DomIfFixture');
+          domIfElement.isStamped = true;
 
-        Flusher.flush();
+          Flusher.flush();
 
-        insideElement = domIfElement.$$('#inside');
-        outsideElement = domIfElement.$.outside;
-        domIfElement.isStamped = false;
+          insideElement = domIfElement.$$('#inside');
+          outsideElement = domIfElement.$.outside;
+          domIfElement.isStamped = false;
 
-        Flusher.flush();
+          Flusher.flush();
+        });
+
+        it('dom-if test', function () {
+          assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
+          assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-FAILURE');
+        });
       });
 
-      it('dom-if test', function() {
-        assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
-        assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-FAILURE');
+      describe('testing standard multiple replace', function () {
+        var setupCorrectly = true;
+        var element1;
+        var element2;
+        var element3;
+        var element4;
+
+        before(function () {
+          try {
+            replace('a').with('b');
+            replace('b').with('c');
+
+            replace('e').with('f');
+            replace('d').with('e');
+
+            replace('exception-element').with('dummy-element');
+          } catch (err) {
+            setupCorrectly = false;
+          }
+
+          var template = fixture('ExceptionFixture');
+          element1 = template.$.normal.$$('#element1');
+          element2 = template.$.normal.$$('#element2');
+          element3 = template.$.normal.$$('#element3');
+          element4 = template.$.normal.$$('#element4');
+        });
+
+        after(function () {
+
+        });
+
+        it('double replace test', function () {
+          assert.isOk(setupCorrectly);
+          assert.equal(element1.nodeName, 'C');
+          assert.equal(element2.nodeName, 'C');
+
+          assert.equal(element3.nodeName, 'F');
+          assert.equal(element4.nodeName, 'F');
+        });
       });
-    });
 
-    describe('testing standard multiple replace', function() {
-      var setupCorrectly = true;
-      var element1;
-      var element2;
-      var element3;
-      var element4;
+      describe('testing projected element replacement', function () {
+        var setupCorrectly = true;
+        var pE3Content;
+        var pE4Content;
 
-      before(function() {
-        try {
-          replace('a').with('b');
-          replace('b').with('c');
+        before(function () {
+          try {
+            replace('projection-element-2').with('projection-element-3');
+          } catch (err) {
+            setupCorrectly = false;
+          }
 
-          replace('e').with('f');
-          replace('d').with('e');
-
-          replace('exception-element').with('dummy-element');
-        } catch (err) {
-          setupCorrectly = false;
-        }
-
-        var template = fixture('ExceptionFixture');
-        element1 = template.$.normal.$$('#element1');
-        element2 = template.$.normal.$$('#element2');
-        element3 = template.$.normal.$$('#element3');
-        element4 = template.$.normal.$$('#element4');
-      });
-
-      after(function () {
-
-      });
-
-      it('double replace test', function() {
-        assert.isOk(setupCorrectly);
-        assert.equal(element1.nodeName, 'C');
-        assert.equal(element2.nodeName, 'C');
-
-        assert.equal(element3.nodeName, 'F');
-        assert.equal(element4.nodeName, 'F');
-      });
-    });
-
-    describe('testing projected element replacement', function() {
-      var setupCorrectly = true;
-      var pE3Content;
-      var pE4Content;
-
-      before(function() {
-        try {
-          replace('projection-element-2').with('projection-element-3');
-        } catch (err) {
-          setupCorrectly = false;
-        }
-
-        var template = fixture('ProjectionFixture');
-        pE3Content = template.$.replaced.$.content.innerText;
-        pE4Content =
+          var template = fixture('ProjectionFixture');
+          pE3Content = template.$.replaced.$.content.innerText;
+          pE4Content =
             Polymer.dom(template.$.projected).querySelector('#content').innerText;
 
+        });
+
+        after(function () {
+
+        });
+
+        it('projection replace test', function () {
+          assert.isOk(setupCorrectly);
+          assert.equal(pE3Content, 'three');
+          assert.equal(pE4Content, 'four');
+        });
       });
 
-      after(function () {
+      describe('testing template reset after test', function () {
+        var setupCorrectly = true;
+        var insideElement;
 
+        before(function () {
+          try {
+            replace('exception-element').with('original-template-success');
+          } catch (err) {
+            setupCorrectly = false;
+          }
+
+          var template = fixture('DomIfFixture');
+          template.isStamped = true;
+
+          Flusher.flush();
+
+          insideElement = template.$$('#inside');
+        });
+
+        after(function () {
+
+        });
+
+        it('checking template is reset after replace test', function () {
+          assert.isOk(setupCorrectly);
+
+          assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-SUCCESS');
+        });
       });
 
-      it('projection replace test', function() {
-        assert.isOk(setupCorrectly);
-        assert.equal(pE3Content, 'three');
-        assert.equal(pE4Content, 'four');
-      });
-    });
+      describe('testing template bindings', function () {
+        var setupCorrectly = true;
+        var insideElement;
+        var domRepeat;
+        var annotationsBefore;
+        var annotationsAfter;
 
-    describe('testing template reset after test', function() {
-      var setupCorrectly = true;
-      var insideElement;
+        before(function () {
+          domRepeat = fixture('DomRepeatFixture');
 
-      before(function() {
-        try {
-          replace('exception-element').with('original-template-success');
-        } catch (err) {
-          setupCorrectly = false;
-        }
+          Flusher.flush();
 
-        var template = fixture('DomIfFixture');
-        template.isStamped = true;
+          var notes = domRepeat._notes || domRepeat._template.content._notes;
+          annotationsBefore = JSON.stringify(notes);
 
-        Flusher.flush();
-
-        insideElement = template.$$('#inside');
-      });
-
-      after(function () {
-
-      });
-
-      it('checking template is reset after replace test', function() {
-        assert.isOk(setupCorrectly);
-
-        assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-SUCCESS');
-      });
-    });
-
-    describe('testing template bindings', function() {
-      var setupCorrectly = true;
-      var insideElement;
-      var domRepeat;
-      var annotationsBefore;
-      var annotationsAfter;
-
-      before(function() {
-        domRepeat = fixture('DomRepeatFixture');
-
-        Flusher.flush();
-
-        var notes = domRepeat._notes || domRepeat._template.content._notes;
-        annotationsBefore = JSON.stringify(notes);
-
-        var bindingElements = Polymer.dom(domRepeat.root)
+          var bindingElements = Polymer.dom(domRepeat.root)
             .querySelectorAll('binding-element');
 
-        for(var i = 0; i < bindingElements.length; i++) {
-          var element = bindingElements[i];
+          for (var i = 0; i < bindingElements.length; i++) {
+            var element = bindingElements[i];
 
-          annotationsBefore += JSON.stringify(element._notes);
-        }
+            annotationsBefore += JSON.stringify(element._notes);
+          }
 
-        try {
-          replace('div').with('span');
-        } catch (err) {
-          setupCorrectly = false;
-        }
+          try {
+            replace('div').with('span');
+          } catch (err) {
+            setupCorrectly = false;
+          }
 
-        domRepeat = fixture('DomRepeatFixture');
+          domRepeat = fixture('DomRepeatFixture');
 
-        Flusher.flush();
+          Flusher.flush();
 
-        var notes = domRepeat._notes || domRepeat._template.content._notes;
-        annotationsAfter = JSON.stringify(notes);
+          var notes = domRepeat._notes || domRepeat._template.content._notes;
+          annotationsAfter = JSON.stringify(notes);
 
-        bindingElements = Polymer.dom(domRepeat.root)
+          bindingElements = Polymer.dom(domRepeat.root)
             .querySelectorAll('binding-element');
 
-        for(var i = 0; i < bindingElements.length; i++) {
-          var element = bindingElements[i];
+          for (var i = 0; i < bindingElements.length; i++) {
+            var element = bindingElements[i];
 
-          annotationsAfter += JSON.stringify(element._notes);
-        }
-      });
+            annotationsAfter += JSON.stringify(element._notes);
+          }
+        });
 
-      after(function () {
+        after(function () {
 
-      });
+        });
 
-      it('dom-repeat bindings exist', function() {
-        assert.isOk(setupCorrectly);
+        it('dom-repeat bindings exist', function () {
+          assert.isOk(setupCorrectly);
 
-        assert.equal(annotationsBefore, annotationsAfter);
+          assert.equal(annotationsBefore, annotationsAfter);
+        });
       });
     });
-  });
   </script>
 
 </body>
