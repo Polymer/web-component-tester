@@ -510,6 +510,7 @@ var _config = {
   ],
 
   environmentImports: [
+    'test-fixture/test-fixture.html'
   ],
 
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
@@ -579,7 +580,7 @@ function get(key) {
 // Internal
 
 function _deepMerge(target, source) {
-  Object.keys(source).forEach(function(key) {
+  Object.keys(source).forEach(function (key) {
     if (target[key] !== null && typeof target[key] === 'object' && !Array.isArray(target[key])) {
       _deepMerge(target[key], source[key]);
     } else {
@@ -1415,6 +1416,24 @@ function applyExtensions() {
   });
 }
 
+extendInterfaces('fixture', function (context, teardown) {
+
+  // Return context.fixture if it is already a thing, for backwards
+  // compatibility with `test-fixture-mocha.js`:
+  return context.fixture || function fixture(fixtureId, model) {
+
+    // Automatically register a teardown callback that will restore the
+    // test-fixture:
+    teardown(function () {
+      document.getElementById(fixtureId).restore();
+    });
+
+    // Find the test-fixture with the provided ID and create it, returning
+    // the results:
+    return document.getElementById(fixtureId).create(model);
+  };
+});
+
 /**
  * stub
  *
@@ -1572,27 +1591,27 @@ extendInterfaces('replace', function (context, teardown) {
 var MOCHA_EXPORTS = {
   // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
   tdd: {
-    'setup':         '"before"',
-    'teardown':      '"after"',
-    'suiteSetup':    '"beforeEach"',
+    'setup': '"before"',
+    'teardown': '"after"',
+    'suiteSetup': '"beforeEach"',
     'suiteTeardown': '"afterEach"',
-    'suite':         '"describe" or "context"',
-    'test':          '"it" or "specify"',
+    'suite': '"describe" or "context"',
+    'test': '"it" or "specify"',
   },
   // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/bdd.js
   bdd: {
-    'before':     '"setup"',
-    'after':      '"teardown"',
+    'before': '"setup"',
+    'after': '"teardown"',
     'beforeEach': '"suiteSetup"',
-    'afterEach':  '"suiteTeardown"',
-    'describe':   '"suite"',
-    'context':    '"suite"',
-    'xdescribe':  '"suite.skip"',
-    'xcontext':   '"suite.skip"',
-    'it':         '"test"',
-    'xit':        '"test.skip"',
-    'specify':    '"test"',
-    'xspecify':   '"test.skip"',
+    'afterEach': '"suiteTeardown"',
+    'describe': '"suite"',
+    'context': '"suite"',
+    'xdescribe': '"suite.skip"',
+    'xcontext': '"suite.skip"',
+    'it': '"test"',
+    'xit': '"test.skip"',
+    'specify': '"test"',
+    'xspecify': '"test.skip"',
   },
 };
 
@@ -1603,8 +1622,8 @@ var MOCHA_EXPORTS = {
  * The assumption is that it is a one-off (sub-)suite of tests being run.
  */
 function stubInterfaces() {
-  Object.keys(MOCHA_EXPORTS).forEach(function(ui) {
-    Object.keys(MOCHA_EXPORTS[ui]).forEach(function(key) {
+  Object.keys(MOCHA_EXPORTS).forEach(function (ui) {
+    Object.keys(MOCHA_EXPORTS[ui]).forEach(function (key) {
       window[key] = function wrappedMochaFunction() {
         _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
         if (!window[key] || window[key] === wrappedMochaFunction) {
@@ -1628,7 +1647,7 @@ function _setupMocha(ui, key, alternate) {
   var mochaOptions = get('mochaOptions');
   if (mochaOptions.ui && mochaOptions.ui !== ui) {
     var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. ' +
-                  'You called "' + key + '". Did you mean ' + alternate + '?';
+      'You called "' + key + '". Did you mean ' + alternate + '?';
     throw new Error(message);
   }
   if (_mochaIsSetup) return;

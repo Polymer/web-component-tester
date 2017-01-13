@@ -11,6 +11,7 @@ You get a browser-based testing environment, configured out of the box with:
 * [Async][async] to keep your sanity.
 * [Lodash][lodash] (3.0) to repeat fewer things.
 * [Sinon][sinon] and [sinon-chai][sinon-chai] to test just your things.
+* [test-fixture][test-fixture] for easy fixture testing with `<template>` tags.
 * [accessibility-developer-tools][a11ydevtools] through `a11ySuite` for simple, automated Accessibility testing.
 
 WCT will [run your tests](#running-your-tests) against whatever browsers you have locally installed, or remotely via Sauce Labs.
@@ -64,10 +65,35 @@ suite('AwesomeLib', function() {
 
 ## Special Features
 
+### test-fixture
+`test-fixture` can be used to reset DOM state between test runs.
+```html
+<test-fixture id="simple">
+  <template>
+    <div></div>
+  </template>
+</test-fixture>
+<script>
+ suite('classList', () => {
+   let div;
+   setup(() => {
+     div = fixture('simple');
+   });
+   test('foo', () => {
+     div.classList.add('foo');
+     assertSomethingOrOther(div);
+   });
+   test('bar', () => {
+     div.classList.add('bar');
+     assertNoFooClass(div);
+   });
+ });
+ ```
+
 ### a11ySuite
 
 `a11ySuite` provides an simple way to run accessibility-developer-tools' high quality accessibility
-audits when given a [`test-fixture`](https://github.com/PolymerElements/test-fixture#even-simpler-usage-in-mocha).
+audits when given a `test-fixture`.
 The `a11ySuite` will show all the audit results via the standard Mocha test output.
 ```html
 <test-fixture id="NoLabel">
