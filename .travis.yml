@@ -13,4 +13,3 @@ node_js:
   - "6"
 script:
   - xvfb-run npm test
-

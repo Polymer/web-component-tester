@@ -1,6 +1,9 @@
 {
   "name": "web-component-tester",
-  "version": "5.0.0",
+  "version": "6.0.0-prerelease.5",
+  "--private-wct--": {
+    "client-side-version-range": "4 - 6 || ^6.0.0-prerelease.1"
+  },
   "description": "web-component-tester makes testing your web components a breeze!",
   "keywords": [
     "browser",
@@ -42,7 +45,7 @@
   ],
   "scripts": {
     "lint": "gulp lint",
-    "build": "gulp build",
+    "build": "tsc",
     "test": "tsc && gulp test",
     "prepublish": "gulp prepublish",
     "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/",
@@ -61,8 +64,9 @@
     "@types/minimatch": "^2.0.29",
     "@types/mocha": "^2.2.32",
     "@types/multer": "0.0.32",
-    "@types/node": "^4.0.30",
+    "@types/node": "4.0.30",
     "@types/nomnom": "0.0.28",
+    "@types/semver": "^5.3.30",
     "@types/sinon": "^1.16.31",
     "@types/sinon-chai": "^2.7.27",
     "@types/socket.io": "^1.4.27",
@@ -73,16 +77,17 @@
     "chalk": "^1.1.1",
     "cleankill": "^1.0.0",
     "express": "^4.8.5",
-    "findup-sync": "^0.2.1",
-    "glob": "^5.0.15",
+    "findup-sync": "^0.4.3",
+    "glob": "^7.1.1",
     "lodash": "^3.0.1",
     "mocha": "^3.1.2",
     "multer": "^1.1.0",
     "nomnom": "^1.8.1",
+    "polyserve": "0.16.0-prerelease.9",
     "promisify-node": "^0.4.0",
     "resolve": "^1.0.0",
+    "semver": "^5.3.0",
     "send": "^0.11.1",
-    "serve-waterfall": "^1.1.0",
     "server-destroy": "^1.0.1",
     "sinon": "^1.11.1",
     "sinon-chai": "^2.6.0",
@@ -94,10 +99,11 @@
   "optionalDependencies": {
     "update-notifier": "^1.0.0",
     "wct-local": "^2.0.8",
-    "wct-sauce": "^1.8.2"
+    "wct-sauce": "^2.0.0-pre.1"
   },
   "devDependencies": {
     "@types/express-serve-static-core": "^4.0.39",
+    "@types/rimraf": "0.0.28",
     "bower": "^1.7.9",
     "clang-format": "^1.0.43",
     "depcheck": "^0.6.3",
@@ -111,10 +117,11 @@
     "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
     "lazypipe": "^1.0.1",
+    "rimraf": "^2.5.4",
     "rollup": "^0.25.1",
     "run-sequence": "^1.0.1",
     "tslint": "^3.10.2",
-    "typescript": "^2.0.6",
+    "typescript": "^2.1.4",
     "watch": "^0.18.0"
   },
   "engines": {

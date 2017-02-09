@@ -37,7 +37,7 @@ let updateNotifier = noopNotifier;
 })();
 
 export async function run(
-    env: any, args: string[], output: NodeJS.WritableStream): Promise<void> {
+    _env: any, args: string[], output: NodeJS.WritableStream): Promise<void> {
   await wrapResult(output, _run(args, output));
 }
 
@@ -65,7 +65,7 @@ async function _run(args: string[], output: NodeJS.WritableStream) {
 // wct-sauce. The trouble is that we also want WCT's configuration lookup logic,
 // and that's not (yet) cleanly exposed.
 export async function runSauceTunnel(
-    env: any, args: string[], output: NodeJS.WritableStream):
+    _env: any, args: string[], output: NodeJS.WritableStream):
     Promise<void> {
       await wrapResult(output, _runSauceTunnel(args, output));
     }

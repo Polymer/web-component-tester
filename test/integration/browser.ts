@@ -13,18 +13,16 @@
  */
 
 import {expect} from 'chai';
-import * as cleankill from 'cleankill';
 import * as fs from 'fs';
 import * as lodash from 'lodash';
 import * as path from 'path';
-import * as util from 'util';
 
 import {BrowserDef, Stats} from '../../runner/browserrunner';
-import {CliReporter, CompletedState, State, TestEndData} from '../../runner/clireporter';
+import {CompletedState, TestEndData} from '../../runner/clireporter';
 import * as config from '../../runner/config';
 import {Context} from '../../runner/context';
-import * as steps from '../../runner/steps';
 import {test} from '../../runner/test';
+import {makeProperTestDir} from './setup_test_dir';
 
 interface TestErrorExpectation {
   [fileName: string]: {
@@ -79,9 +77,10 @@ class VariantResults {
 
 /** Describes all suites, mixed into the environments being run. */
 function runsAllIntegrationSuites() {
-  let integrationDirnames = fs.readdirSync(integrationDir);
+  let integrationDirnames =
+      fs.readdirSync(integrationDir).filter(fn => fn !== 'temp');
   // Overwrite integrationDirnames to run tests in isolation while developing:
-  // integrationDirnames = ['missing'];
+  // integrationDirnames = ['components_dir'];
 
   // TODO(#421): `missing` correctly fails, but currently it times out which
   //     takes ~2 minutes.
@@ -144,25 +143,17 @@ function runsIntegrationSuite(
     before(async function() {
       this.timeout(120 * 1000);
 
-      const suiteRoot = path.join(integrationDir, dirName);
+      const suiteRoot = await makeProperTestDir(dirName);
       const options: config.Config = {
         output: <any>{write: log.push.bind(log)},
         ttyOutput: false,
-        skipCleanup: true,  // We do it manually at the end of all suites.
         root: suiteRoot,
-        // TODO(nevir): Migrate
-        // remote:      currentEnv.remote,
-        // Roughly matches CI Runner statuses.
         browserOptions: <any>{
           name: 'web-component-tester',
           tags: ['org:Polymer', 'repo:web-component-tester'],
         },
-        // Uncomment to customize the browsers to test when debugging.
         plugins: <any>{
-          local: {
-            browsers: ['firefox', 'chrome', /*'safari'*/],
-            skipSeleniumInstall: true
-          },
+          local: {skipSeleniumInstall: true},
         },
       };
       const context = new Context(options);
@@ -182,7 +173,7 @@ function runsIntegrationSuite(
           'test-end',
           (browserDef: BrowserDef, data: TestEndData, stats: Stats) => {
             const variantResults =
-                testResults.getVariantResults(/*browserDef.variant || */ '');
+                testResults.getVariantResults(browserDef.variant || '');
             const browserName = getBrowserName(browserDef);
             variantResults.stats[browserName] = stats;
 
@@ -206,7 +197,7 @@ function runsIntegrationSuite(
       addEventHandler(
           'browser-end', (browserDef: BrowserDef, error: any, stats: Stats) => {
             const variantResults =
-                testResults.getVariantResults(/*browserDef.variant || */ '');
+                testResults.getVariantResults(browserDef.variant || '');
             const browserName = getBrowserName(browserDef);
             variantResults.stats[browserName] = stats;
             variantResults.errors[browserName] = error || null;
@@ -225,7 +216,9 @@ function runsIntegrationSuite(
     });
 
     afterEach(function() {
-      if (this.currentTest.state === 'failed') {
+      // TODO(rictic): remove this case to any once this PR has landed:
+      // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/13480
+      if ((this as any).currentTest.state === 'failed') {
         process.stderr.write(
             `\n    Output of wct for integration suite named \`${dirName}\`` +
             `\n` +
@@ -319,7 +312,8 @@ function assertTestErrors(
   lodash.each(context.testErrors, function(actual, browser) {
     expect(Object.keys(expected))
         .to.have.members(
-            Object.keys(actual), 'Test file mismatch for ' + browser +
+            Object.keys(actual),
+            'Test file mismatch for ' + browser +
                 `: expected ${JSON
                     .stringify(Object.keys(expected))} - got ${JSON.stringify(
                         Object.keys(actual))}`);
@@ -402,11 +396,9 @@ function getBrowserName(browser: BrowserDef) {
     parts.push(browser.version);
   }
 
-  /*
   if (browser.variant) {
     parts.push(`[${browser.variant}]`);
   }
-  */
 
   return parts.join(' ');
 }
@@ -417,3 +409,62 @@ function repeatBrowsers<T>(
       .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
   return lodash.mapValues(context.stats, () => data);
 }
+
+describe('early failures', () => {
+  it(`wct doesn't start testing if it's not bower installed locally`,
+     async function() {
+       this.timeout(20 * 1000);
+       const log: string[] = [];
+       const options: config.Config = {
+         output: <any>{write: log.push.bind(log)},
+         ttyOutput: false,
+         root: path.join(
+             __dirname, '..', 'fixtures', 'integration', 'components_dir'),
+         browserOptions: <any>{
+           name: 'web-component-tester',
+           tags: ['org:Polymer', 'repo:web-component-tester'],
+         },
+         plugins: <any>{
+           local: {
+             // Uncomment to customize the browsers to test when debugging.
+             //  browsers: ['firefox', 'chrome', 'safari'],
+             skipSeleniumInstall: true
+           },
+         },
+       };
+       const context = new Context(options);
+       try {
+         await test(context);
+         throw new Error('Expected test() to fail!');
+       } catch (e) {
+         expect(e.message).to.match(
+             /The web-component-tester Bower package is not installed as a dependency of this project/);
+       }
+     });
+
+  it('fails if the client side library is out of allowed version range',
+     async function() {
+       const log: string[] = [];
+       const options: config.Config = {
+         output: <any>{write: log.push.bind(log)},
+         ttyOutput: false,
+         root: path.join(__dirname, '..', 'fixtures', 'early-failure'),
+         browserOptions: <any>{
+           name: 'web-component-tester',
+           tags: ['org:Polymer', 'repo:web-component-tester'],
+         },
+         plugins: <any>{
+           local: {skipSeleniumInstall: true},
+         },
+       };
+       const context = new Context(options);
+       try {
+         await test(context);
+         throw new Error('Expected test() to fail!');
+       } catch (e) {
+         expect(e.message).to.match(
+             /The web-component-tester Bower package installed is incompatible with the\n\s*wct node package you're using/);
+       }
+     });
+
+});

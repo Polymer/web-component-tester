@@ -44,10 +44,10 @@ function removeFile(path) {
   try {
     fs.unlinkSync(path);
     return;
-  } catch(e) {
+  } catch (e) {
     try {
       fs.statSync(path);
-    } catch(e) {
+    } catch (e) {
       return;
     }
     throw new Error('Unable to remove file: ' + path);
@@ -63,19 +63,19 @@ gulp.task('clean', (done) => {
       for (const file of files) {
         removeFile(file);
       }
-    } catch(e) {
+    } catch (e) {
       return done(e);
     }
     done();
   });
 });
 
-gulp.task('test', function(done) {
+gulp.task('test', function (done) {
   runSequence(
-      ['build:typescript', 'lint'],
-      'test:unit',
-      'test:integration',
-      done);
+    ['build:typescript', 'lint'],
+    'test:unit',
+    'test:integration',
+    done);
 });
 
 gulp.task('build-all', (done) => {
@@ -84,7 +84,7 @@ gulp.task('build-all', (done) => {
 
 gulp.task('build', ['build:typescript', 'build:browser']);
 
-gulp.task('build:typescript', function() {
+gulp.task('build:typescript', function () {
   // Ignore typescript errors, because gulp-typescript, like most things
   // gulp, can't be trusted.
   return tsProject.src().pipe(tsProject(ts.reporter.nullReporter())).js.pipe(gulp.dest('./'));
@@ -92,24 +92,24 @@ gulp.task('build:typescript', function() {
 
 // Specific tasks
 
-gulp.task('build:browser', function(done) {
+gulp.task('build:browser', function (done) {
   rollup.rollup({
     entry: 'browser/index.js',
-  }).then(function(bundle) {
+  }).then(function (bundle) {
     bundle.write({
       indent: false,
       format: 'iife',
-      banner: fs.readFileSync('license-header.txt', 'utf-8'),
+      banner: fs.readFileSync('browser-js-header.txt', 'utf-8'),
       dest: 'browser.js',
       sourceMap: true,
       sourceMapFile: path.resolve('browser.js.map')
-    }).then(function() {
+    }).then(function () {
       done();
     });
   }).catch(done);
 });
 
-gulp.task('test:style', function() {
+gulp.task('test:style', function () {
   return gulp.src([
     '{browser,runner,environment,tasks}/**/*.js',
     'gulpfile.js',
@@ -117,18 +117,18 @@ gulp.task('test:style', function() {
   ]).pipe(jshintFlow());
 });
 
-gulp.task('test:unit', function() {
-  return gulp.src('test/unit/*.js', {read: false})
-      .pipe(mocha({reporter: 'spec'}));
+gulp.task('test:unit', function () {
+  return gulp.src('test/unit/*.js', { read: false })
+    .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('bower', function() {
+gulp.task('bower', function () {
   return bower();
 });
 
-gulp.task('test:integration', ['bower'], function() {
-  return gulp.src('test/integration/*.js', {read: false})
-      .pipe(mocha({reporter: 'spec'}));
+gulp.task('test:integration', ['bower'], function () {
+  return gulp.src('test/integration/*.js', { read: false })
+    .pipe(mocha({ reporter: 'spec' }));
 });
 
 gulp.task('tslint', () =>
@@ -159,13 +159,13 @@ commonTools.depcheck({
 });
 
 function commonDepCheck(options) {
-  const defaultOptions = {stickyDeps: new Set()};
+  const defaultOptions = { stickyDeps: new Set() };
   options = Object.assign({}, defaultOptions, options);
 
   gulp.task('depcheck', () => {
     return new Promise((resolve, reject) => {
       depcheck(
-          __dirname, {ignoreDirs: [], ignoreMatches: ['@types/*']}, resolve);
+        __dirname, { ignoreDirs: [], ignoreMatches: ['@types/*'] }, resolve);
     }).then((result) => {
       const invalidFiles = Object.keys(result.invalidFiles) || [];
       const invalidJsFiles = invalidFiles.filter((f) => f.endsWith('.js'));
@@ -187,7 +187,7 @@ function commonDepCheck(options) {
   });
 }
 
-gulp.task('prepublish', function(done) {
+gulp.task('prepublish', function (done) {
   // We can't run the integration tests here because on travis we may not
   // be running with an x instance when we do `npm install`. We can change
   // this to just `test` from `test:unit` once all supported npm versions

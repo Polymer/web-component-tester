@@ -12,54 +12,26 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
-import * as chalk from 'chalk';
 import * as cleankill from 'cleankill';
-import * as express from 'express';
 import * as fs from 'fs';
-import * as http from 'http';
 import * as _ from 'lodash';
 import * as path from 'path';
+import {MainlineServer, PolyserveServer, RequestHandler, startServers, VariantServer} from 'polyserve';
+import * as semver from 'semver';
 import * as send from 'send';
-import * as serveWaterfall from 'serve-waterfall';
 import * as serverDestroy from 'server-destroy';
 
 import {Context} from './context';
-import * as httpbin from './httpbin';
-import {findPort} from './port-scanner';
 
 // Template for generated indexes.
 const INDEX_TEMPLATE = _.template(fs.readFileSync(
     path.resolve(__dirname, '../data/index.html'), {encoding: 'utf-8'}));
 
-// We prefer serving local assets over bower assets.
-const PACKAGE_ROOT = path.resolve(__dirname, '..');
-const SERVE_STATIC = {
-  // Keys are regexps.
-  '^(.*/web-component-tester|)/browser\\.js$':
-      path.join(PACKAGE_ROOT, 'browser.js'),
-  '^(.*/web-component-tester|)/browser\\.js\\.map$':
-      path.join(PACKAGE_ROOT, 'browser.js.map'),
-  '^(.*/web-component-tester|)/data/a11ySuite\\.js$':
-      path.join(PACKAGE_ROOT, 'data', 'a11ySuite.js'),
-};
-
 const DEFAULT_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
   'Pragma': 'no-cache',
-  'Expires': 0,
+  'Expires': '0',
 };
-
-// Sauce Labs compatible ports
-// taken from
-// https://docs.saucelabs.com/reference/sauce-connect/#can-i-access-applications-on-localhost-
-// - 80, 443, 888: these ports must have root access
-// - 5555, 8080: not forwarded on Android
-const SAUCE_PORTS = [
-  2000, 2001, 2020, 2109, 2222, 2310, 3000, 3001, 3030, 3210, 3333,  4000,
-  4001, 4040, 4321, 4502, 4503, 4567, 5000, 5001, 5050, 5432, 6000,  6001,
-  6060, 6666, 6543, 7000, 7070, 7774, 7777, 8000, 8001, 8003, 8031,  8081,
-  8765, 8777, 8888, 9000, 9001, 9080, 9090, 9876, 9877, 9999, 49221, 55001
-];
 
 /**
  * The webserver module is a quasi-plugin. This ensures that it is hooked in a
@@ -75,120 +47,204 @@ export function webserver(wct: Context): void {
     // For now, you should treat all these options as an implementation detail
     // of WCT. They may be opened up for public configuration, but we need to
     // spend some time rationalizing interactions with external webservers.
-    options.webserver = _.merge(options.webserver, {
-      // The URL path that each test run should target.
-      webRunnerPath: undefined,
-      // If present, HTML content that should be served at `webRunner`.
-      webRunnerContent: undefined,
-      // Map of route expressions (regular expressions) to local file paths that
-      // should be served by the webserver.
-      staticContent: SERVE_STATIC,
-    });
+    options.webserver = _.merge(options.webserver, {});
 
     if (options.verbose) {
       options.clientOptions.verbose = true;
     }
 
-    // Prefix our web runner URL with the base path.
-    let urlPrefix = options.webserver.urlPrefix;
-    urlPrefix = urlPrefix.replace('<basename>', path.basename(options.root));
-    options.webserver.webRunnerPath = urlPrefix + '/generated-index.html';
-
     // Hacky workaround for Firefox + Windows issue where FF screws up pathing.
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
-
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
-    options.webserver.webRunnerContent = INDEX_TEMPLATE(options);
+    options.webserver._generatedIndexContent = INDEX_TEMPLATE(options);
   });
 
   wct.hook('prepare', async function() {
     const wsOptions = options.webserver;
+    const additionalRoutes = new Map<string, RequestHandler>();
 
-    const port = await getPort();
+    const packageName = path.basename(options.root);
 
-    // `port` (and `webRunnerPath`) is read down the line by `BrowserRunner`.
-    wsOptions.port = port;
+    // Check for client-side compatibility.
+    const pathToLocalWct =
+        path.join(options.root, 'bower_components', 'web-component-tester');
+    let version: string|undefined = undefined;
+    const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
+    for (const mdFilename of mdFilenames) {
+      const pathToMetdata = path.join(pathToLocalWct, mdFilename);
+      try {
+        version = version || require(pathToMetdata).version;
+      } catch (e) {
+        // Handled below, where we check if we found a version.
+      }
+    }
+    if (!version) {
+      throw new Error(`
+The web-component-tester Bower package is not installed as a dependency of this project (${packageName
+                      }).
 
-    const app = express();
-    const server = http.createServer(app);
-    // `runTests` needs a reference to this (for the socket.io endpoint).
-    wct._httpServer = server;
+Please run this command to install:
+    bower install --save-dev web-component-tester
 
-    // Debugging information for each request.
-    app.use(function(request, response, next) {
-      const msg = request.url + ' (' + request.header('referer') + ')';
-      wct.emit('log:debug', chalk.magenta(request.method), msg);
-      next();
-    });
+Web Component Tester >=6.0 requires that support files needed in the browser are installed as part of the project's dependencies or dev-dependencies. This is to give projects greater control over the versions that are served, while also making Web Component Tester's behavior easier to understand.
 
-    // Mapped static content (overriding files served at the root).
-    _.each(wsOptions.staticContent, function(file, url) {
-      app.get(new RegExp(url), function(request, response) {
-        response.set(DEFAULT_HEADERS);
-        send(request, file).pipe(response);
-      });
-    });
-
-    // The generated web runner, if present.
-    if (wsOptions.webRunnerContent) {
-      app.get(wsOptions.webRunnerPath, function(request, response) {
-        response.set(DEFAULT_HEADERS);
-        response.send(wsOptions.webRunnerContent);
-      });
+Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
+`);
     }
 
-    // At this point, we allow other plugins to hook and configure the
-    // webserver as they please.
-    await wct.emitHook('prepare:webserver', app);
+    const allowedRange = require(path.join(
+        __dirname, '..',
+        'package.json'))['--private-wct--']['client-side-version-range'] as
+        string;
+    if (!semver.satisfies(version, allowedRange)) {
+      throw new Error(`
+    The web-component-tester Bower package installed is incompatible with the
+    wct node package you're using.
 
-    // Serve up all the static assets.
-    app.use(serveWaterfall(wsOptions.pathMappings, {
+    The test runner expects a version that satisfies ${allowedRange} but the
+    bower package you have installed is ${version}.
+`);
+    }
+
+    // Check that there's a wct node module.
+    const pathToWctNodeModule =
+        path.join(options.root, 'node_modules', 'web-component-tester');
+    if (!exists(pathToWctNodeModule)) {
+      console.warn(`
+    The web-component-tester node module is not installed as a dependency of
+    this project (${packageName}).
+
+    We recommend that you run this command to add it:
+        npm install --save-dev web-component-tester
+
+    or run:
+        yarn add web-component-tester --dev
+
+    Doing so will ensure that your project is in control of the version of wct
+    that your project is tested with, insulating you from any future breaking
+    changes and making your test runs more reproducible. In a future release
+    of wct this will be required.
+
+    Expected a directory to exist at: ${pathToWctNodeModule}/
+`);
+    }
+
+    let hasWarnedBrowserJs = false;
+    additionalRoutes.set('/browser.js', function(request, response) {
+      if (!hasWarnedBrowserJs) {
+        console.warn(`
+
+          WARNING:
+          Loading WCT's browser.js from /browser.js is deprecated.
+
+          Instead load it from ../web-component-tester/browser.js
+          (or with the absolute url /components/web-component-tester/browser.js)
+        `);
+        hasWarnedBrowserJs = true;
+      }
+      const browserJsPath = path.join(pathToLocalWct, 'browser.js');
+      send(request, browserJsPath).pipe(response);
+    });
+
+    const pathToGeneratedIndex =
+        `/components/${packageName}/generated-index.html`;
+    additionalRoutes.set(pathToGeneratedIndex, (_request, response) => {
+      response.set(DEFAULT_HEADERS);
+      response.send(options.webserver._generatedIndexContent);
+    });
+
+    // Serve up project & dependencies via polyserve
+    const polyserveResult = await startServers({
       root: options.root,
-      headers: DEFAULT_HEADERS,
-      log: wct.emit.bind(wct, 'log:debug'),
-    }));
+      compile: options.compile,
+      hostname: options.webserver.hostname,
+      headers: DEFAULT_HEADERS, packageName, additionalRoutes,
+    });
+    let servers: Array<MainlineServer|VariantServer>;
 
-    app.use('/httpbin', httpbin.httpbin);
+    const onDestroyHandlers: Array<() => Promise<void>> = [];
+    const registerServerTeardown = (serverInfo: PolyserveServer) => {
+      const destroyableServer = serverInfo.server as any;
+      serverDestroy(destroyableServer);
+      onDestroyHandlers.push(() => {
+        destroyableServer.destroy();
+        return new Promise<void>(
+            (resolve) => serverInfo.server.on('close', () => resolve()));
+      });
+    };
 
-    app.get('/favicon.ico', function(request, response) {
-      response.end();
+    if (polyserveResult.kind === 'mainline') {
+      servers = [polyserveResult];
+      registerServerTeardown(polyserveResult);
+      wsOptions.port = polyserveResult.server.address().port;
+    } else if (polyserveResult.kind === 'MultipleServers') {
+      servers = [polyserveResult.mainline];
+      servers = servers.concat(polyserveResult.variants);
+      wsOptions.port = polyserveResult.mainline.server.address().port;
+      for (const server of polyserveResult.servers) {
+        registerServerTeardown(server);
+      }
+    } else {
+      const never: never = polyserveResult;
+      throw new Error(
+          `Internal error: Got unknown response from polyserve.startServers:` +
+          `${never}`);
+    }
+
+    wct._httpServers = servers.map(s => s.server);
+
+    // At this point, we allow other plugins to hook and configure the
+    // webservers as they please.
+    for (const server of servers) {
+      await wct.emitHook('prepare:webserver', server.app);
+    }
+
+    options.webserver._servers = servers.map(s => {
+      const port = s.server.address().port;
+      return {
+        url: `http://localhost:${port}${pathToGeneratedIndex}`,
+        variant: s.kind === 'mainline' ? '' : s.variantName
+      };
     });
 
-    app.use(function(request, response, next) {
-      wct.emit('log:warn', '404', chalk.magenta(request.method), request.url);
-      next();
-    });
+    // TODO(rictic): re-enable this stuff. need to either move this code into
+    //     polyserve or let the polyserve API expose this stuff.
+    // app.use('/httpbin', httpbin.httpbin);
 
-    server.listen(port);
-    (<any>server).port = port;
-    serverDestroy(server);
+    // app.get('/favicon.ico', function(request, response) {
+    //   response.end();
+    // });
 
-    cleankill.onInterrupt(function(done) {
+    // app.use(function(request, response, next) {
+    //   wct.emit('log:warn', '404', chalk.magenta(request.method),
+    //   request.url);
+    //   next();
+    // });
+
+    async function interruptHandler() {
       // close the socket IO server directly if it is spun up
-      const io = wct._socketIOServer;
-      if (io) {
+      for (const io of (wct._socketIOServers || [])) {
         // we will close the underlying server ourselves
         (<any>io).httpServer = null;
         io.close();
       }
-      server.destroy();
-      server.on('close', done);
+      await Promise.all(onDestroyHandlers.map((f) => f()));
+    };
+    cleankill.onInterrupt((done) => {
+      interruptHandler().then(() => done(), done);
     });
-
-    wct.emit(
-        'log:info', 'Web server running on port', chalk.yellow(port.toString()),
-        'and serving from', chalk.magenta(options.root));
   });
-
-  async function getPort(): Promise<number> {
-    if (options.webserver.port) {
-      return options.webserver.port;
-    } else {
-      return await findPort(SAUCE_PORTS);
-    }
-  }
 };
+
+function exists(path: string): boolean {
+  try {
+    fs.statSync(path);
+    return true;
+  } catch (_err) {
+    return false;
+  }
+}
 
 // HACK(rictic): remove this ES6-compat hack and export webserver itself
 webserver['webserver'] = webserver;

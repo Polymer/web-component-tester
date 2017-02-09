@@ -46,14 +46,9 @@ Your test suites can be `.html` documents. For example,
 </html>
 ```
 
-Note that it is _critical_ that you include `web-component-tester/browser.js` in
-your test suites. `browser.js` contains all of WCT's client logic (and loads
-bundled libraries like mocha and chai).
-
-If you are using [WCT via the command line](#wct), it will automatically serve
-its local copy of `browser.js` on any URL that ends with
-`/web-component-tester/browser.js`.
-
+Note that it is _critical_ that you include `../web-component-tester/browser.js`
+in your test suites. `browser.js` contains all of WCT's client logic (and loads
+bundled libraries like mocha and chai). You can also load it from the absolute URL `/components/web-component-tester/browser.js`.
 
 ## `.js` Suites
 
@@ -71,7 +66,6 @@ suite('AwesomeLib', function() {
 ## Special Features
 
 ### test-fixture
-
 `test-fixture` can be used to reset DOM state between test runs.
 ```html
 <test-fixture id="simple">
@@ -80,26 +74,26 @@ suite('AwesomeLib', function() {
   </template>
 </test-fixture>
 <script>
-  suite('classList', function() {
-    var div;
-    setup(function() {
-      div = fixture('simple');
-    });
-    test('foo', function() {
-      div.classList.add('foo');
-      assertSomethingOrOther(div);
-    });
-    test('bar', function() {
-      div.classList.add('bar');
-      assertNoFooClass(div);
-    });
-  });
-</script>
-```
+ suite('classList', () => {
+   let div;
+   setup(() => {
+     div = fixture('simple');
+   });
+   test('foo', () => {
+     div.classList.add('foo');
+     assertSomethingOrOther(div);
+   });
+   test('bar', () => {
+     div.classList.add('bar');
+     assertNoFooClass(div);
+   });
+ });
+ ```
 
 ### a11ySuite
 
-`a11ySuite` provides an simple way to run accessibility-developer-tools' high quality accessibility audits when given a `test-fixture`.
+`a11ySuite` provides an simple way to run accessibility-developer-tools' high quality accessibility
+audits when given a `test-fixture`.
 The `a11ySuite` will show all the audit results via the standard Mocha test output.
 ```html
 <test-fixture id="NoLabel">
@@ -243,6 +237,28 @@ For more information on Sauce configuration, [see their Wiki](https://wiki.sauce
 Requesting that plugin via `--plugin` on the command line (or overriding the
 plugin's configuration to `disabled: false`) will cause the plugin to kick in.
 
+## Variant dependencies
+
+Sometimes you want to run your project's tests against different versions of
+your dependencies. For example, suppose there was a significant change in
+paper-button version `v1.5` and you want to confirm that your code works with
+`v1.4` and `v1.5`.
+
+WCT will serve from the `bower_components` directory in your project's root
+directory as siblings of your project's root directory. So if you depend on
+paper-button, you can import it with the url
+`../paper-button/paper-button.html`.
+
+For each directory that WCT detects with a name like
+`bower_components-${variantName}`, it will also run your tests separately
+against that variant of your dependencies. So you could use the [`directory`
+environment variable](https://bower.io/docs/config/) option with bower to set
+up a `bower_components-button-v1.4` directory while developing. WCT would
+notice that directory and run your tests in two different variations, one where
+`../paper-button/paper-button.html` gets `v1.4`, the other where it gets
+`v1.5`.
+
+This is implemented by starting one test server per variant, and one copy of each launched browser per test server.
 
 # Nitty Gritty
 

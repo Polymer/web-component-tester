@@ -17,7 +17,6 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as nomnom from 'nomnom';
 import * as path from 'path';
-import * as serveWaterfall from 'serve-waterfall';
 import {Capabilities} from 'wd';
 
 import {BrowserDef} from './browserrunner';
@@ -29,6 +28,8 @@ import {Plugin} from './plugin';
 const HOME_DIR = path.resolve(
     process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
 const WCT_ROOT = path.resolve(__dirname, '..');
+const JSON_MATCHER = 'wct.conf.json';
+const CONFIG_MATCHER = 'wct.conf.*';
 
 export type Browser = string | {browserName: string, platform: string};
 
@@ -50,19 +51,15 @@ export interface Config {
   registerHooks?: (wct: Context) => void;
   enforceJsonConf?: boolean;
   webserver?: {
-    // The port that the webserver should run on. A port will be determined at
-    // runtime if none is provided.
+    // The port that the main webserver should run on. A port will be
+    // determined at runtime if none is provided.
     port: number;
+
     // The hostname used when generating URLs for the webdriver client.
     hostname: string;
-    // mappings of URL prefix to on disk paths that the web server should
-    // serve via https://github.com/PolymerLabs/serve-waterfall
-    pathMappings: {[urlPath: string]: string}[];
-    // The URL prefix that serves contents from the project root.
-    urlPrefix: string;
-    webRunnerPath?: string;
-    webRunnerContent?: string;
-    staticContent?: {[file: string]: string};
+
+    _generatedIndexContent?: string;
+    _servers?: {variant: string, url: string}[];
   };
 
   skipPlugins?: string[];
@@ -70,12 +67,13 @@ export interface Config {
   sauce?: {};
   remote?: {};
   origSuites?: string[];
-  /** A deprecated option */
-  browsers?: Browser[]|Browser;
+  compile?: 'auto'|'always'|'never';
   skipCleanup?: boolean;
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
   configFile?: string;
+  /** A deprecated option */
+  browsers?: Browser[]|Browser;
 }
 
 // The full set of options, as a reference.
@@ -107,9 +105,10 @@ export function defaults(): Config {
     extraScripts: [],
     // Configuration options passed to the browser client.
     clientOptions: {
-      // Also see `webserver.pathMappings` below.
       root: '/components/',
     },
+    compile: 'auto',
+
     // Webdriver capabilities objects for each browser that should be run.
     //
     // Capabilities can also contain a `url` value which is either a string URL
@@ -149,7 +148,7 @@ export function defaults(): Config {
     //       });
     //     }
     //
-    registerHooks: function(wct) {},
+    registerHooks: function(_wct) {},
     // Whether `wct.conf.*` is allowed, or only `wct.conf.json`.
     //
     // Handy for CI suites that want to be locked down.
@@ -162,31 +161,7 @@ export function defaults(): Config {
       // The port that the webserver should run on. A port will be determined at
       // runtime if none is provided.
       port: undefined,
-      // The hostname used when generating URLs for the webdriver client.
       hostname: 'localhost',
-      // mappings of URL prefix to on disk paths that the web server should
-      // serve via https://github.com/PolymerLabs/serve-waterfall
-      pathMappings: serveWaterfall.mappings.WEB_COMPONENT.concat([
-        // We also expose built in WCT dependencies, but with lower priority
-        // than the project's components.
-        {
-          '/components/sinonjs':
-              path.join(WCT_ROOT, 'node_modules', 'sinon', 'pkg')
-        },
-        {
-          '/components/lodash/lodash.js':
-              path.join(WCT_ROOT, 'node_modules', 'lodash', 'index.js')
-        },
-        {'/components': path.join(WCT_ROOT, 'node_modules')},
-        // npm 3 paths
-        {'/components/sinonjs': path.join(WCT_ROOT, '..', 'sinon', 'pkg')}, {
-          '/components/lodash/lodash.js':
-              path.join(WCT_ROOT, '..', 'lodash', 'index.js')
-        },
-        {'/components/': path.join(WCT_ROOT, '..')}
-      ]),
-      // The URL prefix that serves contents from the project root.
-      urlPrefix: '/components/<basename>',
     },
   };
 }
@@ -255,6 +230,12 @@ const ARG_CONFIG = {
   // Managed by supports-color; let's not freak out if we see it.
   color: {flag: true},
 
+  compile: {
+    help: 'Whether to compile ES2015 down to ES5. ' +
+        'Options: "always", "never", "auto". Auto means that we will ' +
+        'selectively compile based on the requesting user agent.'
+  },
+
   // Deprecated
 
   browsers: {
@@ -321,7 +302,7 @@ function loadProjectFile(file: string) {
       return require(file);
     }
   } catch (error) {
-    throw new Error(`Failed to load WCT config "${file}": ' + error.message`);
+    throw new Error(`Failed to load WCT config "${file}": ${error.message}`);
   }
 }
 
@@ -472,17 +453,20 @@ export async function expand(context: Context): Promise<void> {
 function expandDeprecated(context: Context) {
   const options = context.options;
   // We collect configuration fragments to be merged into the options object.
-  const fragments: {plugins: {sauce: {}, local?: {}}}[] = [];
+  const fragments = [];
 
   let browsers: Browser[] = <any>(
       _.isArray(options.browsers) ? options.browsers : [options.browsers]);
   browsers = <any>_.compact(<any>browsers);
   if (browsers.length > 0) {
     context.emit(
-        'log:warn', 'The --browsers flag/option is deprecated. Please use ' +
+        'log:warn',
+        'The --browsers flag/option is deprecated. Please use ' +
             '--local and --sauce instead, or configure via plugins.' +
             '[local|sauce].browsers.');
-    const fragment = {plugins: {sauce: {}, local: {}}};
+    const fragment: {plugins: {[name: string]: {browsers?: Browser[]}}} = {
+      plugins: {sauce: {}, local: {}}
+    };
     fragments.push(fragment);
 
     for (const browser of browsers) {
@@ -500,7 +484,8 @@ function expandDeprecated(context: Context) {
 
   if (options.sauce) {
     context.emit(
-        'log:warn', 'The sauce configuration key is deprecated. Please use ' +
+        'log:warn',
+        'The sauce configuration key is deprecated. Please use ' +
             'plugins.sauce instead.');
     fragments.push({
       plugins: {sauce: options.sauce},
@@ -510,7 +495,8 @@ function expandDeprecated(context: Context) {
 
   if (options.remote) {
     context.emit(
-        'log:warn', 'The --remote flag is deprecated. Please use ' +
+        'log:warn',
+        'The --remote flag is deprecated. Please use ' +
             '--sauce default instead.');
     fragments.push({
       plugins: {sauce: {browsers: ['default']}},

@@ -22,7 +22,6 @@ import * as util from 'util';
 
 import {BrowserDef, Stats} from './browserrunner';
 import * as config from './config';
-import * as context from './context';
 
 const STACKY_CONFIG = {
   indent: '    ',
@@ -242,6 +241,10 @@ export class CliReporter {
 
     if (browser.version) {
       parts.push(browser.version);
+    }
+
+    if (browser.variant) {
+      parts.push(`[${browser.variant}]`);
     }
 
     return chalk.blue(parts.join(' '));

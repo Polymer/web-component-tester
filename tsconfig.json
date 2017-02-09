@@ -6,7 +6,7 @@
         "isolatedModules": false,
         "noImplicitAny": true,
         "noUnusedLocals": false,
-        "noUnusedParameters": false,
+        "noUnusedParameters": true,
         "noImplicitThis": false,
         "strictNullChecks": false,
         "removeComments": false,

@@ -1,14 +1,37 @@
-# 5.x
+## Unreleased
+
+### Breaking change
+
+* In an effort to reduce magical behavior and make `wct` easier to understand, it no longer will automatically serve some resources from its own `npm` dependencies and some resources from the project under test. Instead, all resources are served out of the project under test. This gives the project under test control over its testing dependencies and their versions.
+  * As part of this, wct will also require that the project under test have an installation of the client side web-component-tester bower package. We recommend that all projects also have a dependency on the npm web-component-tester node module, and in a future release will will require it. This is to makes results more reproducible, and ensures that they'll be protected from future breaking changes.
+  * This release also unifies the behavior of `wct` and `polyserve`, so if your code works without warnings in one it should work in the other.
+  * Calling `replace(...)` will use sinon to stub `document.importNode` until `teardown` is called.
+
+### Added
+
+* Added first pass of _variants_. Variants different configurations of testing the same code.
+  * Add support for _variant dependencies_.
+    * wct already supports loading dependencies from your `bower_components` directory, mapping them to `../` in your code. You can now add variant dependency directories named like `bower_components-foo`. When these are detected, tests will then run separately for each such dependency directory, mapping `../` appropriately. See README for more details.
+
+### Removed
+
+* `webserver.webRunnerPath`, `webserver.webRunnerContent`, and `webserver.urlPrefix`, `webserver.staticContent` were internal properties that were exposed on the `config` object. They have been refactored and their replacement has been prefixed with an underscore to clarify that they're internal implementation details.
+
+### Fixed
+* Fixed #373 and #383 which were caused by `emitHook` not handling argumnts correctly.
+* Fixed error log message for loading WCT config
+
 ## 5.0.0
 * Mocha upgraded to `v3.1.2`. This shouldn't require any new code, but make sure your tests still pass as there were some more subtle changes made to Mocha behavior for v3 (Add IE7 support, update dependencies). See https://github.com/mochajs/mocha/pull/2350 for more info.
 
-# 4.x
 ## 4.2.2
 * Update bower dependencies to match node dependencies
 * Update rollup to 0.25
 * Update README to point to webcomponents-lite.js
+
 ## 4.2.1
 * Fix `grep` for upstream mocha bug
+
 ## 4.2.0
 * Add `httpbin` functionality to check `POST` requests
   * `POST` to `/httpbin`, response will be contents of `POST`

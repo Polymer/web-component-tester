@@ -25,15 +25,12 @@ export interface Stats {
   failing?: number;
 }
 
-interface NodeCB<T> {
-  (err: any, value?: T): void;
-}
-
 export interface BrowserDef extends wd.Capabilities {
   id: number;
   url: string;
   sessionId: string;
   deviceName?: string;
+  variant?: string;
 }
 
 // Browser abstraction, responsible for spinning up a browser instance via wd.js
@@ -49,72 +46,98 @@ export class BrowserRunner {
   options: Config;
   donePromise: Promise<void>;
 
+  /**
+   * The url of the initial page to load in the browser when starting tests.
+   */
+  url: string;
+
   private _resolve: () => void;
   private _reject: (err: any) => void;
 
-  constructor(emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config) {
+  /**
+   * @param emitter The emitter to send updates about test progress to.
+   * @param def A BrowserDef describing and defining the browser to be run.
+   *     Includes both metadata and a method for connecting/launching the
+   *     browser.
+   * @param options WCT options.
+   * @param url The url of the generated index.html file that the browser should
+   *     point at.
+   * @param waitFor Optional. If given, we won't try to start/connect to the
+   *     browser until this promise resolves. Used for serializing access to
+   *     Safari webdriver, which can only have one instance running at once.
+   */
+  constructor(
+      emitter: NodeJS.EventEmitter, def: BrowserDef, options: Config,
+      url: string, waitFor?: Promise<void>) {
     this.emitter = emitter;
     this.def = def;
     this.options = options;
     this.timeout = options.testTimeout;
     this.emitter = emitter;
+    this.url = url;
 
     this.stats = {status: 'initializing'};
-    this.browser = wd.remote(this.def.url);
 
-    // never retry selenium commands
-    this.browser.configureHttp({retries: -1});
     this.donePromise = new Promise<void>((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
     });
 
-    cleankill.onInterrupt((done) => {
-      if (!this.browser) {
-        return done();
-      }
+    waitFor = waitFor || Promise.resolve();
+    waitFor.then(() => {
+      this.browser = wd.remote(this.def.url);
 
-      this.donePromise.then(() => done(), () => done());
-      this.done('Interrupting');
-    });
+      // never retry selenium commands
+      this.browser.configureHttp({retries: -1});
 
-    this.browser.on('command', (method: any, context: any) => {
-      emitter.emit('log:debug', this.def, chalk.cyan(method), context);
-    });
 
-    this.browser.on('http', (method: any, path: any, data: any) => {
-      if (data) {
-        emitter.emit(
-            'log:debug', this.def, chalk.magenta(method), chalk.cyan(path),
-            data);
-      } else {
-        emitter.emit(
-            'log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
-      }
-    });
+      cleankill.onInterrupt((done) => {
+        if (!this.browser) {
+          return done();
+        }
 
-    this.browser.on('connection', (code: any, message: any, error: any) => {
-      emitter.emit(
-          'log:warn', this.def, 'Error code ' + code + ':', message, error);
-    });
-
-    this.emitter.emit('browser-init', this.def, this.stats);
-
-    // Make sure that we are passing a pristine capabilities object to
-    // webdriver. None of our screwy custom properties!
-    const webdriverCapabilities = _.clone(this.def);
-    delete webdriverCapabilities.id;
-    delete webdriverCapabilities.url;
-    delete webdriverCapabilities.sessionId;
-
-    // Reusing a session?
-    if (this.def.sessionId) {
-      this.browser.attach(this.def.sessionId, (error) => {
-        this._init(error, this.def.sessionId);
+        this.donePromise.then(() => done(), () => done());
+        this.done('Interrupting');
       });
-    } else {
-      this.browser.init(webdriverCapabilities, this._init.bind(this));
-    }
+
+      this.browser.on('command', (method: any, context: any) => {
+        emitter.emit('log:debug', this.def, chalk.cyan(method), context);
+      });
+
+      this.browser.on('http', (method: any, path: any, data: any) => {
+        if (data) {
+          emitter.emit(
+              'log:debug', this.def, chalk.magenta(method), chalk.cyan(path),
+              data);
+        } else {
+          emitter.emit(
+              'log:debug', this.def, chalk.magenta(method), chalk.cyan(path));
+        }
+      });
+
+      this.browser.on('connection', (code: any, message: any, error: any) => {
+        emitter.emit(
+            'log:warn', this.def, 'Error code ' + code + ':', message, error);
+      });
+
+      this.emitter.emit('browser-init', this.def, this.stats);
+
+      // Make sure that we are passing a pristine capabilities object to
+      // webdriver. None of our screwy custom properties!
+      const webdriverCapabilities = _.clone(this.def);
+      delete webdriverCapabilities.id;
+      delete webdriverCapabilities.url;
+      delete webdriverCapabilities.sessionId;
+
+      // Reusing a session?
+      if (this.def.sessionId) {
+        this.browser.attach(this.def.sessionId, (error) => {
+          this._init(error, this.def.sessionId);
+        });
+      } else {
+        this.browser.init(webdriverCapabilities, this._init.bind(this));
+      }
+    });
   }
 
   _init(error: any, sessionId: string) {
@@ -128,7 +151,6 @@ export class BrowserRunner {
         // debugger;
         try {
           const data = JSON.parse(error.data);
-          console.log(data.value.message);
           if (data.value && data.value.message &&
               /Failed to connect to SafariDriver/i.test(data.value.message)) {
             error = 'Until Selenium\'s SafariDriver supports ' +
@@ -151,12 +173,9 @@ export class BrowserRunner {
   }
 
   startTest() {
-    const webserver = this.options.webserver;
-    const host = `http://${webserver.hostname}:${webserver.port}`;
-    const path = this.options.webserver.webRunnerPath;
-    const extra = (path.indexOf('?') === -1 ? '?' : '&') +
-        `cli_browser_id=${this.def.id}`;
-    this.browser.get(host + path + extra, (error) => {
+    const paramDelim = (this.url.indexOf('?') === -1 ? '?' : '&');
+    const extra = `${paramDelim}cli_browser_id=${this.def.id}`;
+    this.browser.get(this.url + extra, (error) => {
       if (error) {
         this.done(error.data || error);
       } else {
@@ -167,7 +186,6 @@ export class BrowserRunner {
 
   onEvent(event: string, data: any) {
     this.extendTimeout();
-
     if (event === 'browser-start') {
       // Always assign, to handle re-runs (no browser-init).
       this.stats = {
