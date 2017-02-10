@@ -79,7 +79,7 @@ async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   const plugin = await Plugin.get('sauce');
   const parser = require('nomnom');
   parser.script('wct-st');
-  parser.options(_.omit(plugin.cliConfig, 'browsers', 'tunnelId'));
+  parser.options(_.omit(plugin.cliConfig, ['browsers', 'tunnelId']));
   const options = _.merge(baseOptions, parser.parse(args));
 
   const wctSauce = require('wct-sauce');

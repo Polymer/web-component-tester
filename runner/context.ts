@@ -186,7 +186,7 @@ export class Context extends events.EventEmitter {
   enabledPlugins(): string[] {
     // Plugins with falsy configuration or disabled: true are _not_ loaded.
     const pairs = _.reject(
-        (<any>_).pairs(this.options.plugins),
+        (<any>_).toPairs(this.options.plugins),
         (p: [string, {disabled: boolean}]) => !p[1] || p[1].disabled);
     return _.map(pairs, (p) => p[0]);
   };
