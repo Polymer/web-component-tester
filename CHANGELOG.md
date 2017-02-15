@@ -9,6 +9,8 @@
 
 ### Added
 
+* Polymer.dom.flush() call in a11ySuite to ensure lazy dom is loaded
+* Added beforeEach parameter to a11ySuite
 * Added first pass of _variants_. Variants different configurations of testing the same code.
   * Add support for _variant dependencies_.
     * wct already supports loading dependencies from your `bower_components` directory, mapping them to `../` in your code. You can now add variant dependency directories named like `bower_components-foo`. When these are detected, tests will then run separately for each such dependency directory, mapping `../` appropriately. See README for more details.
@@ -18,6 +20,7 @@
 * `webserver.webRunnerPath`, `webserver.webRunnerContent`, and `webserver.urlPrefix`, `webserver.staticContent` were internal properties that were exposed on the `config` object. They have been refactored and their replacement has been prefixed with an underscore to clarify that they're internal implementation details.
 
 ### Fixed
+* Fixed #392
 * Fixed #373 and #383 which were caused by `emitHook` not handling argumnts correctly.
 * Fixed error log message for loading WCT config
 
