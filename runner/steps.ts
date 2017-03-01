@@ -145,7 +145,7 @@ function runBrowsers(context: Context) {
       const browserDef = _.clone(originalBrowserDef);
       browserDef.id = id++;
       browserDef.variant = server.variant;
-      _.defaults(browserDef, options.browserOptions);
+      _.defaultsDeep(browserDef, options.browserOptions);
 
       const runner =
           new BrowserRunner(context, browserDef, options, server.url, waitFor);
