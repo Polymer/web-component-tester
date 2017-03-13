@@ -96,7 +96,7 @@ ChildRunner.prototype.run = function(done) {
   this.iframe.addEventListener('error',
       this.loaded.bind(this, new Error('Failed to load document ' + this.url)));
 
-  this.iframe.contentWindow.addEventListener('DOMContentLoaded', this.loaded.bind(this, null));
+  this.iframe.contentWindow.addEventListener('load', this.loaded.bind(this, null));
 };
 
 /**
