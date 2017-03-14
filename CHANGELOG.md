@@ -18,7 +18,8 @@
 * `webserver.webRunnerPath`, `webserver.webRunnerContent`, and `webserver.urlPrefix`, `webserver.staticContent` were internal properties that were exposed on the `config` object. They have been refactored and their replacement has been prefixed with an underscore to clarify that they're internal implementation details.
 
 ### Fixed
-* Fixed #373 and #383 which were caused by `emitHook` not handling argumnts correctly.
+* Fixed #505 by stopping parser with a script after inlining environment imports.
+* Fixed #373 and #383 which were caused by `emitHook` not handling arguments correctly.
 * Fixed error log message for loading WCT config
 
 ## 5.0.0
