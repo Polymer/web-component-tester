@@ -42,7 +42,7 @@
   ],
   "scripts": {
     "lint": "gulp lint",
-    "build": "gulp build",
+    "build": "tsc && gulp build",
     "test": "tsc && gulp test",
     "prepublish": "gulp prepublish",
     "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/",
@@ -114,7 +114,7 @@
     "rollup": "^0.25.1",
     "run-sequence": "^1.0.1",
     "tslint": "^3.10.2",
-    "typescript": "^2.0.6",
+    "typescript": "^2.1.4",
     "watch": "^0.18.0"
   },
   "engines": {
