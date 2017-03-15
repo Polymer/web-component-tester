@@ -2,6 +2,7 @@
 
 * Fixed #505 – Work around an issue in Chrome 57 where dynamically inserted HTML Imports did not subsequent script execution. See https://bugs.chromium.org/p/chromium/issues/detail?id=701601
 
+
 ## 6.0.0-prerelease.1 through 6.0.0-prerelease.5
 
 ### Breaking change
