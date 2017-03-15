@@ -162,7 +162,7 @@ export function webserver(wct: Context): void {
 
     server.listen(port);
     (<any>server).port = port;
-    serverDestroy(server);
+    serverDestroy(server as any);
 
     cleankill.onInterrupt(function(done) {
       // close the socket IO server directly if it is spun up
@@ -172,7 +172,7 @@ export function webserver(wct: Context): void {
         (<any>io).httpServer = null;
         io.close();
       }
-      server.destroy();
+      (server as any).destroy();
       server.on('close', done);
     });
 
