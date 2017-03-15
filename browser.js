@@ -1303,6 +1303,13 @@ function loadSync() {
     // Synchronous load.
     document.write('<link rel="import" href="' + encodeURI(url) + '">'); // jshint ignore:line
   });
+  if (imports.length > 0) {
+    // NOTE: In Chrome57 test-fixture elements in the document don't get upgraded when the import
+    // is dynamically appended. We stop the parser from continuing to parse the document by
+    // appending an "empty" script. This gives time to customElements for upgrading elements.
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=701601
+    document.write('<script>void(0)</script>'); // jshint ignore:line
+  }
   debug('Environment imports loaded');
 }
 
