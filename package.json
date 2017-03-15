@@ -42,7 +42,7 @@
   ],
   "scripts": {
     "lint": "gulp lint",
-    "build": "gulp build",
+    "build": "tsc && gulp build",
     "test": "tsc && gulp test",
     "prepublish": "gulp prepublish",
     "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/",
