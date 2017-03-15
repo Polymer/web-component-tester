@@ -1,6 +1,6 @@
 ## 6.0.0-prerelease.6 - 2017-03-15
 
-* Fixed #505 – Work around an issue in Chrome 57 where dynamically inserted HTML Imports did not subsequent script execution. See https://bugs.chromium.org/p/chromium/issues/detail?id=701601
+* Fixed #505 – Work around an issue in Chrome 57 where dynamically inserted HTML Imports did not block subsequent script execution. See https://bugs.chromium.org/p/chromium/issues/detail?id=701601
 
 ## 6.0.0-prerelease.1 through 6.0.0-prerelease.5
 
@@ -24,6 +24,10 @@
 ### Fixed
 * Fixed #373 and #383 which were caused by `emitHook` not handling arguments correctly.
 * Fixed error log message for loading WCT config
+
+## 5.0.1
+
+* Backport of fix for #505 – Work around an issue in Chrome 57 where dynamically inserted HTML Imports did not block subsequent script execution. See https://bugs.chromium.org/p/chromium/issues/detail?id=701601
 
 ## 5.0.0
 * Mocha upgraded to `v3.1.2`. This shouldn't require any new code, but make sure your tests still pass as there were some more subtle changes made to Mocha behavior for v3 (Add IE7 support, update dependencies). See https://github.com/mochajs/mocha/pull/2350 for more info.
