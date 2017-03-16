@@ -9,7 +9,6 @@
  */
 
 (function(Mocha, chai, axs) {
-
   Object.keys(Mocha.interfaces).forEach(function(iface) {
     var orig = Mocha.interfaces[iface];
 
@@ -26,57 +25,70 @@
           *
           * @param {String} fixtureId ID of the fixture element in the document to use
           * @param {Array?} ignoredRules Array of rules to ignore for this suite
+          * @param {?{beforeEach: ?function(?function()), afterEach: ?function(?function())}}
+          *     hooks An object which can contain beforeEach and afterEach hooks to be run
+          *     before and after each test is run. Use these hooks if you need to perform
+          *     (potentially asynchronous) work to set up or tear down your test. If this
+          *     object is passed, the normal setup / teardown of generating a fixture with ID
+          *     `fixtureId` will not be performed - `fixtureId` will still be shown in the
+          *     test title.
           */
-        context.a11ySuite = function(fixtureId, ignoredRules) {
-          // capture a reference to the fixture element early
-          var fixtureElement = document.getElementById(fixtureId);
-          if (!fixtureElement) {
+        context.a11ySuite = function(fixtureId, ignoredRules, hooks) {
+          ignoredRules = ignoredRules || [];
+
+          var beforeEach;
+          var afterEach;
+
+          if (!hooks) {
+            var fixtureElement = document.getElementById(fixtureId);
+            if (!fixtureElement) {
+              return;
+            }
+
+            beforeEach = function() {
+              fixtureElement.create();
+            };
+
+            afterEach = function() {
+              fixtureElement.restore();
+            };
+          } else if (typeof hooks === "object" && hooks !== null) {
+            beforeEach = hooks.beforeEach;
+            afterEach = hooks.afterEach;
+          } else {
             return;
           }
 
-          // build an audit config to disable certain ignorable tests
-          var axsConfig = new axs.AuditConfiguration();
-          axsConfig.scope = document.body;
-          axsConfig.showUnsupportedRulesWarning = false;
-          axsConfig.auditRulesToIgnore = ignoredRules;
-
-          // build mocha suite
           var a11ySuite = Suite.create(suite, 'A11y Audit - Fixture: ' + fixtureId);
+          if (beforeEach) {
+            a11ySuite.beforeEach(beforeEach);
+          }
+          if (afterEach) {
+            a11ySuite.afterEach(afterEach);
+          }
 
-          // override the `eachTest` function to hackily create the tests
-          //
-          // eachTest is called right before test runs to calculate the total
-          // number of tests
-          a11ySuite.eachTest = function() {
-            // instantiate fixture
-            fixtureElement.create();
+          axs.AuditRules.getRules(true).forEach(function(ruleName) {
+            if (ignoredRules.indexOf(ruleName) >= 0) return;
 
-            // run audit
-            var auditResults = axs.Audit.run(axsConfig);
+            var rule = axs.AuditRules.getRule(ruleName);
 
-            // create tests for audit results
-            auditResults.forEach(function(result, index) {
-              // only show applicable tests
-              if (result.result !== 'NA') {
-                var title = result.rule.heading;
-                // fail test if audit result is FAIL
-                var error = result.result === 'FAIL' ? axs.Audit.accessibilityErrorMessage(result) : null;
-                var test = new Test(title, function() {
-                  if (error) {
-                    throw new Error(error);
-                  }
-                });
-                test.file = file;
-                a11ySuite.addTest(test);
-              }
+            // Build an AuditConfiguration that runs only this rule.
+            var axsConfig = new axs.AuditConfiguration();
+            axsConfig.scope = document.body;
+            axsConfig.showUnsupportedRulesWarning = false;
+            axsConfig.auditRulesToRun = [ruleName];
+
+            var test = new Test(rule.heading, function() {
+              axs.Audit.run(axsConfig).forEach(function(result) {
+                if (result.result === 'FAIL') {
+                  throw new Error(axs.Audit.accessibilityErrorMessage(result));
+                }
+              });
             });
+            test.file = file;
 
-            // teardown fixture
-            fixtureElement.restore();
-
-            suite.eachTest.apply(a11ySuite, arguments);
-            this.eachTest = suite.eachTest;
-          };
+            a11ySuite.addTest(test);
+          });
 
           return a11ySuite;
         };
