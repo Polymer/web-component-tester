@@ -15,6 +15,19 @@ import * as config from './config.js';
  *     frameworks have loaded.
  */
 export function whenFrameworksReady(callback) {
+  var wcScriptSelector = [
+    'script[src*="webcomponents.js"]',
+    'script[src*="webcomponents.min.js"]',
+    'script[src*="webcomponents-lite.js"]',
+    'script[src*="webcomponents-lite.min.js"]',
+    'script[src*="webcomponents-loader.js"]'
+  ].join(',');
+  if (!document.querySelector(wcScriptSelector)) {
+    debug('no WebComponents');
+    callback();
+    return;
+  }
+
   debug('WebComponentsReady?');
   var after = function after() {
     window.removeEventListener('WebComponentsReady', after);
