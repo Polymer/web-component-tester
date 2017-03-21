@@ -1308,6 +1308,13 @@ function loadSync() {
     // Synchronous load.
     document.write('<link rel="import" href="' + encodeURI(url) + '">'); // jshint ignore:line
   });
+  if (imports.length > 0) {
+    // NOTE: In Chrome57 test-fixture elements in the document don't get upgraded when the import
+    // is dynamically appended. We stop the parser from continuing to parse the document by
+    // appending an "empty" script. This gives time to customElements for upgrading elements.
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=701601
+    document.write('<script>void(0)</script>'); // jshint ignore:line
+  }
   debug('Environment imports loaded');
 }
 
@@ -1448,6 +1455,14 @@ extendInterfaces('fixture', function (context, teardown) {
  *     otherMethod: function() {
  *       // More custom implementation..
  *     },
+ *     getterSetterProperty: {
+ *       get: function() {
+ *         // Custom getter implementation..
+ *       },
+ *       set: function() {
+ *         // Custom setter implementation..
+ *       }
+ *     },
  *     // etc..
  *   });
  * });
@@ -1459,20 +1474,15 @@ extendInterfaces('stub', function(context, teardown) {
     var proto = document.createElement(tagName).constructor.prototype;
 
     // For all keys in the implementation to stub with..
-    var keys = Object.keys(implementation);
-    keys.forEach(function(key) {
+    var stubs = Object.keys(implementation).map(function(key) {
       // Stub the method on the element prototype with Sinon:
-      sinon.stub(proto, key, implementation[key]);
+      return sinon.stub(proto, key, implementation[key]);
     });
 
     // After all tests..
     teardown(function() {
-      // For all of the keys in the implementation we stubbed..
-      keys.forEach(function(key) {
-        // Restore the stub:
-        if (proto[key].isSinonProxy) {
-          proto[key].restore();
-        }
+      stubs.forEach(function(stub) {
+        stub.restore();
       });
     });
   };
