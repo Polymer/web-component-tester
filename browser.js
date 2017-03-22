@@ -21,26 +21,23 @@
  *     frameworks have loaded.
  */
 function whenFrameworksReady(callback) {
-  var wcScriptSelector = [
-    'script[src*="webcomponents.js"]',
-    'script[src*="webcomponents.min.js"]',
-    'script[src*="webcomponents-lite.js"]',
-    'script[src*="webcomponents-lite.min.js"]',
-    'script[src*="webcomponents-loader.js"]'
-  ].join(',');
-  if (!document.querySelector(wcScriptSelector)) {
+  // webcomponents-loader.js will eventually fire WebComponentsReady.
+  // If WebComponents is not defined and we cannot find the script,
+  // invoke the callback.
+  if (!window.WebComponents &&
+    !document.querySelector('script[src*="webcomponents-loader.js"]')) {
     debug('no WebComponents');
     callback();
     return;
   }
 
   debug('WebComponentsReady?');
-  var after = function after() {
-    window.removeEventListener('WebComponentsReady', after);
+  var done = function done() {
+    window.removeEventListener('WebComponentsReady', done);
     debug('WebComponentsReady');
     callback();
   };
-  window.addEventListener('WebComponentsReady', after);
+  window.addEventListener('WebComponentsReady', done);
 }
 
 /**
