@@ -98,7 +98,7 @@ suite('AwesomeLib', function() {
 |beforeEach|Function (optional)|Called before each test is run|
 
 `a11ySuite` provides an simple way to run accessibility-developer-tools' high quality accessibility
-audits when given a `test-fixture`. 
+audits when given a `test-fixture`.
 The `a11ySuite` will show all the audit results via the standard Mocha test output.
 ```html
 <test-fixture id="NoLabel">
