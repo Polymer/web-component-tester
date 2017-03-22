@@ -51,13 +51,15 @@
           a11ySuite.eachTest = function() {
             // instantiate fixture
             fixtureElement.create();
-            
+
             // Make sure lazy-loaded dom is ready (eg <template is='dom-repeat'>)
             Polymer.dom.flush();
-            
+
             // If we have a beforeEach function, call it
-            if(beforeEach) beforeEach();
-            
+            if (beforeEach) {
+              beforeEach();
+            }
+
             // run audit
             var auditResults = axs.Audit.run(axsConfig);
 
