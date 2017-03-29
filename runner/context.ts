@@ -13,9 +13,9 @@
  */
 
 import * as events from 'events';
-import * as http from 'spdy';
 import * as _ from 'lodash';
 import * as socketIO from 'socket.io';
+import * as http from 'spdy';
 import * as util from 'util';
 
 import {BrowserRunner} from './browserrunner';
@@ -124,7 +124,8 @@ export class Context extends events.EventEmitter {
       argsEnd = argsEnd--;
     }
     const hookArgs = args.slice(0, argsEnd + 1);
-    boundHooks = hooks.map((hook) => hook.bind.apply(hook, [null].concat(hookArgs)));
+    boundHooks =
+        hooks.map((hook) => hook.bind.apply(hook, [null].concat(hookArgs)));
     if (!boundHooks) {
       boundHooks = <any>hooks;
     }

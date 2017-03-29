@@ -237,8 +237,8 @@ export class BrowserRunner {
     browser.quit((quitError) => {
       if (quitError) {
         this.emitter.emit(
-            'log:warn', this.def, 'Failed to quit:',
-            quitError.data || quitError);
+            'log:warn', this.def,
+            'Failed to quit:', quitError.data || quitError);
       }
       if (error) {
         this._reject(error);

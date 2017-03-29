@@ -89,8 +89,9 @@ async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   new CliReporter(emitter, output, <config.Config>{});
   const tunnelId = await new Promise<string>((resolve, reject) => {
     wctSauce.startTunnel(
-        options, emitter, (error: any, tunnelId: string) =>
-                              error ? reject(error) : resolve(tunnelId));
+        options, emitter,
+        (error: any, tunnelId: string) =>
+            error ? reject(error) : resolve(tunnelId));
   });
 
   output.write('\n');
