@@ -590,7 +590,7 @@ function _deepMerge(target, source) {
 }
 
 var htmlSuites$1 = [];
-var jsSuites$1   = [];
+var jsSuites$1 = [];
 
 // We process grep ourselves to avoid loading suites that will be filtered.
 var GREP = getParam('grep');
@@ -692,7 +692,17 @@ function runSuites(reporter, childSuites, done) {
 function _runMocha(reporter, done, waited) {
   if (get('waitForFrameworks') && !waited) {
     var waitFor = (get('waitFor') || whenFrameworksReady).bind(window);
-    waitFor(_runMocha.bind(null, reporter, done, true));
+    waitFor(function() {
+      // NOTE: In Chrome57 test-fixture elements in the document might not get upgraded when
+      // there is a high GC https://bugs.chromium.org/p/chromium/issues/detail?id=701601
+      // We clone and replace the ones that weren't upgraded.
+      var tfs = document.querySelectorAll('test-fixture');
+      for (var i = 0, l = tfs.length, tf; i < l && (tf = tfs[i]); i++) {
+        if (typeof tf.create === 'function') continue; // This one was upgraded!
+        tf.parentNode.replaceChild(document.importNode(tf, true), tf);
+      }
+      _runMocha(reporter, done, true);
+    });
     return;
   }
   debug('_runMocha');
@@ -709,7 +719,7 @@ function _runMocha(reporter, done, waited) {
     if (document.getElementById('mocha')) {
       Mocha.utils.highlightTags('code');
     }
-    done();  // We ignore the Mocha failure count.
+    done(); // We ignore the Mocha failure count.
   });
 
   // Mocha's default `onerror` handling strips the stack (to support really old
@@ -1308,13 +1318,6 @@ function loadSync() {
     // Synchronous load.
     document.write('<link rel="import" href="' + encodeURI(url) + '">'); // jshint ignore:line
   });
-  if (imports.length > 0) {
-    // NOTE: In Chrome57 test-fixture elements in the document don't get upgraded when the import
-    // is dynamically appended. We stop the parser from continuing to parse the document by
-    // appending an "empty" script. This gives time to customElements for upgrading elements.
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=701601
-    document.write('<script>void(0)</script>'); // jshint ignore:line
-  }
   debug('Environment imports loaded');
 }
 
