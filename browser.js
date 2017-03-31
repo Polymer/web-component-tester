@@ -688,14 +688,7 @@ function _runMocha(reporter, done, waited) {
   if (get('waitForFrameworks') && !waited) {
     var waitFor = (get('waitFor') || whenFrameworksReady).bind(window);
     waitFor(function() {
-      // NOTE: In Chrome57 test-fixture elements in the document might not get upgraded when
-      // there is a high GC https://bugs.chromium.org/p/chromium/issues/detail?id=701601
-      // We clone and replace the ones that weren't upgraded.
-      var tfs = document.querySelectorAll('test-fixture');
-      for (var i = 0, l = tfs.length, tf; i < l && (tf = tfs[i]); i++) {
-        if (typeof tf.create === 'function') continue; // This one was upgraded!
-        tf.parentNode.replaceChild(document.importNode(tf, true), tf);
-      }
+      _fixCustomElements();
       _runMocha(reporter, done, true);
     });
     return;
@@ -728,6 +721,34 @@ function _runMocha(reporter, done, waited) {
       if (event.error.ignore) return;
       runner.uncaught(event.error);
     });
+  }
+}
+// In Chrome57 custom elements in the document might not get upgraded when
+// there is a high GC https://bugs.chromium.org/p/chromium/issues/detail?id=701601
+// We clone and replace the ones that weren't upgraded.
+function _fixCustomElements() {
+  // Bail out if it is not Chrome 57.
+  var raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+  var isM57 = raw && raw[2] === '57';
+  if (!isM57) return;
+
+  var elements = document.body.querySelectorAll('*:not(script):not(style)');
+  var constructors = {};
+  // Loop bottom-up so we replace the inner custom elements first, then their parents.
+  for (var i = elements.length - 1; i >= 0; i--) {
+    var el = elements[i];
+    var tag = el.localName;
+    // Not a custom element!
+    if (tag.indexOf('-') === -1) continue;
+
+    // Memoize correct constructors.
+    constructors[tag] = constructors[tag] || document.createElement(tag).constructor;
+    // This one was correctly upgraded.
+    if (el instanceof constructors[tag]) continue;
+
+    debug('_fixCustomElements: found non-upgraded custom element ' + el);
+    var clone = document.importNode(el, true);
+    el.parentNode.replaceChild(clone, el);
   }
 }
 
