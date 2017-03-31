@@ -12,7 +12,7 @@ import * as util from './util.js';
 import ChildRunner from './childrunner.js';
 
 export var htmlSuites = [];
-export var jsSuites   = [];
+export var jsSuites = [];
 
 // We process grep ourselves to avoid loading suites that will be filtered.
 var GREP = util.getParam('grep');
@@ -114,7 +114,17 @@ export function runSuites(reporter, childSuites, done) {
 function _runMocha(reporter, done, waited) {
   if (config.get('waitForFrameworks') && !waited) {
     var waitFor = (config.get('waitFor') || util.whenFrameworksReady).bind(window);
-    waitFor(_runMocha.bind(null, reporter, done, true));
+    waitFor(function() {
+      // NOTE: In Chrome57 test-fixture elements in the document might not get upgraded when
+      // there is a high GC https://bugs.chromium.org/p/chromium/issues/detail?id=701601
+      // We clone and replace the ones that weren't upgraded.
+      var tfs = document.querySelectorAll('test-fixture');
+      for (var i = 0, l = tfs.length, tf; i < l && (tf = tfs[i]); i++) {
+        if (typeof tf.create === 'function') continue; // This one was upgraded!
+        tf.parentNode.replaceChild(document.importNode(tf, true), tf);
+      }
+      _runMocha(reporter, done, true);
+    });
     return;
   }
   util.debug('_runMocha');
@@ -131,7 +141,7 @@ function _runMocha(reporter, done, waited) {
     if (document.getElementById('mocha')) {
       Mocha.utils.highlightTags('code');
     }
-    done();  // We ignore the Mocha failure count.
+    done(); // We ignore the Mocha failure count.
   });
 
   // Mocha's default `onerror` handling strips the stack (to support really old
