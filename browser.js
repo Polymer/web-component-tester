@@ -688,7 +688,7 @@ function _runMocha(reporter, done, waited) {
   if (get('waitForFrameworks') && !waited) {
     var waitFor = (get('waitFor') || whenFrameworksReady).bind(window);
     waitFor(function() {
-      _fixCustomElements(document.body);
+      _fixCustomElements();
       _runMocha(reporter, done, true);
     });
     return;
@@ -723,39 +723,36 @@ function _runMocha(reporter, done, waited) {
     });
   }
 }
-
 /**
  * In Chrome57 custom elements in the document might not get upgraded when
  * there is a high GC https://bugs.chromium.org/p/chromium/issues/detail?id=701601
  * We clone and replace the ones that weren't upgraded.
- *
- * @param {!Element} root The root where to search for custom elements
- * @param {Object=} constructors Memoized constructors.
  */
-function _fixCustomElements(root, constructors) {
+function _fixCustomElements() {
   // Bail out if it is not Chrome 57.
   var raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
   var isM57 = raw && raw[2] === '57';
   if (!isM57) return;
-  constructors = constructors || {};
-  var el = root.firstElementChild;
-  while (el) {
+
+  var elements = document.body.querySelectorAll('*:not(script):not(style)');
+  var constructors = {};
+  for (var i = 0; i < elements.length; i++) {
+    var el = elements[i];
+    // This child has already been cloned and replaced by its parent, skip it!
+    if (!el.isConnected) continue;
+
     var tag = el.localName;
-    // Not a custom element! Search in its children.
-    if (tag.indexOf('-') === -1) {
-      _fixCustomElements(el, constructors);
-    } else {
-      // Memoize correct constructors.
-      constructors[tag] = constructors[tag] || document.createElement(tag).constructor;
-      // This one was not correctly upgraded!
-      if (el instanceof constructors[tag] === false) {
-        debug('_fixCustomElements: found non-upgraded custom element ' + el);
-        // Since we clone deep, we don't need to search within its children.
-        var clone = document.importNode(el, true);
-        root.replaceChild(clone, el);
-      }
-    }
-    el = el.nextElementSibling;
+    // Not a custom element!
+    if (tag.indexOf('-') === -1) continue;
+
+    // Memoize correct constructors.
+    constructors[tag] = constructors[tag] || document.createElement(tag).constructor;
+    // This one was correctly upgraded.
+    if (el instanceof constructors[tag]) continue;
+
+    debug('_fixCustomElements: found non-upgraded custom element ' + el);
+    var clone = document.importNode(el, true);
+    el.parentNode.replaceChild(clone, el);
   }
 }
 
