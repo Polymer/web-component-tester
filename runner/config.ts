@@ -27,7 +27,6 @@ import {Plugin} from './plugin';
 
 const HOME_DIR = path.resolve(
     process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
-const WCT_ROOT = path.resolve(__dirname, '..');
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 

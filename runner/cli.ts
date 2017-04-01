@@ -44,7 +44,7 @@ export async function run(
 async function _run(args: string[], output: NodeJS.WritableStream) {
   // Options parsing is a two phase affair. First, we need an initial set of
   // configuration so that we know which plugins to load, etc:
-  let options = <config.Config>config.preparseArgs(args);
+  let options = config.preparseArgs(args) as config.Config;
   // Depends on values from the initial merge:
   options = config.merge(options, <config.Config>{
     output: output,
@@ -71,7 +71,7 @@ export async function runSauceTunnel(
     }
 
 async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
-  let cmdOptions = <config.Config>config.preparseArgs(args);
+  const cmdOptions = config.preparseArgs(args) as config.Config;
   const context = new Context(cmdOptions);
 
   const diskOptions = context.options;
