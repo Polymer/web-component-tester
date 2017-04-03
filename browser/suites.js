@@ -182,11 +182,15 @@ function _fixCustomElements() {
     // Create clone and replace original if not upgraded.
     // NOTE: Since element might do things on created, avoid creating
     // multiple instances (element might be a singleton).
-    var clone = document.importNode(el, true);
+    var clone = document.importNode(el, false);
     // This one was correctly upgraded, no need to replace it.
     if (clone.constructor === el.constructor) {
       constructors[tag] = el.constructor;
     } else {
+      // Move children into clone.
+      while (el.firstChild) {
+        clone.appendChild(el.firstChild);
+      }
       util.debug('_fixCustomElements: found non-upgraded custom element ' + el);
       el.parentNode.replaceChild(clone, el);
     }
