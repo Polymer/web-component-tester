@@ -173,12 +173,22 @@ function _fixCustomElements() {
     if (tag.indexOf('-') === -1) continue;
 
     // Memoize correct constructors.
-    constructors[tag] = constructors[tag] || document.createElement(tag).constructor;
+    // Custom Elements v1 or v0? Avoid creating new instances
+    // if element is already upgraded and does things on created.
+    constructors[tag] = constructors[tag] || customElements.get(tag) ||
+      (el.createdCallback ? el.constructor : null);
     // This one was correctly upgraded.
-    if (el instanceof constructors[tag]) continue;
-
-    util.debug('_fixCustomElements: found non-upgraded custom element ' + el);
+    if (constructors[tag] && el instanceof constructors[tag]) continue;
+    // Create clone and replace original if not upgraded.
+    // NOTE: Since element might do things on created, avoid creating
+    // multiple instances (element might be a singleton).
     var clone = document.importNode(el, true);
-    el.parentNode.replaceChild(clone, el);
+    // This one was correctly upgraded, no need to replace it.
+    if (clone.constructor === el.constructor) {
+      constructors[tag] = el.constructor;
+    } else {
+      util.debug('_fixCustomElements: found non-upgraded custom element ' + el);
+      el.parentNode.replaceChild(clone, el);
+    }
   }
 }
