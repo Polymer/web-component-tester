@@ -1,4 +1,8 @@
-## Unreleased
+## 6.0.0-prerelease.7 - 2017-03-15
+
+* Fixed #505 – Work around an issue in Chrome 57 where dynamically inserted HTML Imports did not block subsequent script execution. See https://bugs.chromium.org/p/chromium/issues/detail?id=701601
+
+## 6.0.0-prerelease.1 through 6.0.0-prerelease.6
 
 ### Breaking change
 
@@ -9,6 +13,8 @@
 
 ### Added
 
+* Polymer.dom.flush() call in a11ySuite to ensure lazy dom is loaded
+* Added beforeEach parameter to a11ySuite
 * Added first pass of _variants_. Variants different configurations of testing the same code.
   * Add support for _variant dependencies_.
     * wct already supports loading dependencies from your `bower_components` directory, mapping them to `../` in your code. You can now add variant dependency directories named like `bower_components-foo`. When these are detected, tests will then run separately for each such dependency directory, mapping `../` appropriately. See README for more details.
@@ -18,9 +24,15 @@
 * `webserver.webRunnerPath`, `webserver.webRunnerContent`, and `webserver.urlPrefix`, `webserver.staticContent` were internal properties that were exposed on the `config` object. They have been refactored and their replacement has been prefixed with an underscore to clarify that they're internal implementation details.
 
 ### Fixed
-* Fixed #373 and #383 which were caused by `emitHook` not handling argumnts correctly.
+
+* Fixed #392
+* Fixed #373 and #383 which were caused by `emitHook` not handling arguments correctly.
 * Fixed error log message for loading WCT config
 * Fixed #523 wct ignores hostname.
+
+## 5.0.1
+
+* Backport of fix for #505 – Work around an issue in Chrome 57 where dynamically inserted HTML Imports did not block subsequent script execution. See https://bugs.chromium.org/p/chromium/issues/detail?id=701601
 
 ## 5.0.0
 * Mocha upgraded to `v3.1.2`. This shouldn't require any new code, but make sure your tests still pass as there were some more subtle changes made to Mocha behavior for v3 (Add IE7 support, update dependencies). See https://github.com/mochajs/mocha/pull/2350 for more info.

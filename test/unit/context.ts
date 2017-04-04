@@ -60,14 +60,15 @@ describe('Context', () => {
     });
 
     describe('hook handlers with non-callback second argument', async() => {
-      it('are passed the "done" callback function instead of the argument passed to emitHook', async() => {
-        const context = new Context();
-        context.hook('foo', function(arg1: any, done: () => void) {
-          expect(arg1).to.eq('hookArg');
-          done();
-        });
-        await context.emitHook('foo', 'hookArg');
-      });
+      it('are passed the "done" callback function instead of the argument passed to emitHook',
+         async() => {
+           const context = new Context();
+           context.hook('foo', function(arg1: any, done: () => void) {
+             expect(arg1).to.eq('hookArg');
+             done();
+           });
+           await context.emitHook('foo', 'hookArg');
+         });
     });
 
     describe('hook handlers written to call callbacks', () => {

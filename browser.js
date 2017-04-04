@@ -590,7 +590,7 @@ function _deepMerge(target, source) {
 }
 
 var htmlSuites$1 = [];
-var jsSuites$1   = [];
+var jsSuites$1 = [];
 
 // We process grep ourselves to avoid loading suites that will be filtered.
 var GREP = getParam('grep');
@@ -692,7 +692,10 @@ function runSuites(reporter, childSuites, done) {
 function _runMocha(reporter, done, waited) {
   if (get('waitForFrameworks') && !waited) {
     var waitFor = (get('waitFor') || whenFrameworksReady).bind(window);
-    waitFor(_runMocha.bind(null, reporter, done, true));
+    waitFor(function() {
+      _fixCustomElements();
+      _runMocha(reporter, done, true);
+    });
     return;
   }
   debug('_runMocha');
@@ -709,7 +712,7 @@ function _runMocha(reporter, done, waited) {
     if (document.getElementById('mocha')) {
       Mocha.utils.highlightTags('code');
     }
-    done();  // We ignore the Mocha failure count.
+    done(); // We ignore the Mocha failure count.
   });
 
   // Mocha's default `onerror` handling strips the stack (to support really old
@@ -723,6 +726,38 @@ function _runMocha(reporter, done, waited) {
       if (event.error.ignore) return;
       runner.uncaught(event.error);
     });
+  }
+}
+/**
+ * In Chrome57 custom elements in the document might not get upgraded when
+ * there is a high GC https://bugs.chromium.org/p/chromium/issues/detail?id=701601
+ * We clone and replace the ones that weren't upgraded.
+ */
+function _fixCustomElements() {
+  // Bail out if it is not Chrome 57.
+  var raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+  var isM57 = raw && raw[2] === '57';
+  if (!isM57) return;
+
+  var elements = document.body.querySelectorAll('*:not(script):not(style)');
+  var constructors = {};
+  for (var i = 0; i < elements.length; i++) {
+    var el = elements[i];
+    // This child has already been cloned and replaced by its parent, skip it!
+    if (!el.isConnected) continue;
+
+    var tag = el.localName;
+    // Not a custom element!
+    if (tag.indexOf('-') === -1) continue;
+
+    // Memoize correct constructors.
+    constructors[tag] = constructors[tag] || document.createElement(tag).constructor;
+    // This one was correctly upgraded.
+    if (el instanceof constructors[tag]) continue;
+
+    debug('_fixCustomElements: found non-upgraded custom element ' + el);
+    var clone = document.importNode(el, true);
+    el.parentNode.replaceChild(clone, el);
   }
 }
 
@@ -1448,6 +1483,14 @@ extendInterfaces('fixture', function (context, teardown) {
  *     otherMethod: function() {
  *       // More custom implementation..
  *     },
+ *     getterSetterProperty: {
+ *       get: function() {
+ *         // Custom getter implementation..
+ *       },
+ *       set: function() {
+ *         // Custom setter implementation..
+ *       }
+ *     },
  *     // etc..
  *   });
  * });
@@ -1459,20 +1502,15 @@ extendInterfaces('stub', function(context, teardown) {
     var proto = document.createElement(tagName).constructor.prototype;
 
     // For all keys in the implementation to stub with..
-    var keys = Object.keys(implementation);
-    keys.forEach(function(key) {
+    var stubs = Object.keys(implementation).map(function(key) {
       // Stub the method on the element prototype with Sinon:
-      sinon.stub(proto, key, implementation[key]);
+      return sinon.stub(proto, key, implementation[key]);
     });
 
     // After all tests..
     teardown(function() {
-      // For all of the keys in the implementation we stubbed..
-      keys.forEach(function(key) {
-        // Restore the stub:
-        if (proto[key].isSinonProxy) {
-          proto[key].restore();
-        }
+      stubs.forEach(function(stub) {
+        stub.restore();
       });
     });
   };
