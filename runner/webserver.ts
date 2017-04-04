@@ -202,8 +202,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 
     options.webserver._servers = servers.map(s => {
       const port = s.server.address().port;
+      const hostname = s.server.address().address;
       return {
-        url: `http://localhost:${port}${pathToGeneratedIndex}`,
+        url: `http://${hostname}:${port}${pathToGeneratedIndex}`,
         variant: s.kind === 'mainline' ? '' : s.variantName
       };
     });
