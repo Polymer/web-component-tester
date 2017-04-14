@@ -1,3 +1,7 @@
+## 6.0.0-prerelease.8 - 2017-04-13
+
+* [BREAKING] Dropped support for node v4, added support for node v8. See our [node version support policy](https://www.polymer-project.org/2.0/docs/tools/node-support) for details.
+
 ## 6.0.0-prerelease.7 - 2017-03-15
 
 * Fixed #505 – Work around an issue in Chrome 57 where dynamically inserted HTML Imports did not block subsequent script execution. See https://bugs.chromium.org/p/chromium/issues/detail?id=701601
