@@ -9,6 +9,7 @@ addons:
       - google-chrome-stable
 language: node_js
 node_js:
+  - "node"
   - "6"
 script:
   - xvfb-run npm test
