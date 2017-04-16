@@ -19,6 +19,8 @@ WCT will [run your tests](#running-your-tests) against whatever browsers you hav
 
 # Getting Started
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Polymer/web-component-tester?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## `.html` Suites
 
 Your test suites can be `.html` documents. For example,
