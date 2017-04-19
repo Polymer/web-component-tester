@@ -21,19 +21,14 @@ export function whenFrameworksReady(callback) {
     callback();
   };
 
-  var wcReady = function wcReady() {
-    window.removeEventListener('WebComponentsReady', wcReady);
-    debug('WebComponentsReady');
-    done();
-  };
-
-  if (window.WebComponents && WebComponents.whenReady) {
+  // If webcomponents script is in the document, wait for WebComponentsReady.
+  if (document.querySelector('script[src*="webcomponents"]')) {
     debug('WebComponentsReady?');
-    WebComponents.whenReady(wcReady);
-  } else if (document.querySelector('script[src*="webcomponents"]')) {
-    // If webcomponents script is in the document, wait for WebComponentsReady.
-    debug('WebComponentsReady?');
-    window.addEventListener('WebComponentsReady', wcReady);
+    window.addEventListener('WebComponentsReady', function wcReady() {
+      window.removeEventListener('WebComponentsReady', wcReady);
+      debug('WebComponentsReady');
+      done();
+    });
   } else {
     done();
   }

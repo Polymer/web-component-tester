@@ -27,53 +27,16 @@ function whenFrameworksReady(callback) {
     callback();
   };
 
-  function whenWebComponentsReady() {
+  // If webcomponents script is in the document, wait for WebComponentsReady.
+  if (document.querySelector('script[src*="webcomponents"]')) {
     debug('WebComponentsReady?');
-    if (window.WebComponents && WebComponents.whenReady) {
-      WebComponents.whenReady(function() {
-        debug('WebComponents Ready');
-        done();
-      });
-    } else {
-      var after = function after() {
-        window.removeEventListener('WebComponentsReady', after);
-        debug('WebComponentsReady');
-        done();
-      };
-      window.addEventListener('WebComponentsReady', after);
-    }
-  }
-
-  function importsReady() {
-    // handle Polymer 0.5 readiness
-    debug('Polymer ready?');
-    if (window.Polymer && Polymer.whenReady) {
-      Polymer.whenReady(function() {
-        debug('Polymer ready');
-        done();
-      });
-    } else {
-      whenWebComponentsReady();
-    }
-  }
-
-  // All our supported framework configurations depend on imports.
-  if (!window.HTMLImports) {
-    if (document.querySelector('script[src*="webcomponents"]')) {
-      whenWebComponentsReady();
-    } else {
+    window.addEventListener('WebComponentsReady', function wcReady() {
+      window.removeEventListener('WebComponentsReady', wcReady);
+      debug('WebComponentsReady');
       done();
-    }
-  } else if (HTMLImports.ready) {
-    debug('HTMLImports ready');
-    importsReady();
-  } else if (HTMLImports.whenReady) {
-    HTMLImports.whenReady(function() {
-      debug('HTMLImports.whenReady ready');
-      importsReady();
     });
   } else {
-    whenWebComponentsReady();
+    done();
   }
 }
 
