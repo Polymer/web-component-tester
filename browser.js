@@ -59,7 +59,11 @@ function whenFrameworksReady(callback) {
 
   // All our supported framework configurations depend on imports.
   if (!window.HTMLImports) {
-    done();
+    if (document.querySelector('script[src*="webcomponents"]')) {
+      whenWebComponentsReady();
+    } else {
+      done();
+    }
   } else if (HTMLImports.ready) {
     debug('HTMLImports ready');
     importsReady();
@@ -106,7 +110,7 @@ function loadScript(path, done) {
  */
 function loadStyle(path, done) {
   var link = document.createElement('link');
-  link.rel  = 'stylesheet';
+  link.rel = 'stylesheet';
   link.href = path;
   if (done) {
     link.onload = done.bind(null, null);
@@ -135,7 +139,7 @@ function debug(var_args) {
 function parseUrl(url) {
   var parts = url.match(/^(.*?)(?:\?(.*))?$/);
   return {
-    base:   parts[1],
+    base: parts[1],
     params: getParams(parts[2] || ''),
   };
 }
@@ -178,7 +182,7 @@ function getParams(opt_query) {
       console.warn('Invalid URL query part:', part);
       return;
     }
-    var key   = decodeURIComponent(pair[0]);
+    var key = decodeURIComponent(pair[0]);
     var value = decodeURIComponent(pair[1]);
 
     if (!result[key]) {
@@ -274,15 +278,15 @@ function cleanLocation(location) {
  */
 function parallel(runners, limit, done) {
   if (typeof limit !== 'number') {
-    done  = limit;
+    done = limit;
     limit = 0;
   }
   if (!runners.length) return done();
 
-  var called    = false;
-  var total     = runners.length;
+  var called = false;
+  var total = runners.length;
   var numActive = 0;
-  var numDone   = 0;
+  var numDone = 0;
 
   function runnerDone(error) {
     if (called) return;
@@ -318,7 +322,6 @@ function scriptPrefix(filename) {
   var script = scripts[0].src;
   return script.substring(0, script.indexOf(filename));
 }
-
 
 var util = Object.freeze({
   whenFrameworksReady: whenFrameworksReady,
