@@ -27,49 +27,16 @@ function whenFrameworksReady(callback) {
     callback();
   };
 
-  function whenWebComponentsReady() {
+  // If webcomponents script is in the document, wait for WebComponentsReady.
+  if (document.querySelector('script[src*="webcomponents"]')) {
     debug('WebComponentsReady?');
-    if (window.WebComponents && WebComponents.whenReady) {
-      WebComponents.whenReady(function() {
-        debug('WebComponents Ready');
-        done();
-      });
-    } else {
-      var after = function after() {
-        window.removeEventListener('WebComponentsReady', after);
-        debug('WebComponentsReady');
-        done();
-      };
-      window.addEventListener('WebComponentsReady', after);
-    }
-  }
-
-  function importsReady() {
-    // handle Polymer 0.5 readiness
-    debug('Polymer ready?');
-    if (window.Polymer && Polymer.whenReady) {
-      Polymer.whenReady(function() {
-        debug('Polymer ready');
-        done();
-      });
-    } else {
-      whenWebComponentsReady();
-    }
-  }
-
-  // All our supported framework configurations depend on imports.
-  if (!window.HTMLImports) {
-    done();
-  } else if (HTMLImports.ready) {
-    debug('HTMLImports ready');
-    importsReady();
-  } else if (HTMLImports.whenReady) {
-    HTMLImports.whenReady(function() {
-      debug('HTMLImports.whenReady ready');
-      importsReady();
+    window.addEventListener('WebComponentsReady', function wcReady() {
+      window.removeEventListener('WebComponentsReady', wcReady);
+      debug('WebComponentsReady');
+      done();
     });
   } else {
-    whenWebComponentsReady();
+    done();
   }
 }
 
@@ -106,7 +73,7 @@ function loadScript(path, done) {
  */
 function loadStyle(path, done) {
   var link = document.createElement('link');
-  link.rel  = 'stylesheet';
+  link.rel = 'stylesheet';
   link.href = path;
   if (done) {
     link.onload = done.bind(null, null);
@@ -135,7 +102,7 @@ function debug(var_args) {
 function parseUrl(url) {
   var parts = url.match(/^(.*?)(?:\?(.*))?$/);
   return {
-    base:   parts[1],
+    base: parts[1],
     params: getParams(parts[2] || ''),
   };
 }
@@ -178,7 +145,7 @@ function getParams(opt_query) {
       console.warn('Invalid URL query part:', part);
       return;
     }
-    var key   = decodeURIComponent(pair[0]);
+    var key = decodeURIComponent(pair[0]);
     var value = decodeURIComponent(pair[1]);
 
     if (!result[key]) {
@@ -274,15 +241,15 @@ function cleanLocation(location) {
  */
 function parallel(runners, limit, done) {
   if (typeof limit !== 'number') {
-    done  = limit;
+    done = limit;
     limit = 0;
   }
   if (!runners.length) return done();
 
-  var called    = false;
-  var total     = runners.length;
+  var called = false;
+  var total = runners.length;
   var numActive = 0;
-  var numDone   = 0;
+  var numDone = 0;
 
   function runnerDone(error) {
     if (called) return;
@@ -318,7 +285,6 @@ function scriptPrefix(filename) {
   var script = scripts[0].src;
   return script.substring(0, script.indexOf(filename));
 }
-
 
 var util = Object.freeze({
   whenFrameworksReady: whenFrameworksReady,
