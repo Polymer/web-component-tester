@@ -1,3 +1,7 @@
+## 6.0.0-prerelease.9 - 2017-04-19
+
+* The default `waitFor` doesn't rely on `HTMLImports.whenReady` or `Polymer.whenReady` timings, but only waits for the `WebComponentsReady` event to be fired. For a different wait time, set `WCT = { waitFor: function(cb){ cb(); }}`.
+
 ## 6.0.0-prerelease.8 - 2017-04-13
 
 * [BREAKING] Dropped support for node v4, added support for node v8. See our [node version support policy](https://www.polymer-project.org/2.0/docs/tools/node-support) for details.
@@ -14,7 +18,6 @@
   * As part of this, wct will also require that the project under test have an installation of the client side web-component-tester bower package. We recommend that all projects also have a dependency on the npm web-component-tester node module, and in a future release will will require it. This is to makes results more reproducible, and ensures that they'll be protected from future breaking changes.
   * This release also unifies the behavior of `wct` and `polyserve`, so if your code works without warnings in one it should work in the other.
   * Calling `replace(...)` will use sinon to stub `document.importNode` until `teardown` is called.
-  * The default `waitFor` doesn't rely on `HTMLImports.whenReady` or `Polymer.whenReady` timings, but only waits for the `WebComponentsReady` event to be fired. For a different wait time, set `WCT = { waitFor: function(cb){ cb(); }}`.
 
 ### Added
 
