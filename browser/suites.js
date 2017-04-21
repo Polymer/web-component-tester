@@ -114,10 +114,7 @@ export function runSuites(reporter, childSuites, done) {
 function _runMocha(reporter, done, waited) {
   if (config.get('waitForFrameworks') && !waited) {
     var waitFor = (config.get('waitFor') || util.whenFrameworksReady).bind(window);
-    waitFor(function() {
-      _fixCustomElements();
-      _runMocha(reporter, done, true);
-    });
+    waitFor(_runMocha.bind(null, reporter, done, true));
     return;
   }
   util.debug('_runMocha');
@@ -148,37 +145,5 @@ function _runMocha(reporter, done, waited) {
       if (event.error.ignore) return;
       runner.uncaught(event.error);
     });
-  }
-}
-/**
- * In Chrome57 custom elements in the document might not get upgraded when
- * there is a high GC https://bugs.chromium.org/p/chromium/issues/detail?id=701601
- * We clone and replace the ones that weren't upgraded.
- */
-function _fixCustomElements() {
-  // Bail out if it is not Chrome 57.
-  var raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
-  var isM57 = raw && raw[2] === '57';
-  if (!isM57) return;
-
-  var elements = document.body.querySelectorAll('*:not(script):not(style)');
-  var constructors = {};
-  for (var i = 0; i < elements.length; i++) {
-    var el = elements[i];
-    // This child has already been cloned and replaced by its parent, skip it!
-    if (!el.isConnected) continue;
-
-    var tag = el.localName;
-    // Not a custom element!
-    if (tag.indexOf('-') === -1) continue;
-
-    // Memoize correct constructors.
-    constructors[tag] = constructors[tag] || document.createElement(tag).constructor;
-    // This one was correctly upgraded.
-    if (el instanceof constructors[tag]) continue;
-
-    util.debug('_fixCustomElements: found non-upgraded custom element ' + el);
-    var clone = document.importNode(el, true);
-    el.parentNode.replaceChild(clone, el);
   }
 }
