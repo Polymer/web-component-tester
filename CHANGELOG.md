@@ -1,3 +1,7 @@
+## Unreleased
+
+* Undo fix for #505, as https://bugs.chromium.org/p/chromium/issues/detail?id=701601 has been fixed and shipped in M58 stable.
+
 ## 6.0.0-prerelease.9 - 2017-04-19
 
 * The default `waitFor` doesn't rely on `HTMLImports.whenReady` or `Polymer.whenReady` timings, but only waits for the `WebComponentsReady` event to be fired. For a different wait time, set `WCT = { waitFor: function(cb){ cb(); }}`.
