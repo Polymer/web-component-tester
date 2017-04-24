@@ -28,8 +28,7 @@ function whenFrameworksReady(callback) {
   };
 
   // If webcomponents script is in the document, wait for WebComponentsReady.
-  var wcScript = document.querySelector('script[src*="webcomponents"]');
-  if (wcScript && !wcScript.webComponentsReady) {
+  if (window.WebComponents && !window.WebComponents.ready) {
     debug('WebComponentsReady?');
     window.addEventListener('WebComponentsReady', function wcReady() {
       window.removeEventListener('WebComponentsReady', wcReady);
