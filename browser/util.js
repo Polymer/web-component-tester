@@ -16,7 +16,7 @@ import * as config from './config.js';
  */
 export function whenFrameworksReady(callback) {
   debug('whenFrameworksReady');
-  var done = function () {
+  var done = function() {
     debug('whenFrameworksReady done');
     callback();
   };
@@ -133,7 +133,7 @@ export function getParams(opt_query) {
   if (query === '') return {};
 
   var result = {};
-  query.split('&').forEach(function (part) {
+  query.split('&').forEach(function(part) {
     var pair = part.split('=');
     if (pair.length !== 2) {
       console.warn('Invalid URL query part:', part);
@@ -158,7 +158,7 @@ export function getParams(opt_query) {
  * @param {!Object<string, !Array<string>>} source
  */
 export function mergeParams(target, source) {
-  Object.keys(source).forEach(function (key) {
+  Object.keys(source).forEach(function(key) {
     if (!(key in target)) {
       target[key] = [];
     }
@@ -181,8 +181,8 @@ export function getParam(param) {
  */
 export function paramsToQuery(params) {
   var pairs = [];
-  Object.keys(params).forEach(function (key) {
-    params[key].forEach(function (value) {
+  Object.keys(params).forEach(function(key) {
+    params[key].forEach(function(value) {
       pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
     });
   });
