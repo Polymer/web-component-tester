@@ -1,3 +1,14 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## Unreleased
+
+* Update wct-local to remove deprecation warnings on install.
+
 ## 6.0.0-prerelease.9 - 2017-04-19
 
 * The default `waitFor` doesn't rely on `HTMLImports.whenReady` or `Polymer.whenReady` timings, but only waits for the `WebComponentsReady` event to be fired. For a different wait time, set `WCT = { waitFor: function(cb){ cb(); }}`.
