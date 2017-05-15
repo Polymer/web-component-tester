@@ -39,12 +39,12 @@ describe('cli', () => {
   let sandbox: sinon.SinonSandbox;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare', async() => undefined);
-    sandbox.stub(steps, 'runTests', async() => undefined);
+    sandbox.stub(steps, 'prepare', async(): Promise<void> => undefined);
+    sandbox.stub(steps, 'runTests', async(): Promise<void> => undefined);
 
     sandbox.stub(
         wctLocalBrowsers, 'detect',
-        async() => _.omit(LOCAL_BROWSERS, 'aurora'));
+        async () => _.omit(LOCAL_BROWSERS, 'aurora'));
     sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));
   });
 
@@ -53,7 +53,7 @@ describe('cli', () => {
   });
 
   describe('.run', () => {
-    const expectRun = async(args: string[], logInput?: string[]) => {
+    const expectRun = async (args: string[], logInput?: string[]) => {
       const log = logInput || [];
       const stream = <NodeJS.WritableStream><any>{write: log.push.bind(log)};
       try {
@@ -68,7 +68,7 @@ describe('cli', () => {
 
     it('expands test/ by default, ' +
            'and serves from /components/<basename>',
-       async() => {
+       async () => {
          process.chdir(path.join(FIXTURES, 'standard'));
          const options = (await expectRun([])).options;
          expect(options.suites).to.have.members([
@@ -78,7 +78,7 @@ describe('cli', () => {
          expect(options.root).to.equal(path.join(FIXTURES, 'standard'));
        });
 
-    it('honors globs', async() => {
+    it('honors globs', async () => {
       process.chdir(path.join(FIXTURES, 'standard'));
 
       const options = (await expectRun(['**/*.html'])).options;
@@ -88,7 +88,7 @@ describe('cli', () => {
       ]);
     });
 
-    it('honors expanded files', async() => {
+    it('honors expanded files', async () => {
       process.chdir(path.join(FIXTURES, 'standard'));
 
       const options = (await expectRun(['test/b.js', 'x-foo.html'])).options;
@@ -98,7 +98,7 @@ describe('cli', () => {
       ]);
     });
 
-    it('honors --root with no specified suites', async() => {
+    it('honors --root with no specified suites', async () => {
       process.chdir(__dirname);
 
       const root = path.join(FIXTURES, 'standard');
@@ -110,7 +110,7 @@ describe('cli', () => {
       expect(options.root).to.equal(root);
     });
 
-    it('honors --root with specified suites', async() => {
+    it('honors --root with specified suites', async () => {
       process.chdir(__dirname);
 
       const root = path.join(FIXTURES, 'standard');
@@ -122,7 +122,7 @@ describe('cli', () => {
       expect(options.root).to.equal(root);
     });
 
-    it('throws an error if no suites could be found', async() => {
+    it('throws an error if no suites could be found', async () => {
       try {
         await cli.run({}, ['404'], <any>{write: () => {}});
       } catch (error) {
@@ -132,14 +132,14 @@ describe('cli', () => {
       throw new Error('cli.run should have failed');
     });
 
-    it('loads the local and sauce plugins by default', async() => {
+    it('loads the local and sauce plugins by default', async () => {
       process.chdir(path.join(FIXTURES, 'standard'));
 
       const context = await expectRun([]);
       expect(context.enabledPlugins()).to.have.members(['local', 'sauce']);
     });
 
-    it('allows plugins to be diabled via --skip-plugin', async() => {
+    it('allows plugins to be diabled via --skip-plugin', async () => {
       process.chdir(path.join(FIXTURES, 'standard'));
 
       const context = await expectRun(['--skip-plugin', 'sauce']);
@@ -162,7 +162,7 @@ describe('cli', () => {
     describe('with wct.conf.js', () => {
       const ROOT = path.join(FIXTURES, 'conf');
 
-      it('serves from /components/<basename>', async() => {
+      it('serves from /components/<basename>', async () => {
         process.chdir(ROOT);
 
         const options = (await expectRun([])).options;
@@ -172,7 +172,7 @@ describe('cli', () => {
         expect(options.root).to.equal(ROOT);
       });
 
-      it('walks the ancestry', async() => {
+      it('walks the ancestry', async () => {
         process.chdir(path.join(ROOT, 'branch/leaf'));
 
         const options = (await expectRun([])).options;
@@ -182,14 +182,14 @@ describe('cli', () => {
         expect(options.root).to.equal(ROOT);
       });
 
-      it('honors specified values', async() => {
+      it('honors specified values', async () => {
         process.chdir(ROOT);
 
         const options = (await expectRun([])).options;
         expect(options.plugins['sauce'].username).to.eq('abc123');
       });
 
-      it('honors root', async() => {
+      it('honors root', async () => {
         process.chdir(path.join(ROOT, 'rooted'));
 
         const options = (await expectRun([])).options;
@@ -208,7 +208,7 @@ describe('cli', () => {
 
       describe('--browsers', () => {
 
-        it('warns when used', async() => {
+        it('warns when used', async () => {
           const log: string[] = [];
           await expectRun(['--browsers', 'firefox'], log);
           const hasWarning =
@@ -219,7 +219,7 @@ describe('cli', () => {
 
         // Semi-integration test.
         // This also checks that wct-local (mostly) works.
-        it('supports local browsers', async() => {
+        it('supports local browsers', async () => {
           const args = ['--browsers', 'firefox', '-b', 'chrome'];
           const options = (await expectRun(args)).options;
           const names =
@@ -229,7 +229,7 @@ describe('cli', () => {
 
         // Semi-integration test.
         // This also checks that wct-sauce (mostly) works.
-        it('supports sauce browsers', async() => {
+        it('supports sauce browsers', async () => {
           const args = ['--browsers', 'linux/firefox', '-b', 'linux/chrome'];
           const options = (await expectRun(args)).options;
           const names =
@@ -241,7 +241,7 @@ describe('cli', () => {
 
       describe('--remote', () => {
 
-        it('warns when used', async() => {
+        it('warns when used', async () => {
           const log: string[] = [];
           await expectRun(['--remote'], log);
           const hasWarning = _.some(log, (l) => /--remote.*--sauce/.test(l));
@@ -251,7 +251,7 @@ describe('cli', () => {
 
         // Semi-integration test.
         // This also checks that wct-sauce (mostly) works.
-        it('sets up default sauce browsers', async() => {
+        it('sets up default sauce browsers', async () => {
           const options = (await expectRun(['--remote'])).options;
           const platforms =
               options.activeBrowsers.map((browser) => browser.platform);
