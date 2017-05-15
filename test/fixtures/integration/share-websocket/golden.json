@@ -1,0 +1,13 @@
+{
+  "passing": 0,
+  "pending": 0,
+  "failing": 0,
+  "status": "complete",
+  "tests": {
+    "test/": {
+      "wct socket exist": {
+        "state": "passing"
+      }
+    }
+  }
+}

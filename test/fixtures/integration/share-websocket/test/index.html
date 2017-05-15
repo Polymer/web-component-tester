@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="../../../browser.js"></script>
+</head>
+
+<body>
+<script>
+    test('wct socket exist', function () {
+        const wctShare = WCT.share;
+        assert.deepEqual(('socket' in wctShare), true);
+    });
+</script>
+</body>
+
+</html>
