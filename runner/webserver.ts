@@ -108,29 +108,6 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 `);
     }
 
-    // Check that there's a wct node module.
-    const pathToWctNodeModule =
-        path.join(options.root, 'node_modules', 'web-component-tester');
-    if (!exists(pathToWctNodeModule)) {
-      console.warn(`
-    The web-component-tester node module is not installed as a dependency of
-    this project (${packageName}).
-
-    We recommend that you run this command to add it:
-        npm install --save-dev web-component-tester
-
-    or run:
-        yarn add web-component-tester --dev
-
-    Doing so will ensure that your project is in control of the version of wct
-    that your project is tested with, insulating you from any future breaking
-    changes and making your test runs more reproducible. In a future release
-    of wct this will be required.
-
-    Expected a directory to exist at: ${pathToWctNodeModule}/
-`);
-    }
-
     let hasWarnedBrowserJs = false;
     additionalRoutes.set('/browser.js', function(request, response) {
       if (!hasWarnedBrowserJs) {

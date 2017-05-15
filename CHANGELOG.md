@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 * Update wct-local to remove deprecation warnings on install.
+* Remove warning when running wct if it's not installed into `node_modules`.
 
 ## 6.0.0-prerelease.9 - 2017-04-19
 
