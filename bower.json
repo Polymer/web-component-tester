@@ -1,7 +1,7 @@
 {
   "name": "web-component-tester",
   "description": "web-component-tester makes testing your web components a breeze!",
-  "version": "6.0.0-prerelease.10",
+  "version": "6.0.0",
   "main": [
     "browser.js"
   ],
