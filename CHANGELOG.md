@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   * As part of this, wct will also require that the project under test have an installation of the client side web-component-tester bower package. We recommend that all projects also have a dependency on the npm web-component-tester node module, and in a future release will will require it. This is to makes results more reproducible, and ensures that they'll be protected from future breaking changes.
   * This release also unifies the behavior of `wct` and `polyserve`, so if your code works without warnings in one it should work in the other.
   * Calling `replace(...)` will use sinon to stub `document.importNode` until `teardown` is called.
+* Upgrade lodash to 4.0
 
 ### Added
 

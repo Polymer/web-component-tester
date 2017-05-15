@@ -29,7 +29,7 @@
     "accessibility-developer-tools": "^2.10.0",
     "async": "^1.5.0",
     "chai": "^3.2.0",
-    "lodash": "^3.7.0",
+    "lodash": "^4.14.52",
     "mocha": "^3.1.2",
     "sinon-chai": "^2.7.0",
     "sinonjs": "^1.14.1",

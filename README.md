@@ -9,7 +9,7 @@ You get a browser-based testing environment, configured out of the box with:
 * [Mocha][mocha] as a test framework.
 * [Chai][chai] assertions.
 * [Async][async] to keep your sanity.
-* [Lodash][lodash] (3.0) to repeat fewer things.
+* [Lodash][lodash] (4.0) to repeat fewer things.
 * [Sinon][sinon] and [sinon-chai][sinon-chai] to test just your things.
 * [test-fixture][test-fixture] for easy fixture testing with `<template>` tags.
 * [accessibility-developer-tools][a11ydevtools] through `a11ySuite` for simple, automated Accessibility testing.
