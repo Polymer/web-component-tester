@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 6.0.0 - 2017-05-15
+
+* Major changes:
+  * In an effort to reduce magical behavior and make `wct` easier to understand, it no longer will automatically serve some resources from its own `npm` dependencies and some resources from the project under test. Instead, all resources are served out of the project under test. This gives the project under test control over its testing dependencies and their versions.
+    * As part of this, wct will also require that the project under test have an installation of the client side web-component-tester bower package.
+    * This release unifies the behavior of `wct` and `polyserve`, so if your code works without warnings in one it should work in the other.
+  * `webserver.webRunnerPath`, `webserver.webRunnerContent`, and `webserver.urlPrefix`, `webserver.staticContent` were internal properties that were exposed on the `config` object. They have been refactored and their replacement has been prefixed with an underscore to clarify that they're internal implementation details.
+  * Dropped support for node v4, added support for node v8. See our [node version support policy](https://www.polymer-project.org/2.0/docs/tools/node-support) for details.
+
+<details>
+  <summary>Click for full details</summary>
+
+## New in 6.0.0 stable
 
 * Update wct-local to remove deprecation warnings on install.
 * Remove warning when running wct if it's not installed into `node_modules`.
@@ -48,6 +60,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * Fixed #392
 * Fixed #373 and #383 which were caused by `emitHook` not handling arguments correctly.
 * Fixed error log message for loading WCT config
+
+</details>
 
 ## 5.0.1
 
