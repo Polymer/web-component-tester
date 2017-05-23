@@ -16,16 +16,16 @@ import * as cleankill from 'cleankill';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {MainlineServer, PolyserveServer, RequestHandler, startServers, VariantServer} from 'polyserve';
+import { MainlineServer, PolyserveServer, RequestHandler, startServers, VariantServer } from 'polyserve';
 import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
-import {Context} from './context';
+import { Context } from './context';
 
 // Template for generated indexes.
 const INDEX_TEMPLATE = _.template(fs.readFileSync(
-    path.resolve(__dirname, '../data/index.html'), {encoding: 'utf-8'}));
+  path.resolve(__dirname, '../data/index.html'), { encoding: 'utf-8' }));
 
 const DEFAULT_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -43,7 +43,7 @@ const DEFAULT_HEADERS = {
 export function webserver(wct: Context): void {
   const options = wct.options;
 
-  wct.hook('configure', async function() {
+  wct.hook('configure', async function () {
     // For now, you should treat all these options as an implementation detail
     // of WCT. They may be opened up for public configuration, but we need to
     // spend some time rationalizing interactions with external webservers.
@@ -60,7 +60,7 @@ export function webserver(wct: Context): void {
     options.webserver._generatedIndexContent = INDEX_TEMPLATE(options);
   });
 
-  wct.hook('prepare', async function() {
+  wct.hook('prepare', async function () {
     const wsOptions = options.webserver;
     const additionalRoutes = new Map<string, RequestHandler>();
 
@@ -68,8 +68,8 @@ export function webserver(wct: Context): void {
 
     // Check for client-side compatibility.
     const pathToLocalWct =
-        path.join(options.root, 'bower_components', 'web-component-tester');
-    let version: string|undefined = undefined;
+      path.join(options.root, 'bower_components', 'web-component-tester');
+    let version: string | undefined = undefined;
     const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
     for (const mdFilename of mdFilenames) {
       const pathToMetdata = path.join(pathToLocalWct, mdFilename);
@@ -82,8 +82,8 @@ export function webserver(wct: Context): void {
     if (!version) {
       throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
-                                                                                           packageName
-                                                                                         }).
+        packageName
+        }).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
@@ -95,9 +95,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     }
 
     const allowedRange = require(path.join(
-        __dirname, '..',
-        'package.json'))['--private-wct--']['client-side-version-range'] as
-        string;
+      __dirname, '..',
+      'package.json'))['--private-wct--']['client-side-version-range'] as
+      string;
     if (!semver.satisfies(version, allowedRange)) {
       throw new Error(`
     The web-component-tester Bower package installed is incompatible with the
@@ -109,7 +109,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     }
 
     let hasWarnedBrowserJs = false;
-    additionalRoutes.set('/browser.js', function(request, response) {
+    additionalRoutes.set('/browser.js', function (request, response) {
       if (!hasWarnedBrowserJs) {
         console.warn(`
 
@@ -126,7 +126,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     });
 
     const pathToGeneratedIndex =
-        `/components/${packageName}/generated-index.html`;
+      `/components/${packageName}/generated-index.html`;
     additionalRoutes.set(pathToGeneratedIndex, (_request, response) => {
       response.set(DEFAULT_HEADERS);
       response.send(options.webserver._generatedIndexContent);
@@ -139,7 +139,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       hostname: options.webserver.hostname,
       headers: DEFAULT_HEADERS, packageName, additionalRoutes,
     });
-    let servers: Array<MainlineServer|VariantServer>;
+    let servers: Array<MainlineServer | VariantServer>;
 
     const onDestroyHandlers: Array<() => Promise<void>> = [];
     const registerServerTeardown = (serverInfo: PolyserveServer) => {
@@ -148,7 +148,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       onDestroyHandlers.push(() => {
         destroyableServer.destroy();
         return new Promise<void>(
-            (resolve) => serverInfo.server.on('close', () => resolve()));
+          (resolve) => serverInfo.server.on('close', () => resolve()));
       });
     };
 
@@ -166,8 +166,8 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     } else {
       const never: never = polyserveResult;
       throw new Error(
-          `Internal error: Got unknown response from polyserve.startServers:` +
-          `${never}`);
+        `Internal error: Got unknown response from polyserve.startServers:` +
+        `${never}`);
     }
 
     wct._httpServers = servers.map(s => s.server);
@@ -175,7 +175,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     // At this point, we allow other plugins to hook and configure the
     // webservers as they please.
     for (const server of servers) {
-      await wct.emitHook('prepare:webserver', server.app);
+      await wct.emitHook('prepare:webserver', server.app, function () {
+        return Promise.resolve();
+      });
     }
 
     options.webserver._servers = servers.map(s => {
