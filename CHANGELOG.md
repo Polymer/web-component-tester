@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased - 2017-05-24
+
+* Fix what `prepare:webserver` was returning. Ensuring it was returning both a done() callback and the Express server object.
+
 ## 6.0.0 - 2017-05-15
 
 * Major changes:
@@ -25,7 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 6.0.0-prerelease.9 - 2017-04-19
 
 * The default `waitFor` doesn't rely on `HTMLImports.whenReady` or `Polymer.whenReady` timings, but only waits for the `WebComponentsReady` event to be fired. For a different wait time, set `WCT = { waitFor: function(cb){ cb(); }}`.
-
+m
 ## 6.0.0-prerelease.8 - 2017-04-13
 
 * [BREAKING] Dropped support for node v4, added support for node v8. See our [node version support policy](https://www.polymer-project.org/2.0/docs/tools/node-support) for details.
