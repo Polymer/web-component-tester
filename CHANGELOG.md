@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 6.0.0-prerelease.9 - 2017-04-19
 
 * The default `waitFor` doesn't rely on `HTMLImports.whenReady` or `Polymer.whenReady` timings, but only waits for the `WebComponentsReady` event to be fired. For a different wait time, set `WCT = { waitFor: function(cb){ cb(); }}`.
-m
+
 ## 6.0.0-prerelease.8 - 2017-04-13
 
 * [BREAKING] Dropped support for node v4, added support for node v8. See our [node version support policy](https://www.polymer-project.org/2.0/docs/tools/node-support) for details.
