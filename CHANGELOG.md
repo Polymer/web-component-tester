@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+"Unreleased" - 2017-05-24
+
+* Added promise resolve for `prepare:webserver` hook to actually pass Express object to plugins
+
 ## 6.0.0 - 2017-05-15
 
 * Major changes:
