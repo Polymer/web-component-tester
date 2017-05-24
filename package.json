@@ -58,7 +58,7 @@
     "@types/express": "^4.0.33",
     "@types/glob": "^5.0.30",
     "@types/grunt": "^0.4.20",
-    "@types/gulp": "^3.8.32",
+    "@types/gulp": "^4.0.3",
     "@types/lodash": "^4.14.38",
     "@types/mime": "0.0.29",
     "@types/minimatch": "^2.0.29",
