@@ -5,9 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased - 2017-05-24
+## Unreleased
 
 * Fix what `prepare:webserver` was returning. Ensuring it was returning both a done() callback and the Express server object.
+
+* Updated package.json dependencies:
+  * Upgraded @types/gulp
+  * Moved all @types to devDependencies
+  * Removed PolymerElements/test-fixture from npm dependencies (is already installed by bower)
+
 
 ## 6.0.0 - 2017-05-15
 
