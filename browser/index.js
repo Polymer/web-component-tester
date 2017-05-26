@@ -55,8 +55,8 @@ mocha.stubInterfaces();
 environment.loadSync();
 
 // Give any scripts on the page a chance to declare tests and muck with things.
-document.addEventListener('DOMContentLoaded', function() {
-  util.debug('DOMContentLoaded');
+document.addEventListener('load', function() {
+  util.debug('document.load');
 
   environment.ensureDependenciesPresent();
 
