@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+* Updated package.json dependencies:
+  * Upgraded @types/gulp
+  * Moved all @types to devDependencies
+  * Removed PolymerElements/test-fixture from npm dependencies (is already installed by bower)
+
 ## 6.0.0 - 2017-05-15
 
 * Major changes:
