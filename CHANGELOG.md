@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   * Upgraded @types/gulp
   * Moved all @types to devDependencies
   * Removed PolymerElements/test-fixture from npm dependencies (is already installed by bower)
+* Fixed #523 wct ignores hostname.
 
 ## 6.0.0 - 2017-05-15
 
@@ -67,7 +68,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * Fixed #392
 * Fixed #373 and #383 which were caused by `emitHook` not handling arguments correctly.
 * Fixed error log message for loading WCT config
-* Fixed #523 wct ignores hostname.
 
 </details>
 
