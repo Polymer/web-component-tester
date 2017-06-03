@@ -3,6 +3,7 @@
 .todo
 /bower_components
 /node_modules
+package-lock.json
 npm-debug.log
 typings/
 runner/*.js
