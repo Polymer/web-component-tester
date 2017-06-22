@@ -38,8 +38,9 @@ describe('gulp', function() {
     wctGulp.init(orch);
 
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare', async(_context: Context) => undefined);
-    sandbox.stub(steps, 'runTests', async(context: Context) => {
+    sandbox.stub(
+        steps, 'prepare', async(_context: Context): Promise<void> => undefined);
+    sandbox.stub(steps, 'runTests', async (context: Context) => {
       options = context.options;
     });
 
@@ -61,13 +62,13 @@ describe('gulp', function() {
     });
   }
 
-  it('honors wcf.conf.js', async() => {
+  it('honors wcf.conf.js', async () => {
     process.chdir(path.join(FIXTURES, 'conf'));
     await runGulpTask('wct:sauce');
     expect(options.plugins['sauce'].username).to.eq('abc123');
   });
 
-  it('prefers wcf.conf.json', async() => {
+  it('prefers wcf.conf.json', async () => {
     process.chdir(path.join(FIXTURES, 'conf', 'json'));
     await runGulpTask('wct:sauce');
     expect(options.plugins['sauce'].username).to.eq('jsonconf');
@@ -75,7 +76,7 @@ describe('gulp', function() {
 
   describe('wct:local', function() {
 
-    it('kicks off local tests', async() => {
+    it('kicks off local tests', async () => {
       await runGulpTask('wct:local');
       expect(steps.runTests).to.have.been.calledOnce;
       expect(pluginsCalled).to.have.members(['local']);
@@ -85,7 +86,7 @@ describe('gulp', function() {
 
   describe('wct:sauce', function() {
 
-    it('kicks off sauce tests', async() => {
+    it('kicks off sauce tests', async () => {
       await runGulpTask('wct:sauce');
       expect(steps.runTests).to.have.been.calledOnce;
       expect(pluginsCalled).to.have.members(['sauce']);
