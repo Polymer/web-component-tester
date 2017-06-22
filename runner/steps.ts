@@ -13,6 +13,7 @@
  */
 import * as http from 'http';
 import * as _ from 'lodash';
+import * as deepmerge from 'deepmerge';
 import * as socketIO from 'socket.io';
 
 import {BrowserRunner} from './browserrunner';
@@ -142,10 +143,10 @@ function runBrowsers(context: Context) {
     let waitFor: undefined|Promise<void> = undefined;
     for (const server of options.webserver._servers) {
       // Needed by both `BrowserRunner` and `CliReporter`.
-      const browserDef = _.clone(originalBrowserDef);
+      let browserDef = _.clone(originalBrowserDef);
       browserDef.id = id++;
       browserDef.variant = server.variant;
-      _.defaultsDeep(browserDef, options.browserOptions);
+      browserDef = deepmerge(browserDef, options.browserOptions);
 
       const runner =
           new BrowserRunner(context, browserDef, options, server.url, waitFor);
