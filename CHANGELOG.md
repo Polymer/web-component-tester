@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+* Added version flag to CLI. Available using `--version` or `-V`.
 <!-- Add new, unreleased items here. -->
 
 ## 6.0.1 - 2017-08-08
@@ -15,7 +16,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   * Upgraded @types/gulp
   * Moved all @types to devDependencies
   * Removed PolymerElements/test-fixture from npm dependencies (is already installed by bower)
-* Added version flag to CLI. Available using `--version` or `-V`.
 
 ## 6.0.0 - 2017-05-15
 
