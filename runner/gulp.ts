@@ -25,17 +25,17 @@ export function init(gulp: Gulp, dependencies?: string[]): void {
   }
 
   // TODO(nevir): Migrate fully to wct:local/etc.
-  gulp.task('test', ['wct:local']);
-  gulp.task('test:local', ['wct:local']);
-  gulp.task('test:remote', ['wct:sauce']);
+  gulp.task('test', <any>['wct:local']);
+  gulp.task('test:local', <any>['wct:local']);
+  gulp.task('test:remote', <any>['wct:sauce']);
 
-  gulp.task('wct', ['wct:local']);
+  gulp.task('wct', <any>['wct:local']);
 
-  gulp.task('wct:local', dependencies, () => {
+  (<any>gulp).task('wct:local', dependencies, () => {
     return test(<any>{plugins: {local: {}, sauce: false}}).catch(cleanError);
   });
 
-  gulp.task('wct:sauce', dependencies, () => {
+  (<any>gulp).task('wct:sauce', dependencies, () => {
     return test(<any>{plugins: {local: false, sauce: {}}}).catch(cleanError);
   });
 }

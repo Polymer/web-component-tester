@@ -58,7 +58,7 @@ describe('gulp', function() {
 
   async function runGulpTask(name: string) {
     await new Promise((resolve, reject) => {
-      orch.start(name, (error) => error ? reject(error) : resolve());
+      (<any>orch).start(name, (error: any) => error ? reject(error) : resolve());
     });
   }
 
