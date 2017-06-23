@@ -95,7 +95,7 @@ suite('AwesomeLib', function() {
 |---|---|---|
 |fixtureId|String|ID of the fixture to instantiate and test|
 |ignoredTests|Array<string> (optional)|Tests to ignore. <br />Test names are found [here](https://github.com/GoogleChrome/accessibility-developer-tools/blob/master/dist/js/axs_testing.js) as calls to axs.AuditRules.addRule()|
-|beforeEach|Function(optional)|Called before each test is run|
+|beforeEach|Function (optional)|Called before each test is run|
 
 `a11ySuite` provides an simple way to run accessibility-developer-tools' high quality accessibility
 audits when given a `test-fixture`.

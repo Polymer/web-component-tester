@@ -40,15 +40,15 @@
 
   <script>
     'use strict';
-    window.addEventListener('WebComponentsReady', function() {
+    window.addEventListener('WebComponentsReady', function () {
       var Flusher = Polymer.Templatizer.flush ? Polymer.Templatizer : Polymer.dom;
 
-      describe('testing templatized multiple replace', function() {
+      describe('testing templatized multiple replace', function () {
         var domIfElement;
         var insideElement;
         var outsideElement;
 
-        before(function() {
+        before(function () {
           replace('normal-element').with('changed-element-name');
           replace('exception-element').with('original-template-failure');
 
@@ -64,20 +64,20 @@
           Flusher.flush();
         });
 
-        it('dom-if test', function() {
+        it('dom-if test', function () {
           assert.equal(outsideElement.nodeName, 'CHANGED-ELEMENT-NAME');
           assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-FAILURE');
         });
       });
 
-      describe('testing standard multiple replace', function() {
+      describe('testing standard multiple replace', function () {
         var setupCorrectly = true;
         var element1;
         var element2;
         var element3;
         var element4;
 
-        before(function() {
+        before(function () {
           try {
             replace('a').with('b');
             replace('b').with('c');
@@ -97,11 +97,11 @@
           element4 = template.$.normal.$$('#element4');
         });
 
-        after(function() {
+        after(function () {
 
         });
 
-        it('double replace test', function() {
+        it('double replace test', function () {
           assert.isOk(setupCorrectly);
           assert.equal(element1.nodeName, 'C');
           assert.equal(element2.nodeName, 'C');
@@ -111,12 +111,12 @@
         });
       });
 
-      describe('testing projected element replacement', function() {
+      describe('testing projected element replacement', function () {
         var setupCorrectly = true;
         var pE3Content;
         var pE4Content;
 
-        before(function() {
+        before(function () {
           try {
             replace('projection-element-2').with('projection-element-3');
           } catch (err) {
@@ -130,22 +130,22 @@
 
         });
 
-        after(function() {
+        after(function () {
 
         });
 
-        it('projection replace test', function() {
+        it('projection replace test', function () {
           assert.isOk(setupCorrectly);
           assert.equal(pE3Content, 'three');
           assert.equal(pE4Content, 'four');
         });
       });
 
-      describe('testing template reset after test', function() {
+      describe('testing template reset after test', function () {
         var setupCorrectly = true;
         var insideElement;
 
-        before(function() {
+        before(function () {
           try {
             replace('exception-element').with('original-template-success');
           } catch (err) {
@@ -160,25 +160,25 @@
           insideElement = template.$$('#inside');
         });
 
-        after(function() {
+        after(function () {
 
         });
 
-        it('checking template is reset after replace test', function() {
+        it('checking template is reset after replace test', function () {
           assert.isOk(setupCorrectly);
 
           assert.equal(insideElement.nodeName, 'ORIGINAL-TEMPLATE-SUCCESS');
         });
       });
 
-      describe('testing template bindings', function() {
+      describe('testing template bindings', function () {
         var setupCorrectly = true;
         var insideElement;
         var domRepeat;
         var annotationsBefore;
         var annotationsAfter;
 
-        before(function() {
+        before(function () {
           domRepeat = fixture('DomRepeatFixture');
 
           Flusher.flush();
@@ -218,11 +218,11 @@
           }
         });
 
-        after(function() {
+        after(function () {
 
         });
 
-        it('dom-repeat bindings exist', function() {
+        it('dom-repeat bindings exist', function () {
           assert.isOk(setupCorrectly);
 
           assert.equal(annotationsBefore, annotationsAfter);
