@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+* Updated package.json:
+  * Upgraded dependencies async, chai, cleankill, findup-sync, sinon, and socket.io.
+  * Upgraded devDependencies update-notifier
 <!-- Add new, unreleased items here. -->
 
 ## 6.3.0 - 2017-10-02
