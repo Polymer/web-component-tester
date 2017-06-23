@@ -1,0 +1,11 @@
+{
+  "passing": 1,
+  "pending": 0,
+  "failing": 0,
+  "status": "error",
+  "tests": {
+    "test/tests.html": {
+      "suite": {"missing fixture": {"state": "passing"}}
+    }
+  }
+}

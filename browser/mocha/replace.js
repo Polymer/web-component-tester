@@ -18,10 +18,10 @@ var replaceTeardownAttached = false;
  * All annotations and attributes will be set on the placement element the way
  * they were set for the original element.
  */
-extendInterfaces('replace', function (context, teardown) {
+extendInterfaces('replace', function(context, teardown) {
   return function replace(oldTagName) {
     return {
-      with: function (tagName) {
+      with: function(tagName) {
         // Standardizes our replacements map
         oldTagName = oldTagName.toLowerCase();
         tagName = tagName.toLowerCase();
@@ -34,8 +34,8 @@ extendInterfaces('replace', function (context, teardown) {
         }
 
         if (!Polymer.Element) {
-          Polymer.Element = function () { };
-          Polymer.Element.prototype._stampTemplate = function () { };
+          Polymer.Element = function() { };
+          Polymer.Element.prototype._stampTemplate = function() { };
         }
 
         // Keep a reference to the original `document.importNode`
@@ -43,7 +43,7 @@ extendInterfaces('replace', function (context, teardown) {
         var originalImportNode = document.importNode;
 
         // Use Sinon to stub `document.ImportNode`:
-        sinon.stub(document, 'importNode', function (origContent, deep) {
+        sinon.stub(document, 'importNode', function(origContent, deep) {
           var templateClone = document.createElement('template');
           var content = templateClone.content;
           var inertDoc = content.ownerDocument;
@@ -90,7 +90,7 @@ extendInterfaces('replace', function (context, teardown) {
 
         if (!replaceTeardownAttached) {
           // After each test...
-          teardown(function () {
+          teardown(function() {
             replaceTeardownAttached = true;
             // Restore the stubbed version of `document.importNode`:
             if (document.importNode.isSinonProxy) {

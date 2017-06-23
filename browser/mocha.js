@@ -52,8 +52,8 @@ var MOCHA_EXPORTS = {
  * The assumption is that it is a one-off (sub-)suite of tests being run.
  */
 export function stubInterfaces() {
-  Object.keys(MOCHA_EXPORTS).forEach(function (ui) {
-    Object.keys(MOCHA_EXPORTS[ui]).forEach(function (key) {
+  Object.keys(MOCHA_EXPORTS).forEach(function(ui) {
+    Object.keys(MOCHA_EXPORTS[ui]).forEach(function(key) {
       window[key] = function wrappedMochaFunction() {
         _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
         if (!window[key] || window[key] === wrappedMochaFunction) {
@@ -86,4 +86,3 @@ function _setupMocha(ui, key, alternate) {
   mochaOptions.ui = ui;
   mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
 }
-

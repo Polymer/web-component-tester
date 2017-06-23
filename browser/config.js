@@ -101,7 +101,7 @@ export function get(key) {
 // Internal
 
 function _deepMerge(target, source) {
-  Object.keys(source).forEach(function (key) {
+  Object.keys(source).forEach(function(key) {
     if (target[key] !== null && typeof target[key] === 'object' && !Array.isArray(target[key])) {
       _deepMerge(target[key], source[key]);
     } else {

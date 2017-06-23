@@ -70,7 +70,7 @@ gulp.task('clean', (done) => {
   });
 });
 
-gulp.task('test', function (done) {
+gulp.task('test', function(done) {
   runSequence(
     ['build:typescript', 'lint'],
     'test:unit',
@@ -84,7 +84,7 @@ gulp.task('build-all', (done) => {
 
 gulp.task('build', ['build:typescript', 'build:browser']);
 
-gulp.task('build:typescript', function () {
+gulp.task('build:typescript', function() {
   // Ignore typescript errors, because gulp-typescript, like most things
   // gulp, can't be trusted.
   return tsProject.src().pipe(tsProject(ts.reporter.nullReporter())).js.pipe(gulp.dest('./'));
@@ -92,10 +92,10 @@ gulp.task('build:typescript', function () {
 
 // Specific tasks
 
-gulp.task('build:browser', function (done) {
+gulp.task('build:browser', function(done) {
   rollup.rollup({
     entry: 'browser/index.js',
-  }).then(function (bundle) {
+  }).then(function(bundle) {
     bundle.write({
       indent: false,
       format: 'iife',
@@ -103,13 +103,13 @@ gulp.task('build:browser', function (done) {
       dest: 'browser.js',
       sourceMap: true,
       sourceMapFile: path.resolve('browser.js.map')
-    }).then(function () {
+    }).then(function() {
       done();
     });
   }).catch(done);
 });
 
-gulp.task('test:style', function () {
+gulp.task('test:style', function() {
   return gulp.src([
     '{browser,runner,environment,tasks}/**/*.js',
     'gulpfile.js',
@@ -117,16 +117,16 @@ gulp.task('test:style', function () {
   ]).pipe(jshintFlow());
 });
 
-gulp.task('test:unit', function () {
+gulp.task('test:unit', function() {
   return gulp.src('test/unit/*.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }));
 });
 
-gulp.task('bower', function () {
+gulp.task('bower', function() {
   return bower();
 });
 
-gulp.task('test:integration', ['bower'], function () {
+gulp.task('test:integration', ['bower'], function() {
   return gulp.src('test/integration/*.js', { read: false })
     .pipe(mocha({ reporter: 'spec' }));
 });
@@ -187,7 +187,7 @@ function commonDepCheck(options) {
   });
 }
 
-gulp.task('prepublish', function (done) {
+gulp.task('prepublish', function(done) {
   // We can't run the integration tests here because on travis we may not
   // be running with an x instance when we do `npm install`. We can change
   // this to just `test` from `test:unit` once all supported npm versions
