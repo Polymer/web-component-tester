@@ -39,13 +39,13 @@ describe('cli', () => {
   let sandbox: sinon.SinonSandbox;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare', async(): Promise<void> => undefined);
-    sandbox.stub(steps, 'runTests', async(): Promise<void> => undefined);
+    sandbox.stub(steps, 'prepare').callsFake(async(): Promise<void> => undefined);
+    sandbox.stub(steps, 'runTests').callsFake(async(): Promise<void> => undefined);
 
-    sandbox.stub(
-        wctLocalBrowsers, 'detect',
+    sandbox.stub(wctLocalBrowsers, 'detect')
+      .callsFake(
         async () => _.omit(LOCAL_BROWSERS, 'aurora'));
-    sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));
+    sandbox.stub(wctLocalBrowsers, 'supported').callsFake(() => _.keys(LOCAL_BROWSERS));
   });
 
   afterEach(() => {
