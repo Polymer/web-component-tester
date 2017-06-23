@@ -73,9 +73,9 @@ async function expandDirectory(
   }
   const files = await promisify(fs.readdir)(path.resolve(baseDir, aPath));
   // We have an index; defer to that.
-  if (_.includes(files, 'index.html')) {
+  if (_.includes(<any>files, 'index.html')) {
     return [path.join(aPath, 'index.html')];
   }
-  const children = await expandDirectories(path.join(baseDir, aPath), files);
-  return children.map((child) => path.join(aPath, child));
+  const children = await expandDirectories(path.join(baseDir, aPath), <any>files);
+  return children.map((child: string) => path.join(aPath, child));
 }

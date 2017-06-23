@@ -93,9 +93,9 @@ async function main() {
 
   server.listen(port);
   (<any>server).port = port;
-  serverDestroy(server);
+  serverDestroy(<any>server);
   cleankill.onInterrupt((done: (err: any) => void) => {
-    server.destroy();
+    (<any>server).destroy();
     server.on('close', done);
   });
 

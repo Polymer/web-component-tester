@@ -96,7 +96,7 @@
     "@types/minimatch": "^2.0.29",
     "@types/mocha": "^2.2.32",
     "@types/multer": "0.0.32",
-    "@types/node": "4.0.30",
+    "@types/node": "^8.0.1",
     "@types/nomnom": "0.0.28",
     "@types/rimraf": "0.0.28",
     "@types/semver": "^5.3.30",
