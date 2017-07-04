@@ -20,6 +20,7 @@ import {MainlineServer, PolyserveServer, RequestHandler, startServers, VariantSe
 import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
+import * as bowerConfig from 'bower-config';
 
 import {Context} from './context';
 
@@ -67,8 +68,9 @@ export function webserver(wct: Context): void {
     const packageName = path.basename(options.root);
 
     // Check for client-side compatibility.
+    const bowerDir = bowerConfig.read(options.root).directory;
     const pathToLocalWct =
-        path.join(options.root, 'bower_components', 'web-component-tester');
+        path.join(options.root, bowerDir, 'web-component-tester');
     let version: string|undefined = undefined;
     const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
     for (const mdFilename of mdFilenames) {
@@ -135,6 +137,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     // Serve up project & dependencies via polyserve
     const polyserveResult = await startServers({
       root: options.root,
+      componentDir: bowerDir,
       compile: options.compile,
       hostname: options.webserver.hostname,
       headers: DEFAULT_HEADERS, packageName, additionalRoutes,
