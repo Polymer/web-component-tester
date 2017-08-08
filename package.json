@@ -62,6 +62,7 @@
     "findup-sync": "^0.4.3",
     "glob": "^7.1.1",
     "lodash": "^3.0.1",
+    "deepmerge": "^1.4.4",
     "mocha": "^3.1.2",
     "multer": "^1.1.0",
     "nomnom": "^1.8.1",
