@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- Add new, unreleased items here. -->
 
-## 6.0.1 - 2017-05-30
+## 6.0.1 - 2017-08-08
 
 * Updated package.json dependencies:
   * Upgraded @types/gulp
