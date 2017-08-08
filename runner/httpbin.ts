@@ -84,7 +84,7 @@ httpbin.post('/post', function(req, res) {
 // wct.
 async function main() {
   const app = express();
-  const server = http.createServer(app);
+  const server = http.createServer(app) as any;
 
   app.use('/httpbin', httpbin);
 
