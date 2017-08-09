@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 * Fix what `prepare:webserver` was returning. Ensuring it was returning both a done() callback and the Express server object.
+<!-- Add new, unreleased items here. -->
+
+## 6.0.1 - 2017-08-08
 
 * Updated package.json dependencies:
   * Upgraded @types/gulp
