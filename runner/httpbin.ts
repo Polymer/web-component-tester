@@ -35,7 +35,7 @@ function capWords(s: string) {
 
 function formatRequest(req: express.Request) {
   const headers = {};
-  for (let key of Object.keys(req.headers)) {
+  for (const key of Object.keys(req.headers)) {
     headers[capWords(key)] = req.headers[key];
   }
   const formatted = {
