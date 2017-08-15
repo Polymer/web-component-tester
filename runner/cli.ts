@@ -58,7 +58,6 @@ async function _run(args: string[], output: NodeJS.WritableStream) {
 
   // `parseArgs` merges any new configuration into `context.options`.
   await config.parseArgs(context, args);
-  console.log(context.options);
   await test(context);
 }
 

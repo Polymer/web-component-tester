@@ -91,9 +91,9 @@ export function webserver(wct: Context): void {
     }
     if (!version) {
       throw new Error(`
-The web-component-tester package is not installed as a dependency of this project (${
-                                                                                     packageName
-                                                                                   }).
+The web-component-tester Bower package is not installed as a dependency of this project (${
+                                                                                           packageName
+                                                                                         }).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
@@ -143,9 +143,6 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathsToLocalWct[0]}/
       response.send(options.webserver._generatedIndexContent);
     });
 
-    const npm =
-        !pathToLocalWct.match(/\/bower_components\/web-component-tester/);
-
     // Serve up project & dependencies via polyserve
     const polyserveResult = await startServers({
       root: options.root,
@@ -154,7 +151,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathsToLocalWct[0]}/
       headers: DEFAULT_HEADERS,
       packageName,
       additionalRoutes,
-      npm,
+      npm: !!options.npm,
     });
     let servers: Array<MainlineServer|VariantServer>;
 
@@ -196,10 +193,11 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathsToLocalWct[0]}/
     }
 
     options.webserver._servers = servers.map(s => {
-      const browserConfig = `?browserConfig=${npm ? 'npm' : 'bower'}`;
+      const npmParam = options.npm ? `?npm=true` : '';
       const port = s.server.address().port;
+      const url = `http://localhost:${port}${pathToGeneratedIndex}`;
       return {
-        url: `http://localhost:${port}${pathToGeneratedIndex}${browserConfig}`,
+        url: `${url}${npmParam}`,
         variant: s.kind === 'mainline' ? '' : s.variantName
       };
     });
