@@ -67,36 +67,47 @@ export function webserver(wct: Context): void {
     const packageName = path.basename(options.root);
 
     // Check for client-side compatibility.
-    const pathToLocalWct =
-        path.join(options.root, 'bower_components', 'web-component-tester');
+    const pathsToLocalWct = [
+      path.join(options.root, 'bower_components', 'web-component-tester'),
+      path.join(options.root, 'node_modules', 'web-component-tester')
+    ];
+    let pathToLocalWct = '';
     let version: string|undefined = undefined;
     const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
-    for (const mdFilename of mdFilenames) {
-      const pathToMetdata = path.join(pathToLocalWct, mdFilename);
-      try {
-        version = version || require(pathToMetdata).version;
-      } catch (e) {
-        // Handled below, where we check if we found a version.
+    for (const candidatePathToLocalWct of pathsToLocalWct) {
+      for (const mdFilename of mdFilenames) {
+        const pathToMetadata = path.join(candidatePathToLocalWct, mdFilename);
+        try {
+          if (!version) {
+            version = require(pathToMetadata).version;
+            if (version) {
+              pathToLocalWct = candidatePathToLocalWct;
+            }
+          }
+        } catch (e) {
+          // Handled below, where we check if we found a version.
+        }
       }
     }
     if (!version) {
       throw new Error(`
-The web-component-tester Bower package is not installed as a dependency of this project (${
-                                                                                           packageName
-                                                                                         }).
+The web-component-tester package is not installed as a dependency of this project (${
+                                                                                     packageName
+                                                                                   }).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
 
 Web Component Tester >=6.0 requires that support files needed in the browser are installed as part of the project's dependencies or dev-dependencies. This is to give projects greater control over the versions that are served, while also making Web Component Tester's behavior easier to understand.
 
-Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
+Expected to find a ${mdFilenames.join(' or ')} at: ${pathsToLocalWct[0]}/
 `);
     }
 
-    const allowedRange = require(path.join(
-        __dirname, '..',
-        'package.json'))['--private-wct--']['client-side-version-range'] as
+    const allowedRange =
+        require(path.join(
+            __dirname, '..',
+            'package.json'))['--private-wct--']['client-side-version-range'] as
         string;
     if (!semver.satisfies(version, allowedRange)) {
       throw new Error(`
@@ -132,12 +143,18 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       response.send(options.webserver._generatedIndexContent);
     });
 
+    const npm =
+        !pathToLocalWct.match(/\/bower_components\/web-component-tester/);
+
     // Serve up project & dependencies via polyserve
     const polyserveResult = await startServers({
       root: options.root,
       compile: options.compile,
       hostname: options.webserver.hostname,
-      headers: DEFAULT_HEADERS, packageName, additionalRoutes,
+      headers: DEFAULT_HEADERS,
+      packageName,
+      additionalRoutes,
+      npm,
     });
     let servers: Array<MainlineServer|VariantServer>;
 
@@ -179,9 +196,10 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     }
 
     options.webserver._servers = servers.map(s => {
+      const browserConfig = `?browserConfig=${npm ? 'npm' : 'bower'}`;
       const port = s.server.address().port;
       return {
-        url: `http://localhost:${port}${pathToGeneratedIndex}`,
+        url: `http://localhost:${port}${pathToGeneratedIndex}${browserConfig}`,
         variant: s.kind === 'mainline' ? '' : s.variantName
       };
     });

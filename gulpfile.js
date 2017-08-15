@@ -151,6 +151,8 @@ commonTools.depcheck({
     'accessibility-developer-tools',
     'mocha',
     'test-fixture',
+    '@polymer/test-fixture',
+    '@webcomponents/webcomponentsjs',
     'async',
 
     // Used in the wct binary
