@@ -221,6 +221,7 @@ const ARG_CONFIG = {
   npm: {
     help: 'Use node_modules instead of bower_components for all browser ' +
         'components and packages.  Uses polyserve with `--npm` flag.',
+    flag: true,
   },
   'webserver.port': {
     help: 'A port to use for the test webserver.',
