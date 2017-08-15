@@ -94,9 +94,10 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 `);
     }
 
-    const allowedRange = require(path.join(
-        __dirname, '..',
-        'package.json'))['--private-wct--']['client-side-version-range'] as
+    const allowedRange =
+        require(path.join(
+            __dirname, '..',
+            'package.json'))['--private-wct--']['client-side-version-range'] as
         string;
     if (!semver.satisfies(version, allowedRange)) {
       throw new Error(`
@@ -137,7 +138,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       root: options.root,
       compile: options.compile,
       hostname: options.webserver.hostname,
-      headers: DEFAULT_HEADERS, packageName, additionalRoutes,
+      headers: DEFAULT_HEADERS,
+      packageName,
+      additionalRoutes,
     });
     let servers: Array<MainlineServer|VariantServer>;
 
@@ -180,8 +183,12 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 
     options.webserver._servers = servers.map(s => {
       const port = s.server.address().port;
+      let address = s.server.address().address;
+      if (address === '::' || address === '0.0.0.0') {
+        address = 'localhost';
+      }
       return {
-        url: `http://localhost:${port}${pathToGeneratedIndex}`,
+        url: `http://${address}:${port}${pathToGeneratedIndex}`,
         variant: s.kind === 'mainline' ? '' : s.variantName
       };
     });

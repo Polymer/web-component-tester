@@ -85,6 +85,10 @@ httpbin.post('/post', function(req, res) {
 async function main() {
   const app = express();
   const server = http.createServer(app) as serverDestroy.DestroyableServer;
+  let address = server.address().address;
+  if (address === '::' || address === '0.0.0.0') {
+    address = 'localhost';
+  }
 
   app.use('/httpbin', httpbin);
 
@@ -99,7 +103,7 @@ async function main() {
     server.on('close', done);
   });
 
-  console.log('Server running at http://localhost:' + port + '/httpbin/');
+  console.log(`Server running at http://${address}:${port}/httpbin/`);
 }
 
 if (require.main === module) {
