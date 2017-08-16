@@ -1,6 +1,6 @@
 {
   "name": "wct-client",
-  "version": "0.0.1-pre.2",
+  "version": "0.0.1-pre.4",
   "description": "Client-side dependencies for web-component-tester tests installed via npm.",
   "main": "browser.js",
   "license": "http://polymer.github.io/LICENSE.txt",

@@ -455,7 +455,8 @@ ChildRunner.prototype.signalRunComplete = function signalRunComplete(error) {
   this.onRunComplete = null;
 };
 
-var useNpm = (new URL(document.currentScript.src)).search.match(/[?&]npm=true/);
+var useNpm = document.currentScript.src.match(/wct-client\/browser.js/) ||
+  (new URL(document.currentScript.src)).search.match(/[?&]npm=true/);
 
 /**
  * The global configuration state for WCT's browser client.
@@ -474,7 +475,7 @@ var _config = {
       'mocha/mocha.js',
       'chai/chai.js',
       'sinon/lib/sinon.js',
-      'sinon/lib/sinon-chai.js',
+      'sinon-chai/lib/sinon-chai.js',
       'accessibility-developer-tools/dist/js/axs_testing.js'
     ] : [
       'stacky/browser.js',
@@ -1302,14 +1303,16 @@ function _injectPrototype(klass, prototype) {
  */
 function loadSync() {
   debug('Loading environment scripts:');
-  var a11ySuite = 'web-component-tester/data/a11ySuite.js';
+  var a11ySuite =
+    document.currentScript.src.match(/wct-client\/browser.js/) ?
+      'wct-client/a11ySuite.js' : 'web-component-tester/data/a11ySuite.js';
   var scripts = get('environmentScripts');
   var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
   if (!a11ySuiteWillBeLoaded) {
     // wct is running as a bower dependency, load a11ySuite from data/
     scripts.push(a11ySuite);
   }
-  scripts.forEach(function(path) {
+  scripts.forEach(function (path) {
     var url = expandUrl(path, get('root'));
     debug('Loading environment script:', url);
     // Synchronous load.
@@ -1318,7 +1321,7 @@ function loadSync() {
   debug('Environment scripts loaded');
 
   var imports = get('environmentImports');
-  imports.forEach(function(path) {
+  imports.forEach(function (path) {
     var url = expandUrl(path, get('root'));
     debug('Loading environment import:', url);
     // Synchronous load.

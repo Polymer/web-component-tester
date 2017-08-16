@@ -57,12 +57,18 @@ export function webserver(wct: Context): void {
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
+    // The generated index needs the correct browser.js and a11ySuite.js
+    // scripts.  When using npm, the wct-client package may be used, so
+    // we test for that package and will use its scripts if present.
     let browserScript = 'web-component-tester/browser.js';
     let a11ySuiteScript = 'web-component-tester/data/a11ySuite.js';
     if (options.npm) {
       try {
-        if (require(path.join(options.root, 'node_modules', 'wct-client'))
-                .version) {
+        const wctClientPath =
+            path.join(options.root, 'node_modules', 'wct-client');
+        const version =
+            require(path.join(wctClientPath, 'package.json')).version;
+        if (version) {
           browserScript = 'wct-client/browser.js';
           a11ySuiteScript = 'wct-client/a11ySuite.js';
         }

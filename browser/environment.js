@@ -16,14 +16,16 @@ import * as util from './util.js';
  */
 export function loadSync() {
   util.debug('Loading environment scripts:');
-  var a11ySuite = 'web-component-tester/data/a11ySuite.js';
+  var a11ySuite =
+    document.currentScript.src.match(/wct-client\/browser.js/) ?
+      'wct-client/a11ySuite.js' : 'web-component-tester/data/a11ySuite.js';
   var scripts = config.get('environmentScripts');
   var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
   if (!a11ySuiteWillBeLoaded) {
     // wct is running as a bower dependency, load a11ySuite from data/
     scripts.push(a11ySuite);
   }
-  scripts.forEach(function(path) {
+  scripts.forEach(function (path) {
     var url = util.expandUrl(path, config.get('root'));
     util.debug('Loading environment script:', url);
     // Synchronous load.
@@ -32,7 +34,7 @@ export function loadSync() {
   util.debug('Environment scripts loaded');
 
   var imports = config.get('environmentImports');
-  imports.forEach(function(path) {
+  imports.forEach(function (path) {
     var url = util.expandUrl(path, config.get('root'));
     util.debug('Loading environment import:', url);
     // Synchronous load.

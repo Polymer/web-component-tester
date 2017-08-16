@@ -10,7 +10,8 @@
 import * as util from './util.js';
 import ChildRunner from './childrunner.js';
 
-var useNpm = (new URL(document.currentScript.src)).search.match(/[?&]npm=true/);
+var useNpm = document.currentScript.src.match(/wct-client\/browser.js/) ||
+  (new URL(document.currentScript.src)).search.match(/[?&]npm=true/);
 
 /**
  * The global configuration state for WCT's browser client.
@@ -29,7 +30,7 @@ export var _config = {
       'mocha/mocha.js',
       'chai/chai.js',
       'sinon/lib/sinon.js',
-      'sinon/lib/sinon-chai.js',
+      'sinon-chai/lib/sinon-chai.js',
       'accessibility-developer-tools/dist/js/axs_testing.js'
     ] : [
       'stacky/browser.js',
