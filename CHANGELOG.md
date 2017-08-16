@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 * Added an `--npm` flag to support web packages which are installed in `node_modules` by npm (instead of installed in `bower_components` by Bower.
+* Builds a `wct-client` package directory used to publish npm-specific client support package to npm, suitable for use with devDependencies of custom elements.
 <!-- Add new, unreleased items here. -->
 
 ## 6.0.1 - 2017-08-08
