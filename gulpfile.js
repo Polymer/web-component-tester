@@ -110,7 +110,7 @@ gulp.task('build:browser', function (done) {
 });
 
 gulp.task('build:wct-client', function () {
-  return gulp.src(['browser.js', 'browser.js.map'])
+  return gulp.src(['browser.js', 'browser.js.map', 'data/a11ySuite.js'])
     .pipe(gulp.dest('wct-client/'));
 });
 
