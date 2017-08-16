@@ -1,9 +1,9 @@
 {
   "name": "web-component-tester",
-  "version": "6.1.0-pre.1",
+  "version": "6.0.1",
   "--private-wct--": {
     "client-side-version-range": "4 - 6 || ^6.0.0-prerelease.1",
-    "wct-client-version-range": "0.0.1-pre.2 || ^1.0.0"
+    "wct-client-version-range": "0.0.1-pre.4 || ^1.0.0"
   },
   "description": "web-component-tester makes testing your web components a breeze!",
   "keywords": [
