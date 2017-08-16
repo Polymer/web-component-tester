@@ -67,26 +67,19 @@ export function webserver(wct: Context): void {
     const packageName = path.basename(options.root);
 
     // Check for client-side compatibility.
-    const pathsToLocalWct = [
-      path.join(options.root, 'bower_components', 'web-component-tester'),
-      path.join(options.root, 'node_modules', 'web-component-tester')
-    ];
-    let pathToLocalWct = '';
+    const pathToLocalWct = path.join(
+        options.root, options.npm ? 'node_modules' : 'bower_components',
+        'web-component-tester');
     let version: string|undefined = undefined;
     const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
-    for (const candidatePathToLocalWct of pathsToLocalWct) {
-      for (const mdFilename of mdFilenames) {
-        const pathToMetadata = path.join(candidatePathToLocalWct, mdFilename);
-        try {
-          if (!version) {
-            version = require(pathToMetadata).version;
-            if (version) {
-              pathToLocalWct = candidatePathToLocalWct;
-            }
-          }
-        } catch (e) {
-          // Handled below, where we check if we found a version.
+    for (const mdFilename of mdFilenames) {
+      const pathToMetadata = path.join(pathToLocalWct, mdFilename);
+      try {
+        if (!version) {
+          version = require(pathToMetadata).version;
         }
+      } catch (e) {
+        // Handled below, where we check if we found a version.
       }
     }
     if (!version) {
@@ -100,7 +93,7 @@ Please run this command to install:
 
 Web Component Tester >=6.0 requires that support files needed in the browser are installed as part of the project's dependencies or dev-dependencies. This is to give projects greater control over the versions that are served, while also making Web Component Tester's behavior easier to understand.
 
-Expected to find a ${mdFilenames.join(' or ')} at: ${pathsToLocalWct[0]}/
+Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 `);
     }
 
