@@ -82,7 +82,7 @@ gulp.task('build-all', (done) => {
   runSequence('clean', 'lint', 'build', done);
 });
 
-gulp.task('build', ['build:typescript', 'build:browser']);
+gulp.task('build', ['build:typescript', 'build:browser', 'build:wct-client']);
 
 gulp.task('build:typescript', function () {
   // Ignore typescript errors, because gulp-typescript, like most things
@@ -107,6 +107,11 @@ gulp.task('build:browser', function (done) {
       done();
     });
   }).catch(done);
+});
+
+gulp.task('build:wct-client', function () {
+  return gulp.src(['browser.js', 'browser.js.map'])
+    .pipe(gulp.dest('wct-client/'));
 });
 
 gulp.task('test:style', function () {
