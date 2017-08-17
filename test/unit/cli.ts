@@ -66,6 +66,16 @@ describe('cli', () => {
       return call.args[0];
     };
 
+    it('honors --version flags', async () => {
+      const version: String = require('../../package.json').version;
+      let output: String;
+
+      await cli.run({}, ['--version'], <any>{write: (o: String) => output = o});
+      expect(output).to.eq(`${version}\n`);
+      await cli.run({}, ['-V'], <any>{write: (o: String) => output = o});
+      expect(output).to.eq(`${version}\n`);
+    });
+
     it('expands test/ by default, ' +
            'and serves from /components/<basename>',
        async () => {

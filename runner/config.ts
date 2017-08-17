@@ -62,7 +62,6 @@ export interface Config {
   };
   npm?: boolean;
   skipPlugins?: string[];
-
   sauce?: {};
   remote?: {};
   origSuites?: string[];
@@ -221,6 +220,12 @@ const ARG_CONFIG = {
   npm: {
     help: 'Use node_modules instead of bower_components for all browser ' +
         'components and packages.  Uses polyserve with `--npm` flag.',
+    flag: true,
+  },
+  version: {
+    help: 'Display the current version of web-component-tester.  Ends ' +
+        'execution immediately (not useable with other options.)',
+    abbr: 'V',
     flag: true,
   },
   'webserver.port': {
