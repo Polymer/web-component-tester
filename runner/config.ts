@@ -223,6 +223,11 @@ const ARG_CONFIG = {
         'components and packages.  Uses polyserve with `--npm` flag.',
     flag: true,
   },
+  version: {
+    help: 'Display the current version of web-component-tester.  Ends ' +
+        'execution immediately (not useable with other options.)',
+    flag: true,
+  },
   'webserver.port': {
     help: 'A port to use for the test webserver.',
     full: 'webserver-port',
