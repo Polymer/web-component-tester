@@ -183,11 +183,11 @@ you based on the suites you ask it to load._
 # Configuration
 
 The `wct` command line tool will pick up custom configuration from a
-`wct.conf.json` file located in the root of your project.  
-Or, you can specify your own file via the `--configFile` command line option.   
-Example: `--configFile my.wct.conf.js`   
-If you define your own configuration file, make sure you also provide the correct root if needed.  
-By default it will use the directory in which the configuration file is found as rootpath, which can result in errors if the file is in a sub directory.  
+`wct.conf.json` file located in the root of your project.
+Or, you can specify your own file via the `--configFile` command line option.
+Example: `--configFile my.wct.conf.js`
+If you define your own configuration file, make sure you also provide the correct root if needed.
+By default it will use the directory in which the configuration file is found as rootpath, which can result in errors if the file is in a sub directory.
 
  It should export the custom configuration:
 
@@ -393,7 +393,12 @@ follow.
 
 ### Node support
 
-WCT supports node versions 4 and up.
+WCT supports node versions 6 and up.
+
+WCT experimentally supports running tests for web-components which are installed via npm to `node_modules` (instead of via bower to `bower_components`) by use of an `--npm` flag. Components which wish to support npm-based installation should include in their `devDependencies` either npm package:
+  - `wct-browser-legacy` contains only the javascript files and dependencies needed to run tests in the browser.  *(Recommended)*.
+  - `web-component-tester` has a lot of server dependencies you probably don't want and that don't flatten without user-prompted resolution.
+
 
 <!-- References -->
 [async]:      https://github.com/caolan/async       "Async.js"
