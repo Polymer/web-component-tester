@@ -57,7 +57,27 @@ export function webserver(wct: Context): void {
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
-    options.webserver._generatedIndexContent = INDEX_TEMPLATE(options);
+    // The generated index needs the correct browser.js and a11ySuite.js
+    // scripts.  When using npm, the wct-browser-legacy package may be
+    // used, so we test for that package and will use its scripts if present.
+    let browserScript = 'web-component-tester/browser.js';
+    let a11ySuiteScript = 'web-component-tester/data/a11ySuite.js';
+    if (options.npm) {
+      try {
+        const wctBrowserLegacyPath =
+            path.join(options.root, 'node_modules', 'wct-browser-legacy');
+        const version =
+            require(path.join(wctBrowserLegacyPath, 'package.json')).version;
+        if (version) {
+          browserScript = 'wct-browser-legacy/browser.js';
+          a11ySuiteScript = 'wct-browser-legacy/a11ySuite.js';
+        }
+      } catch (e) {
+        // Safely ignore.
+      }
+    }
+    options.webserver._generatedIndexContent = INDEX_TEMPLATE(
+        Object.assign({browserScript, a11ySuiteScript}, options));
   });
 
   wct.hook('prepare', async function() {
@@ -67,20 +87,25 @@ export function webserver(wct: Context): void {
     const packageName = path.basename(options.root);
 
     // Check for client-side compatibility.
-    const pathToLocalWct =
-        path.join(options.root, 'bower_components', 'web-component-tester');
-    let version: string|undefined = undefined;
-    const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
-    for (const mdFilename of mdFilenames) {
-      const pathToMetdata = path.join(pathToLocalWct, mdFilename);
-      try {
-        version = version || require(pathToMetdata).version;
-      } catch (e) {
-        // Handled below, where we check if we found a version.
+
+    // Non-npm case.
+    if (!options.npm) {
+      const pathToLocalWct =
+          path.join(options.root, 'bower_components', 'web-component-tester');
+      let version: string|undefined = undefined;
+      const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
+      for (const mdFilename of mdFilenames) {
+        const pathToMetadata = path.join(pathToLocalWct, mdFilename);
+        try {
+          if (!version) {
+            version = require(pathToMetadata).version;
+          }
+        } catch (e) {
+          // Handled below, where we check if we found a version.
+        }
       }
-    }
-    if (!version) {
-      throw new Error(`
+      if (!version) {
+        throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
                                                                                            packageName
                                                                                          }).
@@ -92,26 +117,27 @@ Web Component Tester >=6.0 requires that support files needed in the browser are
 
 Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 `);
-    }
+      }
 
-    const allowedRange = require(path.join(
-        __dirname, '..',
-        'package.json'))['--private-wct--']['client-side-version-range'] as
-        string;
-    if (!semver.satisfies(version, allowedRange)) {
-      throw new Error(`
+      const allowedRange =
+          require(path.join(
+              __dirname, '..', 'package.json'))['--private-wct--']
+                                               ['client-side-version-range'] as
+          string;
+      if (!semver.satisfies(version, allowedRange)) {
+        throw new Error(`
     The web-component-tester Bower package installed is incompatible with the
     wct node package you're using.
 
     The test runner expects a version that satisfies ${allowedRange} but the
     bower package you have installed is ${version}.
 `);
-    }
+      }
 
-    let hasWarnedBrowserJs = false;
-    additionalRoutes.set('/browser.js', function(request, response) {
-      if (!hasWarnedBrowserJs) {
-        console.warn(`
+      let hasWarnedBrowserJs = false;
+      additionalRoutes.set('/browser.js', function(request, response) {
+        if (!hasWarnedBrowserJs) {
+          console.warn(`
 
           WARNING:
           Loading WCT's browser.js from /browser.js is deprecated.
@@ -119,11 +145,12 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           Instead load it from ../web-component-tester/browser.js
           (or with the absolute url /components/web-component-tester/browser.js)
         `);
-        hasWarnedBrowserJs = true;
-      }
-      const browserJsPath = path.join(pathToLocalWct, 'browser.js');
-      send(request, browserJsPath).pipe(response);
-    });
+          hasWarnedBrowserJs = true;
+        }
+        const browserJsPath = path.join(pathToLocalWct, 'browser.js');
+        send(request, browserJsPath).pipe(response);
+      });
+    }
 
     const pathToGeneratedIndex =
         `/components/${packageName}/generated-index.html`;
@@ -137,7 +164,10 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       root: options.root,
       compile: options.compile,
       hostname: options.webserver.hostname,
-      headers: DEFAULT_HEADERS, packageName, additionalRoutes,
+      headers: DEFAULT_HEADERS,
+      packageName,
+      additionalRoutes,
+      npm: !!options.npm,
     });
     let servers: Array<MainlineServer|VariantServer>;
 
@@ -179,9 +209,11 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     }
 
     options.webserver._servers = servers.map(s => {
+      const npmParam = options.npm ? `?npm=true` : '';
       const port = s.server.address().port;
+      const url = `http://localhost:${port}${pathToGeneratedIndex}`;
       return {
-        url: `http://localhost:${port}${pathToGeneratedIndex}`,
+        url: `${url}${npmParam}`,
         variant: s.kind === 'mainline' ? '' : s.variantName
       };
     });
