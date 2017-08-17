@@ -60,7 +60,7 @@ export interface Config {
     _generatedIndexContent?: string;
     _servers?: {variant: string, url: string}[];
   };
-
+  npm?: boolean;
   skipPlugins?: string[];
 
   sauce?: {};
@@ -217,6 +217,11 @@ const ARG_CONFIG = {
   configFile: {
     help: 'Config file that needs to be used by wct. ie: wct.config-sauce.js',
     full: 'configFile',
+  },
+  npm: {
+    help: 'Use node_modules instead of bower_components for all browser ' +
+        'components and packages.  Uses polyserve with `--npm` flag.',
+    flag: true,
   },
   'webserver.port': {
     help: 'A port to use for the test webserver.',

@@ -10,6 +10,9 @@
 import * as util from './util.js';
 import ChildRunner from './childrunner.js';
 
+var useNpm = document.currentScript.src.match(/wct-browser-legacy\/browser.js/) ||
+  (new URL(document.currentScript.src)).search.match(/[?&]npm=true/);
+
 /**
  * The global configuration state for WCT's browser client.
  */
@@ -19,20 +22,33 @@ export var _config = {
    *
    * Paths are relative to `scriptPrefix`.
    */
-  environmentScripts: [
-    'stacky/browser.js',
-    'async/lib/async.js',
-    'lodash/lodash.js',
-    'mocha/mocha.js',
-    'chai/chai.js',
-    'sinonjs/sinon.js',
-    'sinon-chai/lib/sinon-chai.js',
-    'accessibility-developer-tools/dist/js/axs_testing.js'
-  ],
+  environmentScripts: useNpm ?
+    [
+      'stacky/browser.js',
+      'async/lib/async.js',
+      'lodash/index.js',
+      'mocha/mocha.js',
+      'chai/chai.js',
+      'sinon/lib/sinon.js',
+      'sinon-chai/lib/sinon-chai.js',
+      'accessibility-developer-tools/dist/js/axs_testing.js'
+    ] : [
+      'stacky/browser.js',
+      'async/lib/async.js',
+      'lodash/lodash.js',
+      'mocha/mocha.js',
+      'chai/chai.js',
+      'sinonjs/sinon.js',
+      'sinon-chai/lib/sinon-chai.js',
+      'accessibility-developer-tools/dist/js/axs_testing.js'
+    ],
 
-  environmentImports: [
-    'test-fixture/test-fixture.html'
-  ],
+  environmentImports: useNpm ?
+    [
+      '@polymer/test-fixture/test-fixture.html'
+    ] : [
+      'test-fixture/test-fixture.html'
+    ],
 
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
   root: null,
