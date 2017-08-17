@@ -70,9 +70,9 @@ describe('cli', () => {
       const version: String = require('../../package.json').version;
       let output: String;
 
-      await cli.run({}, ['--version'], <any>{write: (o: String) => output = o });
+      await cli.run({}, ['--version'], <any>{write: (o: String) => output = o});
       expect(output).to.eq(`${version}\n`);
-      await cli.run({}, ['-V'], <any>{write: (o: String) => output = o });
+      await cli.run({}, ['-V'], <any>{write: (o: String) => output = o});
       expect(output).to.eq(`${version}\n`);
     });
 
