@@ -10,7 +10,7 @@
 import * as util from './util.js';
 import ChildRunner from './childrunner.js';
 
-var useNpm = document.currentScript.src.match(/wct-client\/browser.js/) ||
+var useNpm = document.currentScript.src.match(/wct-browser-legacy\/browser.js/) ||
   (new URL(document.currentScript.src)).search.match(/[?&]npm=true/);
 
 /**
