@@ -62,7 +62,6 @@ export interface Config {
   };
   npm?: boolean;
   skipPlugins?: string[];
-
   sauce?: {};
   remote?: {};
   origSuites?: string[];
@@ -226,6 +225,7 @@ const ARG_CONFIG = {
   version: {
     help: 'Display the current version of web-component-tester.  Ends ' +
         'execution immediately (not useable with other options.)',
+    abbr: 'V',
     flag: true,
   },
   'webserver.port': {
