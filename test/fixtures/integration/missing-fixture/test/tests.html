@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <link rel="import" href="../../test-fixture/test-fixture.html">
+  <script src="/components/web-component-tester/browser.js"></script>
+</head>
+
+<body>
+  <script>
+    suite('suite', function () {
+      test('missing fixture', function () {
+        let exception;
+
+        try {
+          fixture('NonExistentFixture');
+        } catch (ex) {
+          exception = ex;
+        }
+
+        assert.equal(exception.message, 'Could not find fixture with ID <NonExistentFixture>');
+      });
+    });
+
+  </script>
+</body>
+
+</html>
