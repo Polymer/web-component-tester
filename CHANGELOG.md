@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 <!-- Add new, unreleased items here. -->
 
+## 6.1.1 - 2017-08-21
+
+* Updated browser dependency to a browser-ready sinon npm package for `wct --npm` option.
+
 ## 6.1.0 - 2017-08-17
 
 * Added an *experimental* `--npm` flag to support web packages which are installed in `node_modules` by npm (instead of installed in `bower_components` by Bower.
