@@ -156,6 +156,7 @@ commonTools.depcheck({
     'accessibility-developer-tools',
     'mocha',
     'test-fixture',
+    '@polymer/sinonjs',
     '@polymer/test-fixture',
     '@webcomponents/webcomponentsjs',
     'async',

@@ -29,7 +29,7 @@ export var _config = {
       'lodash/index.js',
       'mocha/mocha.js',
       'chai/chai.js',
-      'sinon/lib/sinon.js',
+      '@polymer/sinonjs/sinon.js',
       'sinon-chai/lib/sinon-chai.js',
       'accessibility-developer-tools/dist/js/axs_testing.js'
     ] : [
