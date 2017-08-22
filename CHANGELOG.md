@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 <!-- Add new, unreleased items here. -->
 
+## 6.1.2 - 2017-08-22
+
+* Updated npm browser dependency on `@polymer/test-fixture` v3.0.0-pre.1
+
 ## 6.1.1 - 2017-08-21
 
 * Updated browser dependency to a browser-ready sinon npm package for `wct --npm` option.
