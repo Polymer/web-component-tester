@@ -161,6 +161,9 @@ commonTools.depcheck({
     '@webcomponents/webcomponentsjs',
     'async',
 
+    // Only included to satisfy peer dependency and suppress error on install
+    'sinon',
+
     // Used in the wct binary
     'resolve'
   ])
