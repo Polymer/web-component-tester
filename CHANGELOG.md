@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+<!-- Add new, unreleased items here. -->
+
+## 6.1.2 - 2017-08-22
+
+* Updated npm browser dependency on `@polymer/test-fixture` v3.0.0-pre.1
+
+## 6.1.1 - 2017-08-21
+
+* Updated browser dependency to a browser-ready sinon npm package for `wct --npm` option.
+
+## 6.1.0 - 2017-08-17
+
+* Added an *experimental* `--npm` flag to support web packages which are installed in `node_modules` by npm (instead of installed in `bower_components` by Bower.
+* Builds a `wct-browser-legacy` package directory used to publish npm-specific client support package to npm, suitable for use with devDependencies of custom elements.
+* Added version flag to CLI. Available using `--version` or `-V`.
+
+## 6.0.1 - 2017-08-08
 
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 * Updated package.json dependencies:

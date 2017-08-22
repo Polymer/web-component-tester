@@ -82,7 +82,7 @@ gulp.task('build-all', (done) => {
   runSequence('clean', 'lint', 'build', done);
 });
 
-gulp.task('build', ['build:typescript', 'build:browser']);
+gulp.task('build', ['build:typescript', 'build:browser', 'build:wct-browser-legacy']);
 
 gulp.task('build:typescript', function () {
   // Ignore typescript errors, because gulp-typescript, like most things
@@ -107,6 +107,11 @@ gulp.task('build:browser', function (done) {
       done();
     });
   }).catch(done);
+});
+
+gulp.task('build:wct-browser-legacy', function () {
+  return gulp.src(['browser.js', 'browser.js.map', 'data/a11ySuite.js'])
+    .pipe(gulp.dest('wct-browser-legacy/'));
 });
 
 gulp.task('test:style', function () {
@@ -151,6 +156,9 @@ commonTools.depcheck({
     'accessibility-developer-tools',
     'mocha',
     'test-fixture',
+    '@polymer/sinonjs',
+    '@polymer/test-fixture',
+    '@webcomponents/webcomponentsjs',
     'async',
 
     // Used in the wct binary

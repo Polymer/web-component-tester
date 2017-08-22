@@ -216,9 +216,7 @@ function runsIntegrationSuite(
     });
 
     afterEach(function() {
-      // TODO(rictic): remove this case to any once this PR has landed:
-      // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/13480
-      if ((this as any).currentTest.state === 'failed') {
+      if (this.currentTest.state === 'failed') {
         process.stderr.write(
             `\n    Output of wct for integration suite named \`${dirName}\`` +
             `\n` +

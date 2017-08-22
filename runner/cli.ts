@@ -42,6 +42,13 @@ export async function run(
 }
 
 async function _run(args: string[], output: NodeJS.WritableStream) {
+  // If the "--version" or "-V" flag is ever present, just print
+  // the current version. Useful for globally installed CLIs.
+  if (args.includes('--version') || args.includes('-V')) {
+    output.write(`${PACKAGE_INFO.version}\n`);
+    return Promise.resolve();
+  }
+
   // Options parsing is a two phase affair. First, we need an initial set of
   // configuration so that we know which plugins to load, etc:
   let options = config.preparseArgs(args) as config.Config;

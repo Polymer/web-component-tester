@@ -119,11 +119,8 @@ export class Context extends events.EventEmitter {
   emitHook(name: string, done?: (err?: any) => void): Promise<void>;
   emitHook(name: string, ...args: any[]): Promise<void>;
 
-  async emitHook(name: string /*, ...args: any[]*/): Promise<void> {
+  async emitHook(name: string, ...args: any[]): Promise<void> {
     this.emit('log:debug', 'hook:', name);
-
-    // TODO(justinfagnani): remove and uncomment ...args when we drop node 4
-    const args = Array.from(arguments).slice(1);
 
     const hooks = (this._hookHandlers[name] || []);
     type BoundHook = (cb: (err: any) => void) => (void|Promise<any>);
