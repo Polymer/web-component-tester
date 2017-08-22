@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@polymer/sinonjs": "^1.14.1",
-    "@polymer/test-fixture": "^0.0.3",
+    "@polymer/test-fixture": "^3.0.0-pre.1",
     "@webcomponents/webcomponentsjs": "^1.0.7",
     "accessibility-developer-tools": "^2.12.0",
     "async": "^1.5.2",
