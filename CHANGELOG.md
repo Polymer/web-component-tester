@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 Added `sinon` as dependency of `sinon-chai` in web context to suppress the npm installation warning/error of unmet peer dependency, even though `@polymer/sinonjs` fulfills the runtime dependency and `sinon` will be unused.
 
+* Fix what `prepare:webserver` was returning. Ensuring it was returning both a done() callback and the Express server object.
 <!-- Add new, unreleased items here. -->
 
 ## 6.1.2 - 2017-08-22
@@ -30,6 +31,7 @@ Added `sinon` as dependency of `sinon-chai` in web context to suppress the npm i
   * Upgraded @types/gulp
   * Moved all @types to devDependencies
   * Removed PolymerElements/test-fixture from npm dependencies (is already installed by bower)
+
 
 ## 6.0.0 - 2017-05-15
 

@@ -205,7 +205,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     // At this point, we allow other plugins to hook and configure the
     // webservers as they please.
     for (const server of servers) {
-      await wct.emitHook('prepare:webserver', server.app);
+      await wct.emitHook('prepare:webserver', server.app, function() {
+        return Promise.resolve();
+      });
     }
 
     options.webserver._servers = servers.map(s => {
