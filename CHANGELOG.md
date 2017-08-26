@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- Add new, unreleased items here. -->
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 
+## 6.1.3 - 2017-08-26
+
+* Added `sinon` as dependency of `sinon-chai` in web context to suppress the npm installation warning/error of unmet peer dependency, even though `@polymer/sinonjs` fulfills the runtime dependency and `sinon` will be unused.
+* Set `@polymer/test-fixture` back to ^0.0.3 because of dependency install errors related to yarn's "flat".
+
 ## 6.1.2 - 2017-08-22
 
 * Updated npm browser dependency on `@polymer/test-fixture` v3.0.0-pre.1
