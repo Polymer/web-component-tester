@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 <!-- Add new, unreleased items here. -->
+* Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 
 ## 6.1.2 - 2017-08-22
 

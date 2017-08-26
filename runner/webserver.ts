@@ -86,12 +86,13 @@ export function webserver(wct: Context): void {
     const additionalRoutes = new Map<string, RequestHandler>();
 
     const packageName = path.basename(options.root);
+    let componentDir;
 
     // Check for client-side compatibility.
     // Non-npm case.
     if (!options.npm) {
-      const bowerDir = bowerConfig.read(options.root).directory;
-      const pathToLocalWct = path.join(options.root, bowerDir, 'web-component-tester');
+      componentDir = bowerConfig.read(options.root).directory;
+      const pathToLocalWct = path.join(options.root, componentDir, 'web-component-tester');
       let version: string|undefined = undefined;
       const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
       for (const mdFilename of mdFilenames) {
@@ -162,7 +163,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     // Serve up project & dependencies via polyserve
     const polyserveResult = await startServers({
       root: options.root,
-      componentDir: bowerDir,
+      componentDir,
       compile: options.compile,
       hostname: options.webserver.hostname,
       headers: DEFAULT_HEADERS,
