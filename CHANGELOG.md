@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
-Added `sinon` as dependency of `sinon-chai` in web context to suppress the npm installation warning/error of unmet peer dependency, even though `@polymer/sinonjs` fulfills the runtime dependency and `sinon` will be unused.
-
+* Added `sinon` as dependency of `sinon-chai` in web context to suppress the npm installation warning/error of unmet peer dependency, even though `@polymer/sinonjs` fulfills the runtime dependency and `sinon` will be unused.
+* Set `@polymer/test-fixture` back to ^0.0.3 because of dependency install errors related to yarn's "flat".
 <!-- Add new, unreleased items here. -->
 
 ## 6.1.2 - 2017-08-22
