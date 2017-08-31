@@ -6,9 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
-* Removed reliance on `document.currentScript` in browser.js because IE11 doesn't have it.
-  * To use WCT tests with NPM in browser without WCT (or polymer-cli) running on the commandline, you must include an `?npm=true` or `&npm=true` parameter in the URL for the test document; WCT does this automatically when opening its own browsers.
 <!-- Add new, unreleased items here. -->
+
+## 6.1.4 - 2017-08-31
+
+* Removed reliance on `document.currentScript` in browser.js because IE11 doesn't have it.
+* To use WCT tests with NPM in browser without WCT (or polymer-cli) running on the commandline, you must include an `?npm=true` or `&npm=true` parameter in the URL for the test document; WCT does this automatically when opening its own browsers.
 
 ## 6.1.3 - 2017-08-26
 
