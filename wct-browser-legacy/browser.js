@@ -455,8 +455,7 @@ ChildRunner.prototype.signalRunComplete = function signalRunComplete(error) {
   this.onRunComplete = null;
 };
 
-var useNpm = document.currentScript.src.match(/wct-browser-legacy\/browser.js/) ||
-  (new URL(document.currentScript.src)).search.match(/[?&]npm=true/);
+var useNpm = document.location.search.match(/[?&]npm=true/);
 
 /**
  * The global configuration state for WCT's browser client.
