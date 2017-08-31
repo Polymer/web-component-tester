@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+* Removed reliance on `document.currentScript` in browser.js because IE11 doesn't have it. (Second reference found)
 <!-- Add new, unreleased items here. -->
 
 ## 6.1.4 - 2017-08-31
