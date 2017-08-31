@@ -17,7 +17,7 @@ import * as util from './util.js';
 export function loadSync() {
   util.debug('Loading environment scripts:');
   var a11ySuite =
-    document.currentScript.src.match(/wct-browser-legacy\/browser.js/) ?
+    document.location.search.match(/[&?]npm=true/) ?
       'wct-browser-legacy/a11ySuite.js' : 'web-component-tester/data/a11ySuite.js';
   var scripts = config.get('environmentScripts');
   var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
