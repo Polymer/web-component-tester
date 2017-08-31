@@ -1303,7 +1303,7 @@ function _injectPrototype(klass, prototype) {
 function loadSync() {
   debug('Loading environment scripts:');
   var a11ySuite =
-    document.currentScript.src.match(/wct-browser-legacy\/browser.js/) ?
+    document.location.search.match(/[&?]npm=true/) ?
       'wct-browser-legacy/a11ySuite.js' : 'web-component-tester/data/a11ySuite.js';
   var scripts = get('environmentScripts');
   var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
