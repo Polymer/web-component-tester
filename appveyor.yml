@@ -1,15 +1,13 @@
 # Test against this version of Node.js
 environment:
-  nodejs_version: "6.9.1"
+  nodejs_version: "6"
 
 # Install scripts. (runs after repo cloning)
 install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version
-  # Get latest npm
-  - npm install -g npm
-  # install modules. Use --force to workaround permissions issues on Windows
-  - npm install --force
+  # install modules.
+  - npm install
 
 # Post-install test scripts.
 test_script:
