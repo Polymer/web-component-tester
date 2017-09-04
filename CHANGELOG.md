@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 <!-- Add new, unreleased items here. -->
+* Added support for `proxy: {path: string, target: string}` config which is forwarded to `polyserve`
 
 ## 6.1.5 - 2017-08-31
 
