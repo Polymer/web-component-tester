@@ -73,7 +73,7 @@ export interface Config {
   proxy?: {
     path: string;
     target: string;
-  }
+  };
   /** A deprecated option */
   browsers?: Browser[]|Browser;
 }
