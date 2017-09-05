@@ -475,7 +475,8 @@ var _config = {
       'chai/chai.js',
       '@polymer/sinonjs/sinon.js',
       'sinon-chai/lib/sinon-chai.js',
-      'accessibility-developer-tools/dist/js/axs_testing.js'
+      'accessibility-developer-tools/dist/js/axs_testing.js',
+      '@polymer/test-fixture/test-fixture.js'
     ] : [
       'stacky/browser.js',
       'async/lib/async.js',
@@ -487,12 +488,7 @@ var _config = {
       'accessibility-developer-tools/dist/js/axs_testing.js'
     ],
 
-  environmentImports: useNpm ?
-    [
-      '@polymer/test-fixture/test-fixture.html'
-    ] : [
-      'test-fixture/test-fixture.html'
-    ],
+  environmentImports: useNpm ? [] : ['test-fixture/test-fixture.html'],
 
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
   root: null,
