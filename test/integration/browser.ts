@@ -340,7 +340,9 @@ function assertTestErrors(
         const stackTraceMatcher = expectedError[1];
         expect(stackLines[0]).to.eq(expectedErrorText);
         expect(stackLines[stackLines.length - 1])
-            .to.match(new RegExp(stackTraceMatcher));
+            .to.match(
+                new RegExp(stackTraceMatcher),
+                `error stack::::::\n${error.stack}`);
       });
     });
   });
