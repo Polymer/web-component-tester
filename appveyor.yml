@@ -1,13 +1,26 @@
 # Test against this version of Node.js
 environment:
-  nodejs_version: "6"
+  matrix:
+    # - nodejs_version: '8'
+    - nodejs_version: '6'
 
 # Install scripts. (runs after repo cloning)
 install:
-  # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version
-  # install modules.
+  # installing selenium-standalone
+  - npm install -g selenium-standalone
+  - selenium-standalone install
+  # opening firewall ports
+  - netsh advfirewall firewall add rule name="SeleniumIn" dir=in action=allow protocol=TCP localport=4444
+  - netsh advfirewall firewall add rule name="SeleniumOut" dir=out action=allow protocol=TCP localport=4444
+  # running selenium-standalone as background job
+  - ps: Start-Process selenium-standalone 'start','--','-Djna.nosys=true'
+  - npm install --global npm@latest
   - npm install
+
+matrix:
+  fast_finish: true
+shallow_clone: true
 
 # Post-install test scripts.
 test_script:
