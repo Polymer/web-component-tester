@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+
+* Updated the browser.js file for npm case to use test-fixture as JS module instead of html import.
 <!-- Add new, unreleased items here. -->
 
 ## 6.1.5 - 2017-08-31
