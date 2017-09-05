@@ -312,9 +312,8 @@ function assertTestErrors(
         .to.have.members(
             Object.keys(actual),
             'Test file mismatch for ' + browser +
-                `: expected ${
-                              JSON.stringify(Object.keys(expected))
-                            } - got ${JSON.stringify(Object.keys(actual))}`);
+                `: expected ${JSON.stringify(Object.keys(expected))} - got ${
+                    JSON.stringify(Object.keys(actual))}`);
 
     lodash.each(actual, function(errors, file) {
       const expectedErrors = expected[file];
@@ -430,6 +429,10 @@ describe('early failures', () => {
            },
          },
        };
+       if (process.env.LOCAL_BROWSERS) {
+         options.plugins['local']['browsers'] =
+             process.env.LOCAL_BROWSERS.split(/\s*,\s*/);
+       }
        const context = new Context(options);
        try {
          await test(context);
