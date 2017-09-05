@@ -27,6 +27,8 @@ test_script:
   # Output useful info for debugging.
   - node --version
   - npm --version
+  # try to limit tests to ie
+  - set LAUNCHPAD_BROWSERS=ie
   # run tests
   - npm test
 
