@@ -1,7 +1,8 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
 
+const rootDir = path.join(__dirname, '..', '..');
 const baseDir = path.join(__dirname, '..', 'fixtures', 'integration');
 
 /**
@@ -54,22 +55,21 @@ export async function makeProperTestDir(dirname: string) {
     const bowerDeps =
         fs.readdirSync(path.join(__dirname, '../../bower_components'));
     for (const baseFile of bowerDeps) {
-      fs.symlinkSync(
-          path.join('../../../../../../bower_components', baseFile),
-          path.join(componentsDir, baseFile));
+      fs.copySync(
+          path.join(rootDir, 'bower_components', baseFile),
+          path.join(componentsDir, baseFile), {recursive: true});
     }
     // Also set up a web-component-tester dir with symlinks into our own
     // client-side files.
     const wctDir = path.join(componentsDir, 'web-component-tester');
     fs.mkdirSync(wctDir);
-    fs.symlinkSync(
-        '../../../../../../../browser.js', path.join(wctDir, 'browser.js'),
-        'file');
-    fs.symlinkSync(
-        '../../../../../../../package.json', path.join(wctDir, 'package.json'),
-        'file');
-    fs.symlinkSync(
-        '../../../../../../../data', path.join(wctDir, 'data'), 'dir');
+    fs.copySync(
+        path.join(rootDir, 'browser.js'), path.join(wctDir, 'browser.js'));
+    fs.copySync(
+        path.join(rootDir, 'package.json'), path.join(wctDir, 'package.json'));
+    fs.copySync(
+        path.join(rootDir, 'data'), path.join(wctDir, 'data'),
+        {recursive: true});
   }
 
   return pathToTestDir;
