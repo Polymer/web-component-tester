@@ -22,19 +22,14 @@ const baseDir = path.join(__dirname, '..', 'fixtures', 'integration');
 export async function makeProperTestDir(dirname: string) {
   const startingDir = path.join(baseDir, dirname);
   const tempDir = path.join(baseDir, 'temp');
-  if (await exists(tempDir)) {
-    await new Promise((resolve, reject) => {
-      rimraf(tempDir, (err) => err ? reject(err) : resolve());
-    });
+  if (fs.existsSync(tempDir)) {
+    fs.removeSync(tempDir);
   }
   fs.mkdirSync(tempDir);
-
-  // copy dir
-  const pathToTestDir = await copyDir(startingDir, tempDir);
-
-  fs.mkdirSync(path.join(pathToTestDir, 'node_modules'));
-  fs.mkdirSync(
-      path.join(pathToTestDir, 'node_modules', 'web-component-tester'));
+  const testDir = path.join(tempDir, dirname);
+  fs.copySync(startingDir, testDir);
+  fs.mkdirSync(path.join(testDir, 'node_modules'));
+  fs.mkdirSync(path.join(testDir, 'node_modules', 'web-component-tester'));
 
   // set up symlinks into component dirs for browser.js, data/, and wct's
   // dependencies (like mocha, sinon, etc)
@@ -46,8 +41,8 @@ export async function makeProperTestDir(dirname: string) {
   }
 
   for (const baseComponentsDir of componentsDirs) {
-    const componentsDir = path.join(pathToTestDir, baseComponentsDir);
-    if (!await exists(componentsDir)) {
+    const componentsDir = path.join(testDir, baseComponentsDir);
+    if (!fs.existsSync(componentsDir)) {
       fs.mkdirSync(componentsDir);
     }
     // all of wct's bower deps should be present in the project under tests'
@@ -72,24 +67,5 @@ export async function makeProperTestDir(dirname: string) {
         {recursive: true});
   }
 
-  return pathToTestDir;
-}
-
-async function copyDir(from: string, to: string) {
-  const newDir = path.join(to, path.basename(from));
-  fs.mkdirSync(newDir);
-  for (const baseFile of fs.readdirSync(from)) {
-    const file = path.join(from, baseFile);
-    if (fs.statSync(file).isDirectory()) {
-      await copyDir(file, newDir);
-    } else {
-      const newFile = path.join(newDir, baseFile);
-      fs.writeFileSync(newFile, fs.readFileSync(file));
-    }
-  }
-  return newDir;
-}
-
-async function exists(fn: string) {
-  return new Promise((resolve) => fs.stat(fn, (err) => resolve(!err)));
+  return testDir;
 }
