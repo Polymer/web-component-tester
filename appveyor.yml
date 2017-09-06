@@ -28,7 +28,7 @@ test_script:
   - node --version
   - npm --version
   # try to limit tests to ie
-  - set LOCAL_BROWSERS=ie
+  - export LOCAL_BROWSERS=ie
   # run tests
   - npm test
 
