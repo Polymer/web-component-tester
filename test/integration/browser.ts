@@ -90,7 +90,6 @@ function runsAllIntegrationSuites() {
   //     takes ~2 minutes.
   const suitesToSkip = new Set(['missing']);
 
-  integrationDirnames = ['multiple-component_dirs', 'query-string'];
   for (const fn of integrationDirnames) {
     runIntegrationSuiteForDir(fn, suitesToSkip.has(fn));
   }
