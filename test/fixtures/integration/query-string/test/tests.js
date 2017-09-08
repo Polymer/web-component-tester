@@ -9,4 +9,3 @@ test('preserves query strings (' + url.search + ')', function () {
 });
 */
 test('preserves query strings (?fizz=buzz)', function () { });
-test('preserves query strings (?fizz=buzz&foo=bar)', function () { });
