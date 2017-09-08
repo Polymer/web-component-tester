@@ -90,6 +90,7 @@ function runsAllIntegrationSuites() {
   //     takes ~2 minutes.
   const suitesToSkip = new Set(['missing']);
 
+  integrationDirnames = ['multiple-component_dirs', 'query-string'];
   for (const fn of integrationDirnames) {
     runIntegrationSuiteForDir(fn, suitesToSkip.has(fn));
   }
@@ -145,7 +146,7 @@ function runsIntegrationSuite(
     const testResults = new TestResults();
 
     before(async function() {
-      this.timeout(120 * 1000);
+      this.timeout(300 * 1000);
 
       const suiteRoot = await makeProperTestDir(dirName);
       const options: config.Config = {
