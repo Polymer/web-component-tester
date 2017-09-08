@@ -158,7 +158,10 @@ function runsIntegrationSuite(
         },
         plugins: <any>{
           local: testLocalBrowsers && {skipSeleniumInstall: true},
-          sauce: testRemoteBrowsers && {browsers: ['default']},
+          sauce: testRemoteBrowsers && {
+            browsers: ['default'],
+            tunnelOptions: {connectRetries: 3, downloadRetries: 3},
+          },
         },
       };
       const context = new Context(options);
