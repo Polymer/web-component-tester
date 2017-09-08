@@ -24,6 +24,10 @@ import {Context} from '../../runner/context';
 import {test} from '../../runner/test';
 import {makeProperTestDir} from './setup_test_dir';
 
+const testLocalBrowsers = !process.env.SKIP_LOCAL_BROWSERS;
+const testRemoteBrowsers = !process.env.SKIP_REMOTE_BROWSERS ||
+    !process.env.SAUCE_USERNAME || !process.env.SAUCE_ACCESS_KEY;
+
 interface TestErrorExpectation {
   [fileName: string]: {
     // The test name mapped to the error
@@ -153,7 +157,8 @@ function runsIntegrationSuite(
           tags: ['org:Polymer', 'repo:web-component-tester'],
         },
         plugins: <any>{
-          local: {skipSeleniumInstall: true},
+          local: testLocalBrowsers && {skipSeleniumInstall: true},
+          sauce: testRemoteBrowsers && {browsers: ['default']},
         },
       };
       const context = new Context(options);
@@ -233,8 +238,8 @@ function runsIntegrationSuite(
   });
 }
 
-if (!process.env.SKIP_LOCAL_BROWSERS) {
-  describe('Local Browsers', function() {
+if (testLocalBrowsers || testRemoteBrowsers) {
+  describe('Browser Tests', function() {
     runsAllIntegrationSuites();
   });
 }
@@ -333,7 +338,7 @@ function assertTestErrors(
 
         // Chai fails to emit stacks for Firefox.
         // https://github.com/chaijs/chai/issues/100
-        if (browser.indexOf('firefox') !== -1) {
+        if (browser.match(/firefox|internet explorer 11/)) {
           return;
         }
 
@@ -341,7 +346,8 @@ function assertTestErrors(
         const stackTraceMatcher = expectedError[1];
         expect(stackLines[0]).to.eq(expectedErrorText);
         expect(stackLines[stackLines.length - 1])
-            .to.match(new RegExp(stackTraceMatcher));
+            .to.match(
+                new RegExp(stackTraceMatcher), `error.stack="${error.stack}"`);
       });
     });
   });

@@ -29,7 +29,7 @@
         "test/": {
           "only works with mainline components": [
             "expected 'foo' to equal 'mainline'",
-            "at index\\.html:13"
+            "at index\\.html:(10|13)"
           ]
         }
       }
@@ -50,7 +50,7 @@
         "test/": {
           "only works with mainline components": [
             "expected 'bar' to equal 'mainline'",
-            "at index\\.html:13"
+            "at index\\.html:(10|13)"
           ]
         }
       }
