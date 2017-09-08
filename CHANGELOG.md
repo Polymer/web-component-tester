@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 * Updated the browser.js file for npm case to use test-fixture as JS module instead of html import.
+* Updated the integration tests to support running on Sauce via wct-sauce plugin.
 <!-- Add new, unreleased items here. -->
 
 ## 6.1.5 - 2017-08-31
