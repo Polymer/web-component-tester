@@ -89,7 +89,7 @@ function runsAllIntegrationSuites() {
   // TODO(#421): `missing` correctly fails, but currently it times out which
   //     takes ~2 minutes.
   const suitesToSkip = new Set(['missing']);
-
+  integrationDirnames = ['query-string'];
   for (const fn of integrationDirnames) {
     runIntegrationSuiteForDir(fn, suitesToSkip.has(fn));
   }
