@@ -28,10 +28,6 @@ const testLocalBrowsers = !process.env.SKIP_LOCAL_BROWSERS;
 const testRemoteBrowsers = !process.env.SKIP_REMOTE_BROWSERS ||
     !process.env.SAUCE_USERNAME || !process.env.SAUCE_ACCESS_KEY;
 
-if (process.env.TRAVIS_JOB_NUMBER && !process.env.SAUCE_TUNNEL_ID) {
-  process.env.SAUCE_TUNNEL_ID = process.env.TRAVIS_JOB_NUMBER;
-}
-
 interface TestErrorExpectation {
   [fileName: string]: {
     // The test name mapped to the error
