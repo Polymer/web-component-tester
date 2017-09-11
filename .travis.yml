@@ -6,7 +6,7 @@ addons:
     sources:
       - google-chrome
     packages:
-     - google-chrome-stable
+      - google-chrome-stable
   sauce_connect: true
 language: node_js
 node_js:
