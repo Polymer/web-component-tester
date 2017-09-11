@@ -80,7 +80,7 @@ class VariantResults {
 // Tests
 
 /** Describes all suites, mixed into the environments being run. */
-function runsAllIntegrationSuites() {
+function runsAllIntegrationSuites(options: config.Config = {}) {
   let integrationDirnames =
       fs.readdirSync(integrationDir).filter(fn => fn !== 'temp');
   // Overwrite integrationDirnames to run tests in isolation while developing:
@@ -91,13 +91,14 @@ function runsAllIntegrationSuites() {
   const suitesToSkip = new Set(['missing']);
 
   for (const fn of integrationDirnames) {
-    runIntegrationSuiteForDir(fn, suitesToSkip.has(fn));
+    runIntegrationSuiteForDir(fn, options, suitesToSkip.has(fn));
   }
 }
 
 
-function runIntegrationSuiteForDir(dirname: string, skip: boolean) {
-  runsIntegrationSuite(dirname, skip, function(testResults) {
+function runIntegrationSuiteForDir(
+    dirname: string, options: config.Config, skip: boolean) {
+  runsIntegrationSuite(dirname, options, skip, function(testResults) {
     const golden: Golden = JSON.parse(fs.readFileSync(
         path.join(integrationDir, dirname, 'golden.json'), 'utf-8'));
 
@@ -133,7 +134,7 @@ const integrationDir = path.resolve(__dirname, '../fixtures/integration');
  * the output for tests.
  */
 function runsIntegrationSuite(
-    dirName: string, skip: boolean,
+    dirName: string, options: config.Config, skip: boolean,
     contextFunction: (context: TestResults) => void) {
   const suiteName = `integration fixture dir '${dirName}'`;
   let describer: (suiteName: string, spec: () => void) => void = describe;
@@ -148,23 +149,18 @@ function runsIntegrationSuite(
       this.timeout(300 * 1000);
 
       const suiteRoot = await makeProperTestDir(dirName);
-      const options: config.Config = {
-        output: <any>{write: log.push.bind(log)},
-        ttyOutput: false,
-        root: suiteRoot,
-        browserOptions: <any>{
-          name: 'web-component-tester',
-          tags: ['org:Polymer', 'repo:web-component-tester'],
-        },
-        plugins: <any>{
-          local: testLocalBrowsers && {skipSeleniumInstall: true},
-          sauce: testRemoteBrowsers && {
-            browsers: ['default'],
-            tunnelOptions: {connectRetries: 3, downloadRetries: 3},
+      const allOptions: config.Config = Object.assign(
+          {
+            output: <any>{write: log.push.bind(log)},
+            ttyOutput: false,
+            root: suiteRoot,
+            browserOptions: <any>{
+              name: 'web-component-tester',
+              tags: ['org:Polymer', 'repo:web-component-tester'],
+            },
           },
-        },
-      };
-      const context = new Context(options);
+          options);
+      const context = new Context(allOptions);
 
       const addEventHandler = (name: string, handler: Function) => {
         context.on(name, function() {
@@ -241,40 +237,25 @@ function runsIntegrationSuite(
   });
 }
 
-if (testLocalBrowsers || testRemoteBrowsers) {
-  describe('Browser Tests', function() {
-    runsAllIntegrationSuites();
-  });
-}
-
-// TODO(nevir): Re-enable support for integration in sauce.
-/*
-if (!process.env.SKIP_REMOTE_BROWSERS) {
-  describe('Remote Browsers', function() {
-    // Boot up a sauce tunnel w/ whatever the environment gives us.
-
-    before(function(done) {
-      this.timeout(300 * 1000);
-      currentEnv.remote = true;
-
-      const emitter = new Context();
-      new CliReporter(emitter, process.stdout, {verbose: true});
-
-      steps.ensureSauceTunnel(baseOptions, emitter, function(error, tunnelId) {
-        baseOptions.sauce.tunnelId = tunnelId;
-        done(error);
-      });
+if (testLocalBrowsers) {
+  describe('Local Browser Tests', function() {
+    runsAllIntegrationSuites({
+      plugins: <any> {
+        local: {skipSeleniumInstall: true},
+      }
     });
-
-    runsAllIntegrationSuites();
-  });
-
-  after(function(done) {
-    this.timeout(120 * 1000);
-    cleankill.close(done);
   });
 }
-*/
+
+if (testRemoteBrowsers) {
+  describe('Remote Browser Tests', function() {
+    runsAllIntegrationSuites({
+      plugins: <any> {
+        sauce: {browsers: ['default']},
+      }
+    });
+  });
+}
 
 /** Assert that all browsers passed. */
 function assertPassed(context: TestResults) {
