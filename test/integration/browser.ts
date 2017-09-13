@@ -301,9 +301,8 @@ function assertTestErrors(
         .to.have.members(
             Object.keys(actual),
             'Test file mismatch for ' + browser +
-                `: expected ${
-                              JSON.stringify(Object.keys(expected))
-                            } - got ${JSON.stringify(Object.keys(actual))}`);
+                `: expected ${JSON.stringify(Object.keys(expected))} - got ${
+                    JSON.stringify(Object.keys(actual))}`);
 
     lodash.each(actual, function(errors, file) {
       const expectedErrors = expected[file];

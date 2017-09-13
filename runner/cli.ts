@@ -29,11 +29,11 @@ const noopNotifier = {
 let updateNotifier = noopNotifier;
 
 (function() {
-  try {
-    updateNotifier = require('update-notifier')({pkg: PACKAGE_INFO});
-  } catch (error) {
-    // S'ok if we don't have update-notifier. It's optional.
-  }
+try {
+  updateNotifier = require('update-notifier')({pkg: PACKAGE_INFO});
+} catch (error) {
+  // S'ok if we don't have update-notifier. It's optional.
+}
 })();
 
 export async function run(
@@ -72,10 +72,9 @@ async function _run(args: string[], output: NodeJS.WritableStream) {
 // wct-sauce. The trouble is that we also want WCT's configuration lookup logic,
 // and that's not (yet) cleanly exposed.
 export async function runSauceTunnel(
-    _env: any, args: string[], output: NodeJS.WritableStream):
-    Promise<void> {
-      await wrapResult(output, _runSauceTunnel(args, output));
-    }
+    _env: any, args: string[], output: NodeJS.WritableStream): Promise<void> {
+  await wrapResult(output, _runSauceTunnel(args, output));
+}
 
 async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   const cmdOptions = config.preparseArgs(args) as config.Config;
@@ -113,8 +112,8 @@ async function _runSauceTunnel(args: string[], output: NodeJS.WritableStream) {
   output.write(chalk.cyan('export SAUCE_TUNNEL_ID=' + tunnelId) + '\n');
 }
 
-async function
-wrapResult(output: NodeJS.WritableStream, promise: Promise<void>) {
+async function wrapResult(
+    output: NodeJS.WritableStream, promise: Promise<void>) {
   let error: any;
   try {
     await promise;

@@ -24,10 +24,10 @@ import {Plugin} from './plugin';
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 
-export type Handler = ((...args: any[]) => Promise<any>) |
-    ((done: (err?: any) => void) => void) |
-    ((arg1: any, done: (err?: any) => void) => void) |
-    ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
+export type Handler =
+    ((...args: any[]) => Promise<any>)|((done: (err?: any) => void) => void)|
+    ((arg1: any, done: (err?: any) => void) => void)|
+    ((arg1: any, arg2: any, done: (err?: any) => void) => void)|
     ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void);
 
 /**
@@ -68,8 +68,7 @@ export class Context extends events.EventEmitter {
      * hold a reference to it, and make changes to it).
      */
     this.options = config.merge(
-        config.defaults(),
-        config.fromDisk(matcher, options.root), options);
+        config.defaults(), config.fromDisk(matcher, options.root), options);
   }
 
   // Hooks

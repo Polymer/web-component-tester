@@ -34,8 +34,8 @@ const STACKY_CONFIG = {
   ]
 };
 
-export type State = 'passing' | 'pending' | 'failing' | 'unknown' | 'error';
-export type CompletedState = 'passing' | 'failing' | 'pending' | 'unknown';
+export type State = 'passing'|'pending'|'failing'|'unknown'|'error';
+export type CompletedState = 'passing'|'failing'|'pending'|'unknown';
 type Formatter = (value: string) => string;
 
 const STATE_ICONS = {

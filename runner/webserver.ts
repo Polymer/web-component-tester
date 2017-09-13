@@ -107,8 +107,7 @@ export function webserver(wct: Context): void {
       if (!version) {
         throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
-                                                                                           packageName
-                                                                                         }).
+            packageName}).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
