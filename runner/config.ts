@@ -30,7 +30,7 @@ const HOME_DIR = path.resolve(
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 
-export type Browser = string | {browserName: string, platform: string};
+export type Browser = string|{browserName: string, platform: string};
 
 export interface Config {
   suites?: string[];
@@ -164,7 +164,8 @@ export function defaults(): Config {
   };
 }
 
-/** nomnom configuration for command line arguments.
+/**
+ * nomnom configuration for command line arguments.
  *
  * This might feel like duplication with `defaults()`, and out of place (why not
  * in `cli.js`?). But, not every option matches a configurable value, and it is
@@ -473,9 +474,9 @@ function expandDeprecated(context: Context) {
         'The --browsers flag/option is deprecated. Please use ' +
             '--local and --sauce instead, or configure via plugins.' +
             '[local|sauce].browsers.');
-    const fragment: {plugins: {[name: string]: {browsers?: Browser[]}}} = {
-      plugins: {sauce: {}, local: {}}
-    };
+    const fragment: {
+      plugins: {[name: string]: {browsers?: Browser[]}}
+    } = {plugins: {sauce: {}, local: {}}};
     fragments.push(fragment);
 
     for (const browser of browsers) {
