@@ -21,6 +21,7 @@ import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
+import {getPackageName} from './config';
 import {Context} from './context';
 
 // Template for generated indexes.
@@ -75,6 +76,12 @@ export function webserver(wct: Context): void {
       } catch (e) {
         // Safely ignore.
       }
+      const packageName = getPackageName(options);
+      const isPackageScoped = packageName && packageName[0] === '@';
+      if (isPackageScoped) {
+        browserScript = `../${browserScript}`;
+        a11ySuiteScript = `../${a11ySuiteScript}`;
+      }
     }
     options.webserver._generatedIndexContent = INDEX_TEMPLATE(
         Object.assign({browserScript, a11ySuiteScript}, options));
@@ -84,7 +91,7 @@ export function webserver(wct: Context): void {
     const wsOptions = options.webserver;
     const additionalRoutes = new Map<string, RequestHandler>();
 
-    const packageName = path.basename(options.root);
+    const packageName = getPackageName(options);
 
     // Check for client-side compatibility.
 
