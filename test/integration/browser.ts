@@ -109,16 +109,17 @@ function runIntegrationSuiteForDir(
       variantsGolden = {variants: {'': golden}};
     }
 
-    it('ran the correct variants', function() {
-      expect(Object.keys(testResults.variants).sort())
-          .to.deep.equal(Object.keys(variantsGolden.variants).sort());
-    });
+    expect(Object.keys(testResults.variants).sort())
+        .to.deep.equal(
+            Object.keys(variantsGolden.variants).sort(),
+            'ran the correct variants');
+
     for (const variantName in variantsGolden.variants) {
-      const run = () => assertVariantResultsConformToGolden(
+      const run = (message?: string) => assertVariantResultsConformToGolden(
           variantsGolden.variants[variantName],
-          testResults.getVariantResults(variantName));
+          testResults.getVariantResults(variantName), message);
       if (variantName !== '') {
-        describe(`the variant with bower_components-${variantName}`, run);
+        run(`the variant with bower_components-${variantName}`);
       } else {
         run();
       }
@@ -143,10 +144,12 @@ function runsIntegrationSuite(
   }
   describer(suiteName, function() {
     const log: string[] = [];
-    const testResults = new TestResults();
+    let testResults: TestResults = null;
+    this.retries(3);
 
-    before(async function() {
-      this.timeout(300 * 1000);
+    beforeEach(async function() {
+      testResults = new TestResults();
+      this.timeout(60 * 1000);
 
       const suiteRoot = await makeProperTestDir(dirName);
       const allOptions: config.Config = Object.assign(
@@ -233,7 +236,9 @@ function runsIntegrationSuite(
       }
     });
 
-    contextFunction(testResults);
+    it('executes browser tests and returns expected results', () => {
+      contextFunction(testResults);
+    });
   });
 }
 
@@ -282,27 +287,31 @@ function assertFailed(context: VariantResults, expectedError: string) {
 /** Asserts that all browsers match the given stats. */
 function assertStats(
     context: VariantResults, passing: number, pending: number, failing: number,
-    status: 'complete') {
+    status: 'complete', message?: string) {
   const expected: Stats = {passing, pending, failing, status};
-  expect(context.stats).to.deep.equal(repeatBrowsers(context, expected));
+  expect(context.stats)
+      .to.deep.equal(repeatBrowsers(context, expected), message);
 }
 
 /** Asserts that all browsers match the given test layout. */
-function assertTests(context: VariantResults, expected: TestNode) {
-  expect(context.tests).to.deep.equal(repeatBrowsers(context, expected));
+function assertTests(
+    context: VariantResults, expected: TestNode, message?: string) {
+  expect(context.tests)
+      .to.deep.equal(repeatBrowsers(context, expected), message);
 }
 
 
 /** Asserts that all browsers emitted the given errors. */
 function assertTestErrors(
-    context: VariantResults, expected: TestErrorExpectation) {
+    context: VariantResults, expected: TestErrorExpectation, message?: string) {
+  const messageHeader = message ? `${message} - ` : '';
   lodash.each(context.testErrors, function(actual, browser) {
     expect(Object.keys(expected))
         .to.have.members(
             Object.keys(actual),
-            'Test file mismatch for ' + browser +
-                `: expected ${JSON.stringify(Object.keys(expected))} - got ${
-                    JSON.stringify(Object.keys(actual))}`);
+            messageHeader + `Test file mismatch for ${browser}: expected ` +
+                JSON.stringify(Object.keys(expected)) + ' - got ' +
+                JSON.stringify(Object.keys(actual)));
 
     lodash.each(actual, function(errors, file) {
       const expectedErrors = expected[file];
@@ -310,14 +319,17 @@ function assertTestErrors(
       expect(Object.keys(expectedErrors))
           .to.have.members(
               Object.keys(errors),
-              `Test failure mismatch for ${file} on ${browser}`);
+              messageHeader +
+                  `Test failure mismatch for ${file} on ${browser}`);
 
       lodash.each(errors, function(error: Error, test: string) {
         const locationInfo = `for ${file} - "${test}" on ${browser}`;
         const expectedError = expectedErrors[test];
         const stackLines = error.stack.split('\n');
         expect(error.message)
-            .to.eq(expectedError[0], `Error message mismatch ${locationInfo}`);
+            .to.eq(
+                expectedError[0],
+                `${messageHeader}Error message mismatch ${locationInfo}`);
 
         // Chai fails to emit stacks for Firefox.
         // https://github.com/chaijs/chai/issues/100
@@ -330,41 +342,41 @@ function assertTestErrors(
         expect(stackLines[0]).to.eq(expectedErrorText);
         expect(stackLines[stackLines.length - 1])
             .to.match(
-                new RegExp(stackTraceMatcher), `error.stack="${error.stack}"`);
+                new RegExp(stackTraceMatcher),
+                `${messageHeader}error.stack="${error.stack}"`);
       });
     });
   });
 }
 
 function assertVariantResultsConformToGolden(
-    golden: VariantResultGolden, variantResults: VariantResults) {
+    golden: VariantResultGolden, variantResults: VariantResults,
+    message?: string) {
   // const variantResults = testResults.getVariantResults('');
-  it('records the correct result stats', function() {
-    try {
-      assertStats(
-          variantResults, golden.passing, golden.pending, golden.failing,
-          <any>golden.status);
-    } catch (_) {
-      // mocha reports twice the failures because reasons
-      // https://github.com/mochajs/mocha/issues/2083
-      assertStats(
-          variantResults, golden.passing, golden.pending, golden.failing * 2,
-          <any>golden.status);
-    }
-  });
+  const messageHeader = message ? `${message} - ` : '';
+  try {
+    assertStats(
+        variantResults, golden.passing, golden.pending, golden.failing,
+        <any>golden.status, `${messageHeader}records the correct result stats`);
+  } catch (_) {
+    // mocha reports twice the failures because reasons
+    // https://github.com/mochajs/mocha/issues/2083
+    assertStats(
+        variantResults, golden.passing, golden.pending, golden.failing * 2,
+        <any>golden.status, `${messageHeader}records the correct result stats`);
+  }
 
   if (golden.passing + golden.pending + golden.failing === 0 && !golden.tests) {
     return;
   }
 
-  it('runs the correct tests', function() {
-    assertTests(variantResults, golden.tests);
-  });
+  assertTests(
+      variantResults, golden.tests, `${messageHeader}runs the correct tests`);
 
   if (golden.errors || golden.failing > 0) {
-    it('emits well formed errors', function() {
-      assertTestErrors(variantResults, golden.errors);
-    });
+    assertTestErrors(
+        variantResults, golden.errors,
+        `${messageHeader}emits well formed errors`);
   }
   // it('passed the test', function() {
   //   assertPassed(testResults);
