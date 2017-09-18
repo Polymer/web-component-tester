@@ -148,7 +148,7 @@ function runsIntegrationSuite(
     let freshTestResults = false;
 
     this.retries(3);
-    this.timeout(60 * 10000);
+    this.timeout(60 * 1000);
 
     before(async function() {
       const suiteRoot = await makeProperTestDir(dirName);
