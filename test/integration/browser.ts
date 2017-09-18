@@ -144,10 +144,13 @@ function runsIntegrationSuite(
   describer(suiteName, function() {
     const log: string[] = [];
     const testResults = new TestResults();
+    let context: Context;
+    let freshTestResults = false;
+
+    this.retries(3);
+    this.timeout(300 * 1000);
 
     before(async function() {
-      this.timeout(300 * 1000);
-
       const suiteRoot = await makeProperTestDir(dirName);
       const allOptions: config.Config = Object.assign(
           {
@@ -160,7 +163,7 @@ function runsIntegrationSuite(
             },
           },
           options);
-      const context = new Context(allOptions);
+      context = new Context(allOptions);
 
       const addEventHandler = (name: string, handler: Function) => {
         context.on(name, function() {
@@ -210,10 +213,17 @@ function runsIntegrationSuite(
       addEventHandler('run-end', (error: any) => {
         testResults.runError = error;
       });
+    });
+
+    beforeEach(async () => {
+      if (freshTestResults) {
+        return;
+      }
 
       // Don't fail the integration suite on test errors.
       try {
         await test(context);
+        freshTestResults = true;
       } catch (error) {
         testResults.testRunnerError = error.message;
       }
@@ -221,6 +231,7 @@ function runsIntegrationSuite(
 
     afterEach(function() {
       if (this.currentTest.state === 'failed') {
+        freshTestResults = false;
         process.stderr.write(
             `\n    Output of wct for integration suite named \`${dirName}\`` +
             `\n` +
@@ -301,8 +312,9 @@ function assertTestErrors(
         .to.have.members(
             Object.keys(actual),
             'Test file mismatch for ' + browser +
-                `: expected ${JSON.stringify(Object.keys(expected))} - got ${
-                    JSON.stringify(Object.keys(actual))}`);
+                `: expected ${
+                              JSON.stringify(Object.keys(expected))
+                            } - got ${JSON.stringify(Object.keys(actual))}`);
 
     lodash.each(actual, function(errors, file) {
       const expectedErrors = expected[file];
