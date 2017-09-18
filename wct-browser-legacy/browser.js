@@ -16,6 +16,7 @@
 (function () {
 'use strict';
 
+window.__wctUseNpm = true;
 /**
  * @param {function()} callback A function to call when the active web component
  *     frameworks have loaded.
@@ -455,8 +456,6 @@ ChildRunner.prototype.signalRunComplete = function signalRunComplete(error) {
   this.onRunComplete = null;
 };
 
-var useNpm = document.location.search.match(/[?&]npm=true/);
-
 /**
  * The global configuration state for WCT's browser client.
  */
@@ -466,7 +465,7 @@ var _config = {
    *
    * Paths are relative to `scriptPrefix`.
    */
-  environmentScripts: useNpm ?
+  environmentScripts: !!window.__wctUseNpm ?
     [
       'stacky/browser.js',
       'async/lib/async.js',
@@ -488,7 +487,7 @@ var _config = {
       'accessibility-developer-tools/dist/js/axs_testing.js'
     ],
 
-  environmentImports: useNpm ? [] : ['test-fixture/test-fixture.html'],
+  environmentImports: !!window.__wctUseNpm ? [] : ['test-fixture/test-fixture.html'],
 
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
   root: null,
@@ -1298,9 +1297,8 @@ function _injectPrototype(klass, prototype) {
  */
 function loadSync() {
   debug('Loading environment scripts:');
-  var a11ySuite =
-    document.location.search.match(/[&?]npm=true/) ?
-      'wct-browser-legacy/a11ySuite.js' : 'web-component-tester/data/a11ySuite.js';
+  var a11ySuite = !!window.__wctUseNpm ?
+    'wct-browser-legacy/a11ySuite.js' : 'web-component-tester/data/a11ySuite.js';
   var scripts = get('environmentScripts');
   var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
   if (!a11ySuiteWillBeLoaded) {

@@ -107,7 +107,8 @@ export function webserver(wct: Context): void {
       if (!version) {
         throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
-            packageName}).
+                                                                                           packageName
+                                                                                         }).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
@@ -208,13 +209,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     }
 
     options.webserver._servers = servers.map(s => {
-      const npmParam = options.npm ? `?npm=true` : '';
       const port = s.server.address().port;
       const url = `http://localhost:${port}${pathToGeneratedIndex}`;
-      return {
-        url: `${url}${npmParam}`,
-        variant: s.kind === 'mainline' ? '' : s.variantName
-      };
+      return {url, variant: s.kind === 'mainline' ? '' : s.variantName};
     });
 
     // TODO(rictic): re-enable this stuff. need to either move this code into
