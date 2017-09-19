@@ -156,7 +156,11 @@ gulp.task('test:integration', ['bower'], function () {
 });
 
 gulp.task('tslint', () =>
-  gulp.src(['runner/**/*.ts', 'test/**/*.ts', 'custom_typings/*.d.ts'])
+  gulp.src([
+    'runner/**/*.ts', '!runner/**/*.d.ts',
+    'test/**/*.ts', '!test/**/*.d.ts',
+    'custom_typings/*.d.ts'
+  ])
     .pipe(tslint({
       configuration: 'tslint.json',
     }))
