@@ -91,7 +91,7 @@ function readJsonSync(filename: string, dir?: string): any|null {
   try {
     return JSON.parse(config);
   } catch (e) {
-    console.error(`Could not parse ${configPath}`);
+    console.error(`Could not parse ${configPath} as JSON`);
     console.error(e);
   }
   return null;
