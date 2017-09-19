@@ -6,11 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+<!-- Add new, unreleased items here. -->
+
+## 6.2.0 - 2017-09-19
 
 * Updated the browser.js file for npm case to use test-fixture as JS module instead of html import.
 * Updated the integration tests to support running on Sauce via wct-sauce plugin.
+* Updated polyserve to 0.22.1 for better compilation support and ES modules in HTML script tags and bug fixes.
+* Updated bower.json to reference newly published test-fixture version 3.0.0.
 * No longer require `?npm=true` url parameter, as `web-component-tester` and `wct-browser-legacy` versions of `browser.js` now contain explicit npm/non-npm directives of the form `window.__wctUseNpm` as a first step towards splitting out the client-side environment-specific config and behavior.
-<!-- Add new, unreleased items here. -->
+* Added support for scoped package names under npm.
 
 ## 6.1.5 - 2017-08-31
 
