@@ -171,6 +171,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       root: options.root,
       compile: options.compile,
       hostname: options.webserver.hostname,
+      port: options.webserver.port,
       headers: DEFAULT_HEADERS,
       packageName,
       additionalRoutes,
