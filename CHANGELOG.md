@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 <!-- Add new, unreleased items here. -->
+* Fixed #547: WCT now respects webserver.port configuration option
 
 ## 6.2.0 - 2017-09-19
 
