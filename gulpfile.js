@@ -100,6 +100,7 @@ gulp.task('build:browser', function (done) {
       indent: false,
       format: 'iife',
       banner: fs.readFileSync('browser-js-header.txt', 'utf-8'),
+      intro: 'window.__wctUseNpm = false;',
       dest: 'browser.js',
       sourceMap: true,
       sourceMapFile: path.resolve('browser.js.map')
@@ -109,8 +110,26 @@ gulp.task('build:browser', function (done) {
   }).catch(done);
 });
 
-gulp.task('build:wct-browser-legacy', function () {
-  return gulp.src(['browser.js', 'browser.js.map', 'data/a11ySuite.js'])
+gulp.task('build:browser-for-wct-browser-legacy', function (done) {
+  rollup.rollup({
+    entry: 'browser/index.js',
+  }).then(function (bundle) {
+    bundle.write({
+      indent: false,
+      format: 'iife',
+      banner: fs.readFileSync('browser-js-header.txt', 'utf-8'),
+      intro: 'window.__wctUseNpm = true;',
+      dest: 'wct-browser-legacy/browser.js',
+      sourceMap: true,
+      sourceMapFile: path.resolve('browser.js.map')
+    }).then(function () {
+      done();
+    });
+  }).catch(done);
+});
+
+gulp.task('build:wct-browser-legacy', ['build:browser-for-wct-browser-legacy'], function () {
+  return gulp.src(['data/a11ySuite.js'])
     .pipe(gulp.dest('wct-browser-legacy/'));
 });
 
@@ -137,7 +156,11 @@ gulp.task('test:integration', ['bower'], function () {
 });
 
 gulp.task('tslint', () =>
-  gulp.src(['runner/**/*.ts', 'test/**/*.ts', 'custom_typings/*.d.ts'])
+  gulp.src([
+    'runner/**/*.ts', '!runner/**/*.d.ts',
+    'test/**/*.ts', '!test/**/*.d.ts',
+    'custom_typings/*.d.ts'
+  ])
     .pipe(tslint({
       configuration: 'tslint.json',
     }))

@@ -11,7 +11,9 @@
     WCT.loadSuites([
       'tests.html?foo=bar',
       'tests.js?fizz=buzz',
-      'tests.js?fizz=buzz&foo=bar',
+      // TODO(usergenic):  Uncomment the following after `new URL()`
+      // and `document.currentScript` polyfills are added for IE support.
+      // 'tests.js?fizz=buzz&foo=bar',
     ]);
   </script>
 </body>

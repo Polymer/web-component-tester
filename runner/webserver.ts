@@ -22,6 +22,7 @@ import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 import * as bowerConfig from 'bower-config';
 
+import {getPackageName} from './config';
 import {Context} from './context';
 
 // Template for generated indexes.
@@ -76,6 +77,12 @@ export function webserver(wct: Context): void {
       } catch (e) {
         // Safely ignore.
       }
+      const packageName = getPackageName(options);
+      const isPackageScoped = packageName && packageName[0] === '@';
+      if (isPackageScoped) {
+        browserScript = `../${browserScript}`;
+        a11ySuiteScript = `../${a11ySuiteScript}`;
+      }
     }
     options.webserver._generatedIndexContent = INDEX_TEMPLATE(
         Object.assign({browserScript, a11ySuiteScript}, options));
@@ -85,9 +92,8 @@ export function webserver(wct: Context): void {
     const wsOptions = options.webserver;
     const additionalRoutes = new Map<string, RequestHandler>();
 
-    const packageName = path.basename(options.root);
+    const packageName = getPackageName(options);
     let componentDir;
-
     // Check for client-side compatibility.
     // Non-npm case.
     if (!options.npm) {
@@ -211,13 +217,9 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     }
 
     options.webserver._servers = servers.map(s => {
-      const npmParam = options.npm ? `?npm=true` : '';
       const port = s.server.address().port;
       const url = `http://localhost:${port}${pathToGeneratedIndex}`;
-      return {
-        url: `${url}${npmParam}`,
-        variant: s.kind === 'mainline' ? '' : s.variantName
-      };
+      return {url, variant: s.kind === 'mainline' ? '' : s.variantName};
     });
 
     // TODO(rictic): re-enable this stuff. need to either move this code into

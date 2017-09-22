@@ -1,6 +1,6 @@
 {
   "name": "wct-browser-legacy",
-  "version": "0.0.1-pre.3",
+  "version": "0.0.1-pre.8",
   "description": "Client-side dependencies for web-component-tester tests installed via npm.",
   "main": "browser.js",
   "license": "http://polymer.github.io/LICENSE.txt",

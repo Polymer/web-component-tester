@@ -29,32 +29,32 @@ describe('paths', function() {
       expect(actual).to.have.members(expected);
     }
 
-    it('is ok with an empty list', async() => {
+    it('is ok with an empty list', async () => {
       await expectExpands([], []);
     });
 
-    it('ignores explicit files that are missing', async() => {
+    it('ignores explicit files that are missing', async () => {
       await expectExpands(['404.js'], []);
       await expectExpands(['404.js', 'foo.html'], ['foo.html']);
     });
 
-    it('does not expand explicit files', async() => {
+    it('does not expand explicit files', async () => {
       await expectExpands(['foo.js'], ['foo.js']);
       await expectExpands(['foo.html'], ['foo.html']);
       await expectExpands(['foo.js', 'foo.html'], ['foo.js', 'foo.html']);
     });
 
-    it('expands directories into their files', async() => {
+    it('expands directories into their files', async () => {
       await expectExpands(['foo'], ['foo/one.js', 'foo/two.html']);
       await expectExpands(['foo/'], ['foo/one.js', 'foo/two.html']);
     });
 
-    it('expands directories into index.html when present', async() => {
+    it('expands directories into index.html when present', async () => {
       await expectExpands(['bar'], ['bar/index.html']);
       await expectExpands(['bar/'], ['bar/index.html']);
     });
 
-    it('expands directories recursively, honoring all rules', async() => {
+    it('expands directories recursively, honoring all rules', async () => {
       await expectExpands(['baz'], [
         'baz/a/fizz.html',
         'baz/b/index.html',
@@ -63,7 +63,7 @@ describe('paths', function() {
       ]);
     });
 
-    it('accepts globs for explicit file matches', async() => {
+    it('accepts globs for explicit file matches', async () => {
       await expectExpands(['baz/*.js'], ['baz/b.js']);
       await expectExpands(['baz/*.html'], ['baz/a.html']);
       await expectExpands(['baz/**/*.js'], [
@@ -81,7 +81,7 @@ describe('paths', function() {
     });
 
     it('accepts globs for directories, honoring directory behavior',
-       async() => {
+       async () => {
          await expectExpands(['*'], [
            'bar/index.html',
            'baz/a/fizz.html',
@@ -101,7 +101,7 @@ describe('paths', function() {
          ]);
        });
 
-    it('deduplicates', async() => {
+    it('deduplicates', async () => {
       await expectExpands(['bar/a.js', 'bar/*.js', 'bar', 'bar/*.html'], [
         'bar/a.js',
         'bar/index.html',

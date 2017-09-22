@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- Add new, unreleased items here. -->
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 
+## 6.2.0 - 2017-09-19
+
+* Updated the browser.js file for npm case to use test-fixture as JS module instead of html import.
+* Updated the integration tests to support running on Sauce via wct-sauce plugin.
+* Updated polyserve to 0.22.1 for better compilation support and ES modules in HTML script tags and bug fixes.
+* Updated bower.json to reference newly published test-fixture version 3.0.0.
+* No longer require `?npm=true` url parameter, as `web-component-tester` and `wct-browser-legacy` versions of `browser.js` now contain explicit npm/non-npm directives of the form `window.__wctUseNpm` as a first step towards splitting out the client-side environment-specific config and behavior.
+* Added support for scoped package names under npm.
+
+## 6.1.5 - 2017-08-31
+
+* Removed reliance on `document.currentScript` in browser.js because IE11 doesn't have it. (Second reference found)
+
+## 6.1.4 - 2017-08-31
+
+* Removed reliance on `document.currentScript` in browser.js because IE11 doesn't have it.
+* To use WCT tests with NPM in browser without WCT (or polymer-cli) running on the commandline, you must include an `?npm=true` or `&npm=true` parameter in the URL for the test document; WCT does this automatically when opening its own browsers.
+
 ## 6.1.3 - 2017-08-26
 
 * Added `sinon` as dependency of `sinon-chai` in web context to suppress the npm installation warning/error of unmet peer dependency, even though `@polymer/sinonjs` fulfills the runtime dependency and `sinon` will be unused.

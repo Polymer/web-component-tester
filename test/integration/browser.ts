@@ -24,6 +24,10 @@ import {Context} from '../../runner/context';
 import {test} from '../../runner/test';
 import {makeProperTestDir} from './setup_test_dir';
 
+const testLocalBrowsers = !process.env.SKIP_LOCAL_BROWSERS;
+const testRemoteBrowsers = !process.env.SKIP_REMOTE_BROWSERS ||
+    !process.env.SAUCE_USERNAME || !process.env.SAUCE_ACCESS_KEY;
+
 interface TestErrorExpectation {
   [fileName: string]: {
     // The test name mapped to the error
@@ -76,7 +80,7 @@ class VariantResults {
 // Tests
 
 /** Describes all suites, mixed into the environments being run. */
-function runsAllIntegrationSuites() {
+function runsAllIntegrationSuites(options: config.Config = {}) {
   let integrationDirnames =
       fs.readdirSync(integrationDir).filter(fn => fn !== 'temp');
   // Overwrite integrationDirnames to run tests in isolation while developing:
@@ -87,13 +91,14 @@ function runsAllIntegrationSuites() {
   const suitesToSkip = new Set(['missing']);
 
   for (const fn of integrationDirnames) {
-    runIntegrationSuiteForDir(fn, suitesToSkip.has(fn));
+    runIntegrationSuiteForDir(fn, options, suitesToSkip.has(fn));
   }
 }
 
 
-function runIntegrationSuiteForDir(dirname: string, skip: boolean) {
-  runsIntegrationSuite(dirname, skip, function(testResults) {
+function runIntegrationSuiteForDir(
+    dirname: string, options: config.Config, skip: boolean) {
+  runsIntegrationSuite(dirname, options, skip, function(testResults) {
     const golden: Golden = JSON.parse(fs.readFileSync(
         path.join(integrationDir, dirname, 'golden.json'), 'utf-8'));
 
@@ -129,7 +134,7 @@ const integrationDir = path.resolve(__dirname, '../fixtures/integration');
  * the output for tests.
  */
 function runsIntegrationSuite(
-    dirName: string, skip: boolean,
+    dirName: string, options: config.Config, skip: boolean,
     contextFunction: (context: TestResults) => void) {
   const suiteName = `integration fixture dir '${dirName}'`;
   let describer: (suiteName: string, spec: () => void) => void = describe;
@@ -141,22 +146,21 @@ function runsIntegrationSuite(
     const testResults = new TestResults();
 
     before(async function() {
-      this.timeout(120 * 1000);
+      this.timeout(300 * 1000);
 
       const suiteRoot = await makeProperTestDir(dirName);
-      const options: config.Config = {
-        output: <any>{write: log.push.bind(log)},
-        ttyOutput: false,
-        root: suiteRoot,
-        browserOptions: <any>{
-          name: 'web-component-tester',
-          tags: ['org:Polymer', 'repo:web-component-tester'],
-        },
-        plugins: <any>{
-          local: {skipSeleniumInstall: true},
-        },
-      };
-      const context = new Context(options);
+      const allOptions: config.Config = Object.assign(
+          {
+            output: <any>{write: log.push.bind(log)},
+            ttyOutput: false,
+            root: suiteRoot,
+            browserOptions: <any>{
+              name: 'web-component-tester',
+              tags: ['org:Polymer', 'repo:web-component-tester'],
+            },
+          },
+          options);
+      const context = new Context(allOptions);
 
       const addEventHandler = (name: string, handler: Function) => {
         context.on(name, function() {
@@ -233,40 +237,25 @@ function runsIntegrationSuite(
   });
 }
 
-if (!process.env.SKIP_LOCAL_BROWSERS) {
-  describe('Local Browsers', function() {
-    runsAllIntegrationSuites();
-  });
-}
-
-// TODO(nevir): Re-enable support for integration in sauce.
-/*
-if (!process.env.SKIP_REMOTE_BROWSERS) {
-  describe('Remote Browsers', function() {
-    // Boot up a sauce tunnel w/ whatever the environment gives us.
-
-    before(function(done) {
-      this.timeout(300 * 1000);
-      currentEnv.remote = true;
-
-      const emitter = new Context();
-      new CliReporter(emitter, process.stdout, {verbose: true});
-
-      steps.ensureSauceTunnel(baseOptions, emitter, function(error, tunnelId) {
-        baseOptions.sauce.tunnelId = tunnelId;
-        done(error);
-      });
+if (testLocalBrowsers) {
+  describe('Local Browser Tests', function() {
+    runsAllIntegrationSuites({
+      plugins: <any> {
+        local: {skipSeleniumInstall: true},
+      }
     });
-
-    runsAllIntegrationSuites();
-  });
-
-  after(function(done) {
-    this.timeout(120 * 1000);
-    cleankill.close(done);
   });
 }
-*/
+
+if (testRemoteBrowsers) {
+  describe('Remote Browser Tests', function() {
+    runsAllIntegrationSuites({
+      plugins: <any> {
+        sauce: {browsers: ['default']},
+      }
+    });
+  });
+}
 
 /** Assert that all browsers passed. */
 function assertPassed(context: TestResults) {
@@ -312,9 +301,8 @@ function assertTestErrors(
         .to.have.members(
             Object.keys(actual),
             'Test file mismatch for ' + browser +
-                `: expected ${
-                              JSON.stringify(Object.keys(expected))
-                            } - got ${JSON.stringify(Object.keys(actual))}`);
+                `: expected ${JSON.stringify(Object.keys(expected))} - got ${
+                    JSON.stringify(Object.keys(actual))}`);
 
     lodash.each(actual, function(errors, file) {
       const expectedErrors = expected[file];
@@ -333,7 +321,7 @@ function assertTestErrors(
 
         // Chai fails to emit stacks for Firefox.
         // https://github.com/chaijs/chai/issues/100
-        if (browser.indexOf('firefox') !== -1) {
+        if (browser.match(/firefox|internet explorer 11/)) {
           return;
         }
 
@@ -341,7 +329,8 @@ function assertTestErrors(
         const stackTraceMatcher = expectedError[1];
         expect(stackLines[0]).to.eq(expectedErrorText);
         expect(stackLines[stackLines.length - 1])
-            .to.match(new RegExp(stackTraceMatcher));
+            .to.match(
+                new RegExp(stackTraceMatcher), `error.stack="${error.stack}"`);
       });
     });
   });

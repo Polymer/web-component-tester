@@ -10,9 +10,6 @@
 import * as util from './util.js';
 import ChildRunner from './childrunner.js';
 
-var useNpm = document.currentScript.src.match(/wct-browser-legacy\/browser.js/) ||
-  (new URL(document.currentScript.src)).search.match(/[?&]npm=true/);
-
 /**
  * The global configuration state for WCT's browser client.
  */
@@ -22,7 +19,7 @@ export var _config = {
    *
    * Paths are relative to `scriptPrefix`.
    */
-  environmentScripts: useNpm ?
+  environmentScripts: !!window.__wctUseNpm ?
     [
       'stacky/browser.js',
       'async/lib/async.js',
@@ -31,7 +28,8 @@ export var _config = {
       'chai/chai.js',
       '@polymer/sinonjs/sinon.js',
       'sinon-chai/lib/sinon-chai.js',
-      'accessibility-developer-tools/dist/js/axs_testing.js'
+      'accessibility-developer-tools/dist/js/axs_testing.js',
+      '@polymer/test-fixture/test-fixture.js'
     ] : [
       'stacky/browser.js',
       'async/lib/async.js',
@@ -43,12 +41,7 @@ export var _config = {
       'accessibility-developer-tools/dist/js/axs_testing.js'
     ],
 
-  environmentImports: useNpm ?
-    [
-      '@polymer/test-fixture/test-fixture.html'
-    ] : [
-      'test-fixture/test-fixture.html'
-    ],
+  environmentImports: !!window.__wctUseNpm ? [] : ['test-fixture/test-fixture.html'],
 
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
   root: null,

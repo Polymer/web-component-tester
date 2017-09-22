@@ -34,18 +34,16 @@ export async function expand(
 /**
  * Expands any glob expressions in `patterns`.
  */
-async function unglob(baseDir: string, patterns: string[]):
-    Promise<string[]> {
-      const strs: string[][] = [];
-      const pGlob: any = promisify(glob);
-      for (const pattern of patterns) {
-        strs.push(await pGlob(String(pattern), {cwd: baseDir, root: baseDir}));
-      }
+async function unglob(baseDir: string, patterns: string[]): Promise<string[]> {
+  const strs: string[][] = [];
+  const pGlob: any = promisify(glob);
+  for (const pattern of patterns) {
+    strs.push(await pGlob(String(pattern), {cwd: baseDir, root: baseDir}));
+  }
 
-      // for non-POSIX support, replacing path separators
-      return _.union(_.flatten(strs))
-          .map((str) => str.replace(/\//g, path.sep));
-    }
+  // for non-POSIX support, replacing path separators
+  return _.union(_.flatten(strs)).map((str) => str.replace(/\//g, path.sep));
+}
 
 /**
  * Expands any directories in `patterns`, following logic similar to a web
