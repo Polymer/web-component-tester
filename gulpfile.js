@@ -9,6 +9,7 @@
  */
 'use strict';
 
+const concat = require('gulp-concat');
 const depcheck = require('depcheck');
 const fs = require('fs');
 const glob = require('glob');
@@ -110,7 +111,13 @@ gulp.task('build:browser', function (done) {
   }).catch(done);
 });
 
-gulp.task('build:browser-for-wct-browser-legacy', function (done) {
+gulp.task('build:wct-browser-legacy:a11ySuite', function() {
+  return gulp.src(['data/a11ySuite-npm-header.txt', 'data/a11ySuite.js'])
+      .pipe(concat('a11ySuite.js'))
+      .pipe(gulp.dest('wct-browser-legacy/'));
+});
+
+gulp.task('build:wct-browser-legacy:browser', function (done) {
   rollup.rollup({
     entry: 'browser/index.js',
   }).then(function (bundle) {
@@ -128,10 +135,10 @@ gulp.task('build:browser-for-wct-browser-legacy', function (done) {
   }).catch(done);
 });
 
-gulp.task('build:wct-browser-legacy', ['build:browser-for-wct-browser-legacy'], function () {
-  return gulp.src(['data/a11ySuite.js'])
-    .pipe(gulp.dest('wct-browser-legacy/'));
-});
+gulp.task('build:wct-browser-legacy', [
+    'build:wct-browser-legacy:a11ySuite',
+    'build:wct-browser-legacy:browser',
+]);
 
 gulp.task('test:style', function () {
   return gulp.src([
