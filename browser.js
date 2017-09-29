@@ -1301,7 +1301,11 @@ function loadSync() {
     'wct-browser-legacy/a11ySuite.js' : 'web-component-tester/data/a11ySuite.js';
   var scripts = get('environmentScripts');
   var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
-  if (!a11ySuiteWillBeLoaded) {
+
+  // We can't inject a11ySuite when running the npm version because it is a
+  // module-based script that needs `<script type=module>` and compilation 
+  // for browsers without module support.
+  if (!a11ySuiteWillBeLoaded && !window.__wctUseNpm) {
     // wct is running as a bower dependency, load a11ySuite from data/
     scripts.push(a11ySuite);
   }

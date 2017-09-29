@@ -12,8 +12,12 @@
   <script src="../<%= browserScript %>"></script>
   <% extraScripts.forEach(function(script) { %>
     <script src="<%- script %>"></script>
-    <% }); %>
-      <script src="../<%= a11ySuiteScript %>"></script>
+  <% }); %>
+  <% if (typeof npm !== 'undefined' && npm) { %>
+    <script type="module" src="../<%= a11ySuiteScript %>"></script>
+  <% } else { %>
+    <script src="../<%= a11ySuiteScript %>"></script>
+  <% } %>
 </head>
 
 <body>

@@ -1,3 +1,8 @@
+import * as polymerDom from '../@polymer/polymer/lib/legacy/polymer.dom.js';
+const Polymer = { dom: polymerDom };
+
+// wct-browser-legacy/a11ySuite.js is a generated file.  Source is in web-component-tester/data/a11ySuite.js
+
 /**
  * @license
  * Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
