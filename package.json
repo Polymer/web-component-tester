@@ -1,6 +1,6 @@
 {
   "name": "web-component-tester",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "--private-wct--": {
     "client-side-version-range": "4 - 6 || ^6.0.0-prerelease.1",
     "wct-browser-legacy-version-range": "0.0.1-pre.1 || ^1.0.0"
