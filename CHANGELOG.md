@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- Add new, unreleased items here. -->
 * Updated wct-browser-legacy to use a module version of a11ySuite to get access to Polymer.dom.flush.
 * Updated generated index for webserver to use a11ySuite as a module.
+* Added `define:webserver` hook to enable substitution of the generated express app for the webserver through a callback, to support use cases where a plugin might want to inject handlers or middleware in front of polyserve.
 
 ## 6.2.0 - 2017-09-19
 
