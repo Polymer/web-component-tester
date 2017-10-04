@@ -25,8 +25,8 @@ import {test} from '../../runner/test';
 import {makeProperTestDir} from './setup_test_dir';
 
 const testLocalBrowsers = !process.env.SKIP_LOCAL_BROWSERS;
-const testRemoteBrowsers = !process.env.SKIP_REMOTE_BROWSERS ||
-    !process.env.SAUCE_USERNAME || !process.env.SAUCE_ACCESS_KEY;
+const testRemoteBrowsers = !process.env.SKIP_REMOTE_BROWSERS &&
+    process.env.SAUCE_USERNAME && process.env.SAUCE_ACCESS_KEY;
 
 interface TestErrorExpectation {
   [fileName: string]: {
