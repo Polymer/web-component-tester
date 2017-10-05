@@ -180,7 +180,11 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
         async (app: express.Express, options: ServerOptions) => {
           await wct.emitHook(
               'define:webserver', app, options,
-              async (substitution: express.Express) => app = substitution);
+              (substitution: express.Express) => {
+                if (substitution) {
+                  app = substitution;
+                }
+              });
           return app;
         });
     let servers: Array<MainlineServer|VariantServer>;
