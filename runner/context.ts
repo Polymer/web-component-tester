@@ -114,7 +114,7 @@ export class Context extends events.EventEmitter {
    */
   emitHook(
       name: 'define:webserver', app: express.Express, options: ServerOptions,
-      mapper: (app: Express.Application) => Promise<void>,
+      mapper: (app: Express.Application) => void,
       done?: (err?: any) => void): Promise<void>;
   emitHook(
       name: 'prepare:webserver', app: express.Express,
