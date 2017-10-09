@@ -48,7 +48,7 @@
     "lint": "gulp lint",
     "build": "tsc && gulp build",
     "test": "tsc && gulp test",
-    "prepublish": "gulp prepublish",
+    "prepublishOnly": "gulp prepublish",
     "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/",
     "format": "find runner test | grep '\\.js$\\|\\.ts$' | xargs ./node_modules/.bin/clang-format --style=file -i"
   },
@@ -124,7 +124,7 @@
     "rimraf": "^2.5.4",
     "rollup": "^0.25.1",
     "run-sequence": "^1.0.1",
-    "tslint": "^3.10.2",
+    "tslint": "^5.7.0",
     "typescript": "^2.1.4",
     "watch": "^0.18.0"
   },

@@ -56,7 +56,7 @@ interface VariantResultGolden {
 }
 type TestNode = {
   state?: CompletedState; [subTestName: string]: TestNode | CompletedState;
-}
+};
 
 class TestResults {
   variants: {[variantName: string]: VariantResults} = {};
@@ -81,8 +81,8 @@ class VariantResults {
 
 /** Describes all suites, mixed into the environments being run. */
 function runsAllIntegrationSuites(options: config.Config = {}) {
-  let integrationDirnames =
-      fs.readdirSync(integrationDir).filter(fn => fn !== 'temp');
+  const integrationDirnames =
+      fs.readdirSync(integrationDir).filter((fn) => fn !== 'temp');
   // Overwrite integrationDirnames to run tests in isolation while developing:
   // integrationDirnames = ['components_dir'];
 

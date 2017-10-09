@@ -17,7 +17,7 @@ import * as config from './config.js';
  */
 export function whenFrameworksReady(callback: () => void) {
   debug('whenFrameworksReady');
-  let done = function() {
+  const done = function() {
     debug('whenFrameworksReady done');
     callback();
   };
@@ -51,7 +51,7 @@ export function pluralizedStat(count: number, kind: string): string {
  * @param {function} done
  */
 export function loadScript(path: string, done: () => void) {
-  let script = document.createElement('script');
+  const script = document.createElement('script');
   script.src = path;
   if (done) {
     script.onload = done.bind(null, null);
@@ -65,7 +65,7 @@ export function loadScript(path: string, done: () => void) {
  * @param {function} done
  */
 export function loadStyle(path: string, done: () => void) {
-  let link = document.createElement('link');
+  const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = path;
   if (done) {
@@ -83,7 +83,7 @@ export function debug(...var_args: any[]) {
   if (!config.get('verbose')) {
     return;
   }
-  let args = [window.location.pathname, ...var_args];
+  const args = [window.location.pathname, ...var_args];
   (console.debug || console.log).apply(console, args);
 }
 
@@ -94,7 +94,7 @@ export function debug(...var_args: any[]) {
  * @return {{base: string, params: string}}
  */
 export function parseUrl(url: string) {
-  let parts = url.match(/^(.*?)(?:\?(.*))?$/);
+  const parts = url.match(/^(.*?)(?:\?(.*))?$/);
   return {
     base: parts[1],
     params: getParams(parts[2] || ''),
@@ -137,15 +137,15 @@ export function getParams(query?: string): Params {
   if (query === '')
     return {};
 
-  let result: {[param: string]: string[]} = {};
+  const result: {[param: string]: string[]} = {};
   query.split('&').forEach(function(part) {
-    let pair = part.split('=');
+    const pair = part.split('=');
     if (pair.length !== 2) {
       console.warn('Invalid URL query part:', part);
       return;
     }
-    let key = decodeURIComponent(pair[0]);
-    let value = decodeURIComponent(pair[1]);
+    const key = decodeURIComponent(pair[0]);
+    const value = decodeURIComponent(pair[1]);
 
     if (!result[key]) {
       result[key] = [];
@@ -176,7 +176,7 @@ export function mergeParams(target: Params, source: Params) {
  * @return {?string} The first value for `param`, if found.
  */
 export function getParam(param: string): string|null {
-  let params = getParams();
+  const params = getParams();
   return params[param] ? params[param][0] : null;
 }
 
@@ -185,7 +185,7 @@ export function getParam(param: string): string|null {
  * @return {string} `params` encoded as a URI query.
  */
 export function paramsToQuery(params: Params): string {
-  let pairs: string[] = [];
+  const pairs: string[] = [];
   Object.keys(params).forEach(function(key) {
     params[key].forEach(function(value) {
       pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
@@ -249,7 +249,7 @@ export function parallel(
   }
 
   let called = false;
-  let total = runners.length;
+  const total = runners.length;
   let numActive = 0;
   let numDone = 0;
 
@@ -288,11 +288,11 @@ export function parallel(
  * @return {string?}
  */
 export function scriptPrefix(filename: string): string|null {
-  let scripts = document.querySelectorAll('script[src*="' + filename + '"]') as
+  const scripts = document.querySelectorAll('script[src*="' + filename + '"]') as
       NodeListOf<HTMLScriptElement>;
   if (scripts.length !== 1) {
     return null;
   }
-  let script = scripts[0].src;
+  const script = scripts[0].src;
   return script.substring(0, script.indexOf(filename));
 }

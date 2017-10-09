@@ -41,7 +41,7 @@ export interface Config {
 /**
  * The global configuration state for WCT's browser client.
  */
-export var _config: Config = {
+export let _config: Config = {
   environmentScripts: !!window.__wctUseNpm ?
       [
         'stacky/browser.js', 'async/lib/async.js', 'lodash/index.js',

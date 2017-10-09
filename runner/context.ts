@@ -83,7 +83,7 @@ export class Context extends events.EventEmitter {
   hook(name: string, handler: Handler) {
     this._hookHandlers[name] = this._hookHandlers[name] || [];
     this._hookHandlers[name].unshift(handler);
-  };
+  }
 
   /**
    * Registers a handler that will run after any handlers registered so far.
@@ -94,7 +94,7 @@ export class Context extends events.EventEmitter {
   hookLate(name: string, handler: Handler) {
     this._hookHandlers[name] = this._hookHandlers[name] || [];
     this._hookHandlers[name].push(handler);
-  };
+  }
 
   /**
    * Once all registered handlers have run for the hook, your callback will be
@@ -174,7 +174,7 @@ export class Context extends events.EventEmitter {
       done();
     } catch (_) {
     }
-  };
+  }
 
   /**
    * @param {function(*, Array<!Plugin>)} done Asynchronously loads the plugins
@@ -197,7 +197,7 @@ export class Context extends events.EventEmitter {
         (<any>_).pairs(this.options.plugins),
         (p: [string, {disabled: boolean}]) => !p[1] || p[1].disabled);
     return _.map(pairs, (p) => p[0]);
-  };
+  }
 
   /**
    * @param {string} name
@@ -205,7 +205,7 @@ export class Context extends events.EventEmitter {
    */
   pluginOptions(name: string) {
     return this.options.plugins[Plugin.shortName(name)];
-  };
+  }
 
   static Context = Context;
 }

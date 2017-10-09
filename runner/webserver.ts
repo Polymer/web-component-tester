@@ -114,8 +114,7 @@ export function webserver(wct: Context): void {
       if (!version) {
         throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
-                                                                                           packageName
-                                                                                         }).
+            packageName}).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
@@ -207,7 +206,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           `${never}`);
     }
 
-    wct._httpServers = servers.map(s => s.server);
+    wct._httpServers = servers.map((s) => s.server);
 
     // At this point, we allow other plugins to hook and configure the
     // webservers as they please.
@@ -215,7 +214,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       await wct.emitHook('prepare:webserver', server.app);
     }
 
-    options.webserver._servers = servers.map(s => {
+    options.webserver._servers = servers.map((s) => {
       const port = s.server.address().port;
       const url = `http://localhost:${port}${pathToGeneratedIndex}`;
       return {url, variant: s.kind === 'mainline' ? '' : s.variantName};
@@ -250,7 +249,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       });
     });
   });
-};
+}
 
 function exists(path: string): boolean {
   try {
