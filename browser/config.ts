@@ -11,12 +11,6 @@
 import ChildRunner from './childrunner.js';
 import * as util from './util.js';
 
-declare global {
-  interface Window {
-    __wctUseNpm?: boolean;
-  }
-}
-
 export interface Config {
   /**
    * `.js` scripts to be loaded (synchronously) before WCT starts in earnest.
@@ -81,7 +75,7 @@ export var _config: Config = {
  *     reference.
  */
 export function setup(options: Config) {
-  var childRunner = ChildRunner.current();
+  const childRunner = ChildRunner.current();
   if (childRunner) {
     _deepMerge(_config, childRunner.parentScope.WCT._config);
     // But do not force the mocha UI
@@ -94,7 +88,7 @@ export function setup(options: Config) {
 
   if (!_config.root) {
     // Sibling dependencies.
-    var root = util.scriptPrefix('browser.js');
+    const root = util.scriptPrefix('browser.js');
     _config.root = util.basePath(root.substr(0, root.length - 1));
     if (!_config.root) {
       throw new Error(
