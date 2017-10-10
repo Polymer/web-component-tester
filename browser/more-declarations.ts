@@ -9,11 +9,19 @@ declare namespace Mocha {
   }
 
   interface IRunnable {
-    parent: {};
+    parent: ISuite;
     root: boolean;
+    state: 'passed'|'failed'|undefined;
+    pending: boolean;
   }
 
   interface ISuite {
     root: boolean;
+  }
+}
+
+declare namespace SocketIO {
+  interface Server {
+    off(): void;
   }
 }

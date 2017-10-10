@@ -1,3 +1,4 @@
+import * as SocketIOStatic from 'socket.io';
 import * as StackyStatic from 'stacky';
 
 import {default as ChildRunner, SharedState} from './childrunner.js';
@@ -26,6 +27,8 @@ declare global {
   }
 
   var Stacky: typeof StackyStatic;
+
+  var io: typeof SocketIOStatic;
 }
 
 export {};

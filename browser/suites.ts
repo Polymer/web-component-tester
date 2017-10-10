@@ -47,7 +47,7 @@ export function loadSuites(files: string[]) {
 export function activeChildSuites(): string[] {
   let subsuites = htmlSuites;
   if (GREP) {
-    let cleanSubsuites = [];
+    const cleanSubsuites = [];
     for (let i = 0, subsuite; subsuite = subsuites[i]; i++) {
       if (GREP.indexOf(util.cleanLocation(subsuite)) !== -1) {
         cleanSubsuites.push(subsuite);
@@ -65,7 +65,7 @@ export function loadJsSuites(
     _reporter: undefined, done: (error: Error) => void) {
   util.debug('loadJsSuites', jsSuites);
 
-  let loaders = jsSuites.map(function(file) {
+  const loaders = jsSuites.map(function(file) {
     // We only support `.js` dependencies for now.
     return util.loadScript.bind(util, file);
   });
@@ -78,7 +78,7 @@ export function runSuites(
     done: (error?: any) => void) {
   util.debug('runSuites');
 
-  let suiteRunners: Array<(next: () => void) => void> = [
+  const suiteRunners: Array<(next: () => void) => void> = [
     // Run the local tests (if any) first, not stopping on error;
     _runMocha.bind(null, reporter),
   ];
@@ -86,7 +86,7 @@ export function runSuites(
   // As well as any sub suites. Again, don't stop on error.
   childSuites.forEach(function(file) {
     suiteRunners.push(function(next) {
-      let childRunner = new ChildRunner(file, window);
+      const childRunner = new ChildRunner(file, window);
       reporter.emit('childRunner start', childRunner);
       childRunner.run(function(error) {
         reporter.emit('childRunner end', childRunner);
@@ -112,7 +112,7 @@ export function runSuites(
  */
 function _runMocha(reporter: MultiReporter, done: () => void, waited: boolean) {
   if (config.get('waitForFrameworks') && !waited) {
-    let waitFor =
+    const waitFor =
         (config.get('waitFor') || util.whenFrameworksReady).bind(window);
     waitFor(function() {
       _fixCustomElements();
@@ -121,8 +121,8 @@ function _runMocha(reporter: MultiReporter, done: () => void, waited: boolean) {
     return;
   }
   util.debug('_runMocha');
-  let mocha = window.mocha;
-  let Mocha = window.Mocha;
+  const mocha = window.mocha;
+  const Mocha = window.Mocha;
 
   mocha.reporter(reporter.childReporter(window.location));
   mocha.suite.title = reporter.suiteTitle(window.location);
@@ -130,7 +130,7 @@ function _runMocha(reporter: MultiReporter, done: () => void, waited: boolean) {
 
   // We can't use `mocha.run` because it bashes over grep, invert, and friends.
   // See https://github.com/visionmedia/mocha/blob/master/support/tail.js#L137
-  let runner = Mocha.prototype.run.call(mocha, function(_error: any) {
+  const runner = Mocha.prototype.run.call(mocha, function(_error: any) {
     if (document.getElementById('mocha')) {
       Mocha.utils.highlightTags('code');
     }
@@ -160,20 +160,20 @@ function _runMocha(reporter: MultiReporter, done: () => void, waited: boolean) {
  */
 function _fixCustomElements() {
   // Bail out if it is not Chrome 57.
-  let raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
-  let isM57 = raw && raw[2] === '57';
+  const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+  const isM57 = raw && raw[2] === '57';
   if (!isM57)
     return;
 
-  let elements = document.body.querySelectorAll('*:not(script):not(style)');
-  let constructors = {};
+  const elements = document.body.querySelectorAll('*:not(script):not(style)');
+  const constructors = {};
   for (let i = 0; i < elements.length; i++) {
-    let el = elements[i];
+    const el = elements[i];
     // This child has already been cloned and replaced by its parent, skip it!
     if (!el.isConnected)
       continue;
 
-    let tag = el.localName;
+    const tag = el.localName;
     // Not a custom element!
     if (tag.indexOf('-') === -1)
       continue;
@@ -186,7 +186,7 @@ function _fixCustomElements() {
       continue;
 
     util.debug('_fixCustomElements: found non-upgraded custom element ' + el);
-    let clone = document.importNode(el, true);
+    const clone = document.importNode(el, true);
     el.parentNode.replaceChild(clone, el);
   }
 }

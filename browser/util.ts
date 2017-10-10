@@ -50,7 +50,7 @@ export function pluralizedStat(count: number, kind: string): string {
  * @param {string} path The URI of the script to load.
  * @param {function} done
  */
-export function loadScript(path: string, done: () => void) {
+export function loadScript(path: string, done: (error?: any) => void) {
   const script = document.createElement('script');
   script.src = path;
   if (done) {
@@ -288,7 +288,8 @@ export function parallel(
  * @return {string?}
  */
 export function scriptPrefix(filename: string): string|null {
-  const scripts = document.querySelectorAll('script[src*="' + filename + '"]') as
+  const scripts =
+      document.querySelectorAll('script[src*="' + filename + '"]') as
       NodeListOf<HTMLScriptElement>;
   if (scripts.length !== 1) {
     return null;
