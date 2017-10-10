@@ -23,17 +23,13 @@ const lazypipe = require('lazypipe');
 const path = require('path');
 const rollup = require('rollup');
 const runSequence = require('run-sequence');
+const typescript = require('typescript');
 
 
 // const commonTools = require('tools-common/gulpfile');
 const commonTools = {
   depcheck: commonDepCheck
 };
-
-const tsProject = ts.createProject('tsconfig.json', {
-  typescript: require('typescript')
-});
-
 
 gulp.task('lint', ['tslint', 'test:style', 'depcheck']);
 
@@ -58,22 +54,27 @@ function removeFile(path) {
 gulp.task('clean', (done) => {
   removeFile('browser.js');
   removeFile('browser.js.map');
-  glob('runner/*.js', (err, files) => {
-    if (err) return done(err);
-    try {
-      for (const file of files) {
-        removeFile(file);
+  const patterns = ['runner/*.js', 'browser/**/*.js', 'browser/**/*.js.map'];
+  for (const pattern of patterns) {
+    glob(pattern, (err, files) => {
+      if (err) {
+        return done(err);
       }
-    } catch (e) {
-      return done(e);
-    }
-    done();
-  });
+      try {
+        for (const file of files) {
+          removeFile(file);
+        }
+      } catch (e) {
+        return done(e);
+      }
+    });
+  }
+  done();
 });
 
 gulp.task('test', function (done) {
   runSequence(
-    'build:typescript',
+    'build:typescript-server',
     'test:unit',
     'test:integration',
     'lint',
@@ -84,17 +85,27 @@ gulp.task('build-all', (done) => {
   runSequence('clean', 'lint', 'build', done);
 });
 
-gulp.task('build', ['build:typescript', 'build:browser', 'build:wct-browser-legacy']);
+gulp.task('build',
+  ['build:typescript-server', 'build:browser', 'build:wct-browser-legacy']);
 
-gulp.task('build:typescript', function () {
+const tsProject = ts.createProject('tsconfig.json', {typescript});
+gulp.task('build:typescript-server', function () {
   // Ignore typescript errors, because gulp-typescript, like most things
   // gulp, can't be trusted.
   return tsProject.src().pipe(tsProject(ts.reporter.nullReporter())).js.pipe(gulp.dest('./'));
 });
 
+const browserTsProject = ts.createProject('browser/tsconfig.json', {
+  typescript
+});
+gulp.task('build:typescript-browser', function () {
+  return browserTsProject.src().pipe(
+    browserTsProject(ts.reporter.nullReporter())).js.pipe(gulp.dest('./browser/'));
+});
+
 // Specific tasks
 
-gulp.task('build:browser', function (done) {
+gulp.task('build:browser', ['build:typescript-browser'], function (done) {
   rollup.rollup({
     entry: 'browser/index.js',
   }).then(function (bundle) {
@@ -118,7 +129,7 @@ gulp.task('build:wct-browser-legacy:a11ySuite', function() {
       .pipe(gulp.dest('wct-browser-legacy/'));
 });
 
-gulp.task('build:wct-browser-legacy:browser', function (done) {
+gulp.task('build:wct-browser-legacy:browser', ['build:typescript-browser'], function (done) {
   rollup.rollup({
     entry: 'browser/index.js',
   }).then(function (bundle) {
