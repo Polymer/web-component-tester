@@ -12,36 +12,29 @@ import {EventEmitter} from 'events';
 
 import * as util from '../util.js';
 
-var STACKY_CONFIG = {
+const STACKY_CONFIG = {
   indent: '  ',
   locationStrip: [
     /^https?:\/\/[^\/]+/,
     /\?.*$/,
   ],
   filter(line: {location: string}) {
-    return line.location.match(/\/web-component-tester\/[^\/]+(\?.*)?$/);
+    return !!line.location.match(/\/web-component-tester\/[^\/]+(\?.*)?$/);
   },
 };
 
 // https://github.com/visionmedia/mocha/blob/master/lib/runner.js#L36-46
-var MOCHA_EVENTS = [
+const MOCHA_EVENTS = [
   'start', 'end', 'suite', 'suite end', 'test', 'test end', 'hook', 'hook end',
   'pass', 'fail', 'pending', 'childRunner end'
 ];
 
 // Until a suite has loaded, we assume this many tests in it.
-var ESTIMATED_TESTS_PER_SUITE = 3;
+const ESTIMATED_TESTS_PER_SUITE = 3;
 
 export interface Reporter {}
 
 export interface ReporterFactory { new(parent: MultiReporter): Reporter; }
-
-export interface MinimalRunner {
-  name?: string;
-  total: number;
-}
-
-export interface RealRunner extends EventEmitter { name: string; }
 
 interface ExtendedRunnable extends Mocha.IRunnable {
   parent: {};
@@ -59,8 +52,8 @@ export default class MultiReporter implements Reporter {
   private readonly reporters: ReadonlyArray<Reporter>;
   private readonly parent: MultiReporter|undefined;
   private readonly basePath: string;
-  private total: number;
-  private currentRunner: null|MinimalRunner;
+  total: number;
+  private currentRunner: null|Mocha.IRunner;
   /** Arguments that would be called on emit(). */
   private pendingEvents: Array<any[]>;
   private complete: boolean|undefined;
@@ -98,26 +91,26 @@ export default class MultiReporter implements Reporter {
    *     that should be passed to `mocha.run`.
    */
   childReporter(location: Location|string): ReporterConstructor {
-    var name = this.suiteTitle(location);
+    const name = this.suiteTitle(location);
     // The reporter is used as a constructor, so we can't depend on `this` being
     // properly bound.
-    var self = this;
+    const self = this;
     return class ChildReporter {
-      constructor(runner: RealRunner) {
+      constructor(runner: Mocha.IRunner) {
         runner.name = window.name;
         self.bindChildRunner(runner);
       }
 
       static title = window.name;
-    }
-  };
+    };
+  }
 
   /** Must be called once all runners have finished. */
   done() {
     this.complete = true;
     this.flushPendingEvents();
     this.emit('end');
-  };
+  }
 
   /**
    * Emit a top level test that is not part of any suite managed by this
@@ -135,9 +128,9 @@ export default class MultiReporter implements Reporter {
   emitOutOfBandTest(
       title: string, error?: any, suiteTitle?: string, estimated?: boolean) {
     util.debug('MultiReporter#emitOutOfBandTest(', arguments, ')');
-    var root: Mocha.ISuite = new (Mocha as any).Suite();
+    const root: Mocha.ISuite = new (Mocha as any).Suite();
     root.title = suiteTitle || '';
-    var test: ExtendedTest = new (Mocha as any).Test(title, function() {});
+    const test: ExtendedTest = new (Mocha as any).Test(title, function() {});
     test.parent = root;
     test.state = error ? 'failed' : 'passed';
     test.err = error;
@@ -146,7 +139,7 @@ export default class MultiReporter implements Reporter {
       this.total = this.total + ESTIMATED_TESTS_PER_SUITE;
     }
 
-    var runner = {total: 1};
+    const runner = {total: 1} as Mocha.IRunner;
     this.proxyEvent('start', runner);
     this.proxyEvent('suite', runner, root);
     this.proxyEvent('test', runner, test);
@@ -158,26 +151,26 @@ export default class MultiReporter implements Reporter {
     this.proxyEvent('test end', runner, test);
     this.proxyEvent('suite end', runner, root);
     this.proxyEvent('end', runner);
-  };
+  }
 
   /**
    * @param {!Location|string} location
    * @return {string}
    */
   suiteTitle(location: Location|string) {
-    var path = util.relativeLocation(location, this.basePath);
+    let path = util.relativeLocation(location, this.basePath);
     path = util.cleanLocation(path);
     return path;
-  };
+  }
 
   // Internal Interface
 
   /** @param {!Mocha.runners.Base} runner The runner to listen to events for. */
-  private bindChildRunner(runner: RealRunner) {
+  private bindChildRunner(runner: Mocha.IRunner) {
     MOCHA_EVENTS.forEach((eventName) => {
       runner.on(eventName, this.proxyEvent.bind(this, eventName, runner));
     });
-  };
+  }
 
   /**
    * Evaluates an event fired by `runner`, proxying it forward or buffering it.
@@ -187,8 +180,8 @@ export default class MultiReporter implements Reporter {
    * @param {...*} var_args Any additional data passed as part of the event.
    */
   private proxyEvent(
-      eventName: string, runner: MinimalRunner, ..._args: any[]) {
-    var extraArgs = Array.prototype.slice.call(arguments, 2);
+      eventName: string, runner: Mocha.IRunner, ..._args: any[]) {
+    const extraArgs = Array.prototype.slice.call(arguments, 2);
     if (this.complete) {
       console.warn(
           'out of order Mocha event for ' + runner.name + ':', eventName,
@@ -218,7 +211,7 @@ export default class MultiReporter implements Reporter {
       this.cleanEvent(eventName, runner, extraArgs);
       this.emit.apply(this, [eventName].concat(extraArgs));
     }
-  };
+  }
 
   /**
    * Cleans or modifies an event if needed.
@@ -228,7 +221,7 @@ export default class MultiReporter implements Reporter {
    * @param extraArgs
    */
   private cleanEvent(
-      eventName: string, _runner: MinimalRunner, ...extraArgs: any[]) {
+      eventName: string, _runner: Mocha.IRunner, ...extraArgs: any[]) {
     // Suite hierarchy
     if (extraArgs[0]) {
       extraArgs[0] = this.showRootSuite(extraArgs[0]);
@@ -241,7 +234,7 @@ export default class MultiReporter implements Reporter {
     if (extraArgs[0] && extraArgs[0].err) {
       extraArgs[0].err = Stacky.normalize(extraArgs[0].err, STACKY_CONFIG);
     }
-  };
+  }
 
   /**
    * We like to show the root suite's title, which requires a little bit of
@@ -250,30 +243,30 @@ export default class MultiReporter implements Reporter {
    * @param {!Mocha.Runnable} node
    */
   private showRootSuite(node: ExtendedRunnable) {
-    var leaf = node = Object.create(node);
+    const leaf = node = Object.create(node);
     while (node && node.parent) {
-      var wrappedParent = Object.create(node.parent);
+      const wrappedParent = Object.create(node.parent);
       node.parent = wrappedParent;
       node = wrappedParent;
     }
     node.root = false;
 
     return leaf;
-  };
+  }
 
   /** @param {!Mocha.runners.Base} runner */
-  private onRunnerStart(runner: MinimalRunner) {
+  private onRunnerStart(runner: Mocha.IRunner) {
     util.debug('MultiReporter#onRunnerStart:', runner.name);
     this.total = this.total - ESTIMATED_TESTS_PER_SUITE + runner.total;
     this.currentRunner = runner;
-  };
+  }
 
   /** @param {!Mocha.runners.Base} runner */
-  private onRunnerEnd(runner: MinimalRunner) {
+  private onRunnerEnd(runner: Mocha.IRunner) {
     util.debug('MultiReporter#onRunnerEnd:', runner.name);
     this.currentRunner = null;
     this.flushPendingEvents();
-  };
+  }
 
   /**
    * Flushes any buffered events and runs them through `proxyEvent`. This will
@@ -281,13 +274,12 @@ export default class MultiReporter implements Reporter {
    * buffered events.
    */
   private flushPendingEvents() {
-    var events = this.pendingEvents;
+    const events = this.pendingEvents;
     this.pendingEvents = [];
     events.forEach((eventArgs) => {
       this.proxyEvent.apply(this, eventArgs);
     });
-  };
+  }
 }
 
 export default interface MultiReporter extends Mocha.IRunner, EventEmitter {}
-;
