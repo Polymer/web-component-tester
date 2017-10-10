@@ -1,4 +1,5 @@
 import * as ChaiStatic from 'chai';
+import * as SinonStatic from 'sinon';
 import * as SocketIOStatic from 'socket.io';
 import * as StackyStatic from 'stacky';
 
@@ -31,9 +32,16 @@ declare global {
   interface PlatformStatic {
     performMicrotaskCheckpoint(): void;
   }
+  interface PolymerElement {
+    _stampTemplate?(): void;
+  }
+  interface PolymerElementConstructor {
+    prototype: PolymerElement;
+  }
   interface PolymerStatic {
     flush(): void;
     dom: {flush(): void};
+    Element: PolymerElementConstructor;
   }
 
   interface Element {
@@ -47,4 +55,5 @@ declare global {
   var Stacky: typeof StackyStatic;
   var io: typeof SocketIOStatic;
   var Platform: PlatformStatic;
+  var sinon: typeof SinonStatic;
 }
