@@ -21,6 +21,7 @@ browser/childrunner.js*
 browser/clisocket.js*
 browser/config.js*
 browser/declarations.js*
+browser/environment/*.js*
 browser/environment.js*
 browser/more-declarations.js*
 browser/reporters/*.js*

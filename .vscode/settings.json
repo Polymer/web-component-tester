@@ -20,6 +20,7 @@
     "browser/clisocket*.js*": true,
     "browser/config*.js*": true,
     "browser/declarations*.js*": true,
+    "browser/environment/*.js*": true,
     "browser/environment*.js*": true,
     "browser/more-declarations*.js*": true,
     "browser/reporters*.js*": true,
