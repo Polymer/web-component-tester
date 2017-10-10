@@ -18,6 +18,8 @@ declare namespace Mocha {
   interface ISuite {
     root: boolean;
   }
+
+  let Runner: {prototype: IRunner};
 }
 
 declare namespace SocketIO {
