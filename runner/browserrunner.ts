@@ -91,13 +91,15 @@ export class BrowserRunner {
       this.browser.configureHttp({retries: -1});
 
 
-      cleankill.onInterrupt((done) => {
-        if (!this.browser) {
-          return done();
-        }
+      cleankill.onInterrupt(() => {
+        return new Promise((resolve) => {
+          if (!this.browser) {
+            return resolve();
+          }
 
-        this.donePromise.then(() => done(), () => done());
-        this.done('Interrupting');
+          this.donePromise.then(() => resolve(), () => resolve());
+          this.done('Interrupting');
+        });
       });
 
       this.browser.on('command', (method: any, context: any) => {

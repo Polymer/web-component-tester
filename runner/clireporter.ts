@@ -90,9 +90,11 @@ export class CliReporter {
     this.emitter = emitter;
     this.stream = stream;
     this.options = options;
-    cleankill.onInterrupt((done) => {
-      this.flush();
-      done();
+    cleankill.onInterrupt(() => {
+      return new Promise((resolve) => {
+        this.flush();
+        resolve();
+      });
     });
 
     emitter.on('log:error', this.log.bind(this, chalk.red));

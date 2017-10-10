@@ -81,7 +81,7 @@ export async function test(options: Config|Context): Promise<void> {
     await steps.runTests(context);
   } finally {
     if (!context.options.skipCleanup) {
-      await new Promise((resolve) => cleankill.close(resolve));
+      await cleankill.close();
     }
   }
 };

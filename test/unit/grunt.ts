@@ -77,12 +77,12 @@ describe('grunt', function() {
     let sandbox: sinon.SinonSandbox;
     beforeEach(function() {
       sandbox = sinon.sandbox.create();
-      sandbox.stub(
-          steps, 'prepare',
+      sandbox.stub(steps, 'prepare')
+        .callsFake(
           async(_context: Context): Promise<void> => undefined);
 
-      sandbox.stub(wctLocalBrowsers, 'detect', async () => LOCAL_BROWSERS);
-      sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));
+      sandbox.stub(wctLocalBrowsers, 'detect').callsFake(async () => LOCAL_BROWSERS);
+      sandbox.stub(wctLocalBrowsers, 'supported').callsFake(() => _.keys(LOCAL_BROWSERS));
 
       process.chdir(path.resolve(__dirname, '../fixtures/cli/standard'));
     });
@@ -94,7 +94,7 @@ describe('grunt', function() {
     describe('with a passing suite', function() {
 
       beforeEach(function() {
-        sandbox.stub(steps, 'runTests', async(): Promise<void> => undefined);
+        sandbox.stub(steps, 'runTests').callsFake(async(): Promise<void> => undefined);
       });
 
       it('passes configuration through', async () => {
@@ -105,7 +105,7 @@ describe('grunt', function() {
 
     describe('with a failing suite', function() {
       beforeEach(function() {
-        sandbox.stub(steps, 'runTests', async () => {
+        sandbox.stub(steps, 'runTests').callsFake(async () => {
           throw 'failures';
         });
       });
