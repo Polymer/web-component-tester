@@ -1,4 +1,4 @@
-import {extendInterfaces} from './extend';
+import {extendInterfaces} from './extend.js';
 
 interface TestFixture extends HTMLElement {
   create(model: object): HTMLElement;

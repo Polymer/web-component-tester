@@ -8,8 +8,6 @@
  * Google as part of the polymer project is also subject to an additional IP
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import {EventEmitter} from 'events';
-
 import * as util from '../util.js';
 
 const STACKY_CONFIG = {
@@ -277,4 +275,5 @@ export default class MultiReporter implements Reporter {
   }
 }
 
-export default interface MultiReporter extends Mocha.IRunner, EventEmitter {}
+export default interface MultiReporter extends Mocha.IRunner,
+                                               NodeJS.EventEmitter {}

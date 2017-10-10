@@ -1,4 +1,4 @@
-import {extendInterfaces} from './extend';
+import {extendInterfaces} from './extend.js';
 
 // replacement map stores what should be
 let replacements = {};

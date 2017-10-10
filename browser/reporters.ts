@@ -8,7 +8,7 @@
  * Google as part of the polymer project is also subject to an additional IP
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import CLISocket from './clisocket';
+import CLISocket from './clisocket.js';
 import ConsoleReporter from './reporters/console.js';
 import HTMLReporter from './reporters/html.js';
 import MultiReporter, {ReporterFactory} from './reporters/multi.js';
