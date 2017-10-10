@@ -9,6 +9,8 @@ declare global {
   interface Window {
     __wctUseNpm?: boolean;
     WebComponents?: WebComponentsStatic;
+    Platform?: PlatformStatic;
+    Polymer?: PolymerStatic;
     WCT: {
       _ChildRunner: typeof ChildRunner; share: SharedState; _config: Config;
     };
@@ -22,6 +24,14 @@ declare global {
   }
   interface WebComponentsStatic {
     ready?(): void;
+    flush?(): void;
+  }
+  interface PlatformStatic {
+    performMicrotaskCheckpoint(): void;
+  }
+  interface PolymerStatic {
+    flush(): void;
+    dom: {flush(): void};
   }
 
   interface Element {
@@ -33,6 +43,6 @@ declare global {
   }
 
   var Stacky: typeof StackyStatic;
-
   var io: typeof SocketIOStatic;
+  var Platform: PlatformStatic;
 }
