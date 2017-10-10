@@ -73,9 +73,10 @@ gulp.task('clean', (done) => {
 
 gulp.task('test', function (done) {
   runSequence(
-    ['build:typescript', 'lint'],
+    'build:typescript',
     'test:unit',
     'test:integration',
+    'lint',
     done);
 });
 
@@ -144,7 +145,7 @@ gulp.task('test:style', function () {
   return gulp.src([
     '{browser,runner,environment,tasks}/**/*.js',
     'gulpfile.js',
-    '!runner/*.js',
+    '!runner/*.js', '!browser/**/*.js',
   ]).pipe(jshintFlow());
 });
 
@@ -166,12 +167,10 @@ gulp.task('tslint', () =>
   gulp.src([
     'runner/**/*.ts', '!runner/**/*.d.ts',
     'test/**/*.ts', '!test/**/*.d.ts',
-    'custom_typings/*.d.ts'
+    'custom_typings/*.d.ts', 'browser/**/*.ts', '!browser/**/*.ts'
   ])
-    .pipe(tslint({
-      configuration: 'tslint.json',
-    }))
-    .pipe(tslint.report('verbose')));
+    .pipe(tslint())
+    .pipe(tslint.report({ formatter: 'verbose' })));
 
 // Flows
 

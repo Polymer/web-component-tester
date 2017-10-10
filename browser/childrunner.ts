@@ -32,7 +32,7 @@ export default class ChildRunner {
   private share: SharedState;
 
   constructor(url: string, parentScope: Window) {
-    var urlBits = util.parseUrl(url);
+    const urlBits = util.parseUrl(url);
     util.mergeParams(
         urlBits.params, util.getParams(parentScope.location.search));
     delete urlBits.params.cli_browser_id;
@@ -56,7 +56,7 @@ export default class ChildRunner {
    */
   static current(): ChildRunner {
     return ChildRunner.get(window);
-  };
+  }
 
   /**
    * @param {!Window} target A window to find the ChildRunner of.
@@ -64,7 +64,7 @@ export default class ChildRunner {
    * @return {ChildRunner} The `ChildRunner` that was registered for `target`.
    */
   static get(target: Window, traversal?: boolean): ChildRunner {
-    var childRunner = ChildRunner._byUrl[target.location.href];
+    const childRunner = ChildRunner._byUrl[target.location.href];
     if (childRunner) {
       return childRunner;
     }
@@ -78,7 +78,7 @@ export default class ChildRunner {
     }
     // Otherwise, traverse.
     return window.parent.WCT._ChildRunner.get(target, true);
-  };
+  }
 
   /**
    * Loads and runs the subsuite.
@@ -94,7 +94,7 @@ export default class ChildRunner {
     this.iframe.src = this.url;
     this.iframe.classList.add('subsuite');
 
-    var container = document.getElementById('subsuites');
+    let container = document.getElementById('subsuites');
     if (!container) {
       container = document.createElement('div');
       container.id = 'subsuites';
@@ -117,7 +117,7 @@ export default class ChildRunner {
 
     this.iframe.contentWindow.addEventListener(
         'DOMContentLoaded', this.loaded.bind(this, null));
-  };
+  }
 
   /**
    * Called when the sub suite's iframe has loaded (or errored during load).
@@ -136,7 +136,7 @@ export default class ChildRunner {
       this.signalRunComplete(error);
       this.done();
     }
-  };
+  }
 
   /**
    * Called in mocha/run.js when all dependencies have loaded, and the child is
@@ -153,7 +153,7 @@ export default class ChildRunner {
       this.signalRunComplete(error);
       this.done();
     }
-  };
+  }
 
   /**
    * Called when the sub suite's tests are complete, so that it can clean up.
@@ -173,7 +173,7 @@ export default class ChildRunner {
       this.iframe.parentNode.removeChild(this.iframe);
       this.iframe = null;
     }.bind(this), 1);
-  };
+  }
 
   signalRunComplete(error?: any) {
     if (!this.onRunComplete)
@@ -181,5 +181,5 @@ export default class ChildRunner {
     this.state = 'complete';
     this.onRunComplete(error);
     this.onRunComplete = null;
-  };
+  }
 }
