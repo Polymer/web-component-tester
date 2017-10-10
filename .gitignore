@@ -18,6 +18,7 @@ test/integration/*.js.map
 test/fixtures/integration/temp
 
 browser/childrunner.js*
+browser/clisocket.js*
 browser/config.js*
 browser/declarations.js*
 browser/more-declarations.js*
