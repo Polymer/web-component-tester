@@ -16,3 +16,11 @@ test/integration/*.js
 test/integration/*.d.ts
 test/integration/*.js.map
 test/fixtures/integration/temp
+
+browser/childrunner.js*
+browser/config.js*
+browser/declarations.js*
+browser/more-declarations.js*
+browser/reporters/*.js*
+browser/suites.js*
+browser/util.js*
