@@ -64,7 +64,7 @@ export function loadScript(path: string, done: (error?: any) => void) {
  * @param {string} path The URI of the stylesheet to load.
  * @param {function} done
  */
-export function loadStyle(path: string, done: () => void) {
+export function loadStyle(path: string, done?: () => void) {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = path;

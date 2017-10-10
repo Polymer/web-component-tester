@@ -1,3 +1,4 @@
+import * as ChaiStatic from 'chai';
 import * as SocketIOStatic from 'socket.io';
 import * as StackyStatic from 'stacky';
 
@@ -13,6 +14,11 @@ declare global {
     };
     mocha: typeof mocha;
     Mocha: typeof Mocha;
+    __generatedByWct?: boolean;
+
+    chai: typeof ChaiStatic;
+    assert: typeof ChaiStatic.assert;
+    expect: typeof ChaiStatic.expect;
   }
   interface WebComponentsStatic {
     ready?(): void;
@@ -30,5 +36,3 @@ declare global {
 
   var io: typeof SocketIOStatic;
 }
-
-export {};
