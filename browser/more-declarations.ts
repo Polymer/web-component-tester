@@ -7,4 +7,13 @@ declare namespace Mocha {
     name?: string;
     total: number;
   }
+
+  interface IRunnable {
+    parent: {};
+    root: boolean;
+  }
+
+  interface ISuite {
+    root: boolean;
+  }
 }

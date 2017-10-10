@@ -36,11 +36,6 @@ export interface Reporter {}
 
 export interface ReporterFactory { new(parent: MultiReporter): Reporter; }
 
-interface ExtendedRunnable extends Mocha.IRunnable {
-  parent: {};
-  root: boolean;
-}
-
 interface ExtendedTest extends Mocha.ITest {
   err: any;
 }
@@ -242,7 +237,7 @@ export default class MultiReporter implements Reporter {
    *
    * @param {!Mocha.Runnable} node
    */
-  private showRootSuite(node: ExtendedRunnable) {
+  private showRootSuite(node: Mocha.IRunnable) {
     const leaf = node = Object.create(node);
     while (node && node.parent) {
       const wrappedParent = Object.create(node.parent);
