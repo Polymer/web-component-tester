@@ -19,7 +19,7 @@ declare namespace Mocha {
     root: boolean;
   }
 
-  let Runner: {prototype: IRunner};
+  let Runner: {prototype: IRunner; immediately(callback: () => void): void};
 }
 
 declare namespace SocketIO {

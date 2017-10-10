@@ -4,6 +4,7 @@ import * as StackyStatic from 'stacky';
 
 import {default as ChildRunner, SharedState} from './childrunner.js';
 import {Config} from './config.js';
+import MultiReporter from './reporters/multi';
 
 declare global {
   interface Window {
@@ -13,6 +14,7 @@ declare global {
     Polymer?: PolymerStatic;
     WCT: {
       _ChildRunner: typeof ChildRunner; share: SharedState; _config: Config;
+      _reporter: MultiReporter;
     };
     mocha: typeof mocha;
     Mocha: typeof Mocha;
