@@ -15,18 +15,8 @@
     "test/integration/*.js.map": true,
     "browser.js": true,
     "browser.js.map": true,
-    "browser/childrunner*.js*": true,
-    "browser/clisocket*.js*": true,
-    "browser/config*.js*": true,
-    "browser/declarations*.js*": true,
-    "browser/environment/*.js*": true,
-    "browser/environment*.js*": true,
-    "browser/more-declarations*.js*": true,
-    "browser/mocha/*.js*": true,
-    "browser/reporters/*.js*": true,
-    "browser/reporters*.js*": true,
-    "browser/suites*.js*": true,
-    "browser/util*.js*": true
+    "browser/**/*.js": true,
+    "browser/**/*.js.map": true
   },
   "typescript.tsdk": "./node_modules/typescript/lib"
 }

@@ -17,15 +17,8 @@ test/integration/*.d.ts
 test/integration/*.js.map
 test/fixtures/integration/temp
 
-browser/childrunner.js*
-browser/clisocket.js*
-browser/config.js*
-browser/declarations.js*
+browser/*.js
+browser/*.js.map
 browser/environment/*.js*
-browser/environment.js*
-browser/more-declarations.js*
 browser/mocha/*.js*
 browser/reporters/*.js*
-browser/reporters.js*
-browser/suites.js*
-browser/util.js*
