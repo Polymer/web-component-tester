@@ -15,7 +15,6 @@ const fs = require('fs');
 const glob = require('glob');
 const gulp = require('gulp');
 const bower = require('gulp-bower');
-const jshint = require('gulp-jshint');
 const mocha = require('gulp-spawn-mocha');
 const tslint = require('gulp-tslint');
 const ts = require('gulp-typescript');
@@ -31,7 +30,7 @@ const commonTools = {
   depcheck: commonDepCheck
 };
 
-gulp.task('lint', ['tslint', 'test:style', 'depcheck']);
+gulp.task('lint', ['tslint', 'depcheck']);
 
 // Meta tasks
 
@@ -152,13 +151,6 @@ gulp.task('build:wct-browser-legacy', [
     'build:wct-browser-legacy:browser',
 ]);
 
-gulp.task('test:style', function () {
-  return gulp.src([
-    '{browser,runner,environment,tasks}/**/*.js',
-    'gulpfile.js',
-    '!runner/*.js', '!browser/**/*.js',
-  ]).pipe(jshintFlow());
-});
 
 gulp.task('test:unit', function () {
   return gulp.src('test/unit/*.js', { read: false })
@@ -184,11 +176,6 @@ gulp.task('tslint', () =>
     .pipe(tslint.report({ formatter: 'verbose' })));
 
 // Flows
-
-const jshintFlow = lazypipe()
-  .pipe(jshint)
-  .pipe(jshint.reporter, 'jshint-stylish')
-  .pipe(jshint.reporter, 'fail');
 
 commonTools.depcheck({
   stickyDeps: new Set([
