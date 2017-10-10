@@ -11,7 +11,7 @@
 import CLISocket from './clisocket';
 import ConsoleReporter from './reporters/console.js';
 import HTMLReporter from './reporters/html.js';
-import MultiReporter from './reporters/multi.js';
+import MultiReporter, {ReporterFactory} from './reporters/multi.js';
 import TitleReporter from './reporters/title.js';
 import * as suites from './suites.js';
 
@@ -23,18 +23,18 @@ export let jsSuites: Array<undefined> = [];
  * @param {MultiReporter} parent The parent reporter, if present.
  * @return {!Array.<!Mocha.reporters.Base} The reporters that should be used.
  */
-export function determineReporters(socket: CLISocket, parent: MultiReporter) {
+export function determineReporters(
+    socket: CLISocket, parent: MultiReporter): ReporterFactory[] {
   // Parents are greedy.
   if (parent) {
     return [parent.childReporter(window.location)];
   }
 
   // Otherwise, we get to run wild without any parental supervision!
-  const reporters: Array<new (runner: Mocha.IRunner) => void> =
-      [TitleReporter, ConsoleReporter];
+  const reporters: Array<ReporterFactory> = [TitleReporter, ConsoleReporter];
 
   if (socket) {
-    reporters.push(function(runner: Mocha.IRunner) {
+    reporters.push(function(runner: MultiReporter) {
       socket.observe(runner);
     } as any);
   }

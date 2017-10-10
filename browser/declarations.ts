@@ -5,7 +5,10 @@ import * as StackyStatic from 'stacky';
 
 import {default as ChildRunner, SharedState} from './childrunner.js';
 import {Config} from './config.js';
-import MultiReporter from './reporters/multi';
+import MultiReporter from './reporters/multi.js';
+import * as suites from './suites.js';
+
+type loadSuitesType = (typeof suites.loadSuites);
 
 declare global {
   interface Window {
@@ -14,7 +17,10 @@ declare global {
     Platform?: PlatformStatic;
     Polymer?: PolymerStatic;
     WCT: {
-      _ChildRunner: typeof ChildRunner; share: SharedState; _config: Config;
+      readonly _ChildRunner: typeof ChildRunner; //
+      readonly share: SharedState; //
+      readonly _config: Config; //
+      readonly loadSuites: loadSuitesType;
       _reporter: MultiReporter;
     };
     mocha: typeof mocha;

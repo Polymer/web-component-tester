@@ -62,7 +62,7 @@ export function activeChildSuites(): string[] {
  * Loads all `.js` sources requested by the current suite.
  */
 export function loadJsSuites(
-    _reporter: undefined, done: (error: Error) => void) {
+    _reporter: MultiReporter, done: (error: Error) => void) {
   util.debug('loadJsSuites', jsSuites);
 
   const loaders = jsSuites.map(function(file) {

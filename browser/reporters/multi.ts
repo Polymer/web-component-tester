@@ -85,7 +85,7 @@ export default class MultiReporter implements Reporter {
    * @return A reporter-like "class" for each child suite
    *     that should be passed to `mocha.run`.
    */
-  childReporter(location: Location|string): ReporterConstructor {
+  childReporter(location: Location|string): ReporterFactory {
     const name = this.suiteTitle(location);
     // The reporter is used as a constructor, so we can't depend on `this` being
     // properly bound.
