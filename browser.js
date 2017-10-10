@@ -18,6 +18,267 @@
 
 window.__wctUseNpm = false;
 /**
+ * @license
+ * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+// Make sure that we use native timers, in case they're being stubbed out.
+var nativeSetInterval = window.setInterval;
+var nativeSetTimeout = window.setTimeout;
+var nativeRequestAnimationFrame = window.requestAnimationFrame;
+/**
+ * Runs `stepFn`, catching any error and passing it to `callback` (Node-style).
+ * Otherwise, calls `callback` with no arguments on success.
+ *
+ * @param {function()} callback
+ * @param {function()} stepFn
+ */
+function safeStep(callback, stepFn) {
+    var err;
+    try {
+        stepFn();
+    }
+    catch (error) {
+        err = error;
+    }
+    callback(err);
+}
+/**
+ * Runs your test at declaration time (before Mocha has begun tests). Handy for
+ * when you need to test document initialization.
+ *
+ * Be aware that any errors thrown asynchronously cannot be tied to your test.
+ * You may want to catch them and pass them to the done event, instead. See
+ * `safeStep`.
+ *
+ * @param {string} name The name of the test.
+ * @param {function(?function())} testFn The test function. If an argument is
+ *     accepted, the test will be treated as async, just like Mocha tests.
+ */
+function testImmediate(name, testFn) {
+    if (testFn.length > 0) {
+        return testImmediateAsync(name, testFn);
+    }
+    var err;
+    try {
+        testFn();
+    }
+    catch (error) {
+        err = error;
+    }
+    test(name, function (done) {
+        done(err);
+    });
+}
+/**
+ * An async-only variant of `testImmediate`.
+ *
+ * @param {string} name
+ * @param {function(?function())} testFn
+ */
+function testImmediateAsync(name, testFn) {
+    var testComplete = false;
+    var err;
+    test(name, function (done) {
+        var intervalId = nativeSetInterval(function () {
+            if (!testComplete)
+                return;
+            clearInterval(intervalId);
+            done(err);
+        }, 10);
+    });
+    try {
+        testFn(function (error) {
+            if (error)
+                err = error;
+            testComplete = true;
+        });
+    }
+    catch (error) {
+        err = error;
+        testComplete = true;
+    }
+}
+/**
+ * Triggers a flush of any pending events, observations, etc and calls you back
+ * after they have been processed.
+ *
+ * @param {function()} callback
+ */
+function flush(callback) {
+    // Ideally, this function would be a call to Polymer.dom.flush, but that
+    // doesn't support a callback yet
+    // (https://github.com/Polymer/polymer-dev/issues/851),
+    // ...and there's cross-browser flakiness to deal with.
+    // Make sure that we're invoking the callback with no arguments so that the
+    // caller can pass Mocha callbacks, etc.
+    var done = function done() {
+        callback();
+    };
+    // Because endOfMicrotask is flaky for IE, we perform microtask checkpoints
+    // ourselves (https://github.com/Polymer/polymer-dev/issues/114):
+    var isIE = navigator.appName === 'Microsoft Internet Explorer';
+    if (isIE && window.Platform && window.Platform.performMicrotaskCheckpoint) {
+        var reallyDone_1 = done;
+        done = function doneIE() {
+            Platform.performMicrotaskCheckpoint();
+            nativeSetTimeout(reallyDone_1, 0);
+        };
+    }
+    // Everyone else gets a regular flush.
+    var scope;
+    if (window.Polymer && window.Polymer.dom && window.Polymer.dom.flush) {
+        scope = window.Polymer.dom;
+    }
+    else if (window.Polymer && window.Polymer.flush) {
+        scope = window.Polymer;
+    }
+    else if (window.WebComponents && window.WebComponents.flush) {
+        scope = window.WebComponents;
+    }
+    if (scope) {
+        scope.flush();
+    }
+    // Ensure that we are creating a new _task_ to allow all active microtasks to
+    // finish (the code you're testing may be using endOfMicrotask, too).
+    nativeSetTimeout(done, 0);
+}
+/**
+ * Advances a single animation frame.
+ *
+ * Calls `flush`, `requestAnimationFrame`, `flush`, and `callback` sequentially
+ * @param {function()} callback
+ */
+function animationFrameFlush(callback) {
+    flush(function () {
+        nativeRequestAnimationFrame(function () {
+            flush(callback);
+        });
+    });
+}
+/**
+ * DEPRECATED: Use `flush`.
+ * @param {function} callback
+ */
+function asyncPlatformFlush(callback) {
+    console.warn('asyncPlatformFlush is deprecated in favor of the more terse flush()');
+    return window.flush(callback);
+}
+/**
+ *
+ */
+function waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime) {
+    timeoutTime = timeoutTime || Date.now() + (timeout || 1000);
+    intervalOrMutationEl = intervalOrMutationEl || 32;
+    try {
+        fn();
+    }
+    catch (e) {
+        if (Date.now() > timeoutTime) {
+            throw e;
+        }
+        else {
+            if (typeof intervalOrMutationEl !== 'number') {
+                intervalOrMutationEl.onMutation(intervalOrMutationEl, function () {
+                    waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime);
+                });
+            }
+            else {
+                nativeSetTimeout(function () {
+                    waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime);
+                }, intervalOrMutationEl);
+            }
+            return;
+        }
+    }
+    next();
+}
+window.safeStep = safeStep;
+window.testImmediate = testImmediate;
+window.testImmediateAsync = testImmediateAsync;
+window.flush = flush;
+window.animationFrameFlush = animationFrameFlush;
+window.asyncPlatformFlush = asyncPlatformFlush;
+window.waitFor = waitFor;
+
+/**
+ * The global configuration state for WCT's browser client.
+ */
+var _config = {
+    environmentScripts: !!window.__wctUseNpm ?
+        [
+            'stacky/browser.js', 'async/lib/async.js', 'lodash/index.js',
+            'mocha/mocha.js', 'chai/chai.js', '@polymer/sinonjs/sinon.js',
+            'sinon-chai/lib/sinon-chai.js',
+            'accessibility-developer-tools/dist/js/axs_testing.js',
+            '@polymer/test-fixture/test-fixture.js'
+        ] :
+        [
+            'stacky/browser.js', 'async/lib/async.js', 'lodash/lodash.js',
+            'mocha/mocha.js', 'chai/chai.js', 'sinonjs/sinon.js',
+            'sinon-chai/lib/sinon-chai.js',
+            'accessibility-developer-tools/dist/js/axs_testing.js'
+        ],
+    environmentImports: !!window.__wctUseNpm ? [] :
+        ['test-fixture/test-fixture.html'],
+    root: null,
+    waitForFrameworks: true,
+    waitFor: null,
+    numConcurrentSuites: 1,
+    trackConsoleError: true,
+    mochaOptions: { timeout: 10 * 1000 },
+    verbose: false,
+};
+/**
+ * Merges initial `options` into WCT's global configuration.
+ *
+ * @param {Object} options The options to merge. See `browser/config.js` for a
+ *     reference.
+ */
+function setup(options) {
+    var childRunner = ChildRunner.current();
+    if (childRunner) {
+        _deepMerge(_config, childRunner.parentScope.WCT._config);
+        // But do not force the mocha UI
+        delete _config.mochaOptions.ui;
+    }
+    if (options && typeof options === 'object') {
+        _deepMerge(_config, options);
+    }
+    if (!_config.root) {
+        // Sibling dependencies.
+        var root = scriptPrefix('browser.js');
+        _config.root = basePath(root.substr(0, root.length - 1));
+        if (!_config.root) {
+            throw new Error('Unable to detect root URL for WCT sources. Please set WCT.root before including browser.js');
+        }
+    }
+}
+/**
+ * Retrieves a configuration value.
+ */
+function get(key) {
+    return _config[key];
+}
+// Internal
+function _deepMerge(target, source) {
+    Object.keys(source).forEach(function (key) {
+        if (target[key] !== null && typeof target[key] === 'object' &&
+            !Array.isArray(target[key])) {
+            _deepMerge(target[key], source[key]);
+        }
+        else {
+            target[key] = source[key];
+        }
+    });
+}
+
+/**
  * @param {function()} callback A function to call when the active web component
  *     frameworks have loaded.
  */
@@ -305,7 +566,6 @@ var ChildRunner = /** @class */ (function () {
     ChildRunner.current = function () {
         return ChildRunner.get(window);
     };
-    ;
     /**
      * @param {!Window} target A window to find the ChildRunner of.
      * @param {boolean} traversal Whether this is a traversal from a child window.
@@ -326,7 +586,6 @@ var ChildRunner = /** @class */ (function () {
         // Otherwise, traverse.
         return window.parent.WCT._ChildRunner.get(target, true);
     };
-    ;
     /**
      * Loads and runs the subsuite.
      *
@@ -353,7 +612,6 @@ var ChildRunner = /** @class */ (function () {
         this.iframe.addEventListener('error', this.loaded.bind(this, new Error('Failed to load document ' + this.url)));
         this.iframe.contentWindow.addEventListener('DOMContentLoaded', this.loaded.bind(this, null));
     };
-    ;
     /**
      * Called when the sub suite's iframe has loaded (or errored during load).
      *
@@ -370,7 +628,6 @@ var ChildRunner = /** @class */ (function () {
             this.done();
         }
     };
-    ;
     /**
      * Called in mocha/run.js when all dependencies have loaded, and the child is
      * ready to start running tests
@@ -387,7 +644,6 @@ var ChildRunner = /** @class */ (function () {
             this.done();
         }
     };
-    ;
     /**
      * Called when the sub suite's tests are complete, so that it can clean up.
      */
@@ -405,7 +661,6 @@ var ChildRunner = /** @class */ (function () {
             this.iframe = null;
         }.bind(this), 1);
     };
-    ;
     ChildRunner.prototype.signalRunComplete = function (error) {
         if (!this.onRunComplete)
             return;
@@ -413,7 +668,6 @@ var ChildRunner = /** @class */ (function () {
         this.onRunComplete(error);
         this.onRunComplete = null;
     };
-    ;
     // ChildRunners get a pretty generous load timeout by default.
     ChildRunner.loadTimeout = 60000;
     // We can't maintain properties on iframe elements in Firefox/Safari/???, so
@@ -422,232 +676,130 @@ var ChildRunner = /** @class */ (function () {
     return ChildRunner;
 }());
 
+var SOCKETIO_ENDPOINT = window.location.protocol + '//' + window.location.host;
+var SOCKETIO_LIBRARY = SOCKETIO_ENDPOINT + '/socket.io/socket.io.js';
 /**
- * The global configuration state for WCT's browser client.
- */
-var _config = {
-    environmentScripts: !!window.__wctUseNpm ?
-        [
-            'stacky/browser.js', 'async/lib/async.js', 'lodash/index.js',
-            'mocha/mocha.js', 'chai/chai.js', '@polymer/sinonjs/sinon.js',
-            'sinon-chai/lib/sinon-chai.js',
-            'accessibility-developer-tools/dist/js/axs_testing.js',
-            '@polymer/test-fixture/test-fixture.js'
-        ] :
-        [
-            'stacky/browser.js', 'async/lib/async.js', 'lodash/lodash.js',
-            'mocha/mocha.js', 'chai/chai.js', 'sinonjs/sinon.js',
-            'sinon-chai/lib/sinon-chai.js',
-            'accessibility-developer-tools/dist/js/axs_testing.js'
-        ],
-    environmentImports: !!window.__wctUseNpm ? [] :
-        ['test-fixture/test-fixture.html'],
-    root: null,
-    waitForFrameworks: true,
-    waitFor: null,
-    numConcurrentSuites: 1,
-    trackConsoleError: true,
-    mochaOptions: { timeout: 10 * 1000 },
-    verbose: false,
-};
-/**
- * Merges initial `options` into WCT's global configuration.
+ * A socket for communication between the CLI and browser runners.
  *
- * @param {Object} options The options to merge. See `browser/config.js` for a
- *     reference.
+ * @param {string} browserId An ID generated by the CLI runner.
+ * @param {!io.Socket} socket The socket.io `Socket` to communicate over.
  */
-function setup(options) {
-    var childRunner = ChildRunner.current();
-    if (childRunner) {
-        _deepMerge(_config, childRunner.parentScope.WCT._config);
-        // But do not force the mocha UI
-        delete _config.mochaOptions.ui;
+var CLISocket = /** @class */ (function () {
+    function CLISocket(browserId, socket) {
+        this.browserId = browserId;
+        this.socket = socket;
     }
-    if (options && typeof options === 'object') {
-        _deepMerge(_config, options);
-    }
-    if (!_config.root) {
-        // Sibling dependencies.
-        var root = scriptPrefix('browser.js');
-        _config.root = basePath(root.substr(0, root.length - 1));
-        if (!_config.root) {
-            throw new Error('Unable to detect root URL for WCT sources. Please set WCT.root before including browser.js');
-        }
-    }
-}
-/**
- * Retrieves a configuration value.
- */
-function get(key) {
-    return _config[key];
-}
-// Internal
-function _deepMerge(target, source) {
-    Object.keys(source).forEach(function (key) {
-        if (target[key] !== null && typeof target[key] === 'object' &&
-            !Array.isArray(target[key])) {
-            _deepMerge(target[key], source[key]);
-        }
-        else {
-            target[key] = source[key];
-        }
-    });
-}
-
-var htmlSuites$1 = [];
-var jsSuites$1 = [];
-// We process grep ourselves to avoid loading suites that will be filtered.
-var GREP = getParam('grep');
-// work around mocha bug (https://github.com/mochajs/mocha/issues/2070)
-if (GREP) {
-    GREP = GREP.replace(/\\\./g, '.');
-}
-/**
- * Loads suites of tests, supporting both `.js` and `.html` files.
- *
- * @param files The files to load.
- */
-function loadSuites(files) {
-    files.forEach(function (file) {
-        if (/\.js(\?.*)?$/.test(file)) {
-            jsSuites$1.push(file);
-        }
-        else if (/\.html(\?.*)?$/.test(file)) {
-            htmlSuites$1.push(file);
-        }
-        else {
-            throw new Error('Unknown resource type: ' + file);
-        }
-    });
-}
-/**
- * @return The child suites that should be loaded, ignoring
- *     those that would not match `GREP`.
- */
-function activeChildSuites() {
-    var subsuites = htmlSuites$1;
-    if (GREP) {
-        var cleanSubsuites = [];
-        for (var i = 0, subsuite = void 0; subsuite = subsuites[i]; i++) {
-            if (GREP.indexOf(cleanLocation(subsuite)) !== -1) {
-                cleanSubsuites.push(subsuite);
-            }
-        }
-        subsuites = cleanSubsuites;
-    }
-    return subsuites;
-}
-/**
- * Loads all `.js` sources requested by the current suite.
- */
-function loadJsSuites(_reporter, done) {
-    debug('loadJsSuites', jsSuites$1);
-    var loaders = jsSuites$1.map(function (file) {
-        // We only support `.js` dependencies for now.
-        return loadScript.bind(util, file);
-    });
-    parallel(loaders, done);
-}
-function runSuites(reporter, childSuites, done) {
-    debug('runSuites');
-    var suiteRunners = [
-        // Run the local tests (if any) first, not stopping on error;
-        _runMocha.bind(null, reporter),
-    ];
-    // As well as any sub suites. Again, don't stop on error.
-    childSuites.forEach(function (file) {
-        suiteRunners.push(function (next) {
-            var childRunner = new ChildRunner(file, window);
-            reporter.emit('childRunner start', childRunner);
-            childRunner.run(function (error) {
-                reporter.emit('childRunner end', childRunner);
-                if (error)
-                    reporter.emitOutOfBandTest(file, error);
-                next();
+    /**
+     * @param {!Mocha.Runner} runner The Mocha `Runner` to observe, reporting
+     *     interesting events back to the CLI runner.
+     */
+    CLISocket.prototype.observe = function (runner) {
+        var _this = this;
+        this.emitEvent('browser-start', {
+            url: window.location.toString(),
+        });
+        // We only emit a subset of events that we care about, and follow a more
+        // general event format that is hopefully applicable to test runners beyond
+        // mocha.
+        //
+        // For all possible mocha events, see:
+        // https://github.com/visionmedia/mocha/blob/master/lib/runner.js#L36
+        runner.on('test', function (test) {
+            _this.emitEvent('test-start', { test: getTitles(test) });
+        });
+        runner.on('test end', function (test) {
+            _this.emitEvent('test-end', {
+                state: getState(test),
+                test: getTitles(test),
+                duration: test.duration,
+                error: test.err,
             });
         });
-    });
-    parallel(suiteRunners, get('numConcurrentSuites'), function (error) {
-        reporter.done();
-        done(error);
-    });
+        runner.on('fail', function (test, err) {
+            // fail the test run if we catch errors outside of a test function
+            if (test.type !== 'test') {
+                _this.emitEvent('browser-fail', 'Error thrown outside of test function: ' + err.stack);
+            }
+        });
+        runner.on('childRunner start', function (childRunner) {
+            _this.emitEvent('sub-suite-start', childRunner.share);
+        });
+        runner.on('childRunner end', function (childRunner) {
+            _this.emitEvent('sub-suite-end', childRunner.share);
+        });
+        runner.on('end', function () {
+            _this.emitEvent('browser-end');
+        });
+    };
+    /**
+     * @param {string} event The name of the event to fire.
+     * @param {*} data Additional data to pass with the event.
+     */
+    CLISocket.prototype.emitEvent = function (event, data) {
+        this.socket.emit('client-event', {
+            browserId: this.browserId,
+            event: event,
+            data: data,
+        });
+    };
+    /**
+     * Builds a `CLISocket` if we are within a CLI-run environment; short-circuits
+     * otherwise.
+     *
+     * @param {function(*, CLISocket)} done Node-style callback.
+     */
+    CLISocket.init = function (done) {
+        var browserId = getParam('cli_browser_id');
+        if (!browserId)
+            return done();
+        // Only fire up the socket for root runners.
+        if (ChildRunner.current())
+            return done();
+        loadScript(SOCKETIO_LIBRARY, function (error) {
+            if (error)
+                return done(error);
+            var socket = io(SOCKETIO_ENDPOINT);
+            socket.on('error', function (error) {
+                socket.off();
+                done(error);
+            });
+            socket.on('connect', function () {
+                socket.off();
+                done(null, new CLISocket(browserId, socket));
+            });
+        });
+    };
+    return CLISocket;
+}());
+// Misc Utility
+/**
+ * @param {!Mocha.Runnable} runnable The test or suite to extract titles from.
+ * @return {!Array.<string>} The titles of the runnable and its parents.
+ */
+function getTitles(runnable) {
+    var titles = [];
+    while (runnable && !runnable.root && runnable.title) {
+        titles.unshift(runnable.title);
+        runnable = runnable.parent;
+    }
+    return titles;
 }
 /**
- * Kicks off a mocha run, waiting for frameworks to load if necessary.
- *
- * @param {!MultiReporter} reporter Where to send Mocha's events.
- * @param {function} done A callback fired, _no error is passed_.
+ * @param {!Mocha.Runnable} runnable
+ * @return {string}
  */
-function _runMocha(reporter, done, waited) {
-    if (get('waitForFrameworks') && !waited) {
-        var waitFor = (get('waitFor') || whenFrameworksReady).bind(window);
-        waitFor(function () {
-            _fixCustomElements();
-            _runMocha(reporter, done, true);
-        });
-        return;
+function getState(runnable) {
+    if (runnable.state === 'passed') {
+        return 'passing';
     }
-    debug('_runMocha');
-    var mocha = window.mocha;
-    var Mocha = window.Mocha;
-    mocha.reporter(reporter.childReporter(window.location));
-    mocha.suite.title = reporter.suiteTitle(window.location);
-    mocha.grep(GREP);
-    // We can't use `mocha.run` because it bashes over grep, invert, and friends.
-    // See https://github.com/visionmedia/mocha/blob/master/support/tail.js#L137
-    var runner = Mocha.prototype.run.call(mocha, function (_error) {
-        if (document.getElementById('mocha')) {
-            Mocha.utils.highlightTags('code');
-        }
-        done(); // We ignore the Mocha failure count.
-    });
-    // Mocha's default `onerror` handling strips the stack (to support really old
-    // browsers). We upgrade this to get better stacks for async errors.
-    //
-    // TODO(nevir): Can we expand support to other browsers?
-    if (navigator.userAgent.match(/chrome/i)) {
-        window.onerror = null;
-        window.addEventListener('error', function (event) {
-            if (!event.error)
-                return;
-            if (event.error.ignore)
-                return;
-            runner.uncaught(event.error);
-        });
+    else if (runnable.state === 'failed') {
+        return 'failing';
     }
-}
-/**
- * In Chrome57 custom elements in the document might not get upgraded when
- * there is a high GC
- * https://bugs.chromium.org/p/chromium/issues/detail?id=701601 We clone and
- * replace the ones that weren't upgraded.
- */
-function _fixCustomElements() {
-    // Bail out if it is not Chrome 57.
-    var raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
-    var isM57 = raw && raw[2] === '57';
-    if (!isM57)
-        return;
-    var elements = document.body.querySelectorAll('*:not(script):not(style)');
-    var constructors = {};
-    for (var i = 0; i < elements.length; i++) {
-        var el = elements[i];
-        // This child has already been cloned and replaced by its parent, skip it!
-        if (!el.isConnected)
-            continue;
-        var tag = el.localName;
-        // Not a custom element!
-        if (tag.indexOf('-') === -1)
-            continue;
-        // Memoize correct constructors.
-        constructors[tag] =
-            constructors[tag] || document.createElement(tag).constructor;
-        // This one was correctly upgraded.
-        if (el instanceof constructors[tag])
-            continue;
-        debug('_fixCustomElements: found non-upgraded custom element ' + el);
-        var clone = document.importNode(el, true);
-        el.parentNode.replaceChild(clone, el);
+    else if (runnable.pending) {
+        return 'pending';
+    }
+    else {
+        return 'unknown';
     }
 }
 
@@ -1094,209 +1246,355 @@ function drawFaviconArc(context, total, start, length, color) {
     context.stroke();
 }
 
+var htmlSuites$1 = [];
+var jsSuites$1 = [];
+// We process grep ourselves to avoid loading suites that will be filtered.
+var GREP = getParam('grep');
+// work around mocha bug (https://github.com/mochajs/mocha/issues/2070)
+if (GREP) {
+    GREP = GREP.replace(/\\\./g, '.');
+}
+/**
+ * Loads suites of tests, supporting both `.js` and `.html` files.
+ *
+ * @param files The files to load.
+ */
+function loadSuites(files) {
+    files.forEach(function (file) {
+        if (/\.js(\?.*)?$/.test(file)) {
+            jsSuites$1.push(file);
+        }
+        else if (/\.html(\?.*)?$/.test(file)) {
+            htmlSuites$1.push(file);
+        }
+        else {
+            throw new Error('Unknown resource type: ' + file);
+        }
+    });
+}
+/**
+ * @return The child suites that should be loaded, ignoring
+ *     those that would not match `GREP`.
+ */
+function activeChildSuites() {
+    var subsuites = htmlSuites$1;
+    if (GREP) {
+        var cleanSubsuites = [];
+        for (var i = 0, subsuite = void 0; subsuite = subsuites[i]; i++) {
+            if (GREP.indexOf(cleanLocation(subsuite)) !== -1) {
+                cleanSubsuites.push(subsuite);
+            }
+        }
+        subsuites = cleanSubsuites;
+    }
+    return subsuites;
+}
+/**
+ * Loads all `.js` sources requested by the current suite.
+ */
+function loadJsSuites(_reporter, done) {
+    debug('loadJsSuites', jsSuites$1);
+    var loaders = jsSuites$1.map(function (file) {
+        // We only support `.js` dependencies for now.
+        return loadScript.bind(util, file);
+    });
+    parallel(loaders, done);
+}
+function runSuites(reporter, childSuites, done) {
+    debug('runSuites');
+    var suiteRunners = [
+        // Run the local tests (if any) first, not stopping on error;
+        _runMocha.bind(null, reporter),
+    ];
+    // As well as any sub suites. Again, don't stop on error.
+    childSuites.forEach(function (file) {
+        suiteRunners.push(function (next) {
+            var childRunner = new ChildRunner(file, window);
+            reporter.emit('childRunner start', childRunner);
+            childRunner.run(function (error) {
+                reporter.emit('childRunner end', childRunner);
+                if (error)
+                    reporter.emitOutOfBandTest(file, error);
+                next();
+            });
+        });
+    });
+    parallel(suiteRunners, get('numConcurrentSuites'), function (error) {
+        reporter.done();
+        done(error);
+    });
+}
+/**
+ * Kicks off a mocha run, waiting for frameworks to load if necessary.
+ *
+ * @param {!MultiReporter} reporter Where to send Mocha's events.
+ * @param {function} done A callback fired, _no error is passed_.
+ */
+function _runMocha(reporter, done, waited) {
+    if (get('waitForFrameworks') && !waited) {
+        var waitFor = (get('waitFor') || whenFrameworksReady).bind(window);
+        waitFor(function () {
+            _fixCustomElements();
+            _runMocha(reporter, done, true);
+        });
+        return;
+    }
+    debug('_runMocha');
+    var mocha = window.mocha;
+    var Mocha = window.Mocha;
+    mocha.reporter(reporter.childReporter(window.location));
+    mocha.suite.title = reporter.suiteTitle(window.location);
+    mocha.grep(GREP);
+    // We can't use `mocha.run` because it bashes over grep, invert, and friends.
+    // See https://github.com/visionmedia/mocha/blob/master/support/tail.js#L137
+    var runner = Mocha.prototype.run.call(mocha, function (_error) {
+        if (document.getElementById('mocha')) {
+            Mocha.utils.highlightTags('code');
+        }
+        done(); // We ignore the Mocha failure count.
+    });
+    // Mocha's default `onerror` handling strips the stack (to support really old
+    // browsers). We upgrade this to get better stacks for async errors.
+    //
+    // TODO(nevir): Can we expand support to other browsers?
+    if (navigator.userAgent.match(/chrome/i)) {
+        window.onerror = null;
+        window.addEventListener('error', function (event) {
+            if (!event.error)
+                return;
+            if (event.error.ignore)
+                return;
+            runner.uncaught(event.error);
+        });
+    }
+}
+/**
+ * In Chrome57 custom elements in the document might not get upgraded when
+ * there is a high GC
+ * https://bugs.chromium.org/p/chromium/issues/detail?id=701601 We clone and
+ * replace the ones that weren't upgraded.
+ */
+function _fixCustomElements() {
+    // Bail out if it is not Chrome 57.
+    var raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+    var isM57 = raw && raw[2] === '57';
+    if (!isM57)
+        return;
+    var elements = document.body.querySelectorAll('*:not(script):not(style)');
+    var constructors = {};
+    for (var i = 0; i < elements.length; i++) {
+        var el = elements[i];
+        // This child has already been cloned and replaced by its parent, skip it!
+        if (!el.isConnected)
+            continue;
+        var tag = el.localName;
+        // Not a custom element!
+        if (tag.indexOf('-') === -1)
+            continue;
+        // Memoize correct constructors.
+        constructors[tag] =
+            constructors[tag] || document.createElement(tag).constructor;
+        // This one was correctly upgraded.
+        if (el instanceof constructors[tag])
+            continue;
+        debug('_fixCustomElements: found non-upgraded custom element ' + el);
+        var clone = document.importNode(el, true);
+        el.parentNode.replaceChild(clone, el);
+    }
+}
+
 /**
  * @param {CLISocket} socket The CLI socket, if present.
  * @param {MultiReporter} parent The parent reporter, if present.
  * @return {!Array.<!Mocha.reporters.Base} The reporters that should be used.
  */
 function determineReporters(socket, parent) {
-  // Parents are greedy.
-  if (parent) {
-    return [parent.childReporter(window.location)];
-  }
-
-  // Otherwise, we get to run wild without any parental supervision!
-  var reporters = [Title, Console];
-
-  if (socket) {
-    reporters.push(function(runner) {
-      socket.observe(runner);
-    });
-  }
-
-  if (htmlSuites$1.length > 0 || jsSuites$1.length > 0) {
-    reporters.push(HTML);
-  }
-
-  return reporters;
+    // Parents are greedy.
+    if (parent) {
+        return [parent.childReporter(window.location)];
+    }
+    // Otherwise, we get to run wild without any parental supervision!
+    var reporters = [Title, Console];
+    if (socket) {
+        reporters.push(function (runner) {
+            socket.observe(runner);
+        });
+    }
+    if (htmlSuites$1.length > 0 || jsSuites$1.length > 0) {
+        reporters.push(HTML);
+    }
+    return reporters;
 }
-
 /**
  * Yeah, hideous, but this allows us to be loaded before Mocha, which is handy.
  */
 function injectMocha(Mocha) {
-  _injectPrototype(Console, Mocha.reporters.Base.prototype);
-  _injectPrototype(HTML,    Mocha.reporters.HTML.prototype);
-  // Mocha doesn't expose its `EventEmitter` shim directly, so:
-  _injectPrototype(MultiReporter,   Object.getPrototypeOf(Mocha.Runner.prototype));
+    _injectPrototype(Console, Mocha.reporters.Base.prototype);
+    _injectPrototype(HTML, Mocha.reporters.HTML.prototype);
+    // Mocha doesn't expose its `EventEmitter` shim directly, so:
+    _injectPrototype(MultiReporter, Object.getPrototypeOf(Mocha.Runner.prototype));
 }
-
 function _injectPrototype(klass, prototype) {
-  var newPrototype = Object.create(prototype);
-  // Only support
-  Object.keys(klass.prototype).forEach(function(key) {
-    newPrototype[key] = klass.prototype[key];
-  });
-
-  klass.prototype = newPrototype;
+    var newPrototype = Object.create(prototype);
+    // Only support
+    Object.keys(klass.prototype).forEach(function (key) {
+        newPrototype[key] = klass.prototype[key];
+    });
+    klass.prototype = newPrototype;
 }
 
 /**
  * Loads all environment scripts ...synchronously ...after us.
  */
 function loadSync() {
-  debug('Loading environment scripts:');
-  var a11ySuite = !!window.__wctUseNpm ?
-    'wct-browser-legacy/a11ySuite.js' : 'web-component-tester/data/a11ySuite.js';
-  var scripts = get('environmentScripts');
-  var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
-
-  // We can't inject a11ySuite when running the npm version because it is a
-  // module-based script that needs `<script type=module>` and compilation 
-  // for browsers without module support.
-  if (!a11ySuiteWillBeLoaded && !window.__wctUseNpm) {
-    // wct is running as a bower dependency, load a11ySuite from data/
-    scripts.push(a11ySuite);
-  }
-  scripts.forEach(function (path) {
-    var url = expandUrl(path, get('root'));
-    debug('Loading environment script:', url);
-    // Synchronous load.
-    document.write('<script src="' + encodeURI(url) + '"></script>'); // jshint ignore:line
-  });
-  debug('Environment scripts loaded');
-
-  var imports = get('environmentImports');
-  imports.forEach(function (path) {
-    var url = expandUrl(path, get('root'));
-    debug('Loading environment import:', url);
-    // Synchronous load.
-    document.write('<link rel="import" href="' + encodeURI(url) + '">'); // jshint ignore:line
-  });
-  debug('Environment imports loaded');
+    debug('Loading environment scripts:');
+    var a11ySuite = !!window.__wctUseNpm ?
+        'wct-browser-legacy/a11ySuite.js' :
+        'web-component-tester/data/a11ySuite.js';
+    var scripts = get('environmentScripts');
+    var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
+    // We can't inject a11ySuite when running the npm version because it is a
+    // module-based script that needs `<script type=module>` and compilation
+    // for browsers without module support.
+    if (!a11ySuiteWillBeLoaded && !window.__wctUseNpm) {
+        // wct is running as a bower dependency, load a11ySuite from data/
+        scripts.push(a11ySuite);
+    }
+    scripts.forEach(function (path) {
+        var url = expandUrl(path, get('root'));
+        debug('Loading environment script:', url);
+        // Synchronous load.
+        document.write('<script src="' + encodeURI(url) +
+            '"></script>'); // jshint ignore:line
+    });
+    debug('Environment scripts loaded');
+    var imports = get('environmentImports');
+    imports.forEach(function (path) {
+        var url = expandUrl(path, get('root'));
+        debug('Loading environment import:', url);
+        // Synchronous load.
+        document.write('<link rel="import" href="' + encodeURI(url) +
+            '">'); // jshint ignore:line
+    });
+    debug('Environment imports loaded');
 }
-
 /**
  * We have some hard dependencies on things that should be loaded via
  * `environmentScripts`, so we assert that they're present here; and do any
  * post-facto setup.
  */
 function ensureDependenciesPresent() {
-  _ensureMocha();
-  _checkChai();
+    _ensureMocha();
+    _checkChai();
 }
-
 function _ensureMocha() {
-  var Mocha = window.Mocha;
-  if (!Mocha) {
-    throw new Error('WCT requires Mocha. Please ensure that it is present in WCT.environmentScripts, or that you load it before loading web-component-tester/browser.js');
-  }
-  injectMocha(Mocha);
-  // Magic loading of mocha's stylesheet
-  var mochaPrefix = scriptPrefix('mocha.js');
-  // only load mocha stylesheet for the test runner output
-  // Not the end of the world, if it doesn't load.
-  if (mochaPrefix && window.top === window.self) {
-    loadStyle(mochaPrefix + 'mocha.css');
-  }
+    var Mocha = window.Mocha;
+    if (!Mocha) {
+        throw new Error('WCT requires Mocha. Please ensure that it is present in WCT.environmentScripts, or that you load it before loading web-component-tester/browser.js');
+    }
+    injectMocha(Mocha);
+    // Magic loading of mocha's stylesheet
+    var mochaPrefix = scriptPrefix('mocha.js');
+    // only load mocha stylesheet for the test runner output
+    // Not the end of the world, if it doesn't load.
+    if (mochaPrefix && window.top === window.self) {
+        loadStyle(mochaPrefix + 'mocha.css');
+    }
 }
-
 function _checkChai() {
-  if (!window.chai) {
-    debug('Chai not present; not registering shorthands');
-    return;
-  }
-
-  window.assert = window.chai.assert;
-  window.expect = window.chai.expect;
+    if (!window.chai) {
+        debug('Chai not present; not registering shorthands');
+        return;
+    }
+    window.assert = window.chai.assert;
+    window.expect = window.chai.expect;
 }
 
 // We may encounter errors during initialization (for example, syntax errors in
 // a test file). Hang onto those (and more) until we are ready to report them.
 var globalErrors = [];
-
 /**
  * Hook the environment to pick up on global errors.
  */
 function listenForErrors() {
-  window.addEventListener('error', function(event) {
-    globalErrors.push(event.error);
-  });
-
-  // Also, we treat `console.error` as a test failure. Unless you prefer not.
-  var origConsole = console;
-  var origError   = console.error;
-  console.error = function wctShimmedError() {
-    origError.apply(origConsole, arguments);
-    if (get('trackConsoleError')) {
-      throw 'console.error: ' + Array.prototype.join.call(arguments, ' ');
-    }
-  };
+    window.addEventListener('error', function (event) {
+        globalErrors.push(event.error);
+    });
+    // Also, we treat `console.error` as a test failure. Unless you prefer not.
+    var origConsole = console;
+    var origError = console.error;
+    console.error = function wctShimmedError() {
+        origError.apply(origConsole, arguments);
+        if (get('trackConsoleError')) {
+            throw 'console.error: ' + Array.prototype.join.call(arguments, ' ');
+        }
+    };
 }
 
 var interfaceExtensions = [];
-
 /**
  * Registers an extension that extends the global `Mocha` implementation
  * with new helper methods. These helper methods will be added to the `window`
  * when tests run for both BDD and TDD interfaces.
  */
 function extendInterfaces(helperName, helperFactory) {
-  interfaceExtensions.push(function() {
-    var Mocha = window.Mocha;
-    // For all Mocha interfaces (probably just TDD and BDD):
-    Object.keys(Mocha.interfaces).forEach(function(interfaceName) {
-      // This is the original callback that defines the interface (TDD or BDD):
-      var originalInterface = Mocha.interfaces[interfaceName];
-      // This is the name of the "teardown" or "afterEach" property for the
-      // current interface:
-      var teardownProperty = interfaceName === 'tdd' ? 'teardown' : 'afterEach';
-      // The original callback is monkey patched with a new one that appends to
-      // the global context however we want it to:
-      Mocha.interfaces[interfaceName] = function(suite) {
-        // Call back to the original callback so that we get the base interface:
-        originalInterface.apply(this, arguments);
-        // Register a listener so that we can further extend the base interface:
-        suite.on('pre-require', function(context, file, mocha) {
-          // Capture a bound reference to the teardown function as a convenience:
-          var teardown = context[teardownProperty].bind(context);
-          // Add our new helper to the testing context. The helper is generated
-          // by a factory method that receives the context, the teardown function
-          // and the interface name and returns the new method to be added to
-          // that context:
-          context[helperName] = helperFactory(context, teardown, interfaceName);
+    interfaceExtensions.push(function () {
+        var Mocha = window.Mocha;
+        // For all Mocha interfaces (probably just TDD and BDD):
+        Object.keys(Mocha.interfaces)
+            .forEach(function (interfaceName) {
+            // This is the original callback that defines the interface (TDD or
+            // BDD):
+            var originalInterface = Mocha.interfaces[interfaceName];
+            // This is the name of the "teardown" or "afterEach" property for the
+            // current interface:
+            var teardownProperty = interfaceName === 'tdd' ? 'teardown' : 'afterEach';
+            // The original callback is monkey patched with a new one that appends
+            // to the global context however we want it to:
+            Mocha.interfaces[interfaceName] = function (suite) {
+                // Call back to the original callback so that we get the base
+                // interface:
+                originalInterface.apply(this, arguments);
+                // Register a listener so that we can further extend the base
+                // interface:
+                suite.on('pre-require', function (context, _file, _mocha) {
+                    // Capture a bound reference to the teardown function as a
+                    // convenience:
+                    var teardown = context[teardownProperty].bind(context);
+                    // Add our new helper to the testing context. The helper is
+                    // generated by a factory method that receives the context,
+                    // the teardown function and the interface name and returns
+                    // the new method to be added to that context:
+                    context[helperName] =
+                        helperFactory(context, teardown, interfaceName);
+                });
+            };
         });
-      };
     });
-  });
 }
-
 /**
  * Applies any registered interface extensions. The extensions will be applied
  * as many times as this function is called, so don't call it more than once.
  */
 function applyExtensions() {
-  interfaceExtensions.forEach(function(applyExtension) {
-    applyExtension();
-  });
+    interfaceExtensions.forEach(function (applyExtension) {
+        applyExtension();
+    });
 }
 
 extendInterfaces('fixture', function (context, teardown) {
-
-  // Return context.fixture if it is already a thing, for backwards
-  // compatibility with `test-fixture-mocha.js`:
-  return context.fixture || function fixture(fixtureId, model) {
-
-    // Automatically register a teardown callback that will restore the
-    // test-fixture:
-    teardown(function () {
-      document.getElementById(fixtureId).restore();
-    });
-
-    // Find the test-fixture with the provided ID and create it, returning
-    // the results:
-    return document.getElementById(fixtureId).create(model);
-  };
+    // Return context.fixture if it is already a thing, for backwards
+    // compatibility with `test-fixture-mocha.js`:
+    return context.fixture || function fixture(fixtureId, model) {
+        // Automatically register a teardown callback that will restore the
+        // test-fixture:
+        teardown(function () {
+            document.getElementById(fixtureId).restore();
+        });
+        // Find the test-fixture with the provided ID and create it, returning
+        // the results:
+        return document.getElementById(fixtureId).create(model);
+    };
 });
 
 /**
@@ -1325,31 +1623,27 @@ extendInterfaces('fixture', function (context, teardown) {
  *   });
  * });
  */
-extendInterfaces('stub', function(context, teardown) {
-
-  return function stub(tagName, implementation) {
-    // Find the prototype of the element being stubbed:
-    var proto = document.createElement(tagName).constructor.prototype;
-
-    // For all keys in the implementation to stub with..
-    var stubs = Object.keys(implementation).map(function(key) {
-      // Stub the method on the element prototype with Sinon:
-      return sinon.stub(proto, key, implementation[key]);
-    });
-
-    // After all tests..
-    teardown(function() {
-      stubs.forEach(function(stub) {
-        stub.restore();
-      });
-    });
-  };
+extendInterfaces('stub', function (_context, teardown) {
+    return function stub(tagName, implementation) {
+        // Find the prototype of the element being stubbed:
+        var proto = document.createElement(tagName).constructor.prototype;
+        // For all keys in the implementation to stub with..
+        var stubs = Object.keys(implementation).map(function (key) {
+            // Stub the method on the element prototype with Sinon:
+            return sinon.stub(proto, key, implementation[key]);
+        });
+        // After all tests..
+        teardown(function () {
+            stubs.forEach(function (stub) {
+                stub.restore();
+            });
+        });
+    };
 });
 
 // replacement map stores what should be
 var replacements = {};
 var replaceTeardownAttached = false;
-
 /**
  * replace
  *
@@ -1364,92 +1658,75 @@ var replaceTeardownAttached = false;
  * All annotations and attributes will be set on the placement element the way
  * they were set for the original element.
  */
-extendInterfaces('replace', function (context, teardown) {
-  return function replace(oldTagName) {
-    return {
-      with: function (tagName) {
-        // Standardizes our replacements map
-        oldTagName = oldTagName.toLowerCase();
-        tagName = tagName.toLowerCase();
-
-        replacements[oldTagName] = tagName;
-
-        // If the function is already a stub, restore it to original
-        if (document.importNode.isSinonProxy) {
-          return;
-        }
-
-        if (!Polymer.Element) {
-          Polymer.Element = function () { };
-          Polymer.Element.prototype._stampTemplate = function () { };
-        }
-
-        // Keep a reference to the original `document.importNode`
-        // implementation for later:
-        var originalImportNode = document.importNode;
-
-        // Use Sinon to stub `document.ImportNode`:
-        sinon.stub(document, 'importNode', function (origContent, deep) {
-          var templateClone = document.createElement('template');
-          var content = templateClone.content;
-          var inertDoc = content.ownerDocument;
-
-          // imports node from inertDoc which holds inert nodes.
-          templateClone.content.appendChild(inertDoc.importNode(origContent, true));
-
-          // optional arguments are not optional on IE.
-          var nodeIterator = document.createNodeIterator(content,
-            NodeFilter.SHOW_ELEMENT, null, true);
-          var node;
-
-          // Traverses the tree. A recently-replaced node will be put next, so
-          // if a node is replaced, it will be checked if it needs to be
-          // replaced again.
-          while (node = nodeIterator.nextNode()) {
-            var currentTagName = node.tagName.toLowerCase();
-
-            if (replacements.hasOwnProperty(currentTagName)) {
-              currentTagName = replacements[currentTagName];
-
-              // find the final tag name.
-              while (replacements[currentTagName]) {
-                currentTagName = replacements[currentTagName];
-              }
-
-              // Create a replacement:
-              var replacement = document.createElement(currentTagName);
-
-              // For all attributes in the original node..
-              for (var index = 0; index < node.attributes.length; ++index) {
-                // Set that attribute on the replacement:
-                replacement.setAttribute(
-                  node.attributes[index].name, node.attributes[index].value);
-              }
-
-              // Replace the original node with the replacement node:
-              node.parentNode.replaceChild(replacement, node);
+extendInterfaces('replace', function (_context, teardown) {
+    return function replace(oldTagName) {
+        return {
+            with: function (tagName) {
+                // Standardizes our replacements map
+                oldTagName = oldTagName.toLowerCase();
+                tagName = tagName.toLowerCase();
+                replacements[oldTagName] = tagName;
+                // If the function is already a stub, restore it to original
+                if (document.importNode.isSinonProxy) {
+                    return;
+                }
+                if (!window.Polymer.Element) {
+                    window.Polymer.Element = function () { };
+                    window.Polymer.Element.prototype._stampTemplate = function () { };
+                }
+                // Keep a reference to the original `document.importNode`
+                // implementation for later:
+                var originalImportNode = document.importNode;
+                // Use Sinon to stub `document.ImportNode`:
+                sinon.stub(document, 'importNode', function (origContent, deep) {
+                    var templateClone = document.createElement('template');
+                    var content = templateClone.content;
+                    var inertDoc = content.ownerDocument;
+                    // imports node from inertDoc which holds inert nodes.
+                    templateClone.content.appendChild(inertDoc.importNode(origContent, true));
+                    // optional arguments are not optional on IE.
+                    var nodeIterator = document.createNodeIterator(content, NodeFilter.SHOW_ELEMENT, null, true);
+                    var node;
+                    // Traverses the tree. A recently-replaced node will be put next,
+                    // so if a node is replaced, it will be checked if it needs to be
+                    // replaced again.
+                    while (node = nodeIterator.nextNode()) {
+                        var currentTagName = node.tagName.toLowerCase();
+                        if (replacements.hasOwnProperty(currentTagName)) {
+                            currentTagName = replacements[currentTagName];
+                            // find the final tag name.
+                            while (replacements[currentTagName]) {
+                                currentTagName = replacements[currentTagName];
+                            }
+                            // Create a replacement:
+                            var replacement = document.createElement(currentTagName);
+                            // For all attributes in the original node..
+                            for (var index = 0; index < node.attributes.length; ++index) {
+                                // Set that attribute on the replacement:
+                                replacement.setAttribute(node.attributes[index].name, node.attributes[index].value);
+                            }
+                            // Replace the original node with the replacement node:
+                            node.parentNode.replaceChild(replacement, node);
+                        }
+                    }
+                    return originalImportNode.call(this, content, deep);
+                });
+                if (!replaceTeardownAttached) {
+                    // After each test...
+                    teardown(function () {
+                        replaceTeardownAttached = true;
+                        // Restore the stubbed version of `document.importNode`:
+                        var documentImportNode = document.importNode;
+                        if (documentImportNode.isSinonProxy) {
+                            documentImportNode.restore();
+                        }
+                        // Empty the replacement map
+                        replacements = {};
+                    });
+                }
             }
-          }
-
-          return originalImportNode.call(this, content, deep);
-        });
-
-        if (!replaceTeardownAttached) {
-          // After each test...
-          teardown(function () {
-            replaceTeardownAttached = true;
-            // Restore the stubbed version of `document.importNode`:
-            if (document.importNode.isSinonProxy) {
-              document.importNode.restore();
-            }
-
-            // Empty the replacement map
-            replacements = {};
-          });
-        }
-      }
+        };
     };
-  };
 });
 
 // Mocha global helpers, broken out by testing method.
@@ -1457,32 +1734,31 @@ extendInterfaces('replace', function (context, teardown) {
 // Keys are the method for a particular interface; values are their analog in
 // the opposite interface.
 var MOCHA_EXPORTS = {
-  // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
-  tdd: {
-    'setup': '"before"',
-    'teardown': '"after"',
-    'suiteSetup': '"beforeEach"',
-    'suiteTeardown': '"afterEach"',
-    'suite': '"describe" or "context"',
-    'test': '"it" or "specify"',
-  },
-  // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/bdd.js
-  bdd: {
-    'before': '"setup"',
-    'after': '"teardown"',
-    'beforeEach': '"suiteSetup"',
-    'afterEach': '"suiteTeardown"',
-    'describe': '"suite"',
-    'context': '"suite"',
-    'xdescribe': '"suite.skip"',
-    'xcontext': '"suite.skip"',
-    'it': '"test"',
-    'xit': '"test.skip"',
-    'specify': '"test"',
-    'xspecify': '"test.skip"',
-  },
+    // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
+    tdd: {
+        'setup': '"before"',
+        'teardown': '"after"',
+        'suiteSetup': '"beforeEach"',
+        'suiteTeardown': '"afterEach"',
+        'suite': '"describe" or "context"',
+        'test': '"it" or "specify"',
+    },
+    // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/bdd.js
+    bdd: {
+        'before': '"setup"',
+        'after': '"teardown"',
+        'beforeEach': '"suiteSetup"',
+        'afterEach': '"suiteTeardown"',
+        'describe': '"suite"',
+        'context': '"suite"',
+        'xdescribe': '"suite.skip"',
+        'xcontext': '"suite.skip"',
+        'it': '"test"',
+        'xit': '"test.skip"',
+        'specify': '"test"',
+        'xspecify': '"test.skip"',
+    },
 };
-
 /**
  * Exposes all Mocha methods up front, configuring and running mocha
  * automatically when you call them.
@@ -1490,428 +1766,106 @@ var MOCHA_EXPORTS = {
  * The assumption is that it is a one-off (sub-)suite of tests being run.
  */
 function stubInterfaces() {
-  Object.keys(MOCHA_EXPORTS).forEach(function (ui) {
-    Object.keys(MOCHA_EXPORTS[ui]).forEach(function (key) {
-      window[key] = function wrappedMochaFunction() {
-        _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
-        if (!window[key] || window[key] === wrappedMochaFunction) {
-          throw new Error('Expected mocha.setup to define ' + key);
-        }
-        window[key].apply(window, arguments);
-      };
+    var keys = Object.keys(MOCHA_EXPORTS);
+    keys.forEach(function (ui) {
+        Object.keys(MOCHA_EXPORTS[ui]).forEach(function (key) {
+            window[key] = function wrappedMochaFunction() {
+                _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
+                if (!window[key] || window[key] === wrappedMochaFunction) {
+                    throw new Error('Expected mocha.setup to define ' + key);
+                }
+                window[key].apply(window, arguments);
+            };
+        });
     });
-  });
 }
-
 // Whether we've called `mocha.setup`
 var _mochaIsSetup = false;
-
 /**
  * @param {string} ui Sets up mocha to run `ui`-style tests.
  * @param {string} key The method called that triggered this.
  * @param {string} alternate The matching method in the opposite interface.
  */
 function _setupMocha(ui, key, alternate) {
-  var mochaOptions = get('mochaOptions');
-  if (mochaOptions.ui && mochaOptions.ui !== ui) {
-    var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. ' +
-      'You called "' + key + '". Did you mean ' + alternate + '?';
-    throw new Error(message);
-  }
-  if (_mochaIsSetup) return;
-
-  applyExtensions();
-  mochaOptions.ui = ui;
-  mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
-}
-
-var SOCKETIO_ENDPOINT = window.location.protocol + '//' + window.location.host;
-var SOCKETIO_LIBRARY  = SOCKETIO_ENDPOINT + '/socket.io/socket.io.js';
-
-/**
- * A socket for communication between the CLI and browser runners.
- *
- * @param {string} browserId An ID generated by the CLI runner.
- * @param {!io.Socket} socket The socket.io `Socket` to communicate over.
- */
-function CLISocket(browserId, socket) {
-  this.browserId = browserId;
-  this.socket    = socket;
-}
-
-/**
- * @param {!Mocha.Runner} runner The Mocha `Runner` to observe, reporting
- *     interesting events back to the CLI runner.
- */
-CLISocket.prototype.observe = function observe(runner) {
-  this.emitEvent('browser-start', {
-    url: window.location.toString(),
-  });
-
-  // We only emit a subset of events that we care about, and follow a more
-  // general event format that is hopefully applicable to test runners beyond
-  // mocha.
-  //
-  // For all possible mocha events, see:
-  // https://github.com/visionmedia/mocha/blob/master/lib/runner.js#L36
-  runner.on('test', function(test) {
-    this.emitEvent('test-start', {test: getTitles(test)});
-  }.bind(this));
-
-  runner.on('test end', function(test) {
-    this.emitEvent('test-end', {
-      state:    getState(test),
-      test:     getTitles(test),
-      duration: test.duration,
-      error:    test.err,
-    });
-  }.bind(this));
-
-  runner.on('fail', function(test, err) {
-    // fail the test run if we catch errors outside of a test function
-    if (test.type !== 'test') {
-      this.emitEvent('browser-fail', 'Error thrown outside of test function: ' + err.stack);
+    var mochaOptions = get('mochaOptions');
+    if (mochaOptions.ui && mochaOptions.ui !== ui) {
+        var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui +
+            ' Mocha styles is not supported. ' +
+            'You called "' + key + '". Did you mean ' + alternate + '?';
+        throw new Error(message);
     }
-  }.bind(this));
-
-  runner.on('childRunner start', function(childRunner) {
-    this.emitEvent('sub-suite-start', childRunner.share);
-  }.bind(this));
-
-  runner.on('childRunner end', function(childRunner) {
-    this.emitEvent('sub-suite-end', childRunner.share);
-  }.bind(this));
-
-  runner.on('end', function() {
-    this.emitEvent('browser-end');
-  }.bind(this));
-};
-
-/**
- * @param {string} event The name of the event to fire.
- * @param {*} data Additional data to pass with the event.
- */
-CLISocket.prototype.emitEvent = function emitEvent(event, data) {
-  this.socket.emit('client-event', {
-    browserId: this.browserId,
-    event:     event,
-    data:      data,
-  });
-};
-
-/**
- * Builds a `CLISocket` if we are within a CLI-run environment; short-circuits
- * otherwise.
- *
- * @param {function(*, CLISocket)} done Node-style callback.
- */
-CLISocket.init = function init(done) {
-  var browserId = getParam('cli_browser_id');
-  if (!browserId) return done();
-  // Only fire up the socket for root runners.
-  if (ChildRunner.current()) return done();
-
-  loadScript(SOCKETIO_LIBRARY, function(error) {
-    if (error) return done(error);
-
-    var socket = io(SOCKETIO_ENDPOINT);
-    socket.on('error', function(error) {
-      socket.off();
-      done(error);
-    });
-
-    socket.on('connect', function() {
-      socket.off();
-      done(null, new CLISocket(browserId, socket));
-    });
-  });
-};
-
-// Misc Utility
-
-/**
- * @param {!Mocha.Runnable} runnable The test or suite to extract titles from.
- * @return {!Array.<string>} The titles of the runnable and its parents.
- */
-function getTitles(runnable) {
-  var titles = [];
-  while (runnable && !runnable.root && runnable.title) {
-    titles.unshift(runnable.title);
-    runnable = runnable.parent;
-  }
-  return titles;
-}
-
-/**
- * @param {!Mocha.Runnable} runnable
- * @return {string}
- */
-function getState(runnable) {
-  if (runnable.state === 'passed') {
-    return 'passing';
-  } else if (runnable.state == 'failed') {
-    return 'failing';
-  } else if (runnable.pending) {
-    return 'pending';
-  } else {
-    return 'unknown';
-  }
-}
-
-/**
- * @license
- * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
- */
-
-// Make sure that we use native timers, in case they're being stubbed out.
-var setInterval           = window.setInterval;           // jshint ignore:line
-var setTimeout$1            = window.setTimeout;            // jshint ignore:line
-var requestAnimationFrame = window.requestAnimationFrame; // jshint ignore:line
-
-/**
- * Runs `stepFn`, catching any error and passing it to `callback` (Node-style).
- * Otherwise, calls `callback` with no arguments on success.
- *
- * @param {function()} callback
- * @param {function()} stepFn
- */
-window.safeStep = function safeStep(callback, stepFn) {
-  var err;
-  try {
-    stepFn();
-  } catch (error) {
-    err = error;
-  }
-  callback(err);
-};
-
-/**
- * Runs your test at declaration time (before Mocha has begun tests). Handy for
- * when you need to test document initialization.
- *
- * Be aware that any errors thrown asynchronously cannot be tied to your test.
- * You may want to catch them and pass them to the done event, instead. See
- * `safeStep`.
- *
- * @param {string} name The name of the test.
- * @param {function(?function())} testFn The test function. If an argument is
- *     accepted, the test will be treated as async, just like Mocha tests.
- */
-window.testImmediate = function testImmediate(name, testFn) {
-  if (testFn.length > 0) {
-    return testImmediateAsync(name, testFn);
-  }
-
-  var err;
-  try {
-    testFn();
-  } catch (error) {
-    err = error;
-  }
-
-  test(name, function(done) {
-    done(err);
-  });
-};
-
-/**
- * An async-only variant of `testImmediate`.
- *
- * @param {string} name
- * @param {function(?function())} testFn
- */
-window.testImmediateAsync = function testImmediateAsync(name, testFn) {
-  var testComplete = false;
-  var err;
-
-  test(name, function(done) {
-    var intervalId = setInterval(function() {
-      if (!testComplete) return;
-      clearInterval(intervalId);
-      done(err);
-    }, 10);
-  });
-
-  try {
-    testFn(function(error) {
-      if (error) err = error;
-      testComplete = true;
-    });
-  } catch (error) {
-    err = error;
-    testComplete = true;
-  }
-};
-
-/**
- * Triggers a flush of any pending events, observations, etc and calls you back
- * after they have been processed.
- *
- * @param {function()} callback
- */
-window.flush = function flush(callback) {
-  // Ideally, this function would be a call to Polymer.dom.flush, but that doesn't
-  // support a callback yet (https://github.com/Polymer/polymer-dev/issues/851),
-  // ...and there's cross-browser flakiness to deal with.
-
-  // Make sure that we're invoking the callback with no arguments so that the
-  // caller can pass Mocha callbacks, etc.
-  var done = function done() { callback(); };
-
-  // Because endOfMicrotask is flaky for IE, we perform microtask checkpoints
-  // ourselves (https://github.com/Polymer/polymer-dev/issues/114):
-  var isIE = navigator.appName == 'Microsoft Internet Explorer';
-  if (isIE && window.Platform && window.Platform.performMicrotaskCheckpoint) {
-    var reallyDone = done;
-    done = function doneIE() {
-      Platform.performMicrotaskCheckpoint();
-      setTimeout$1(reallyDone, 0);
-    };
-  }
-
-  // Everyone else gets a regular flush.
-  var scope;
-  if (window.Polymer && window.Polymer.dom && window.Polymer.dom.flush) {
-    scope = window.Polymer.dom;
-  } else if (window.Polymer && window.Polymer.flush) {
-    scope = window.Polymer;
-  } else if (window.WebComponents && window.WebComponents.flush) {
-    scope = window.WebComponents;
-  }
-  if (scope) {
-    scope.flush();
-  }
-
-  // Ensure that we are creating a new _task_ to allow all active microtasks to
-  // finish (the code you're testing may be using endOfMicrotask, too).
-  setTimeout$1(done, 0);
-};
-
-/**
- * Advances a single animation frame.
- *
- * Calls `flush`, `requestAnimationFrame`, `flush`, and `callback` sequentially
- * @param {function()} callback
- */
-window.animationFrameFlush = function animationFrameFlush(callback) {
-  flush(function() {
-    requestAnimationFrame(function() {
-      flush(callback);
-    });
-  });
-};
-
-/**
- * DEPRECATED: Use `flush`.
- * @param {function} callback
- */
-window.asyncPlatformFlush = function asyncPlatformFlush(callback) {
-  console.warn('asyncPlatformFlush is deprecated in favor of the more terse flush()');
-  return window.flush(callback);
-};
-
-/**
- *
- */
-window.waitFor = function waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime) {
-  timeoutTime = timeoutTime || Date.now() + (timeout || 1000);
-  intervalOrMutationEl = intervalOrMutationEl || 32;
-  try {
-    fn();
-  } catch (e) {
-    if (Date.now() > timeoutTime) {
-      throw e;
-    } else {
-      if (isNaN(intervalOrMutationEl)) {
-        intervalOrMutationEl.onMutation(intervalOrMutationEl, function() {
-          waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime);
-        });
-      } else {
-        setTimeout$1(function() {
-          waitFor(fn, next, intervalOrMutationEl, timeout, timeoutTime);
-        }, intervalOrMutationEl);
-      }
-      return;
+    if (_mochaIsSetup) {
+        return;
     }
-  }
-  next();
-};
+    applyExtensions();
+    mochaOptions.ui = ui;
+    mocha.setup(mochaOptions); // Note that the reporter is configured in run.js.
+}
 
 // You can configure WCT before it has loaded by assigning your custom
 // configuration to the global `WCT`.
 setup(window.WCT);
-
 // Maybe some day we'll expose WCT as a module to whatever module registry you
 // are using (aka the UMD approach), or as an es6 module.
-var WCT = window.WCT = {};
-// A generic place to hang data about the current suite. This object is reported
-// back via the `sub-suite-start` and `sub-suite-end` events.
-WCT.share = {};
-// Until then, we get to rely on it to expose parent runners to their children.
-WCT._ChildRunner = ChildRunner;
-WCT._config      = _config;
-
-
-// Public Interface
-
-/**
- * Loads suites of tests, supporting both `.js` and `.html` files.
- *
- * @param {!Array.<string>} files The files to load.
- */
-WCT.loadSuites = loadSuites;
-
-
+var WCT = window.WCT = {
+    // A generic place to hang data about the current suite. This object is
+    // reported
+    // back via the `sub-suite-start` and `sub-suite-end` events.
+    share: {},
+    // Until then, we get to rely on it to expose parent runners to their
+    // children.
+    _ChildRunner: ChildRunner,
+    _reporter: undefined,
+    _config: _config,
+    // Public API
+    /**
+     * Loads suites of tests, supporting both `.js` and `.html` files.
+     *
+     * @param {!Array.<string>} files The files to load.
+     */
+    loadSuites: loadSuites,
+};
 // Load Process
-
 listenForErrors();
 stubInterfaces();
 loadSync();
-
 // Give any scripts on the page a chance to declare tests and muck with things.
-document.addEventListener('DOMContentLoaded', function() {
-  debug('DOMContentLoaded');
-
-  ensureDependenciesPresent();
-
-  // We need the socket built prior to building its reporter.
-  CLISocket.init(function(error, socket) {
-    if (error) throw error;
-
-    // Are we a child of another run?
-    var current = ChildRunner.current();
-    var parent  = current && current.parentScope.WCT._reporter;
-    debug('parentReporter:', parent);
-
-    var childSuites    = activeChildSuites();
-    var reportersToUse = determineReporters(socket, parent);
-    // +1 for any local tests.
-    var reporter = new MultiReporter(childSuites.length + 1, reportersToUse, parent);
-    WCT._reporter = reporter; // For environment/compatibility.js
-
-    // We need the reporter so that we can report errors during load.
-    loadJsSuites(reporter, function(error) {
-      // Let our parent know that we're about to start the tests.
-      if (current) current.ready(error);
-      if (error) throw error;
-
-      // Emit any errors we've encountered up til now
-      globalErrors.forEach(function onError(error) {
-        reporter.emitOutOfBandTest('Test Suite Initialization', error);
-      });
-
-      runSuites(reporter, childSuites, function(error) {
-        // Make sure to let our parent know that we're done.
-        if (current) current.done();
-        if (error) throw error;
-      });
+document.addEventListener('DOMContentLoaded', function () {
+    debug('DOMContentLoaded');
+    ensureDependenciesPresent();
+    // We need the socket built prior to building its reporter.
+    CLISocket.init(function (error, socket) {
+        if (error)
+            throw error;
+        // Are we a child of another run?
+        var current = ChildRunner.current();
+        var parent = current && current.parentScope.WCT._reporter;
+        debug('parentReporter:', parent);
+        var childSuites = activeChildSuites();
+        var reportersToUse = determineReporters(socket, parent);
+        // +1 for any local tests.
+        var reporter = new MultiReporter(childSuites.length + 1, reportersToUse, parent);
+        WCT._reporter = reporter; // For environment/compatibility.js
+        // We need the reporter so that we can report errors during load.
+        loadJsSuites(reporter, function (error) {
+            // Let our parent know that we're about to start the tests.
+            if (current)
+                current.ready(error);
+            if (error)
+                throw error;
+            // Emit any errors we've encountered up til now
+            globalErrors.forEach(function onError(error) {
+                reporter.emitOutOfBandTest('Test Suite Initialization', error);
+            });
+            runSuites(reporter, childSuites, function (error) {
+                // Make sure to let our parent know that we're done.
+                if (current)
+                    current.done();
+                if (error)
+                    throw error;
+            });
+        });
     });
-  });
 });
 
 }());
