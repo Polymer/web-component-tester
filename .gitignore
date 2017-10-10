@@ -24,6 +24,7 @@ browser/declarations.js*
 browser/environment/*.js*
 browser/environment.js*
 browser/more-declarations.js*
+browser/mocha/*.js*
 browser/reporters/*.js*
 browser/reporters.js*
 browser/suites.js*
