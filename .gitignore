@@ -23,5 +23,6 @@ browser/config.js*
 browser/declarations.js*
 browser/more-declarations.js*
 browser/reporters/*.js*
+browser/reporters.js*
 browser/suites.js*
 browser/util.js*
