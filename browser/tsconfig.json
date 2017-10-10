@@ -25,6 +25,7 @@
   ],
   "include": [
     "*.ts",
-    "**/*.ts"
+    "**/*.ts",
+    "../custom_typings/*.d.ts"
   ]
 }
