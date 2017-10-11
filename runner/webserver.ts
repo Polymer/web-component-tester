@@ -242,7 +242,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
         io.close();
       }
       await Promise.all(onDestroyHandlers.map((f) => f()));
-    };
+    }
     cleankill.onInterrupt(() => {
       return new Promise((resolve) => {
         interruptHandler().then(() => resolve(), resolve);
