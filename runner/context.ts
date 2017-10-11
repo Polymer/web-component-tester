@@ -114,6 +114,10 @@ export class Context extends events.EventEmitter {
    */
   emitHook(
       name: 'define:webserver', app: express.Express,
+      // The `mapper` param is a function the client of the hook uses to
+      // substitute a new app for the one given.  This enables, for example,
+      // mounting the polyserve app on a custom app to handle requests or mount
+      // middleware that needs to sit in front of polyserve's own handlers.
       mapper: (app: Express.Application) => void, options: ServerOptions,
       done?: (err?: any) => void): Promise<void>;
   emitHook(
