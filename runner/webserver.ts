@@ -167,12 +167,13 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     });
 
     const appMapper = async (app: express.Express, options: ServerOptions) => {
+      // Using the define:webserver hook to provide a mapper function that
+      // allows user to substitute their own app for the generated polyserve
+      // app.
       await wct.emitHook(
-          'define:webserver', app, options, (substitution: express.Express) => {
-            if (substitution) {
-              app = substitution;
-            }
-          });
+          'define:webserver', app, (substitution: express.Express) => {
+            app = substitution;
+          }, options);
       return app;
     };
 

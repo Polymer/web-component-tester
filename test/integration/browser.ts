@@ -422,8 +422,8 @@ describe('define:webserver hook', () => {
     const context = new Context(options);
     context.hook(
         'define:webserver',
-        (app: express.Application, _options: ServerOptions,
-         assign: (sub: express.Express) => void, done: (err?: any) => void) => {
+        (app: express.Application, assign: (sub: express.Express) => void,
+         _options: ServerOptions, done: (err?: any) => void) => {
           const newApp = express();
           newApp.get('*', (request, _response, next) => {
             requestedUrls.push(request.url);
