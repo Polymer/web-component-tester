@@ -166,6 +166,16 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       response.send(options.webserver._generatedIndexContent);
     });
 
+    const appMapper = async (app: express.Express, options: ServerOptions) => {
+      await wct.emitHook(
+          'define:webserver', app, options, (substitution: express.Express) => {
+            if (substitution) {
+              app = substitution;
+            }
+          });
+      return app;
+    };
+
     // Serve up project & dependencies via polyserve
     const polyserveResult = await startServers(
         {
@@ -177,16 +187,8 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           additionalRoutes,
           npm: !!options.npm,
         },
-        async (app: express.Express, options: ServerOptions) => {
-          await wct.emitHook(
-              'define:webserver', app, options,
-              (substitution: express.Express) => {
-                if (substitution) {
-                  app = substitution;
-                }
-              });
-          return app;
-        });
+        appMapper);
+
     let servers: Array<MainlineServer|VariantServer>;
 
     const onDestroyHandlers: Array<() => Promise<void>> = [];
