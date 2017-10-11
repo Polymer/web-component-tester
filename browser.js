@@ -1116,11 +1116,7 @@ var MultiReporter = /** @class */ (function () {
      * @param runner The runner that emitted this event.
      * @param extraArgs
      */
-    MultiReporter.prototype.cleanEvent = function (eventName, _runner) {
-        var extraArgs = [];
-        for (var _i = 2; _i < arguments.length; _i++) {
-            extraArgs[_i - 2] = arguments[_i];
-        }
+    MultiReporter.prototype.cleanEvent = function (eventName, _runner, extraArgs) {
         // Suite hierarchy
         if (extraArgs[0]) {
             extraArgs[0] = this.showRootSuite(extraArgs[0]);

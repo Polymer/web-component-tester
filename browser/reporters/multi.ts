@@ -214,7 +214,7 @@ export default class MultiReporter implements Reporter {
    * @param extraArgs
    */
   private cleanEvent(
-      eventName: string, _runner: Mocha.IRunner, ...extraArgs: any[]) {
+      eventName: string, _runner: Mocha.IRunner, extraArgs: any[]) {
     // Suite hierarchy
     if (extraArgs[0]) {
       extraArgs[0] = this.showRootSuite(extraArgs[0]);
