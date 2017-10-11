@@ -71,6 +71,10 @@ export interface Config {
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
   configFile?: string;
+  proxy?: {
+    path: string;
+    target: string;
+  };
   /** A deprecated option */
   browsers?: Browser[]|Browser;
 }

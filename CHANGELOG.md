@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   * Upgraded dependencies async, chai, cleankill, findup-sync, sinon, and socket.io.
   * Upgraded devDependencies update-notifier
 <!-- Add new, unreleased items here. -->
+* Added support for `proxy: {path: string, target: string}` config which is forwarded to `polyserve`
 
 ## 6.3.0 - 2017-10-02
 

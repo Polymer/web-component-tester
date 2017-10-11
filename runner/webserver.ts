@@ -175,6 +175,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       packageName,
       additionalRoutes,
       npm: !!options.npm,
+      proxy: options.proxy
     });
     let servers: Array<MainlineServer|VariantServer>;
 
