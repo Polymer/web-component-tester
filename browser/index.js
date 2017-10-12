@@ -75,6 +75,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var reporter = new MultiReporter(childSuites.length + 1, reportersToUse, parent);
     WCT._reporter = reporter; // For environment/compatibility.js
 
+    // Publish socket to allow communication for other parties.
+    if (socket) {
+      WCT.share.socket = socket;
+    }
+
     // We need the reporter so that we can report errors during load.
     suites.loadJsSuites(reporter, function(error) {
       // Let our parent know that we're about to start the tests.
