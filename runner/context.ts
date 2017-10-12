@@ -13,7 +13,9 @@
  */
 
 import * as events from 'events';
+import * as express from 'express';
 import * as _ from 'lodash';
+import {ExpressAppMapper, ServerOptions} from 'polyserve/lib/start_server';
 import * as socketIO from 'socket.io';
 import * as http from 'spdy';
 import * as util from 'util';
@@ -21,6 +23,7 @@ import * as util from 'util';
 import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
+
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 
@@ -110,7 +113,15 @@ export class Context extends events.EventEmitter {
    * @return {!Context}
    */
   emitHook(
-      name: 'prepare:webserver', app: Express.Application,
+      name: 'define:webserver', app: express.Express,
+      // The `mapper` param is a function the client of the hook uses to
+      // substitute a new app for the one given.  This enables, for example,
+      // mounting the polyserve app on a custom app to handle requests or mount
+      // middleware that needs to sit in front of polyserve's own handlers.
+      mapper: (app: Express.Application) => void, options: ServerOptions,
+      done?: (err?: any) => void): Promise<void>;
+  emitHook(
+      name: 'prepare:webserver', app: express.Express,
       done?: (err?: any) => void): Promise<void>;
   emitHook(name: 'configure', done?: (err?: any) => void): Promise<void>;
   emitHook(name: 'prepare', done?: (err?: any) => void): Promise<void>;

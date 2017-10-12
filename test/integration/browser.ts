@@ -13,10 +13,12 @@
  */
 
 import {expect} from 'chai';
+import * as express from 'express';
 import * as fs from 'fs';
 import * as lodash from 'lodash';
 import * as path from 'path';
 
+import {ExpressAppMapper, ServerOptions} from 'polyserve/lib/start_server';
 import {BrowserDef, Stats} from '../../runner/browserrunner';
 import {CompletedState, TestEndData} from '../../runner/clireporter';
 import * as config from '../../runner/config';
@@ -396,6 +398,51 @@ function repeatBrowsers<T>(
       .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
   return lodash.mapValues(context.stats, () => data);
 }
+
+describe('define:webserver hook', () => {
+  it('supports substituting given app', async function() {
+    this.timeout(20 * 1000);
+    const suiteRoot = await makeProperTestDir('define-webserver-hook');
+    const log: string[] = [];
+    const requestedUrls: string[] = [];
+    const options: config.Config = {
+      output: <any>{write: log.push.bind(log)},
+      ttyOutput: false,
+      root: suiteRoot,
+      browserOptions: <any>{
+        name: 'web-component-tester',
+        tags: ['org:Polymer', 'repo:web-component-tester'],
+      },
+      plugins: <any>{
+        local: {
+          skipSeleniumInstall: true,
+        }
+      },
+    };
+    const context = new Context(options);
+    context.hook(
+        'define:webserver',
+        (app: express.Application, assign: (sub: express.Express) => void,
+         _options: ServerOptions, done: (err?: any) => void) => {
+          const newApp = express();
+          newApp.get('*', (request, _response, next) => {
+            requestedUrls.push(request.url);
+            next();
+          });
+          newApp.use(app);
+          assign(newApp);
+          done();
+        });
+    await test(context);
+
+    // Our middleware records all the requested urls into this requestedUrls
+    // array, so we can test that the middleware works by inspecting it for
+    // expected tests.html file which should be loaded by index.html
+    expect(requestedUrls)
+        .to.include('/components/define-webserver-hook/test/tests.html');
+    return true;
+  });
+});
 
 describe('early failures', () => {
   it(`wct doesn't start testing if it's not bower installed locally`,
