@@ -881,7 +881,9 @@ var style = document.createElement('style');
 style.textContent = 'html, body {' +
                     '  position: relative;' +
                     '  height: 100%;' +
-                    '  width:  100%;' +
+                    '  width: 100%;' +
+                    '  margin: 0;' +
+                    '  padding: 0;' +
                     '  min-width: 900px;' +
                     '}' +
                     '#mocha, #subsuites {' +
