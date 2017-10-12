@@ -22,7 +22,7 @@ export var _config = {
   environmentScripts: !!window.__wctUseNpm ?
     [
       'stacky/browser.js',
-      'async/lib/async.js',
+      'async/dist/async.js',
       'lodash/index.js',
       'mocha/mocha.js',
       'chai/chai.js',
@@ -32,7 +32,7 @@ export var _config = {
       '@polymer/test-fixture/test-fixture.js'
     ] : [
       'stacky/browser.js',
-      'async/lib/async.js',
+      'async/dist/async.js',
       'lodash/lodash.js',
       'mocha/mocha.js',
       'chai/chai.js',
