@@ -221,7 +221,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           `${never}`);
     }
 
-    wct._httpServers = servers.map(s => s.server);
+    wct._httpServers = servers.map((s) => s.server);
 
     // At this point, we allow other plugins to hook and configure the
     // webservers as they please.
@@ -229,7 +229,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       await wct.emitHook('prepare:webserver', server.app);
     }
 
-    options.webserver._servers = servers.map(s => {
+    options.webserver._servers = servers.map((s) => {
       const port = s.server.address().port;
       const url = `http://localhost:${port}${pathToGeneratedIndex}`;
       return {url, variant: s.kind === 'mainline' ? '' : s.variantName};
@@ -257,14 +257,14 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
         io.close();
       }
       await Promise.all(onDestroyHandlers.map((f) => f()));
-    };
+    }
     cleankill.onInterrupt(() => {
       return new Promise((resolve) => {
         interruptHandler().then(() => resolve(), resolve);
       });
     });
   });
-};
+}
 
 function exists(path: string): boolean {
   try {

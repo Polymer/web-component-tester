@@ -84,7 +84,7 @@ export async function test(options: Config|Context): Promise<void> {
       await cleankill.close();
     }
   }
-};
+}
 
 // HACK
 test['test'] = test;

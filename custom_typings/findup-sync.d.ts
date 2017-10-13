@@ -5,7 +5,7 @@ declare module 'findup-sync' {
     cwd?: string;
   }
 
-  function mod(pattern: string[] | string, opts?: IOptions): string;
-  module mod { }
+  function mod(pattern: string[]|string, opts?: IOptions): string;
+  namespace mod {}
   export = mod;
 }

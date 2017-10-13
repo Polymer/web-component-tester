@@ -54,7 +54,7 @@ export class Plugin {
     } catch (error) {
       throw `Failed to load plugin "${this.name}": ${error}`;
     }
-  };
+  }
 
   /**
    * Retrieves a plugin by shorthand or module name (loading it as necessary).
@@ -78,7 +78,7 @@ export class Plugin {
     }
 
     return loaded[0];
-  };
+  }
 
   /**
    * @param {string} name
@@ -91,7 +91,7 @@ export class Plugin {
       }
     }
     return name;
-  };
+  }
 
   // HACK(rictic): Makes es6 style imports happy, so that we can do, e.g.
   //     import {Plugin} from './plugin';
