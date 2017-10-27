@@ -114,8 +114,7 @@ export function webserver(wct: Context): void {
       if (!version) {
         throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
-                                                                                           packageName
-                                                                                         }).
+            packageName}).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
@@ -175,7 +174,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       packageName,
       additionalRoutes,
       npm: !!options.npm,
-      proxy: options.proxy
+      proxy: options.proxy,
     });
     let servers: Array<MainlineServer|VariantServer>;
 
