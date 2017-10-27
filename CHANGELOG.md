@@ -6,11 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+<!-- Add new, unreleased items here. -->
 * Updated package.json:
   * Upgraded dependencies async, chai, cleankill, findup-sync, sinon, and socket.io.
   * Upgraded devDependencies update-notifier
-<!-- Add new, unreleased items here. -->
-* Added support for `proxy: {path: string, target: string}` config which is forwarded to `polyserve`
+* Added support for `proxy: {path: string, target: string}` config which is forwarded to `polyserve`.
 
 ## 6.3.0 - 2017-10-02
 
