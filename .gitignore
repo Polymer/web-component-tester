@@ -16,3 +16,9 @@ test/integration/*.js
 test/integration/*.d.ts
 test/integration/*.js.map
 test/fixtures/integration/temp
+
+browser/*.js
+browser/*.js.map
+browser/environment/*.js*
+browser/mocha/*.js*
+browser/reporters/*.js*

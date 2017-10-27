@@ -11,6 +11,6 @@ declare module 'promisify-node' {
   function promisify<A1, A2, A3, T>(
       f: (a: A1, a2: A2, a3: A3, cb: NodeCallback<T>) =>
           void): (a: A1, a2: A2, a3: A3) => Promise<T>;
-  module promisify {}
+  namespace promisify {}
   export = promisify;
 }

@@ -60,4 +60,4 @@ export async function findPort(ports: number[]): Promise<number> {
   } catch (error) {
     throw new Error('no port found!');
   }
-};
+}

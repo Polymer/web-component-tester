@@ -1,24 +1,25 @@
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import * as config from './config.js';
-
 import './mocha/fixture.js';
 import './mocha/stub.js';
 import './mocha/replace.js';
-import { applyExtensions } from './mocha/extend.js';
+
+import * as config from './config.js';
+import {applyExtensions} from './mocha/extend.js';
 
 // Mocha global helpers, broken out by testing method.
 //
 // Keys are the method for a particular interface; values are their analog in
 // the opposite interface.
-var MOCHA_EXPORTS = {
+const MOCHA_EXPORTS = {
   // https://github.com/visionmedia/mocha/blob/master/lib/interfaces/tdd.js
   tdd: {
     'setup': '"before"',
@@ -52,8 +53,9 @@ var MOCHA_EXPORTS = {
  * The assumption is that it is a one-off (sub-)suite of tests being run.
  */
 export function stubInterfaces() {
-  Object.keys(MOCHA_EXPORTS).forEach(function (ui) {
-    Object.keys(MOCHA_EXPORTS[ui]).forEach(function (key) {
+  const keys = Object.keys(MOCHA_EXPORTS) as Array<keyof typeof MOCHA_EXPORTS>;
+  keys.forEach(function(ui) {
+    Object.keys(MOCHA_EXPORTS[ui]).forEach(function(key) {
       window[key] = function wrappedMochaFunction() {
         _setupMocha(ui, key, MOCHA_EXPORTS[ui][key]);
         if (!window[key] || window[key] === wrappedMochaFunction) {
@@ -66,24 +68,26 @@ export function stubInterfaces() {
 }
 
 // Whether we've called `mocha.setup`
-var _mochaIsSetup = false;
+const _mochaIsSetup = false;
 
 /**
  * @param {string} ui Sets up mocha to run `ui`-style tests.
  * @param {string} key The method called that triggered this.
  * @param {string} alternate The matching method in the opposite interface.
  */
-function _setupMocha(ui, key, alternate) {
-  var mochaOptions = config.get('mochaOptions');
+function _setupMocha(ui: 'tdd'|'bdd', key: string, alternate: 'string') {
+  const mochaOptions = config.get('mochaOptions');
   if (mochaOptions.ui && mochaOptions.ui !== ui) {
-    var message = 'Mixing ' + mochaOptions.ui + ' and ' + ui + ' Mocha styles is not supported. ' +
-      'You called "' + key + '". Did you mean ' + alternate + '?';
+    const message = 'Mixing ' + mochaOptions.ui + ' and ' + ui +
+        ' Mocha styles is not supported. ' +
+        'You called "' + key + '". Did you mean ' + alternate + '?';
     throw new Error(message);
   }
-  if (_mochaIsSetup) return;
+  if (_mochaIsSetup) {
+    return;
+  }
 
   applyExtensions();
   mochaOptions.ui = ui;
   mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
 }
-

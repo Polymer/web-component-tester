@@ -13,7 +13,9 @@
  */
 
 import * as events from 'events';
+import * as express from 'express';
 import * as _ from 'lodash';
+import {ExpressAppMapper, ServerOptions} from 'polyserve/lib/start_server';
 import * as socketIO from 'socket.io';
 import * as http from 'spdy';
 import * as util from 'util';
@@ -21,6 +23,7 @@ import * as util from 'util';
 import {BrowserRunner} from './browserrunner';
 import * as config from './config';
 import {Plugin} from './plugin';
+
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 
@@ -83,7 +86,7 @@ export class Context extends events.EventEmitter {
   hook(name: string, handler: Handler) {
     this._hookHandlers[name] = this._hookHandlers[name] || [];
     this._hookHandlers[name].unshift(handler);
-  };
+  }
 
   /**
    * Registers a handler that will run after any handlers registered so far.
@@ -94,7 +97,7 @@ export class Context extends events.EventEmitter {
   hookLate(name: string, handler: Handler) {
     this._hookHandlers[name] = this._hookHandlers[name] || [];
     this._hookHandlers[name].push(handler);
-  };
+  }
 
   /**
    * Once all registered handlers have run for the hook, your callback will be
@@ -110,7 +113,15 @@ export class Context extends events.EventEmitter {
    * @return {!Context}
    */
   emitHook(
-      name: 'prepare:webserver', app: Express.Application,
+      name: 'define:webserver', app: express.Express,
+      // The `mapper` param is a function the client of the hook uses to
+      // substitute a new app for the one given.  This enables, for example,
+      // mounting the polyserve app on a custom app to handle requests or mount
+      // middleware that needs to sit in front of polyserve's own handlers.
+      mapper: (app: Express.Application) => void, options: ServerOptions,
+      done?: (err?: any) => void): Promise<void>;
+  emitHook(
+      name: 'prepare:webserver', app: express.Express,
       done?: (err?: any) => void): Promise<void>;
   emitHook(name: 'configure', done?: (err?: any) => void): Promise<void>;
   emitHook(name: 'prepare', done?: (err?: any) => void): Promise<void>;
@@ -174,7 +185,7 @@ export class Context extends events.EventEmitter {
       done();
     } catch (_) {
     }
-  };
+  }
 
   /**
    * @param {function(*, Array<!Plugin>)} done Asynchronously loads the plugins
@@ -197,7 +208,7 @@ export class Context extends events.EventEmitter {
         (<any>_).pairs(this.options.plugins),
         (p: [string, {disabled: boolean}]) => !p[1] || p[1].disabled);
     return _.map(pairs, (p) => p[0]);
-  };
+  }
 
   /**
    * @param {string} name
@@ -205,7 +216,7 @@ export class Context extends events.EventEmitter {
    */
   pluginOptions(name: string) {
     return this.options.plugins[Plugin.shortName(name)];
-  };
+  }
 
   static Context = Context;
 }
