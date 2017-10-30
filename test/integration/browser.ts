@@ -298,7 +298,7 @@ function assertTests(context: VariantResults, expected: TestNode) {
 /** Asserts that all browsers emitted the given errors. */
 function assertTestErrors(
     context: VariantResults, expected: TestErrorExpectation) {
-  lodash.each(context.testErrors, function(actual, browser) {
+  lodash.each(context.testErrors, function(actual: any, browser) {
     expect(Object.keys(expected))
         .to.have.members(
             Object.keys(actual),
@@ -306,7 +306,7 @@ function assertTestErrors(
                 `: expected ${JSON.stringify(Object.keys(expected))} - got ${
                     JSON.stringify(Object.keys(actual))}`);
 
-    lodash.each(actual, function(errors, file) {
+    lodash.each(actual, function(errors: any, file: any) {
       const expectedErrors = expected[file];
       // Currently very dumb for simplicity: We don't support suites.
       expect(Object.keys(expectedErrors))

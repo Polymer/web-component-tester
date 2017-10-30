@@ -71,10 +71,7 @@ export interface Config {
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
   configFile?: string;
-  proxy?: {
-    path: string;
-    target: string;
-  };
+  proxy?: {path: string; target: string;};
   /** A deprecated option */
   browsers?: Browser[]|Browser;
 }
@@ -422,10 +419,12 @@ function _configurePluginOptions(
 
   _.each(plugin.cliConfig, function(config, key) {
     // Make sure that we don't expose the name prefixes.
-    if (!config.full) {
-      config.full = key;
+    if (!config['full']) {
+      config['full'] = key;
     }
-    parser.option('plugins.' + plugin.name + '.' + key, config);
+    parser.option(
+        'plugins.' + plugin.name + '.' + key,
+        config as NomnomInternal.Parser.Option);
   });
 }
 
@@ -457,7 +456,7 @@ export function merge(): Config {
   // false plugin configs are preserved.
   configs.forEach(function(config) {
     _.each(config.plugins, function(value, key) {
-      if (value === false) {
+      if (typeof value === 'boolean' && value === false) {
         result.plugins[key] = false;
       }
     });
