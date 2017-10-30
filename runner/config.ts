@@ -71,7 +71,14 @@ export interface Config {
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
   configFile?: string;
-  proxy?: {path: string; target: string;};
+  proxy?: {
+    // Top-level path that should be redirected to the proxy-target.  E.g.
+    // `api/v1` when you want to redirect all requests of
+    // `https://localhost/api/v1/`.
+    path: string;
+    // Host URL to proxy to, for example `https://myredirect:8080/foo`.
+    target: string;
+  };
   /** A deprecated option */
   browsers?: Browser[]|Browser;
 }
