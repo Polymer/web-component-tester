@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 <!-- Add new, unreleased items here. -->
+
+## 6.4.0 - 2017-10-31 🎃
+
 * Updated package.json:
   * Upgraded dependencies async, chai, cleankill, findup-sync, sinon, and socket.io.
   * Upgraded devDependencies update-notifier
