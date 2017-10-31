@@ -74,9 +74,9 @@ gulp.task('clean', (done) => {
 gulp.task('test', function (done) {
   runSequence(
     'build:typescript-server',
+    'lint',
     'test:unit',
     'test:integration',
-    'lint',
     done);
 });
 
@@ -87,7 +87,7 @@ gulp.task('build-all', (done) => {
 gulp.task('build',
   ['build:typescript-server', 'build:browser', 'build:wct-browser-legacy']);
 
-const tsProject = ts.createProject('tsconfig.json', {typescript});
+const tsProject = ts.createProject('tsconfig.json', { typescript });
 gulp.task('build:typescript-server', function () {
   // Ignore typescript errors, because gulp-typescript, like most things
   // gulp, can't be trusted.
@@ -122,10 +122,10 @@ gulp.task('build:browser', ['build:typescript-browser'], function (done) {
   }).catch(done);
 });
 
-gulp.task('build:wct-browser-legacy:a11ySuite', function() {
+gulp.task('build:wct-browser-legacy:a11ySuite', function () {
   return gulp.src(['data/a11ySuite-npm-header.txt', 'data/a11ySuite.js'])
-      .pipe(concat('a11ySuite.js'))
-      .pipe(gulp.dest('wct-browser-legacy/'));
+    .pipe(concat('a11ySuite.js'))
+    .pipe(gulp.dest('wct-browser-legacy/'));
 });
 
 gulp.task('build:wct-browser-legacy:browser', ['build:typescript-browser'], function (done) {
@@ -147,8 +147,8 @@ gulp.task('build:wct-browser-legacy:browser', ['build:typescript-browser'], func
 });
 
 gulp.task('build:wct-browser-legacy', [
-    'build:wct-browser-legacy:a11ySuite',
-    'build:wct-browser-legacy:browser',
+  'build:wct-browser-legacy:a11ySuite',
+  'build:wct-browser-legacy:browser',
 ]);
 
 

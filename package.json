@@ -46,8 +46,8 @@
   ],
   "scripts": {
     "lint": "gulp lint",
-    "build": "gulp build && tsc",
-    "test": "gulp test && tsc",
+    "build": "tsc && gulp build",
+    "test": "tsc && gulp test",
     "prepublishOnly": "gulp prepublish",
     "test:watch": "watch 'gulp test:unit' runner/ browser/ bin/ test/ tasks/",
     "format": "find runner test | grep '\\.js$\\|\\.ts$' | xargs ./node_modules/.bin/clang-format --style=file -i"

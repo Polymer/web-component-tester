@@ -6,11 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+<!-- Add new, unreleased items here. -->
 * Updated package.json:
   * Upgraded dependencies async, chai, cleankill, findup-sync, sinon, and socket.io.
   * Upgraded devDependencies update-notifier
-<!-- Add new, unreleased items here. -->
 * Added `define:webserver` hook to enable substitution of the generated express app for the webserver through a callback, to support use cases where a plugin might want to inject handlers or middleware in front of polyserve.
+* Added support for `proxy: {path: string, target: string}` config which is forwarded to `polyserve`.
 
 ## 6.3.0 - 2017-10-02
 
