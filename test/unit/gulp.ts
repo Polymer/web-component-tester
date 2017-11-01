@@ -39,13 +39,13 @@ describe('gulp', function() {
 
     sandbox = sinon.sandbox.create();
     sandbox.stub(
-        steps, 'prepare', async(_context: Context): Promise<void> => undefined);
-    sandbox.stub(steps, 'runTests', async (context: Context) => {
+        steps, 'prepare').callsFake(async(_context: Context): Promise<void> => undefined);
+    sandbox.stub(steps, 'runTests').callsFake(async (context: Context) => {
       options = context.options;
     });
 
     pluginsCalled = [];
-    sandbox.stub(Plugin.prototype, 'execute', async function(context: Context) {
+    sandbox.stub(Plugin.prototype, 'execute').callsFake(async function(context: Context) {
       pluginsCalled.push(this.name);
       context.options.activeBrowsers.push(
           <any>{browserName: 'fake for ' + this.name});

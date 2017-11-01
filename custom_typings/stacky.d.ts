@@ -22,5 +22,8 @@ declare module 'stacky' {
     };
   }
   export function clean(lines: ParsedStackFrame[], options: Options): void;
-  export function pretty(errorStack: string|ParsedStackFrame[], options: Options): string;
+  export function pretty(
+      errorStack: string|ParsedStackFrame[], options: Options): string;
+
+  export function normalize(error: Error, config: Options): Error;
 }

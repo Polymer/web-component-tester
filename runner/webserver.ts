@@ -13,10 +13,11 @@
  */
 
 import * as cleankill from 'cleankill';
+import * as express from 'express';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {MainlineServer, PolyserveServer, RequestHandler, startServers, VariantServer} from 'polyserve';
+import {MainlineServer, PolyserveServer, RequestHandler, ServerOptions, startServers, VariantServer} from 'polyserve';
 import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
@@ -114,8 +115,7 @@ export function webserver(wct: Context): void {
       if (!version) {
         throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
-                                                                                           packageName
-                                                                                         }).
+            packageName}).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
@@ -166,17 +166,32 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       response.send(options.webserver._generatedIndexContent);
     });
 
+    const appMapper = async (app: express.Express, options: ServerOptions) => {
+      // Using the define:webserver hook to provide a mapper function that
+      // allows user to substitute their own app for the generated polyserve
+      // app.
+      await wct.emitHook(
+          'define:webserver', app, (substitution: express.Express) => {
+            app = substitution;
+          }, options);
+      return app;
+    };
+
     // Serve up project & dependencies via polyserve
-    const polyserveResult = await startServers({
-      root: options.root,
-      componentDir,
-      compile: options.compile,
-      hostname: options.webserver.hostname,
-      headers: DEFAULT_HEADERS,
-      packageName,
-      additionalRoutes,
-      npm: !!options.npm,
-    });
+    const polyserveResult = await startServers(
+        {
+          root: options.root,
+          componentDir,
+          compile: options.compile,
+          hostname: options.webserver.hostname,
+          headers: DEFAULT_HEADERS,
+          packageName,
+          additionalRoutes,
+          npm: !!options.npm,
+          proxy: options.proxy,
+        },
+        appMapper);
+
     let servers: Array<MainlineServer|VariantServer>;
 
     const onDestroyHandlers: Array<() => Promise<void>> = [];
@@ -208,7 +223,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           `${never}`);
     }
 
-    wct._httpServers = servers.map(s => s.server);
+    wct._httpServers = servers.map((s) => s.server);
 
     // At this point, we allow other plugins to hook and configure the
     // webservers as they please.
@@ -216,7 +231,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       await wct.emitHook('prepare:webserver', server.app);
     }
 
-    options.webserver._servers = servers.map(s => {
+    options.webserver._servers = servers.map((s) => {
       const port = s.server.address().port;
       const url = `http://localhost:${port}${pathToGeneratedIndex}`;
       return {url, variant: s.kind === 'mainline' ? '' : s.variantName};
@@ -244,12 +259,14 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
         io.close();
       }
       await Promise.all(onDestroyHandlers.map((f) => f()));
-    };
-    cleankill.onInterrupt((done) => {
-      interruptHandler().then(() => done(), done);
+    }
+    cleankill.onInterrupt(() => {
+      return new Promise((resolve) => {
+        interruptHandler().then(() => resolve(), resolve);
+      });
     });
   });
-};
+}
 
 function exists(path: string): boolean {
   try {

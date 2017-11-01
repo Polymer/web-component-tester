@@ -395,9 +395,7 @@ follow.
 
 WCT supports node versions 6 and up.
 
-WCT experimentally supports running tests for web-components which are installed via npm to `node_modules` (instead of via bower to `bower_components`) by use of an `--npm` flag. Components which wish to support npm-based installation should include in their `devDependencies` either npm package:
-  - `wct-browser-legacy` contains only the javascript files and dependencies needed to run tests in the browser.  *(Recommended)*.
-  - `web-component-tester` has a lot of server dependencies you probably don't want and that don't flatten without user-prompted resolution.
+WCT experimentally supports running tests for web-components which are installed via npm to `node_modules` (instead of via bower to `bower_components`) by use of an `--npm` flag. Components which wish to support npm-based installation should include `wct-browser-legacy` in their `devDependencies`, which is a package that contains only the client-side javascript necessary for executing WCT tests in an npm-based environment.
 
 
 <!-- References -->

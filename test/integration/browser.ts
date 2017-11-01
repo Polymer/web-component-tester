@@ -13,10 +13,12 @@
  */
 
 import {expect} from 'chai';
+import * as express from 'express';
 import * as fs from 'fs';
 import * as lodash from 'lodash';
 import * as path from 'path';
 
+import {ExpressAppMapper, ServerOptions} from 'polyserve/lib/start_server';
 import {BrowserDef, Stats} from '../../runner/browserrunner';
 import {CompletedState, TestEndData} from '../../runner/clireporter';
 import * as config from '../../runner/config';
@@ -25,8 +27,8 @@ import {test} from '../../runner/test';
 import {makeProperTestDir} from './setup_test_dir';
 
 const testLocalBrowsers = !process.env.SKIP_LOCAL_BROWSERS;
-const testRemoteBrowsers = !process.env.SKIP_REMOTE_BROWSERS ||
-    !process.env.SAUCE_USERNAME || !process.env.SAUCE_ACCESS_KEY;
+const testRemoteBrowsers = !process.env.SKIP_REMOTE_BROWSERS &&
+    process.env.SAUCE_USERNAME && process.env.SAUCE_ACCESS_KEY;
 
 interface TestErrorExpectation {
   [fileName: string]: {
@@ -56,7 +58,7 @@ interface VariantResultGolden {
 }
 type TestNode = {
   state?: CompletedState; [subTestName: string]: TestNode | CompletedState;
-}
+};
 
 class TestResults {
   variants: {[variantName: string]: VariantResults} = {};
@@ -81,8 +83,8 @@ class VariantResults {
 
 /** Describes all suites, mixed into the environments being run. */
 function runsAllIntegrationSuites(options: config.Config = {}) {
-  let integrationDirnames =
-      fs.readdirSync(integrationDir).filter(fn => fn !== 'temp');
+  const integrationDirnames =
+      fs.readdirSync(integrationDir).filter((fn) => fn !== 'temp');
   // Overwrite integrationDirnames to run tests in isolation while developing:
   // integrationDirnames = ['components_dir'];
 
@@ -296,7 +298,7 @@ function assertTests(context: VariantResults, expected: TestNode) {
 /** Asserts that all browsers emitted the given errors. */
 function assertTestErrors(
     context: VariantResults, expected: TestErrorExpectation) {
-  lodash.each(context.testErrors, function(actual, browser) {
+  lodash.each(context.testErrors, function(actual: any, browser) {
     expect(Object.keys(expected))
         .to.have.members(
             Object.keys(actual),
@@ -304,7 +306,7 @@ function assertTestErrors(
                 `: expected ${JSON.stringify(Object.keys(expected))} - got ${
                     JSON.stringify(Object.keys(actual))}`);
 
-    lodash.each(actual, function(errors, file) {
+    lodash.each(actual, function(errors: any, file: any) {
       const expectedErrors = expected[file];
       // Currently very dumb for simplicity: We don't support suites.
       expect(Object.keys(expectedErrors))
@@ -396,6 +398,51 @@ function repeatBrowsers<T>(
       .to.be.greaterThan(0, 'No browsers were run. Bad environment?');
   return lodash.mapValues(context.stats, () => data);
 }
+
+describe('define:webserver hook', () => {
+  it('supports substituting given app', async function() {
+    this.timeout(20 * 1000);
+    const suiteRoot = await makeProperTestDir('define-webserver-hook');
+    const log: string[] = [];
+    const requestedUrls: string[] = [];
+    const options: config.Config = {
+      output: <any>{write: log.push.bind(log)},
+      ttyOutput: false,
+      root: suiteRoot,
+      browserOptions: <any>{
+        name: 'web-component-tester',
+        tags: ['org:Polymer', 'repo:web-component-tester'],
+      },
+      plugins: <any>{
+        local: {
+          skipSeleniumInstall: true,
+        }
+      },
+    };
+    const context = new Context(options);
+    context.hook(
+        'define:webserver',
+        (app: express.Application, assign: (sub: express.Express) => void,
+         _options: ServerOptions, done: (err?: any) => void) => {
+          const newApp = express();
+          newApp.get('*', (request, _response, next) => {
+            requestedUrls.push(request.url);
+            next();
+          });
+          newApp.use(app);
+          assign(newApp);
+          done();
+        });
+    await test(context);
+
+    // Our middleware records all the requested urls into this requestedUrls
+    // array, so we can test that the middleware works by inspecting it for
+    // expected tests.html file which should be loaded by index.html
+    expect(requestedUrls)
+        .to.include('/components/define-webserver-hook/test/tests.html');
+    return true;
+  });
+});
 
 describe('early failures', () => {
   it(`wct doesn't start testing if it's not bower installed locally`,

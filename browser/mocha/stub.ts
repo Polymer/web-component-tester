@@ -1,4 +1,4 @@
-import { extendInterfaces } from './extend';
+import {extendInterfaces} from './extend.js';
 
 /**
  * stub
@@ -26,14 +26,14 @@ import { extendInterfaces } from './extend';
  *   });
  * });
  */
-extendInterfaces('stub', function(context, teardown) {
+extendInterfaces('stub', function(_context, teardown) {
 
-  return function stub(tagName, implementation) {
+  return function stub(tagName: string, implementation: object) {
     // Find the prototype of the element being stubbed:
-    var proto = document.createElement(tagName).constructor.prototype;
+    const proto = document.createElement(tagName).constructor.prototype;
 
     // For all keys in the implementation to stub with..
-    var stubs = Object.keys(implementation).map(function(key) {
+    const stubs = Object.keys(implementation).map(function(key) {
       // Stub the method on the element prototype with Sinon:
       return sinon.stub(proto, key, implementation[key]);
     });

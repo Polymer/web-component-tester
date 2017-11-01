@@ -1,6 +1,6 @@
 {
   "name": "wct-browser-legacy",
-  "version": "0.0.1-pre.8",
+  "version": "0.0.1-pre.10",
   "description": "Client-side dependencies for web-component-tester tests installed via npm.",
   "main": "browser.js",
   "license": "http://polymer.github.io/LICENSE.txt",
@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/polymer/web-component-tester#readme",
   "dependencies": {
+    "@polymer/polymer": "^3.0.0-pre.1",
     "@polymer/sinonjs": "^1.14.1",
     "@polymer/test-fixture": "^3.0.0-pre.1",
     "@webcomponents/webcomponentsjs": "^1.0.7",

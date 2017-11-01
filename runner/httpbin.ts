@@ -94,9 +94,11 @@ async function main() {
   server.listen(port);
   (<any>server).port = port;
   serverDestroy(server);
-  cleankill.onInterrupt((done: (err: any) => void) => {
-    server.destroy();
-    server.on('close', done);
+  cleankill.onInterrupt(() => {
+    return new Promise((resolve) => {
+      server.destroy();
+      server.on('close', resolve);
+    });
   });
 
   console.log('Server running at http://localhost:' + port + '/httpbin/');

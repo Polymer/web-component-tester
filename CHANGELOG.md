@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- Add new, unreleased items here. -->
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 
+## 6.4.0 - 2017-10-31 🎃
+
+* Updated package.json:
+  * Upgraded dependencies async, chai, cleankill, findup-sync, sinon, and socket.io.
+  * Upgraded devDependencies update-notifier
+* Added `define:webserver` hook to enable substitution of the generated express app for the webserver through a callback, to support use cases where a plugin might want to inject handlers or middleware in front of polyserve.
+* Added support for `proxy: {path: string, target: string}` config which is forwarded to `polyserve`.
+
+## 6.3.0 - 2017-10-02
+
+* Updated wct-browser-legacy to use a module version of a11ySuite to get access to Polymer.dom.flush.
+* Updated generated index for webserver to use a11ySuite as a module.
+* Updated polyserve to get support for on-the-fly module compilation and `<script type=module>` conversion for browsers that don't support modules.
+
 ## 6.2.0 - 2017-09-19
 
 * Updated the browser.js file for npm case to use test-fixture as JS module instead of html import.
