@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 <!-- Add new, unreleased items here. -->
+Fixed #523 WCT ignores the webserver hostname
 
 ## 6.4.0 - 2017-10-31 🎃
 
