@@ -52,7 +52,7 @@ export let _config: Config = {
       ] :
       [
         'stacky/browser.js', 'async/lib/async.js', 'lodash/lodash.js',
-        'mocha/mocha.js', 'chai/chai.js', 'sinonjs/sinon.js',
+        'mocha/mocha.js', 'chai/chai.js', 'sinonjs/index.js',
         'sinon-chai/lib/sinon-chai.js',
         'accessibility-developer-tools/dist/js/axs_testing.js'
       ],
