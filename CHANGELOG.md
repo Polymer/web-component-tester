@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- Add new, unreleased items here. -->
 Fixed #523 WCT ignores the webserver hostname
 
+## 6.4.2 - 2017-11-27
+* Upgrade wct-sauce to 2.0.0-pre.3 to get updated browsers lists to include Safari 11 and Edge 15.
+
 ## 6.4.1 - 2017-11-20
 * Ensure that WCT is installed with compatible versions of wct-local and wct-sauce. This fixes a bug where – if incompatible versions are installed – they aren't able to coordinate shutdown, so WCT hangs after successfully completing a test run.
 
