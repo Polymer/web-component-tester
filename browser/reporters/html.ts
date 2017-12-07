@@ -44,7 +44,6 @@ style.textContent = `
     #mocha {
       box-sizing: border-box;
       margin: 0 !important;
-      overflow-y: auto;
       padding: 60px 20px;
       right: 0;
       left: 500px;
