@@ -941,7 +941,7 @@ function HTML(runner) {
 // Woo! What a hack. This just saves us from adding a bunch of complexity around
 // style loading.
 var style = document.createElement('style');
-style.textContent = "\n    html, body {\n      position: relative;\n      height: 100%;\n      width:  100%;\n      min-width: 900px;\n    }\n    #mocha, #subsuites {\n      height: 100%;\n      position: absolute;\n      top: 0;\n    }\n    #mocha {\n      box-sizing: border-box;\n      margin: 0 !important;\n      overflow-y: auto;\n      padding: 60px 20px;\n      right: 0;\n      left: 500px;\n    }\n    #subsuites {\n      -ms-flex-direction: column;\n      -webkit-flex-direction: column;\n      display: -ms-flexbox;\n      display: -webkit-flex;\n      display: flex;\n      flex-direction: column;\n      left: 0;\n      width: 500px;\n    }\n    #subsuites .subsuite {\n      border: 0;\n      width: 100%;\n      height: 100%;\n    }\n    #mocha .test.pass .duration {\n      color: #555 !important;\n    }\n";
+style.textContent = "\n    html, body {\n      position: relative;\n      height: 100%;\n      width:  100%;\n      min-width: 900px;\n    }\n    #mocha, #subsuites {\n      height: 100%;\n      position: absolute;\n      top: 0;\n    }\n    #mocha {\n      box-sizing: border-box;\n      margin: 0 !important;\n      padding: 60px 20px;\n      right: 0;\n      left: 500px;\n    }\n    #subsuites {\n      -ms-flex-direction: column;\n      -webkit-flex-direction: column;\n      display: -ms-flexbox;\n      display: -webkit-flex;\n      display: flex;\n      flex-direction: column;\n      left: 0;\n      width: 500px;\n    }\n    #subsuites .subsuite {\n      border: 0;\n      width: 100%;\n      height: 100%;\n    }\n    #mocha .test.pass .duration {\n      color: #555 !important;\n    }\n";
 document.head.appendChild(style);
 
 var STACKY_CONFIG = {
@@ -1029,8 +1029,7 @@ var MultiReporter = /** @class */ (function () {
      */
     MultiReporter.prototype.emitOutOfBandTest = function (title, error, suiteTitle, estimated) {
         debug('MultiReporter#emitOutOfBandTest(', arguments, ')');
-        var root = new Mocha.Suite();
-        root.title = suiteTitle || '';
+        var root = new Mocha.Suite(suiteTitle || '');
         var test = new Mocha.Test(title, function () { });
         test.parent = root;
         test.state = error ? 'failed' : 'passed';
