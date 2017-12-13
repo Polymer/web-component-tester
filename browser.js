@@ -1029,8 +1029,7 @@ var MultiReporter = /** @class */ (function () {
      */
     MultiReporter.prototype.emitOutOfBandTest = function (title, error, suiteTitle, estimated) {
         debug('MultiReporter#emitOutOfBandTest(', arguments, ')');
-        var root = new Mocha.Suite();
-        root.title = suiteTitle || '';
+        var root = new Mocha.Suite(suiteTitle || '');
         var test = new Mocha.Test(title, function () { });
         test.parent = root;
         test.state = error ? 'failed' : 'passed';
