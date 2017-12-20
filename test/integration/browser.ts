@@ -500,5 +500,4 @@ describe('early failures', () => {
              /The web-component-tester Bower package installed is incompatible with the\n\s*wct node package you're using/);
        }
      });
-
 });

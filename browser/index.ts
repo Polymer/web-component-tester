@@ -59,13 +59,13 @@ mocha.stubInterfaces();
 environment.loadSync();
 
 // Give any scripts on the page a chance to declare tests and muck with things.
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   util.debug('DOMContentLoaded');
 
   environment.ensureDependenciesPresent();
 
   // We need the socket built prior to building its reporter.
-  CLISocket.init(function(error, socket) {
+  CLISocket.init(function (error, socket) {
     if (error)
       throw error;
 
@@ -75,14 +75,14 @@ document.addEventListener('DOMContentLoaded', function() {
     util.debug('parentReporter:', parent);
 
     const childSuites = suites.activeChildSuites();
-    const reportersToUse = reporters.determineReporters(socket, parent);
+    const reportersToUse = reporters.determineReporters(socket, parent, config.get('noHTMLReporter') || true);
     // +1 for any local tests.
     const reporter =
-        new MultiReporter(childSuites.length + 1, reportersToUse, parent);
+      new MultiReporter(childSuites.length + 1, reportersToUse, parent);
     WCT._reporter = reporter;  // For environment/compatibility.js
 
     // We need the reporter so that we can report errors during load.
-    suites.loadJsSuites(reporter, function(error) {
+    suites.loadJsSuites(reporter, function (error) {
       // Let our parent know that we're about to start the tests.
       if (current)
         current.ready(error);
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
         reporter.emitOutOfBandTest('Test Suite Initialization', error);
       });
 
-      suites.runSuites(reporter, childSuites, function(error) {
+      suites.runSuites(reporter, childSuites, function (error) {
         // Make sure to let our parent know that we're done.
         if (current)
           current.done();

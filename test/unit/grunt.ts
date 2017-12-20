@@ -33,7 +33,6 @@ const LOCAL_BROWSERS = {
 };
 
 describe('grunt', function() {
-
   // Sinon doesn't stub process.env very well.
   let origEnv: any, origArgv: any;
   beforeEach(function() {
@@ -73,16 +72,16 @@ describe('grunt', function() {
   }
 
   describe('wct-test', function() {
-
     let sandbox: sinon.SinonSandbox;
     beforeEach(function() {
       sandbox = sinon.sandbox.create();
       sandbox.stub(steps, 'prepare')
-        .callsFake(
-          async(_context: Context): Promise<void> => undefined);
+          .callsFake(async(_context: Context): Promise<void> => undefined);
 
-      sandbox.stub(wctLocalBrowsers, 'detect').callsFake(async () => LOCAL_BROWSERS);
-      sandbox.stub(wctLocalBrowsers, 'supported').callsFake(() => _.keys(LOCAL_BROWSERS));
+      sandbox.stub(wctLocalBrowsers, 'detect')
+          .callsFake(async () => LOCAL_BROWSERS);
+      sandbox.stub(wctLocalBrowsers, 'supported')
+          .callsFake(() => _.keys(LOCAL_BROWSERS));
 
       process.chdir(path.resolve(__dirname, '../fixtures/cli/standard'));
     });
@@ -92,9 +91,9 @@ describe('grunt', function() {
     });
 
     describe('with a passing suite', function() {
-
       beforeEach(function() {
-        sandbox.stub(steps, 'runTests').callsFake(async(): Promise<void> => undefined);
+        sandbox.stub(steps, 'runTests')
+            .callsFake(async(): Promise<void> => undefined);
       });
 
       it('passes configuration through', async () => {

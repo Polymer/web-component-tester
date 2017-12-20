@@ -35,17 +35,18 @@ const LOCAL_BROWSERS = {
 };
 
 describe('cli', () => {
-
   let sandbox: sinon.SinonSandbox;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare').callsFake(async(): Promise<void> => undefined);
-    sandbox.stub(steps, 'runTests').callsFake(async(): Promise<void> => undefined);
+    sandbox.stub(steps, 'prepare')
+        .callsFake(async(): Promise<void> => undefined);
+    sandbox.stub(steps, 'runTests')
+        .callsFake(async(): Promise<void> => undefined);
 
     sandbox.stub(wctLocalBrowsers, 'detect')
-      .callsFake(
-        async () => _.omit(LOCAL_BROWSERS, 'aurora'));
-    sandbox.stub(wctLocalBrowsers, 'supported').callsFake(() => _.keys(LOCAL_BROWSERS));
+        .callsFake(async () => _.omit(LOCAL_BROWSERS, 'aurora'));
+    sandbox.stub(wctLocalBrowsers, 'supported')
+        .callsFake(() => _.keys(LOCAL_BROWSERS));
   });
 
   afterEach(() => {
@@ -211,13 +212,11 @@ describe('cli', () => {
     });
 
     describe('deprecated flags', () => {
-
       beforeEach(() => {
         process.chdir(path.join(FIXTURES, 'standard'));
       });
 
       describe('--browsers', () => {
-
         it('warns when used', async () => {
           const log: string[] = [];
           await expectRun(['--browsers', 'firefox'], log);
@@ -246,11 +245,9 @@ describe('cli', () => {
               options.activeBrowsers.map((browser) => browser.browserName);
           expect(names).to.have.members(['firefox', 'chrome']);
         });
-
       });
 
       describe('--remote', () => {
-
         it('warns when used', async () => {
           const log: string[] = [];
           await expectRun(['--remote'], log);

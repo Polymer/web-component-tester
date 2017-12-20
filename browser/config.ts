@@ -20,14 +20,14 @@ export interface Config {
   environmentScripts: string[];
   environmentImports: string[];
   /** Absolute root for client scripts. Detected in `setup()` if not set. */
-  root: null|string;
+  root: null | string;
   /** By default, we wait for any web component frameworks to load. */
   waitForFrameworks: boolean;
   /**
    * Alternate callback for waiting for tests.
    * `this` for the callback will be the window currently running tests.
    */
-  waitFor: null|Function;
+  waitFor: null | Function;
   /** How many `.html` suites that can be concurrently loaded & run. */
   numConcurrentSuites: number;
   /** Whether `console.error` should be treated as a test failure. */
@@ -36,6 +36,7 @@ export interface Config {
   mochaOptions: MochaSetupOptions;
   /** Whether WCT should emit (extremely verbose) debugging log messages. */
   verbose: boolean;
+  noHTMLReporter: boolean;
 }
 
 /**
@@ -43,29 +44,30 @@ export interface Config {
  */
 export let _config: Config = {
   environmentScripts: !!window.__wctUseNpm ?
-      [
-        'stacky/browser.js', 'async/lib/async.js', 'lodash/index.js',
-        'mocha/mocha.js', 'chai/chai.js', '@polymer/sinonjs/sinon.js',
-        'sinon-chai/lib/sinon-chai.js',
-        'accessibility-developer-tools/dist/js/axs_testing.js',
-        '@polymer/test-fixture/test-fixture.js'
-      ] :
-      [
-        'stacky/browser.js', 'async/lib/async.js', 'lodash/lodash.js',
-        'mocha/mocha.js', 'chai/chai.js', 'sinonjs/sinon.js',
-        'sinon-chai/lib/sinon-chai.js',
-        'accessibility-developer-tools/dist/js/axs_testing.js'
-      ],
+    [
+      'stacky/browser.js', 'async/lib/async.js', 'lodash/index.js',
+      'mocha/mocha.js', 'chai/chai.js', '@polymer/sinonjs/sinon.js',
+      'sinon-chai/lib/sinon-chai.js',
+      'accessibility-developer-tools/dist/js/axs_testing.js',
+      '@polymer/test-fixture/test-fixture.js'
+    ] :
+    [
+      'stacky/browser.js', 'async/lib/async.js', 'lodash/lodash.js',
+      'mocha/mocha.js', 'chai/chai.js', 'sinonjs/sinon.js',
+      'sinon-chai/lib/sinon-chai.js',
+      'accessibility-developer-tools/dist/js/axs_testing.js'
+    ],
 
   environmentImports: !!window.__wctUseNpm ? [] :
-                                             ['test-fixture/test-fixture.html'],
+    ['test-fixture/test-fixture.html'],
   root: null as null | string,
   waitForFrameworks: true,
   waitFor: null as null | Function,
   numConcurrentSuites: 1,
   trackConsoleError: true,
-  mochaOptions: {timeout: 10 * 1000},
+  mochaOptions: { timeout: 10 * 1000 },
   verbose: false,
+  noHTMLReporter: false
 };
 
 /**
@@ -92,7 +94,7 @@ export function setup(options: Config) {
     _config.root = util.basePath(root.substr(0, root.length - 1));
     if (!_config.root) {
       throw new Error(
-          'Unable to detect root URL for WCT sources. Please set WCT.root before including browser.js');
+        'Unable to detect root URL for WCT sources. Please set WCT.root before including browser.js');
     }
   }
 }
@@ -106,9 +108,9 @@ export function get<K extends keyof Config>(key: K): Config[K] {
 
 // Internal
 function _deepMerge(target: Partial<Config>, source: Config) {
-  Object.keys(source).forEach(function(key) {
+  Object.keys(source).forEach(function (key) {
     if (target[key] !== null && typeof target[key] === 'object' &&
-        !Array.isArray(target[key])) {
+      !Array.isArray(target[key])) {
       _deepMerge(target[key], source[key]);
     } else {
       target[key] = source[key];

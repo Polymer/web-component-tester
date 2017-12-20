@@ -233,6 +233,7 @@ var _config = {
     trackConsoleError: true,
     mochaOptions: { timeout: 10 * 1000 },
     verbose: false,
+    noHTMLReporter: false
 };
 /**
  * Merges initial `options` into WCT's global configuration.
@@ -1401,9 +1402,11 @@ function _fixCustomElements() {
 /**
  * @param {CLISocket} socket The CLI socket, if present.
  * @param {MultiReporter} parent The parent reporter, if present.
+ * @param {boolean=} disableHTMLReporter Force-disable the HTML reporter
  * @return {!Array.<!Mocha.reporters.Base} The reporters that should be used.
  */
-function determineReporters(socket, parent) {
+function determineReporters(socket, parent, disableHTMLReporter) {
+    if (disableHTMLReporter === void 0) { disableHTMLReporter = false; }
     // Parents are greedy.
     if (parent) {
         return [parent.childReporter(window.location)];
@@ -1415,7 +1418,7 @@ function determineReporters(socket, parent) {
             socket.observe(runner);
         });
     }
-    if (htmlSuites$1.length > 0 || jsSuites$1.length > 0) {
+    if (!disableHTMLReporter && (htmlSuites$1.length > 0 || jsSuites$1.length > 0)) {
         reporters.push(HTML);
     }
     return reporters;
@@ -1837,7 +1840,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var parent = current && current.parentScope.WCT._reporter;
         debug('parentReporter:', parent);
         var childSuites = activeChildSuites();
-        var reportersToUse = determineReporters(socket, parent);
+        var reportersToUse = determineReporters(socket, parent, get('noHTMLReporter') || true);
         // +1 for any local tests.
         var reporter = new MultiReporter(childSuites.length + 1, reportersToUse, parent);
         WCT._reporter = reporter; // For environment/compatibility.js
