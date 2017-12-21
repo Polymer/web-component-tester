@@ -43,7 +43,7 @@ export interface Config {
   testTimeout?: number;
   persistent?: boolean;
   extraScripts?: string[];
-  clientOptions?: {root?: string; verbose?: boolean};
+  clientOptions?: {root?: string; verbose?: boolean, noHTMLReporter?: boolean};
   activeBrowsers?: BrowserDef[];
   browserOptions?: {[name: string]: Capabilities};
   plugins?: (string|boolean)[]|{[key: string]: ({disabled: boolean} | boolean)};
@@ -81,6 +81,7 @@ export interface Config {
   };
   /** A deprecated option */
   browsers?: Browser[]|Browser;
+  noHTMLReporter?: boolean;
 }
 
 /**

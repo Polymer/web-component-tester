@@ -18,9 +18,7 @@ import {Context} from '../../runner/context';
 const expect = chai.expect;
 
 describe('config', function() {
-
   describe('.merge', function() {
-
     it('avoids modifying the input', function() {
       const one = <any>{foo: 1};
       const two = <any>{foo: 2};
@@ -39,13 +37,10 @@ describe('config', function() {
 
       expect(merged).to.deep.equal({plugins: {foo: false, bar: {}}});
     });
-
   });
 
   describe('.expand', function() {
-
     describe('deprecated options', function() {
-
       it('expands local string browsers', function() {
         const context = new Context(<any>{browsers: ['chrome']});
         return config.expand(context).then(() => {
@@ -84,7 +79,5 @@ describe('config', function() {
         });
       });
     });
-
   });
-
 });

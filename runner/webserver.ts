@@ -55,6 +55,10 @@ export function webserver(wct: Context): void {
       options.clientOptions.verbose = true;
     }
 
+    if (options.noHTMLReporter) {
+      options.clientOptions.noHTMLReporter = true;
+    }
+
     // Hacky workaround for Firefox + Windows issue where FF screws up pathing.
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));

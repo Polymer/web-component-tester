@@ -11,7 +11,7 @@
 import CLISocket from './clisocket.js';
 import ConsoleReporter from './reporters/console.js';
 import HTMLReporter from './reporters/html.js';
-import MultiReporter, {ReporterFactory} from './reporters/multi.js';
+import MultiReporter, { ReporterFactory } from './reporters/multi.js';
 import TitleReporter from './reporters/title.js';
 import * as suites from './suites.js';
 
@@ -21,10 +21,11 @@ export let jsSuites: Array<undefined> = [];
 /**
  * @param {CLISocket} socket The CLI socket, if present.
  * @param {MultiReporter} parent The parent reporter, if present.
+ * @param {boolean=} disableHTMLReporter Force-disable the HTML reporter
  * @return {!Array.<!Mocha.reporters.Base} The reporters that should be used.
  */
 export function determineReporters(
-    socket: CLISocket, parent: MultiReporter): ReporterFactory[] {
+  socket: CLISocket, parent: MultiReporter, disableHTMLReporter: boolean = false): ReporterFactory[] {
   // Parents are greedy.
   if (parent) {
     return [parent.childReporter(window.location)];
@@ -34,12 +35,12 @@ export function determineReporters(
   const reporters: Array<ReporterFactory> = [TitleReporter, ConsoleReporter];
 
   if (socket) {
-    reporters.push(function(runner: MultiReporter) {
+    reporters.push(function (runner: MultiReporter) {
       socket.observe(runner);
     } as any);
   }
 
-  if (suites.htmlSuites.length > 0 || suites.jsSuites.length > 0) {
+  if (!disableHTMLReporter && (suites.htmlSuites.length > 0 || suites.jsSuites.length > 0)) {
     reporters.push(HTMLReporter as any);
   }
 
@@ -55,13 +56,13 @@ export function injectMocha(Mocha: MochaStatic) {
   _injectPrototype(HTMLReporter, Mocha.reporters.HTML.prototype);
   // Mocha doesn't expose its `EventEmitter` shim directly, so:
   _injectPrototype(
-      MultiReporter, Object.getPrototypeOf(Mocha.Runner.prototype));
+    MultiReporter, Object.getPrototypeOf(Mocha.Runner.prototype));
 }
 
 function _injectPrototype(klass: any, prototype: any) {
   const newPrototype = Object.create(prototype);
   // Only support
-  Object.keys(klass.prototype).forEach(function(key) {
+  Object.keys(klass.prototype).forEach(function (key) {
     newPrototype[key] = klass.prototype[key];
   });
 
