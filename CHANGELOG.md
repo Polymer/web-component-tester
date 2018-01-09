@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 <!-- Add new, unreleased items here. -->
 
-## 6.4.2 - 2017-11-27
+## 6.4.2 - 2018-01-09
 * Upgrade wct-sauce to 2.0.0-pre.3 to get updated browsers lists to include Safari 11 and Edge 15.
 * Fixed #523 WCT ignores the webserver hostname
 * Remove `overflow-y: auto` from test runner styling to increase performance.
