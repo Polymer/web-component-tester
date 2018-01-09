@@ -452,12 +452,7 @@ describe('early failures', () => {
        this.timeout(20 * 1000);
        const log: string[] = [];
        const options: config.Config = {
-         output: <any>{
-           write: () => {
-             console.log(arguments);
-             log.push.apply(log, arguments);
-           },
-         },
+         output: <any>{write: log.push.bind(log)},
          ttyOutput: false,
          root: path.join(
              __dirname, '..', 'fixtures', 'integration', 'components_dir'),
