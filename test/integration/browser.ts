@@ -148,7 +148,7 @@ function runsIntegrationSuite(
     const testResults = new TestResults();
 
     before(async function() {
-      this.timeout(300 * 1000);
+      this.timeout(500 * 1000);
 
       const suiteRoot = await makeProperTestDir(dirName);
       const allOptions: config.Config = Object.assign(
@@ -253,7 +253,9 @@ if (testRemoteBrowsers) {
   describe('Remote Browser Tests', function() {
     runsAllIntegrationSuites({
       plugins: <any> {
-        sauce: {browsers: ['default']},
+        sauce: {
+          browsers: ['default'],
+        },
       }
     });
   });
@@ -500,5 +502,4 @@ describe('early failures', () => {
              /The web-component-tester Bower package installed is incompatible with the\n\s*wct node package you're using/);
        }
      });
-
 });
