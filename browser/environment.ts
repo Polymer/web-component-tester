@@ -17,19 +17,17 @@ import * as util from './util.js';
  */
 export function loadSync() {
   util.debug('Loading environment scripts:');
-  const a11ySuite = !!window.__wctUseNpm ?
-      'wct-browser-legacy/a11ySuite.js' :
-      'web-component-tester/data/a11ySuite.js';
+  const a11ySuiteScriptPath = 'web-component-tester/data/a11ySuite.js';
   const scripts = config.get('environmentScripts');
   const a11ySuiteWillBeLoaded =
-      window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
+      window.__generatedByWct || scripts.indexOf(a11ySuiteScriptPath) > -1;
 
   // We can't inject a11ySuite when running the npm version because it is a
   // module-based script that needs `<script type=module>` and compilation
   // for browsers without module support.
   if (!a11ySuiteWillBeLoaded && !window.__wctUseNpm) {
     // wct is running as a bower dependency, load a11ySuite from data/
-    scripts.push(a11ySuite);
+    scripts.push(a11ySuiteScriptPath);
   }
   scripts.forEach(function(path) {
     const url = util.expandUrl(path, config.get('root'));

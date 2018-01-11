@@ -1443,17 +1443,15 @@ function _injectPrototype(klass, prototype) {
  */
 function loadSync() {
     debug('Loading environment scripts:');
-    var a11ySuite = !!window.__wctUseNpm ?
-        'wct-browser-legacy/a11ySuite.js' :
-        'web-component-tester/data/a11ySuite.js';
+    var a11ySuiteScriptPath = 'web-component-tester/data/a11ySuite.js';
     var scripts = get('environmentScripts');
-    var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
+    var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuiteScriptPath) > -1;
     // We can't inject a11ySuite when running the npm version because it is a
     // module-based script that needs `<script type=module>` and compilation
     // for browsers without module support.
     if (!a11ySuiteWillBeLoaded && !window.__wctUseNpm) {
         // wct is running as a bower dependency, load a11ySuite from data/
-        scripts.push(a11ySuite);
+        scripts.push(a11ySuiteScriptPath);
     }
     scripts.forEach(function (path) {
         var url = expandUrl(path, get('root'));
