@@ -1445,7 +1445,7 @@ function loadSync() {
     debug('Loading environment scripts:');
     var a11ySuite = !!window.__wctUseNpm ?
         'wct-browser-legacy/a11ySuite.js' :
-        'web-component-tester/data/a11ySuite.js';
+        'web-component-tester/a11ySuite.js';
     var scripts = get('environmentScripts');
     var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
     // We can't inject a11ySuite when running the npm version because it is a
