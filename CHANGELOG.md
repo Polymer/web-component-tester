@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+* web-component-tester: no longer injects `a11ySuite.js` script in `--npm` mode.
+* wct-browser-legacy: `a11ySuite.js` now exports a `a11ySuite` reference. Import this reference direction to use `a11ySuite()` in npm.
 <!-- Add new, unreleased items here. -->
 
 ## 6.4.2 - 2018-01-09
