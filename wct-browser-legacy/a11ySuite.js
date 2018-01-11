@@ -1,7 +1,8 @@
 import * as polymerDom from '../@polymer/polymer/lib/legacy/polymer.dom.js';
 const Polymer = { dom: polymerDom };
+export var a11ySuite;
 
-// wct-browser-legacy/a11ySuite.js is a generated file.  Source is in web-component-tester/data/a11ySuite.js
+// wct-browser-legacy/a11ySuite.js is a generated file.  Source is in web-component-tester/data
 
 /**
  * @license
@@ -33,7 +34,7 @@ const Polymer = { dom: polymerDom };
           * @param {Array?} ignoredRules Array of rules to ignore for this suite
           * @param {Function?} beforeEach Function to be called before each test to ensure proper setup
           */
-        context.a11ySuite = function(fixtureId, ignoredRules, beforeEach) {
+          a11ySuite = context.a11ySuite = function(fixtureId, ignoredRules, beforeEach) {
           // capture a reference to the fixture element early
           var fixtureElement = document.getElementById(fixtureId);
           if (!fixtureElement) {
