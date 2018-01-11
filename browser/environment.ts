@@ -19,7 +19,7 @@ export function loadSync() {
   util.debug('Loading environment scripts:');
   const a11ySuite = !!window.__wctUseNpm ?
       'wct-browser-legacy/a11ySuite.js' :
-      'web-component-tester/data/a11ySuite.js';
+      'web-component-tester/a11ySuite.js';
   const scripts = config.get('environmentScripts');
   const a11ySuiteWillBeLoaded =
       window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;

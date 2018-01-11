@@ -63,7 +63,7 @@ export function webserver(wct: Context): void {
     // scripts.  When using npm, the wct-browser-legacy package may be
     // used, so we test for that package and will use its scripts if present.
     let browserScript = 'web-component-tester/browser.js';
-    let a11ySuiteScript = 'web-component-tester/data/a11ySuite.js';
+    let a11ySuiteScript = 'web-component-tester/a11ySuite.js';
     if (options.npm) {
       try {
         const wctBrowserLegacyPath =

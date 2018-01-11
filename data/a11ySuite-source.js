@@ -1,9 +1,3 @@
-import * as polymerDom from '../@polymer/polymer/lib/legacy/polymer.dom.js';
-const Polymer = { dom: polymerDom };
-export var a11ySuite;
-
-// wct-browser-legacy/a11ySuite.js is a generated file.  Source is in web-component-tester/data
-
 /**
  * @license
  * Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -28,13 +22,13 @@ export var a11ySuite;
       suite.on('pre-require', function(context, file, mocha) {
 
         /**
-          * Runs the Chrome Accessibility Developer Tools Audit against a test-fixture
-          *
-          * @param {String} fixtureId ID of the fixture element in the document to use
-          * @param {Array?} ignoredRules Array of rules to ignore for this suite
-          * @param {Function?} beforeEach Function to be called before each test to ensure proper setup
-          */
-          a11ySuite = context.a11ySuite = function(fixtureId, ignoredRules, beforeEach) {
+         * Runs the Chrome Accessibility Developer Tools Audit against a test-fixture
+         *
+         * @param {String} fixtureId ID of the fixture element in the document to use
+         * @param {Array?} ignoredRules Array of rules to ignore for this suite
+         * @param {Function?} beforeEach Function to be called before each test to ensure proper setup
+         */
+        a11ySuite = context.a11ySuite = function(fixtureId, ignoredRules, beforeEach) {
           // capture a reference to the fixture element early
           var fixtureElement = document.getElementById(fixtureId);
           if (!fixtureElement) {
