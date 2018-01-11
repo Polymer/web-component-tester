@@ -12,10 +12,10 @@
   <script src="../<%= browserScript %>"></script>
   <% extraScripts.forEach(function(script) { %>
     <script src="<%- script %>"></script>
-  <% }); %>
-  <% if (!npm) { %>
-    <script src="../<%= a11ySuiteScript %>"></script>
-  <% } %>
+    <% }); %>
+      <% if (typeof npm === 'undefined' || !npm) { %>
+        <script src="../<%= a11ySuiteScript %>"></script>
+        <% } %>
 </head>
 
 <body>
