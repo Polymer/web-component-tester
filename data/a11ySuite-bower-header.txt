@@ -1,0 +1,3 @@
+let a11ySuite;
+
+// a11ySuite.js is a generated file.  Source is in web-component-tester/data/a11ySuite.js
