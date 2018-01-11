@@ -13,9 +13,7 @@
   <% extraScripts.forEach(function(script) { %>
     <script src="<%- script %>"></script>
   <% }); %>
-  <% if (typeof npm !== 'undefined' && npm) { %>
-    <script type="module" src="../<%= a11ySuiteScript %>"></script>
-  <% } else { %>
+  <% if (typeof npm === 'undefined' || !npm) { %>
     <script src="../<%= a11ySuiteScript %>"></script>
   <% } %>
 </head>

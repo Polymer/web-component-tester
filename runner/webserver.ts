@@ -59,11 +59,10 @@ export function webserver(wct: Context): void {
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
-    // The generated index needs the correct browser.js and a11ySuite.js
-    // scripts.  When using npm, the wct-browser-legacy package may be
-    // used, so we test for that package and will use its scripts if present.
+    // The generated index needs the correct "browser.js" script. When using npm,
+    // the wct-browser-legacy package may be used, so we test for that package
+    // and will use its "browser.js" if present.
     let browserScript = 'web-component-tester/browser.js';
-    let a11ySuiteScript = 'web-component-tester/data/a11ySuite.js';
     if (options.npm) {
       try {
         const wctBrowserLegacyPath =
@@ -72,7 +71,6 @@ export function webserver(wct: Context): void {
             require(path.join(wctBrowserLegacyPath, 'package.json')).version;
         if (version) {
           browserScript = 'wct-browser-legacy/browser.js';
-          a11ySuiteScript = 'wct-browser-legacy/a11ySuite.js';
         }
       } catch (e) {
         // Safely ignore.
@@ -81,9 +79,9 @@ export function webserver(wct: Context): void {
       const isPackageScoped = packageName && packageName[0] === '@';
       if (isPackageScoped) {
         browserScript = `../${browserScript}`;
-        a11ySuiteScript = `../${a11ySuiteScript}`;
       }
     }
+    const a11ySuiteScript = 'web-component-tester/data/a11ySuite.js';
     options.webserver._generatedIndexContent = INDEX_TEMPLATE(
         Object.assign({browserScript, a11ySuiteScript}, options));
   });
