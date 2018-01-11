@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+<!-- Add new, unreleased items here. -->
+
+## 6.4.3 - 2018-01-11
 * web-component-tester: no longer injects `a11ySuite.js` script in `--npm` mode.
 * wct-browser-legacy: `a11ySuite.js` now exports a `a11ySuite` reference. Import this reference direction to use `a11ySuite()` in npm.
-<!-- Add new, unreleased items here. -->
 
 ## 6.4.2 - 2018-01-09
 * Upgrade wct-sauce to 2.0.0 to get updated browsers lists to include Safari 11 and Edge 15.
