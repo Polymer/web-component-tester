@@ -83,7 +83,7 @@
   },
   "optionalDependencies": {
     "update-notifier": "^2.2.0",
-    "wct-local": "^2.0.16",
+    "wct-local": "^2.1.0",
     "wct-sauce": "^2.0.0"
   },
   "devDependencies": {
