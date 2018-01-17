@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 <!-- Add new, unreleased items here. -->
 
+## 6.5.0 - 2018-01-17
+* Upgrade wct-local to 2.1.0 to get support for headless Chrome.
+
 ## 6.4.3 - 2018-01-11
 * web-component-tester: no longer injects `a11ySuite.js` script in `--npm` mode.
 * wct-browser-legacy: `a11ySuite.js` now exports a `a11ySuite` reference. Import this reference direction to use `a11ySuite()` in npm.
