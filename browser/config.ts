@@ -36,7 +36,7 @@ export interface Config {
   mochaOptions: MochaSetupOptions;
   /** Whether WCT should emit (extremely verbose) debugging log messages. */
   verbose: boolean;
-  noHTMLReporter: boolean;
+  disableHTMLReports: boolean;
 }
 
 /**
@@ -67,7 +67,7 @@ export let _config: Config = {
   trackConsoleError: true,
   mochaOptions: { timeout: 10 * 1000 },
   verbose: false,
-  noHTMLReporter: false
+  disableHTMLReports: false
 };
 
 /**

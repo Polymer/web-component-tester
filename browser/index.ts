@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
     util.debug('parentReporter:', parent);
 
     const childSuites = suites.activeChildSuites();
-    const reportersToUse = reporters.determineReporters(socket, parent, config.get('noHTMLReporter') || true);
+    const reportersToUse = reporters.determineReporters(socket, parent, config.get('disableHTMLReports'));
     // +1 for any local tests.
     const reporter =
       new MultiReporter(childSuites.length + 1, reportersToUse, parent);

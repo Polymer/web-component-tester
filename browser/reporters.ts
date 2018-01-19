@@ -21,11 +21,11 @@ export let jsSuites: Array<undefined> = [];
 /**
  * @param {CLISocket} socket The CLI socket, if present.
  * @param {MultiReporter} parent The parent reporter, if present.
- * @param {boolean=} disableHTMLReporter Force-disable the HTML reporter
+ * @param {boolean=} disableHTMLReports Force-disable the HTML reporter
  * @return {!Array.<!Mocha.reporters.Base} The reporters that should be used.
  */
 export function determineReporters(
-  socket: CLISocket, parent: MultiReporter, disableHTMLReporter: boolean = false): ReporterFactory[] {
+  socket: CLISocket, parent: MultiReporter, disableHTMLReports: boolean = false): ReporterFactory[] {
   // Parents are greedy.
   if (parent) {
     return [parent.childReporter(window.location)];
@@ -40,7 +40,7 @@ export function determineReporters(
     } as any);
   }
 
-  if (!disableHTMLReporter && (suites.htmlSuites.length > 0 || suites.jsSuites.length > 0)) {
+  if (!disableHTMLReports && (suites.htmlSuites.length > 0 || suites.jsSuites.length > 0)) {
     reporters.push(HTMLReporter as any);
   }
 

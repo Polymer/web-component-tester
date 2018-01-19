@@ -43,7 +43,8 @@ export interface Config {
   testTimeout?: number;
   persistent?: boolean;
   extraScripts?: string[];
-  clientOptions?: {root?: string; verbose?: boolean, noHTMLReporter?: boolean};
+  clientOptions?:
+      {root?: string; verbose?: boolean, disableHTMLReports?: boolean};
   activeBrowsers?: BrowserDef[];
   browserOptions?: {[name: string]: Capabilities};
   plugins?: (string|boolean)[]|{[key: string]: ({disabled: boolean} | boolean)};
@@ -81,7 +82,7 @@ export interface Config {
   };
   /** A deprecated option */
   browsers?: Browser[]|Browser;
-  noHTMLReporter?: boolean;
+  disableHTMLReports?: boolean;
 }
 
 /**
@@ -215,6 +216,7 @@ export function defaults(): Config {
       port: undefined,
       hostname: 'localhost',
     },
+    disableHTMLReports: false
   };
 }
 
@@ -298,6 +300,12 @@ const ARG_CONFIG = {
     help: 'Whether to compile ES2015 down to ES5. ' +
         'Options: "always", "never", "auto". Auto means that we will ' +
         'selectively compile based on the requesting user agent.'
+  },
+
+  disableHTMLReports: {
+    flag: true,
+    'help': 'Disable visual results in the test browser',
+    'full': 'disable-html-reports'
   },
 
   // Deprecated

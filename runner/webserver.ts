@@ -55,17 +55,17 @@ export function webserver(wct: Context): void {
       options.clientOptions.verbose = true;
     }
 
-    if (options.noHTMLReporter) {
-      options.clientOptions.noHTMLReporter = true;
+    if (options.disableHTMLReports) {
+      options.clientOptions.disableHTMLReports = true;
     }
 
     // Hacky workaround for Firefox + Windows issue where FF screws up pathing.
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
-    // The generated index needs the correct "browser.js" script. When using npm,
-    // the wct-browser-legacy package may be used, so we test for that package
-    // and will use its "browser.js" if present.
+    // The generated index needs the correct "browser.js" script. When using
+    // npm, the wct-browser-legacy package may be used, so we test for that
+    // package and will use its "browser.js" if present.
     let browserScript = 'web-component-tester/browser.js';
     if (options.npm) {
       try {
