@@ -185,6 +185,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           packageName,
           additionalRoutes,
           npm: !!options.npm,
+          moduleResolution: options.moduleResolution,
           proxy: options.proxy,
         },
         appMapper);

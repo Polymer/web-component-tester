@@ -61,6 +61,7 @@ export interface Config {
     _servers?: {variant: string, url: string}[];
   };
   npm?: boolean;
+  moduleResolution?: 'none'|'node';
   packageName?: string;
   skipPlugins?: string[];
   sauce?: {};
@@ -275,6 +276,16 @@ const ARG_CONFIG = {
     help: 'Use node_modules instead of bower_components for all browser ' +
         'components and packages.  Uses polyserve with `--npm` flag.',
     flag: true,
+  },
+  moduleResolution: {
+    // kebab case to match the polyserve flag
+    full: 'module-resolution',
+    help: 'Algorithm to use for resolving module specifiers in import ' +
+        'and export statements when rewriting them to be web-compatible. ' +
+        'Valid values are "none" and "node". "none" disables module ' +
+        'specifier rewriting. "node" uses Node.js resolution to find modules.',
+    // type: 'string',
+    choices: ['none', 'node'],
   },
   version: {
     help: 'Display the current version of web-component-tester.  Ends ' +
@@ -529,9 +540,9 @@ function expandDeprecated(context: Context) {
         'The --browsers flag/option is deprecated. Please use ' +
             '--local and --sauce instead, or configure via plugins.' +
             '[local|sauce].browsers.');
-    const fragment: {
-      plugins: {[name: string]: {browsers?: Browser[]}}
-    } = {plugins: {sauce: {}, local: {}}};
+    const fragment: {plugins: {[name: string]: {browsers?: Browser[]}}} = {
+      plugins: {sauce: {}, local: {}}
+    };
     fragments.push(fragment);
 
     for (const browser of browsers) {
