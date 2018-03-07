@@ -31,7 +31,7 @@
     "test/": {
       "inline failing test": [
         "expected false to be true",
-        "at index\\.html:13(:|$)"
+        "at index\\.html:(12|15)(:|$)"
       ],
       "failing test": [
         "expected false to be true",
@@ -41,7 +41,7 @@
     "test/tests.html": {
       "failing test": [
         "expected false to be true",
-        "at tests\\.html:11(:|$)"
+        "at tests\\.html:(10|13)(:|$)"
       ]
     }
   }

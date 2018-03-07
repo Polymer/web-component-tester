@@ -34,9 +34,9 @@ describe('Context', () => {
 
   describe('.plugins', () => {
 
-    it('excludes plugins with a falsy config', async() => {
+    it('excludes plugins with a falsy config', async () => {
       const context = new Context(<any>{plugins: {local: false, sauce: {}}});
-      const stub = sandbox.stub(Plugin, 'get', (name: string) => {
+      const stub = sandbox.stub(Plugin, 'get').callsFake((name: string) => {
         return Promise.resolve(name);
       });
 
@@ -46,10 +46,10 @@ describe('Context', () => {
       expect(plugins).to.have.members(['sauce']);
     });
 
-    it('excludes plugins disabled: true', async() => {
+    it('excludes plugins disabled: true', async () => {
       const context =
           new Context(<any>{plugins: {local: {}, sauce: {disabled: true}}});
-      const stub = sandbox.stub(Plugin, 'get', (name: string) => {
+      const stub = sandbox.stub(Plugin, 'get').callsFake((name: string) => {
         return Promise.resolve(name);
       });
 
@@ -59,9 +59,9 @@ describe('Context', () => {
       expect(plugins).to.have.members(['local']);
     });
 
-    describe('hook handlers with non-callback second argument', async() => {
+    describe('hook handlers with non-callback second argument', async () => {
       it('are passed the "done" callback function instead of the argument passed to emitHook',
-         async() => {
+         async () => {
            const context = new Context();
            context.hook('foo', function(arg1: any, done: () => void) {
              expect(arg1).to.eq('hookArg');
@@ -72,7 +72,7 @@ describe('Context', () => {
     });
 
     describe('hook handlers written to call callbacks', () => {
-      it('passes additional arguments through', async() => {
+      it('passes additional arguments through', async () => {
         const context = new Context();
         context.hook(
             'foo',
@@ -92,7 +92,7 @@ describe('Context', () => {
         expect(error).to.not.be.ok;
       });
 
-      it('halts on error', async() => {
+      it('halts on error', async () => {
         const context = new Context();
         context.hook('bar', function(hookDone: (err?: any) => void) {
           hookDone('nope');
@@ -115,7 +115,7 @@ describe('Context', () => {
     });
 
     describe('hooks handlers written to return promises', () => {
-      it('passes additional arguments through', async() => {
+      it('passes additional arguments through', async () => {
         const context = new Context();
         context.hook('foo', async function(arg1: any, arg2: any) {
           expect(arg1).to.eq('one');
@@ -129,9 +129,9 @@ describe('Context', () => {
         expect(error).to.not.be.ok;
       });
 
-      it('halts on error', async() => {
+      it('halts on error', async () => {
         const context = new Context();
-        context.hook('bar', async() => {
+        context.hook('bar', async () => {
           throw 'nope';
         });
 

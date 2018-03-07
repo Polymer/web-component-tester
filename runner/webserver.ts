@@ -13,14 +13,16 @@
  */
 
 import * as cleankill from 'cleankill';
+import * as express from 'express';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {MainlineServer, PolyserveServer, RequestHandler, startServers, VariantServer} from 'polyserve';
+import {MainlineServer, PolyserveServer, RequestHandler, ServerOptions, startServers, VariantServer} from 'polyserve';
 import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
+import {getPackageName} from './config';
 import {Context} from './context';
 
 // Template for generated indexes.
@@ -57,33 +59,61 @@ export function webserver(wct: Context): void {
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
-    options.webserver._generatedIndexContent = INDEX_TEMPLATE(options);
+    // The generated index needs the correct "browser.js" script. When using npm,
+    // the wct-browser-legacy package may be used, so we test for that package
+    // and will use its "browser.js" if present.
+    let browserScript = 'web-component-tester/browser.js';
+    if (options.npm) {
+      try {
+        const wctBrowserLegacyPath =
+            path.join(options.root, 'node_modules', 'wct-browser-legacy');
+        const version =
+            require(path.join(wctBrowserLegacyPath, 'package.json')).version;
+        if (version) {
+          browserScript = 'wct-browser-legacy/browser.js';
+        }
+      } catch (e) {
+        // Safely ignore.
+      }
+      const packageName = getPackageName(options);
+      const isPackageScoped = packageName && packageName[0] === '@';
+      if (isPackageScoped) {
+        browserScript = `../${browserScript}`;
+      }
+    }
+    const a11ySuiteScript = 'web-component-tester/data/a11ySuite.js';
+    options.webserver._generatedIndexContent = INDEX_TEMPLATE(
+        Object.assign({browserScript, a11ySuiteScript}, options));
   });
 
   wct.hook('prepare', async function() {
     const wsOptions = options.webserver;
     const additionalRoutes = new Map<string, RequestHandler>();
 
-    const packageName = path.basename(options.root);
+    const packageName = getPackageName(options);
 
     // Check for client-side compatibility.
-    const pathToLocalWct =
-        path.join(options.root, 'bower_components', 'web-component-tester');
-    let version: string|undefined = undefined;
-    const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
-    for (const mdFilename of mdFilenames) {
-      const pathToMetdata = path.join(pathToLocalWct, mdFilename);
-      try {
-        version = version || require(pathToMetdata).version;
-      } catch (e) {
-        // Handled below, where we check if we found a version.
+
+    // Non-npm case.
+    if (!options.npm) {
+      const pathToLocalWct =
+          path.join(options.root, 'bower_components', 'web-component-tester');
+      let version: string|undefined = undefined;
+      const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
+      for (const mdFilename of mdFilenames) {
+        const pathToMetadata = path.join(pathToLocalWct, mdFilename);
+        try {
+          if (!version) {
+            version = require(pathToMetadata).version;
+          }
+        } catch (e) {
+          // Handled below, where we check if we found a version.
+        }
       }
-    }
-    if (!version) {
-      throw new Error(`
+      if (!version) {
+        throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
-                                                                                           packageName
-                                                                                         }).
+            packageName}).
 
 Please run this command to install:
     bower install --save-dev web-component-tester
@@ -92,26 +122,27 @@ Web Component Tester >=6.0 requires that support files needed in the browser are
 
 Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
 `);
-    }
+      }
 
-    const allowedRange = require(path.join(
-        __dirname, '..',
-        'package.json'))['--private-wct--']['client-side-version-range'] as
-        string;
-    if (!semver.satisfies(version, allowedRange)) {
-      throw new Error(`
+      const allowedRange =
+          require(path.join(
+              __dirname, '..', 'package.json'))['--private-wct--']
+                                               ['client-side-version-range'] as
+          string;
+      if (!semver.satisfies(version, allowedRange)) {
+        throw new Error(`
     The web-component-tester Bower package installed is incompatible with the
     wct node package you're using.
 
     The test runner expects a version that satisfies ${allowedRange} but the
     bower package you have installed is ${version}.
 `);
-    }
+      }
 
-    let hasWarnedBrowserJs = false;
-    additionalRoutes.set('/browser.js', function(request, response) {
-      if (!hasWarnedBrowserJs) {
-        console.warn(`
+      let hasWarnedBrowserJs = false;
+      additionalRoutes.set('/browser.js', function(request, response) {
+        if (!hasWarnedBrowserJs) {
+          console.warn(`
 
           WARNING:
           Loading WCT's browser.js from /browser.js is deprecated.
@@ -119,11 +150,12 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           Instead load it from ../web-component-tester/browser.js
           (or with the absolute url /components/web-component-tester/browser.js)
         `);
-        hasWarnedBrowserJs = true;
-      }
-      const browserJsPath = path.join(pathToLocalWct, 'browser.js');
-      send(request, browserJsPath).pipe(response);
-    });
+          hasWarnedBrowserJs = true;
+        }
+        const browserJsPath = path.join(pathToLocalWct, 'browser.js');
+        send(request, browserJsPath).pipe(response);
+      });
+    }
 
     const pathToGeneratedIndex =
         `/components/${packageName}/generated-index.html`;
@@ -132,13 +164,32 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       response.send(options.webserver._generatedIndexContent);
     });
 
+    const appMapper = async (app: express.Express, options: ServerOptions) => {
+      // Using the define:webserver hook to provide a mapper function that
+      // allows user to substitute their own app for the generated polyserve
+      // app.
+      await wct.emitHook(
+          'define:webserver', app, (substitution: express.Express) => {
+            app = substitution;
+          }, options);
+      return app;
+    };
+
     // Serve up project & dependencies via polyserve
-    const polyserveResult = await startServers({
-      root: options.root,
-      compile: options.compile,
-      hostname: options.webserver.hostname,
-      headers: DEFAULT_HEADERS, packageName, additionalRoutes,
-    });
+    const polyserveResult = await startServers(
+        {
+          root: options.root,
+          compile: options.compile,
+          hostname: options.webserver.hostname,
+          headers: DEFAULT_HEADERS,
+          packageName,
+          additionalRoutes,
+          npm: !!options.npm,
+          moduleResolution: options.moduleResolution,
+          proxy: options.proxy,
+        },
+        appMapper);
+
     let servers: Array<MainlineServer|VariantServer>;
 
     const onDestroyHandlers: Array<() => Promise<void>> = [];
@@ -170,7 +221,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           `${never}`);
     }
 
-    wct._httpServers = servers.map(s => s.server);
+    wct._httpServers = servers.map((s) => s.server);
 
     // At this point, we allow other plugins to hook and configure the
     // webservers as they please.
@@ -178,12 +229,11 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
       await wct.emitHook('prepare:webserver', server.app);
     }
 
-    options.webserver._servers = servers.map(s => {
+    options.webserver._servers = servers.map((s) => {
       const port = s.server.address().port;
-      return {
-        url: `http://localhost:${port}${pathToGeneratedIndex}`,
-        variant: s.kind === 'mainline' ? '' : s.variantName
-      };
+      const hostname = s.options.hostname;
+      const url = `http://${hostname}:${port}${pathToGeneratedIndex}`;
+      return {url, variant: s.kind === 'mainline' ? '' : s.variantName};
     });
 
     // TODO(rictic): re-enable this stuff. need to either move this code into
@@ -208,12 +258,14 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
         io.close();
       }
       await Promise.all(onDestroyHandlers.map((f) => f()));
-    };
-    cleankill.onInterrupt((done) => {
-      interruptHandler().then(() => done(), done);
+    }
+    cleankill.onInterrupt(() => {
+      return new Promise((resolve) => {
+        interruptHandler().then(() => resolve(), resolve);
+      });
     });
   });
-};
+}
 
 function exists(path: string): boolean {
   try {

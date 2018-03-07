@@ -1,13 +1,15 @@
 {
     "rules": {
+        "arrow-parens": true,
         "class-name": true,
         "indent": [
             true,
             "spaces"
         ],
+        "prefer-const": true,
         "no-duplicate-variable": true,
         "no-eval": true,
-        "no-internal-module": false,
+        "no-internal-module": true,
         "no-trailing-whitespace": true,
         "no-var-keyword": true,
         "one-line": [

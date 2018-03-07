@@ -34,8 +34,8 @@ const STACKY_CONFIG = {
   ]
 };
 
-export type State = 'passing' | 'pending' | 'failing' | 'unknown' | 'error';
-export type CompletedState = 'passing' | 'failing' | 'pending' | 'unknown';
+export type State = 'passing'|'pending'|'failing'|'unknown'|'error';
+export type CompletedState = 'passing'|'failing'|'pending'|'unknown';
 type Formatter = (value: string) => string;
 
 const STATE_ICONS = {
@@ -90,9 +90,11 @@ export class CliReporter {
     this.emitter = emitter;
     this.stream = stream;
     this.options = options;
-    cleankill.onInterrupt((done) => {
-      this.flush();
-      done();
+    cleankill.onInterrupt(() => {
+      return new Promise((resolve) => {
+        this.flush();
+        resolve();
+      });
     });
 
     emitter.on('log:error', this.log.bind(this, chalk.red));
@@ -192,7 +194,7 @@ export class CliReporter {
     });
 
     this.writeWrapped(statuses, '  ');
-  };
+  }
 
   writeTestError(browser: BrowserDef, data: TestEndData) {
     this.log(browser, this.stateIcon(data.state), this.prettyTest(data));
@@ -215,19 +217,19 @@ export class CliReporter {
       }
     }
     this.write('\n');
-  };
+  }
 
   // Object Formatting
 
   stateIcon(state: State) {
     const color = STATE_COLORS[state] || STATE_COLORS['unknown'];
     return color(STATE_ICONS[state] || STATE_ICONS.unknown);
-  };
+  }
 
   prettyTest(data: TestEndData) {
     const color = STATE_COLORS[data.state] || STATE_COLORS['unknown'];
     return color(data.test.join(' » ') || '<unknown test>');
-  };
+  }
 
   prettyBrowser(browser: BrowserDef) {
     const parts: string[] = [];
@@ -248,7 +250,7 @@ export class CliReporter {
     }
 
     return chalk.blue(parts.join(' '));
-  };
+  }
 
   // General Output Formatting
 
@@ -273,7 +275,7 @@ export class CliReporter {
       line = format(line);
     }
     this.write(line);
-  };
+  }
 
   writeWrapped(blocks: string[], separator: string) {
     if (blocks.length === 0) {
@@ -299,12 +301,12 @@ export class CliReporter {
       this.stream.write('\r');
       this.stream.write('\u001b[' + (lines.length + 1) + 'A');
     }
-  };
+  }
 
   write(line: string) {
     this.writeLines([line]);
     this.updateStatus();
-  };
+  }
 
   writeLines(lines: string[]) {
     for (let line of lines) {
@@ -317,7 +319,7 @@ export class CliReporter {
       this.stream.write(line);
     }
     this.linesWritten = lines.length;
-  };
+  }
 
   flush() {
     if (!this.options.ttyOutput) {
@@ -327,7 +329,7 @@ export class CliReporter {
     for (let i = 0; i <= this.linesWritten; i++) {
       this.stream.write('\n');
     }
-  };
+  }
 
   // HACK
   static CliReporter = CliReporter;

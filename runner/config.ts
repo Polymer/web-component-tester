@@ -30,7 +30,7 @@ const HOME_DIR = path.resolve(
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 
-export type Browser = string | {browserName: string, platform: string};
+export type Browser = string|{browserName: string, platform: string};
 
 export interface Config {
   suites?: string[];
@@ -60,9 +60,10 @@ export interface Config {
     _generatedIndexContent?: string;
     _servers?: {variant: string, url: string}[];
   };
-
+  npm?: boolean;
+  moduleResolution?: 'none'|'node';
+  packageName?: string;
   skipPlugins?: string[];
-
   sauce?: {};
   remote?: {};
   origSuites?: string[];
@@ -71,8 +72,60 @@ export interface Config {
   simpleOutput?: boolean;
   skipUpdateCheck?: boolean;
   configFile?: string;
+  proxy?: {
+    // Top-level path that should be redirected to the proxy-target.  E.g.
+    // `api/v1` when you want to redirect all requests of
+    // `https://localhost/api/v1/`.
+    path: string;
+    // Host URL to proxy to, for example `https://myredirect:8080/foo`.
+    target: string;
+  };
   /** A deprecated option */
   browsers?: Browser[]|Browser;
+}
+
+/**
+ * config helper: A basic function to synchronously read JSON,
+ * log any errors, and return null if no file or invalid JSON
+ * was found.
+ */
+function readJsonSync(filename: string, dir?: string): any|null {
+  const configPath = path.resolve(dir || '', filename);
+  let config: any;
+  try {
+    config = fs.readFileSync(configPath, 'utf-8');
+  } catch (e) {
+    return null;
+  }
+  try {
+    return JSON.parse(config);
+  } catch (e) {
+    console.error(`Could not parse ${configPath} as JSON`);
+    console.error(e);
+  }
+  return null;
+}
+
+
+/**
+ * Determines the package name by reading from the following sources:
+ *
+ * 1. `options.packageName`
+ * 2. bower.json or package.json, depending on options.npm
+ */
+export function getPackageName(options: Config): string|undefined {
+  if (options.packageName) {
+    return options.packageName;
+  }
+  const manifestName = (options.npm ? 'package.json' : 'bower.json');
+  const manifest = readJsonSync(manifestName, options.root);
+  if (manifest !== null) {
+    return manifest.name;
+  }
+  const basename = path.basename(options.root);
+  console.warn(
+      `no ${manifestName} found, defaulting to packageName=${basename}`);
+  return basename;
 }
 
 // The full set of options, as a reference.
@@ -165,7 +218,8 @@ export function defaults(): Config {
   };
 }
 
-/** nomnom configuration for command line arguments.
+/**
+ * nomnom configuration for command line arguments.
  *
  * This might feel like duplication with `defaults()`, and out of place (why not
  * in `cli.js`?). But, not every option matches a configurable value, and it is
@@ -217,6 +271,27 @@ const ARG_CONFIG = {
   configFile: {
     help: 'Config file that needs to be used by wct. ie: wct.config-sauce.js',
     full: 'configFile',
+  },
+  npm: {
+    help: 'Use node_modules instead of bower_components for all browser ' +
+        'components and packages.  Uses polyserve with `--npm` flag.',
+    flag: true,
+  },
+  moduleResolution: {
+    // kebab case to match the polyserve flag
+    full: 'module-resolution',
+    help: 'Algorithm to use for resolving module specifiers in import ' +
+        'and export statements when rewriting them to be web-compatible. ' +
+        'Valid values are "none" and "node". "none" disables module ' +
+        'specifier rewriting. "node" uses Node.js resolution to find modules.',
+    // type: 'string',
+    choices: ['none', 'node'],
+  },
+  version: {
+    help: 'Display the current version of web-component-tester.  Ends ' +
+        'execution immediately (not useable with other options.)',
+    abbr: 'V',
+    flag: true,
   },
   'webserver.port': {
     help: 'A port to use for the test webserver.',
@@ -362,10 +437,12 @@ function _configurePluginOptions(
 
   _.each(plugin.cliConfig, function(config, key) {
     // Make sure that we don't expose the name prefixes.
-    if (!config.full) {
-      config.full = key;
+    if (!config['full']) {
+      config['full'] = key;
     }
-    parser.option('plugins.' + plugin.name + '.' + key, config);
+    parser.option(
+        'plugins.' + plugin.name + '.' + key,
+        config as NomnomInternal.Parser.Option);
   });
 }
 
@@ -397,7 +474,7 @@ export function merge(): Config {
   // false plugin configs are preserved.
   configs.forEach(function(config) {
     _.each(config.plugins, function(value, key) {
-      if (value === false) {
+      if (typeof value === 'boolean' && value === false) {
         result.plugins[key] = false;
       }
     });

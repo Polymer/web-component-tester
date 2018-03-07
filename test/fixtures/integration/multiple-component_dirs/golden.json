@@ -7,7 +7,9 @@
       "status": "complete",
       "tests": {
         "test/": {
-          "only works with mainline components": {"state": "passing"}
+          "only works with mainline components": {
+            "state": "passing"
+          }
         }
       }
     },
@@ -18,14 +20,16 @@
       "status": "complete",
       "tests": {
         "test/": {
-          "only works with mainline components": {"state": "failing"}
+          "only works with mainline components": {
+            "state": "failing"
+          }
         }
       },
       "errors": {
         "test/": {
           "only works with mainline components": [
-              "expected 'foo' to equal 'mainline'",
-              "at index\\.html:11"
+            "expected 'foo' to equal 'mainline'",
+            "at index\\.html:(10|13)"
           ]
         }
       }
@@ -37,14 +41,16 @@
       "status": "complete",
       "tests": {
         "test/": {
-          "only works with mainline components": {"state": "failing"}
+          "only works with mainline components": {
+            "state": "failing"
+          }
         }
       },
       "errors": {
         "test/": {
           "only works with mainline components": [
-              "expected 'bar' to equal 'mainline'",
-              "at index\\.html:11"
+            "expected 'bar' to equal 'mainline'",
+            "at index\\.html:(10|13)"
           ]
         }
       }

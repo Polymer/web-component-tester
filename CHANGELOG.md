@@ -6,6 +6,76 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+<!-- Add new, unreleased items here. -->
+* Upgrade polyserve to 0.24.0 and add the --module-resolution flag
+
+## 6.5.0 - 2018-01-17
+* Upgrade wct-local to 2.1.0 to get support for headless Chrome.
+
+## 6.4.3 - 2018-01-11
+* web-component-tester: no longer injects `a11ySuite.js` script in `--npm` mode.
+* wct-browser-legacy: `a11ySuite.js` now exports a `a11ySuite` reference. Import this reference direction to use `a11ySuite()` in npm.
+
+## 6.4.2 - 2018-01-09
+* Upgrade wct-sauce to 2.0.0 to get updated browsers lists to include Safari 11 and Edge 15.
+* Fixed #523 WCT ignores the webserver hostname
+* Remove `overflow-y: auto` from test runner styling to increase performance.
+
+## 6.4.1 - 2017-11-20
+* Ensure that WCT is installed with compatible versions of wct-local and wct-sauce. This fixes a bug where – if incompatible versions are installed – they aren't able to coordinate shutdown, so WCT hangs after successfully completing a test run.
+
+## 6.4.0 - 2017-10-31 🎃
+
+* Updated package.json:
+  * Upgraded dependencies async, chai, cleankill, findup-sync, sinon, and socket.io.
+  * Upgraded devDependencies update-notifier
+* Added `define:webserver` hook to enable substitution of the generated express app for the webserver through a callback, to support use cases where a plugin might want to inject handlers or middleware in front of polyserve.
+* Added support for `proxy: {path: string, target: string}` config which is forwarded to `polyserve`.
+
+## 6.3.0 - 2017-10-02
+
+* Updated wct-browser-legacy to use a module version of a11ySuite to get access to Polymer.dom.flush.
+* Updated generated index for webserver to use a11ySuite as a module.
+* Updated polyserve to get support for on-the-fly module compilation and `<script type=module>` conversion for browsers that don't support modules.
+
+## 6.2.0 - 2017-09-19
+
+* Updated the browser.js file for npm case to use test-fixture as JS module instead of html import.
+* Updated the integration tests to support running on Sauce via wct-sauce plugin.
+* Updated polyserve to 0.22.1 for better compilation support and ES modules in HTML script tags and bug fixes.
+* Updated bower.json to reference newly published test-fixture version 3.0.0.
+* No longer require `?npm=true` url parameter, as `web-component-tester` and `wct-browser-legacy` versions of `browser.js` now contain explicit npm/non-npm directives of the form `window.__wctUseNpm` as a first step towards splitting out the client-side environment-specific config and behavior.
+* Added support for scoped package names under npm.
+
+## 6.1.5 - 2017-08-31
+
+* Removed reliance on `document.currentScript` in browser.js because IE11 doesn't have it. (Second reference found)
+
+## 6.1.4 - 2017-08-31
+
+* Removed reliance on `document.currentScript` in browser.js because IE11 doesn't have it.
+* To use WCT tests with NPM in browser without WCT (or polymer-cli) running on the commandline, you must include an `?npm=true` or `&npm=true` parameter in the URL for the test document; WCT does this automatically when opening its own browsers.
+
+## 6.1.3 - 2017-08-26
+
+* Added `sinon` as dependency of `sinon-chai` in web context to suppress the npm installation warning/error of unmet peer dependency, even though `@polymer/sinonjs` fulfills the runtime dependency and `sinon` will be unused.
+* Set `@polymer/test-fixture` back to ^0.0.3 because of dependency install errors related to yarn's "flat".
+
+## 6.1.2 - 2017-08-22
+
+* Updated npm browser dependency on `@polymer/test-fixture` v3.0.0-pre.1
+
+## 6.1.1 - 2017-08-21
+
+* Updated browser dependency to a browser-ready sinon npm package for `wct --npm` option.
+
+## 6.1.0 - 2017-08-17
+
+* Added an *experimental* `--npm` flag to support web packages which are installed in `node_modules` by npm (instead of installed in `bower_components` by Bower.
+* Builds a `wct-browser-legacy` package directory used to publish npm-specific client support package to npm, suitable for use with devDependencies of custom elements.
+* Added version flag to CLI. Available using `--version` or `-V`.
+
+## 6.0.1 - 2017-08-08
 
 * Updated package.json dependencies:
   * Upgraded @types/gulp

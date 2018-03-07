@@ -39,13 +39,13 @@ describe('cli', () => {
   let sandbox: sinon.SinonSandbox;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(steps, 'prepare', async(): Promise<void> => undefined);
-    sandbox.stub(steps, 'runTests', async(): Promise<void> => undefined);
+    sandbox.stub(steps, 'prepare').callsFake(async(): Promise<void> => undefined);
+    sandbox.stub(steps, 'runTests').callsFake(async(): Promise<void> => undefined);
 
-    sandbox.stub(
-        wctLocalBrowsers, 'detect',
+    sandbox.stub(wctLocalBrowsers, 'detect')
+      .callsFake(
         async () => _.omit(LOCAL_BROWSERS, 'aurora'));
-    sandbox.stub(wctLocalBrowsers, 'supported', () => _.keys(LOCAL_BROWSERS));
+    sandbox.stub(wctLocalBrowsers, 'supported').callsFake(() => _.keys(LOCAL_BROWSERS));
   });
 
   afterEach(() => {
@@ -65,6 +65,16 @@ describe('cli', () => {
       const call = <{args: [context.Context]}>steps.runTests['getCall'](0);
       return call.args[0];
     };
+
+    it('honors --version flags', async () => {
+      const version: String = require('../../package.json').version;
+      let output: String;
+
+      await cli.run({}, ['--version'], <any>{write: (o: String) => output = o});
+      expect(output).to.eq(`${version}\n`);
+      await cli.run({}, ['-V'], <any>{write: (o: String) => output = o});
+      expect(output).to.eq(`${version}\n`);
+    });
 
     it('expands test/ by default, ' +
            'and serves from /components/<basename>',
