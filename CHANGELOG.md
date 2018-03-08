@@ -78,7 +78,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 6.0.1 - 2017-08-08
 
-* Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 * Updated package.json dependencies:
   * Upgraded @types/gulp
   * Moved all @types to devDependencies
