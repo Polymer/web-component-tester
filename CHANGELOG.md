@@ -82,6 +82,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   * Upgraded @types/gulp
   * Moved all @types to devDependencies
   * Removed PolymerElements/test-fixture from npm dependencies (is already installed by bower)
+* Undo fix for #505, as https://bugs.chromium.org/p/chromium/issues/detail?id=701601 has been fixed and shipped in M58 stable.
 
 ## 6.0.0 - 2017-05-15
 
