@@ -93,9 +93,7 @@ export function webserver(wct: Context): void {
 
     const packageName = getPackageName(options);
     let componentDir;
-
     // Check for client-side compatibility.
-
     // Non-npm case.
     if (!options.npm) {
       componentDir = bowerConfig.read(options.root).directory;
