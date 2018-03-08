@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
+import * as bowerConfig from 'bower-config';
 
 const baseDir = path.join(__dirname, '..', 'fixtures', 'integration');
 
@@ -30,6 +31,7 @@ export async function makeProperTestDir(dirname: string) {
 
   // copy dir
   const pathToTestDir = await copyDir(startingDir, tempDir);
+  const bowerDir = bowerConfig.read(pathToTestDir).directory;
 
   fs.mkdirSync(path.join(pathToTestDir, 'node_modules'));
   fs.mkdirSync(
@@ -37,9 +39,9 @@ export async function makeProperTestDir(dirname: string) {
 
   // set up symlinks into component dirs for browser.js, data/, and wct's
   // dependencies (like mocha, sinon, etc)
-  const componentsDirs = new Set(['bower_components']);
+  const componentsDirs = new Set([bowerDir]);
   for (const baseFile of fs.readdirSync(startingDir)) {
-    if (/^bower_components(-|$)/.test(baseFile)) {
+    if (new RegExp(`${bowerDir}(-|$)`).test(baseFile)) {
       componentsDirs.add(baseFile);
     }
   }

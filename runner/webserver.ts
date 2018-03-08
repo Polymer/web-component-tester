@@ -21,6 +21,7 @@ import {MainlineServer, PolyserveServer, RequestHandler, ServerOptions, startSer
 import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
+import * as bowerConfig from 'bower-config';
 
 import {getPackageName} from './config';
 import {Context} from './context';
@@ -91,13 +92,12 @@ export function webserver(wct: Context): void {
     const additionalRoutes = new Map<string, RequestHandler>();
 
     const packageName = getPackageName(options);
-
+    let componentDir;
     // Check for client-side compatibility.
-
     // Non-npm case.
     if (!options.npm) {
-      const pathToLocalWct =
-          path.join(options.root, 'bower_components', 'web-component-tester');
+      componentDir = bowerConfig.read(options.root).directory;
+      const pathToLocalWct = path.join(options.root, componentDir, 'web-component-tester');
       let version: string|undefined = undefined;
       const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
       for (const mdFilename of mdFilenames) {
@@ -179,6 +179,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     const polyserveResult = await startServers(
         {
           root: options.root,
+          componentDir,
           compile: options.compile,
           hostname: options.webserver.hostname,
           headers: DEFAULT_HEADERS,
