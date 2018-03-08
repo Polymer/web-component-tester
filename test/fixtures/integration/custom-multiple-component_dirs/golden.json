@@ -1,0 +1,53 @@
+{
+  "variants": {
+    "": {
+      "passing": 1,
+      "pending": 0,
+      "failing": 0,
+      "status": "complete",
+      "tests": {
+        "test/": {
+          "only works with mainline components": {"state": "passing"}
+        }
+      }
+    },
+    "foo": {
+      "passing": 0,
+      "pending": 0,
+      "failing": 1,
+      "status": "complete",
+      "tests": {
+        "test/": {
+          "only works with mainline components": {"state": "failing"}
+        }
+      },
+      "errors": {
+        "test/": {
+          "only works with mainline components": [
+              "expected 'foo' to equal 'mainline'",
+              "at index\\.html:11"
+          ]
+        }
+      }
+    },
+    "bar": {
+      "passing": 0,
+      "pending": 0,
+      "failing": 1,
+      "status": "complete",
+      "tests": {
+        "test/": {
+          "only works with mainline components": {"state": "failing"}
+        }
+      },
+      "errors": {
+        "test/": {
+          "only works with mainline components": [
+              "expected 'bar' to equal 'mainline'",
+              "at index\\.html:11"
+          ]
+        }
+      }
+    }
+  }
+}
