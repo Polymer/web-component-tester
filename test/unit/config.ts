@@ -12,9 +12,11 @@
  * http://polymer.github.io/PATENTS.txt
  */
 import * as chai from 'chai';
+import * as path from 'path';
 
 import * as config from '../../runner/config';
 import {Context} from '../../runner/context';
+
 const expect = chai.expect;
 
 describe('config', function() {
@@ -85,6 +87,41 @@ describe('config', function() {
       });
     });
 
+  });
+
+  describe('npm pathing', function() {
+    describe('Resolves simple names to paths', function() {
+      const localPackagePath =
+          path.join(__dirname, '../fixtures/fake-packages/singleton-dep');
+      const options = <config.Config>{root: localPackagePath};
+      const npmPackages: config.NPMPackage[] = [{
+        name: 'dependency',
+        jsEntrypoints: ['index.js', 'arbitraryJsFile.js']
+      }];
+      const resolvedEntrypoints =
+          config.resolveWCTNPMEntrypointNames(options, npmPackages);
+
+      expect(resolvedEntrypoints[0]).to.equal('dependency/index.js');
+      expect(resolvedEntrypoints[1]).to.equal('dependency/arbitraryJsFile.js');
+    });
+
+    it('Resolves duplicated names to paths', function() {
+      const localPackagePath =
+          path.join(__dirname, '../fixtures/fake-packages/duplicated-dep');
+      const options = <config.Config>{root: localPackagePath};
+      const npmPackages: config.NPMPackage[] = [{
+        name: 'dependency',
+        jsEntrypoints: ['index.js', 'arbitraryJsFile.js']
+      }];
+      const resolvedEntrypoints =
+          config.resolveWCTNPMEntrypointNames(options, npmPackages);
+
+      expect(resolvedEntrypoints[0])
+          .to.equal('wct-browser-legacy/node_modules/dependency/index.js');
+      expect(resolvedEntrypoints[1])
+          .to.equal(
+              'wct-browser-legacy/node_modules/dependency/arbitraryJsFile.js');
+    });
   });
 
 });
