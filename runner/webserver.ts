@@ -12,6 +12,7 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
+import * as bowerConfig from 'bower-config';
 import * as cleankill from 'cleankill';
 import * as express from 'express';
 import * as fs from 'fs';
@@ -21,9 +22,8 @@ import {MainlineServer, PolyserveServer, RequestHandler, ServerOptions, startSer
 import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
-import * as bowerConfig from 'bower-config';
 
-import {getPackageName} from './config';
+import {getPackageName, NPMPackage, resolveWCTNPMEntrypointNames} from './config';
 import {Context} from './context';
 
 // Template for generated indexes.
@@ -35,6 +35,22 @@ const DEFAULT_HEADERS = {
   'Pragma': 'no-cache',
   'Expires': '0',
 };
+
+// scripts to be injected into the running test
+const ENVIRONMENT_SCRIPTS: NPMPackage[] = [
+  {name: 'stacky', jsEntrypoints: ['browser.js']},
+  {name: 'async', jsEntrypoints: ['lib/async.js']},
+  {name: 'lodash', jsEntrypoints: ['index.js']},
+  {name: 'mocha', jsEntrypoints: ['mocha.js']},
+  {name: 'chai', jsEntrypoints: ['chai.js']},
+  {name: '@polymer/sinonjs', jsEntrypoints: ['sinon.js']},
+  {name: 'sinon-chai', jsEntrypoints: ['lib/sinon-chai.js']},
+  {
+    name: 'accessibility-developer-tools',
+    jsEntrypoints: ['dist/js/axs_testing.js']
+  },
+  {name: '@polymer/test-fixture', jsEntrypoints: ['test-fixture.js']},
+];
 
 /**
  * The webserver module is a quasi-plugin. This ensures that it is hooked in a
@@ -60,9 +76,9 @@ export function webserver(wct: Context): void {
     // Bug: https://github.com/Polymer/web-component-tester/issues/194
     options.suites = options.suites.map((cv) => cv.replace(/\\/g, '/'));
 
-    // The generated index needs the correct "browser.js" script. When using npm,
-    // the wct-browser-legacy package may be used, so we test for that package
-    // and will use its "browser.js" if present.
+    // The generated index needs the correct "browser.js" script. When using
+    // npm, the wct-browser-legacy package may be used, so we test for that
+    // package and will use its "browser.js" if present.
     let browserScript = 'web-component-tester/browser.js';
     if (options.npm) {
       try {
@@ -78,6 +94,19 @@ export function webserver(wct: Context): void {
       }
       const packageName = getPackageName(options);
       const isPackageScoped = packageName && packageName[0] === '@';
+
+      // concat options.clientOptions.environmentScripts with resolved
+      // ENVIRONMENT_SCRIPTS
+      options.clientOptions =
+          options.clientOptions ? options.clientOptions : {};
+      options.clientOptions.environmentScripts =
+          options.clientOptions.environmentScripts ?
+          options.clientOptions.environmentScripts :
+          [];
+      options.clientOptions.environmentScripts =
+          options.clientOptions.environmentScripts.concat(
+              resolveWCTNPMEntrypointNames(options, ENVIRONMENT_SCRIPTS));
+
       if (isPackageScoped) {
         browserScript = `../${browserScript}`;
       }
@@ -99,7 +128,8 @@ export function webserver(wct: Context): void {
     // Non-npm case.
     if (!options.npm) {
       componentDir = bowerConfig.read(options.root).directory;
-      const pathToLocalWct = path.join(options.root, componentDir, 'web-component-tester');
+      const pathToLocalWct =
+          path.join(options.root, componentDir, 'web-component-tester');
       let version: string|undefined = undefined;
       const mdFilenames = ['package.json', 'bower.json', '.bower.json'];
       for (const mdFilename of mdFilenames) {

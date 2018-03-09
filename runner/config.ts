@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as nomnom from 'nomnom';
 import * as path from 'path';
+import * as resolve from 'resolve';
 import {Capabilities} from 'wd';
 
 import {BrowserDef} from './browserrunner';
@@ -43,7 +44,9 @@ export interface Config {
   testTimeout?: number;
   persistent?: boolean;
   extraScripts?: string[];
-  clientOptions?: {root?: string; verbose?: boolean};
+  wctPackageName?: string;
+  clientOptions?:
+      {root?: string; verbose?: boolean; environmentScripts?: string[]};
   activeBrowsers?: BrowserDef[];
   browserOptions?: {[name: string]: Capabilities};
   plugins?: (string|boolean)[]|{[key: string]: ({disabled: boolean} | boolean)};
@@ -82,6 +85,20 @@ export interface Config {
   };
   /** A deprecated option */
   browsers?: Browser[]|Browser;
+}
+
+export interface NPMPackage {
+  /**
+   * Name of the node package. e.g. '@polymer/polymer'
+   */
+  name: string;
+
+  /**
+   * JS entrypoints relative to packageName e.g. lodash/index.js would simply
+   * be ['index.js'] and myPackage/dist/addon.js and myPackage/lib/core.js would
+   * be ['dist/addon.js', 'lib/core.js']
+   */
+  jsEntrypoints: string[];
 }
 
 /**
@@ -126,6 +143,97 @@ export function getPackageName(options: Config): string|undefined {
   console.warn(
       `no ${manifestName} found, defaulting to packageName=${basename}`);
   return basename;
+}
+
+/**
+ * Finds the first npm scope starting with `@` from a path. Undefined if no path
+ * found
+ *
+ * @param path Path to be searched
+ */
+export function getPackageScopeFromPath(path: string): string|undefined {
+  const pathParts = path.split('/');
+
+  for (const pathPart of pathParts) {
+    if (pathPart[0] === '@') {
+      return pathPart;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Truncates the path to the slash after the last occurrence of the given
+ * package name.
+ *
+ * @param directory Name of directory
+ * @param path Path to be truncated
+ */
+export function truncatePathToDir(directory: string, path: string): string|
+    null {
+  const delimitedDir = `/${directory}/`;
+  const lastDirOccurrence = path.lastIndexOf(delimitedDir);
+  if (lastDirOccurrence === -1) {
+    return null;
+  }
+  return path.substr(0, lastDirOccurrence + delimitedDir.length);
+}
+
+/**
+ * Resolves npm paths from current config root to ScriptNames.
+ *
+ * e.g. a/b.js is actually resolved in directory c's node modules, it would
+ * return c/node_modules/a/b.js. These dependencies must be direct dependencies
+ * to WCT.
+ *
+ * @param config Current config / options / scope
+ * @param npmPackages List of NPMScript objects to be resolved
+ * @param wctPackageName Name of wct package with browser.js (Defaults to
+ * wct-browser-legacy)
+ */
+export function resolveWCTNPMEntrypointNames(
+    config: Config, npmPackages: NPMPackage[],
+    wctPackageName = 'wct-browser-legacy'): string[] {
+  // grab from CLI flag defaults to wct-browser-legacy
+  wctPackageName =
+      config.wctPackageName ? config.wctPackageName : wctPackageName;
+  let absoluteBrowserPath;
+
+  try {
+    console.log(`${npmPackages[0].name}
+    basedir: ${config.root}
+    package name: ${wctPackageName}`);
+    absoluteBrowserPath = resolve.sync(wctPackageName, {basedir: config.root});
+  } catch {
+    throw new Error(
+        `${wctPackageName} not installed. Please change --wct-package-name` +
+        ` flag or install the package.`);
+  }
+
+  // We want to find and inject dependencies WCT relies on not the local
+  // package or its dependencies' dependencies
+  const absoluteWCTRoot =
+      truncatePathToDir(wctPackageName, absoluteBrowserPath);
+  const resolvedEntrypoints: string[] = [];
+
+  for (const npmPackage of npmPackages) {
+    const absoluteNPMMainPath =
+        resolve.sync(npmPackage.name, {basedir: absoluteWCTRoot});
+
+    const absoluteBasePath =
+        truncatePathToDir(npmPackage.name, absoluteNPMMainPath);
+
+    // Find path relative to our testing element's node_modules
+    const nodeModulesDir = path.join(config.root, 'node_modules');
+    const relativeBasePath = path.relative(nodeModulesDir, absoluteBasePath);
+
+    for (let entrypoint of npmPackage.jsEntrypoints) {
+      resolvedEntrypoints.push(path.join(relativeBasePath, entrypoint));
+    }
+  }
+
+  return resolvedEntrypoints;
 }
 
 // The full set of options, as a reference.
@@ -215,6 +323,8 @@ export function defaults(): Config {
       port: undefined,
       hostname: 'localhost',
     },
+    // The name of the NPM package that is vending wct's browser.js
+    wctPackageName: 'wct-browser-legacy'
   };
 }
 
@@ -308,6 +418,11 @@ const ARG_CONFIG = {
     help: 'Whether to compile ES2015 down to ES5. ' +
         'Options: "always", "never", "auto". Auto means that we will ' +
         'selectively compile based on the requesting user agent.'
+  },
+  wctPackageName: {
+    full: 'wct-package-name',
+    help: 'NPM package name that contains web-component-tester\'s browser.js.' +
+        ' Defaults to wct-browser-legacy. This is only used in NPM projects.'
   },
 
   // Deprecated
@@ -540,9 +655,9 @@ function expandDeprecated(context: Context) {
         'The --browsers flag/option is deprecated. Please use ' +
             '--local and --sauce instead, or configure via plugins.' +
             '[local|sauce].browsers.');
-    const fragment: {plugins: {[name: string]: {browsers?: Browser[]}}} = {
-      plugins: {sauce: {}, local: {}}
-    };
+    const fragment: {
+      plugins: {[name: string]: {browsers?: Browser[]}}
+    } = {plugins: {sauce: {}, local: {}}};
     fragments.push(fragment);
 
     for (const browser of browsers) {
