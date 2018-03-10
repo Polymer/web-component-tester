@@ -123,7 +123,6 @@ function readJsonSync(filename: string, dir?: string): any|null {
   return null;
 }
 
-
 /**
  * Determines the package name by reading from the following sources:
  *
@@ -143,24 +142,6 @@ export function getPackageName(options: Config): string|undefined {
   console.warn(
       `no ${manifestName} found, defaulting to packageName=${basename}`);
   return basename;
-}
-
-/**
- * Finds the first npm scope starting with `@` from a path. Undefined if no path
- * found
- *
- * @param path Path to be searched
- */
-export function getPackageScopeFromPath(path: string): string|undefined {
-  const pathParts = path.split('/');
-
-  for (const pathPart of pathParts) {
-    if (pathPart[0] === '@') {
-      return pathPart;
-    }
-  }
-
-  return undefined;
 }
 
 /**
