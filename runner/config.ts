@@ -173,7 +173,7 @@ export function truncatePathToDir(directory: string, path: string): string|
  * @param wctPackageName Name of wct package with browser.js (Defaults to
  * wct-browser-legacy)
  */
-export function resolveWCTNPMEntrypointNames(
+export function resolveWctNpmEntrypointNames(
     config: Config, npmPackages: NPMPackage[]): string[] {
   // grab from CLI flag defaults to wct-browser-legacy
   let wctPackageName = config.wctPackageName;
@@ -202,11 +202,11 @@ export function resolveWCTNPMEntrypointNames(
   const resolvedEntrypoints: string[] = [];
 
   for (const npmPackage of npmPackages) {
-    const absoluteNPMMainPath =
+    const absoluteNpmMainPath =
         resolve.sync(npmPackage.name, {basedir: absoluteWCTRoot});
 
     const absoluteBasePath =
-        truncatePathToDir(npmPackage.name, absoluteNPMMainPath);
+        truncatePathToDir(npmPackage.name, absoluteNpmMainPath);
 
     // Find path relative to our testing element's node_modules
     const nodeModulesDir = path.join(config.root, 'node_modules');

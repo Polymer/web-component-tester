@@ -23,7 +23,7 @@ import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
-import {getPackageName, NPMPackage, resolveWCTNPMEntrypointNames} from './config';
+import {getPackageName, NPMPackage, resolveWctNpmEntrypointNames} from './config';
 import {Context} from './context';
 
 // Template for generated indexes.
@@ -105,7 +105,7 @@ export function webserver(wct: Context): void {
           [];
       options.clientOptions.environmentScripts =
           options.clientOptions.environmentScripts.concat(
-              resolveWCTNPMEntrypointNames(options, ENVIRONMENT_SCRIPTS));
+              resolveWctNpmEntrypointNames(options, ENVIRONMENT_SCRIPTS));
 
       if (isPackageScoped) {
         browserScript = `../${browserScript}`;

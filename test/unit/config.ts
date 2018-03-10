@@ -99,7 +99,7 @@ describe('config', function() {
         jsEntrypoints: ['index.js', 'arbitraryJsFile.js']
       }];
       const resolvedEntrypoints =
-          config.resolveWCTNPMEntrypointNames(options, npmPackages);
+          config.resolveWctNpmEntrypointNames(options, npmPackages);
 
       expect(resolvedEntrypoints[0]).to.equal('dependency/index.js');
       expect(resolvedEntrypoints[1]).to.equal('dependency/arbitraryJsFile.js');
@@ -114,7 +114,7 @@ describe('config', function() {
         jsEntrypoints: ['index.js', 'arbitraryJsFile.js']
       }];
       const resolvedEntrypoints =
-          config.resolveWCTNPMEntrypointNames(options, npmPackages);
+          config.resolveWctNpmEntrypointNames(options, npmPackages);
 
       expect(resolvedEntrypoints[0])
           .to.equal('wct-browser-legacy/node_modules/dependency/index.js');
