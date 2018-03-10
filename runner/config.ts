@@ -212,7 +212,7 @@ export function resolveWctNpmEntrypointNames(
     const nodeModulesDir = path.join(config.root, 'node_modules');
     const relativeBasePath = path.relative(nodeModulesDir, absoluteBasePath);
 
-    for (let entrypoint of npmPackage.jsEntrypoints) {
+    for (const entrypoint of npmPackage.jsEntrypoints) {
       resolvedEntrypoints.push(path.join(relativeBasePath, entrypoint));
     }
   }
