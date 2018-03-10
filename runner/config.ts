@@ -174,11 +174,14 @@ export function truncatePathToDir(directory: string, path: string): string|
  * wct-browser-legacy)
  */
 export function resolveWCTNPMEntrypointNames(
-    config: Config, npmPackages: NPMPackage[],
-    wctPackageName = 'wct-browser-legacy'): string[] {
+    config: Config, npmPackages: NPMPackage[]): string[] {
   // grab from CLI flag defaults to wct-browser-legacy
-  wctPackageName =
-      config.wctPackageName ? config.wctPackageName : wctPackageName;
+  let wctPackageName = config.wctPackageName;
+
+  if (wctPackageName === undefined) {
+    wctPackageName = 'wct-browser-legacy';
+  }
+
   let absoluteBrowserPath;
 
   try {
