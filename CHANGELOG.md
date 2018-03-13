@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- Add new, unreleased items here. -->
 * Upgrade polyserve to 0.24.0 and add the --module-resolution flag
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
+* Fixed #547: WCT now respects webserver.port configuration option
+* Refactored #523: Defaults for hostname are correctly used
 
 ## 6.5.0 - 2018-01-17
 * Upgrade wct-local to 2.1.0 to get support for headless Chrome.
