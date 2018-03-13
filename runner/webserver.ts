@@ -184,6 +184,7 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
           componentDir,
           compile: options.compile,
           hostname: options.webserver.hostname,
+          port: options.webserver.port,
           headers: DEFAULT_HEADERS,
           packageName,
           additionalRoutes,
@@ -233,8 +234,8 @@ Expected to find a ${mdFilenames.join(' or ')} at: ${pathToLocalWct}/
     }
 
     options.webserver._servers = servers.map((s) => {
+      const hostname = s.server.address().address;
       const port = s.server.address().port;
-      const hostname = s.options.hostname;
       const url = `http://${hostname}:${port}${pathToGeneratedIndex}`;
       return {url, variant: s.kind === 'mainline' ? '' : s.variantName};
     });
