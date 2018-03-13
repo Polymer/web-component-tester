@@ -149,16 +149,16 @@ export function getPackageName(options: Config): string|undefined {
  * package name.
  *
  * @param directory Name of directory
- * @param path Path to be truncated
+ * @param pathName Path to be truncated
  */
-export function truncatePathToDir(directory: string, path: string): string|
+export function truncatePathToDir(directory: string, pathName: string): string|
     null {
   const delimitedDir = `/${directory}/`;
-  const lastDirOccurrence = path.lastIndexOf(delimitedDir);
+  const lastDirOccurrence = pathName.lastIndexOf(delimitedDir);
   if (lastDirOccurrence === -1) {
     return null;
   }
-  return path.substr(0, lastDirOccurrence + delimitedDir.length);
+  return pathName.substr(0, lastDirOccurrence + delimitedDir.length);
 }
 
 /**
