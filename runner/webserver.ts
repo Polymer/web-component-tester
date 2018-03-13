@@ -97,12 +97,9 @@ export function webserver(wct: Context): void {
 
       // concat options.clientOptions.environmentScripts with resolved
       // ENVIRONMENT_SCRIPTS
-      options.clientOptions =
-          options.clientOptions ? options.clientOptions : {};
+      options.clientOptions = options.clientOptions || {};
       options.clientOptions.environmentScripts =
-          options.clientOptions.environmentScripts ?
-          options.clientOptions.environmentScripts :
-          [];
+          options.clientOptions.environmentScripts || [];
       options.clientOptions.environmentScripts =
           options.clientOptions.environmentScripts.concat(
               resolveWctNpmEntrypointNames(options, ENVIRONMENT_SCRIPTS));

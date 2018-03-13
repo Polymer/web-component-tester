@@ -209,11 +209,12 @@ export function resolveWctNpmEntrypointNames(
         truncatePathToDir(npmPackage.name, absoluteNpmMainPath);
 
     // Find path relative to our testing element's node_modules
-    const nodeModulesDir = path.join(config.root, 'node_modules');
-    const relativeBasePath = path.relative(nodeModulesDir, absoluteBasePath);
+    const nodeModulesDir = path.posix.join(config.root, 'node_modules');
+    const relativeBasePath =
+        path.posix.relative(nodeModulesDir, absoluteBasePath);
 
     resolvedEntrypoints.push(
-        path.join(relativeBasePath, npmPackage.jsEntrypoint));
+        path.posix.join(relativeBasePath, npmPackage.jsEntrypoint));
   }
 
   return resolvedEntrypoints;
