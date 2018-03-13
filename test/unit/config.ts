@@ -94,10 +94,10 @@ describe('config', function() {
       const localPackagePath =
           path.join(__dirname, '../fixtures/fake-packages/singleton-dep');
       const options = <config.Config>{root: localPackagePath};
-      const npmPackages: config.NPMPackage[] = [{
-        name: 'dependency',
-        jsEntrypoints: ['index.js', 'arbitraryJsFile.js']
-      }];
+      const npmPackages: config.NPMPackage[] = [
+        {name: 'dependency', jsEntrypoint: 'index.js'},
+        {name: 'dependency', jsEntrypoint: 'arbitraryJsFile.js'}
+      ];
       const resolvedEntrypoints =
           config.resolveWctNpmEntrypointNames(options, npmPackages);
 
@@ -109,10 +109,10 @@ describe('config', function() {
       const localPackagePath =
           path.join(__dirname, '../fixtures/fake-packages/duplicated-dep');
       const options = <config.Config>{root: localPackagePath};
-      const npmPackages: config.NPMPackage[] = [{
-        name: 'dependency',
-        jsEntrypoints: ['index.js', 'arbitraryJsFile.js']
-      }];
+      const npmPackages: config.NPMPackage[] = [
+        {name: 'dependency', jsEntrypoint: 'index.js'},
+        {name: 'dependency', jsEntrypoint: 'arbitraryJsFile.js'}
+      ];
       const resolvedEntrypoints =
           config.resolveWctNpmEntrypointNames(options, npmPackages);
 

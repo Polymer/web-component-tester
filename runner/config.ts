@@ -98,7 +98,7 @@ export interface NPMPackage {
    * be ['index.js'] and myPackage/dist/addon.js and myPackage/lib/core.js would
    * be ['dist/addon.js', 'lib/core.js']
    */
-  jsEntrypoints: string[];
+  jsEntrypoint: string;
 }
 
 /**
@@ -212,9 +212,8 @@ export function resolveWctNpmEntrypointNames(
     const nodeModulesDir = path.join(config.root, 'node_modules');
     const relativeBasePath = path.relative(nodeModulesDir, absoluteBasePath);
 
-    for (const entrypoint of npmPackage.jsEntrypoints) {
-      resolvedEntrypoints.push(path.join(relativeBasePath, entrypoint));
-    }
+    resolvedEntrypoints.push(
+        path.join(relativeBasePath, npmPackage.jsEntrypoint));
   }
 
   return resolvedEntrypoints;

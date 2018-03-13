@@ -38,18 +38,18 @@ const DEFAULT_HEADERS = {
 
 // scripts to be injected into the running test
 const ENVIRONMENT_SCRIPTS: NPMPackage[] = [
-  {name: 'stacky', jsEntrypoints: ['browser.js']},
-  {name: 'async', jsEntrypoints: ['lib/async.js']},
-  {name: 'lodash', jsEntrypoints: ['index.js']},
-  {name: 'mocha', jsEntrypoints: ['mocha.js']},
-  {name: 'chai', jsEntrypoints: ['chai.js']},
-  {name: '@polymer/sinonjs', jsEntrypoints: ['sinon.js']},
-  {name: 'sinon-chai', jsEntrypoints: ['lib/sinon-chai.js']},
+  {name: 'stacky', jsEntrypoint: 'browser.js'},
+  {name: 'async', jsEntrypoint: 'lib/async.js'},
+  {name: 'lodash', jsEntrypoint: 'index.js'},
+  {name: 'mocha', jsEntrypoint: 'mocha.js'},
+  {name: 'chai', jsEntrypoint: 'chai.js'},
+  {name: '@polymer/sinonjs', jsEntrypoint: 'sinon.js'},
+  {name: 'sinon-chai', jsEntrypoint: 'lib/sinon-chai.js'},
   {
     name: 'accessibility-developer-tools',
-    jsEntrypoints: ['dist/js/axs_testing.js']
+    jsEntrypoint: 'dist/js/axs_testing.js'
   },
-  {name: '@polymer/test-fixture', jsEntrypoints: ['test-fixture.js']},
+  {name: '@polymer/test-fixture', jsEntrypoint: 'test-fixture.js'},
 ];
 
 /**
