@@ -185,9 +185,6 @@ export function resolveWctNpmEntrypointNames(
   let absoluteBrowserPath;
 
   try {
-    console.log(`${npmPackages[0].name}
-    basedir: ${config.root}
-    package name: ${wctPackageName}`);
     absoluteBrowserPath = resolve.sync(wctPackageName, {basedir: config.root});
   } catch {
     throw new Error(
