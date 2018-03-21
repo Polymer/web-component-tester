@@ -5,9 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+<!-- ## Unreleased -->
 <!-- Add new, unreleased items here. -->
-* Upgrade polyserve to 0.24.0 and add the --module-resolution flag
+
+## 6.6.0 - 2018-03-21
+* Upgrade polyserve to ^0.25.2 and add the --module-resolution flag
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 * Injected libraries are now resolved to correct paths while using the runner. Note: simply serving the test file and running it will attempt to find the files, but they may load the wrong versions (e.g. lodash 4 might load instead of 3)
 
