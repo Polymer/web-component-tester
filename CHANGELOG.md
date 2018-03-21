@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- ## Unreleased -->
 <!-- Add new, unreleased items here. -->
+## 6.6.0-pre.2 - 2018-03-21
+* Fix issue where compiled runner files were not published
 
 ## 6.6.0-pre.1 - 2018-03-21
 * Upgrade polyserve to ^0.25.2 and add the --module-resolution flag
