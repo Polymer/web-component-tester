@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- ## Unreleased -->
 <!-- Add new, unreleased items here. -->
 
-## 6.6.0 - 2018-03-21
+## 6.6.0-pre.1 - 2018-03-21
 * Upgrade polyserve to ^0.25.2 and add the --module-resolution flag
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 * Injected libraries are now resolved to correct paths while using the runner. Note: simply serving the test file and running it will attempt to find the files, but they may load the wrong versions (e.g. lodash 4 might load instead of 3)
