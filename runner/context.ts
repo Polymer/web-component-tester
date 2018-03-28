@@ -15,23 +15,23 @@
 import * as events from 'events';
 import * as express from 'express';
 import * as _ from 'lodash';
-import {ExpressAppMapper, ServerOptions} from 'polyserve/lib/start_server';
-import * as socketIO from 'socket.io';
+import { ExpressAppMapper, ServerOptions } from 'polyserve/lib/start_server';
+import { Server } from 'socket.io';
 import * as http from 'spdy';
 import * as util from 'util';
 
-import {BrowserRunner} from './browserrunner';
+import { BrowserRunner } from './browserrunner';
 import * as config from './config';
-import {Plugin} from './plugin';
+import { Plugin } from './plugin';
 
 const JSON_MATCHER = 'wct.conf.json';
 const CONFIG_MATCHER = 'wct.conf.*';
 
 export type Handler =
-    ((...args: any[]) => Promise<any>)|((done: (err?: any) => void) => void)|
-    ((arg1: any, done: (err?: any) => void) => void)|
-    ((arg1: any, arg2: any, done: (err?: any) => void) => void)|
-    ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void);
+  ((...args: any[]) => Promise<any>) | ((done: (err?: any) => void) => void) |
+  ((arg1: any, done: (err?: any) => void) => void) |
+  ((arg1: any, arg2: any, done: (err?: any) => void) => void) |
+  ((arg1: any, arg2: any, arg3: any, done: (err?: any) => void) => void);
 
 /**
  * Exposes the current state of a WCT run, and emits events/hooks for anyone
@@ -46,8 +46,8 @@ export type Handler =
  */
 export class Context extends events.EventEmitter {
   options: config.Config;
-  private _hookHandlers: {[key: string]: Handler[]} = {};
-  _socketIOServers: SocketIO.Server[];
+  private _hookHandlers: { [key: string]: Handler[] } = {};
+  _socketIOServers: Server[];
   _httpServers: http.Server[];
   _testRunners: BrowserRunner[];
 
@@ -71,7 +71,7 @@ export class Context extends events.EventEmitter {
      * hold a reference to it, and make changes to it).
      */
     this.options = config.merge(
-        config.defaults(), config.fromDisk(matcher, options.root), options);
+      config.defaults(), config.fromDisk(matcher, options.root), options);
   }
 
   // Hooks
@@ -113,16 +113,16 @@ export class Context extends events.EventEmitter {
    * @return {!Context}
    */
   emitHook(
-      name: 'define:webserver', app: express.Express,
-      // The `mapper` param is a function the client of the hook uses to
-      // substitute a new app for the one given.  This enables, for example,
-      // mounting the polyserve app on a custom app to handle requests or mount
-      // middleware that needs to sit in front of polyserve's own handlers.
-      mapper: (app: Express.Application) => void, options: ServerOptions,
-      done?: (err?: any) => void): Promise<void>;
+    name: 'define:webserver', app: express.Express,
+    // The `mapper` param is a function the client of the hook uses to
+    // substitute a new app for the one given.  This enables, for example,
+    // mounting the polyserve app on a custom app to handle requests or mount
+    // middleware that needs to sit in front of polyserve's own handlers.
+    mapper: (app: Express.Application) => void, options: ServerOptions,
+    done?: (err?: any) => void): Promise<void>;
   emitHook(
-      name: 'prepare:webserver', app: express.Express,
-      done?: (err?: any) => void): Promise<void>;
+    name: 'prepare:webserver', app: express.Express,
+    done?: (err?: any) => void): Promise<void>;
   emitHook(name: 'configure', done?: (err?: any) => void): Promise<void>;
   emitHook(name: 'prepare', done?: (err?: any) => void): Promise<void>;
   emitHook(name: 'cleanup', done?: (err?: any) => void): Promise<void>;
@@ -133,9 +133,9 @@ export class Context extends events.EventEmitter {
     this.emit('log:debug', 'hook:', name);
 
     const hooks = (this._hookHandlers[name] || []);
-    type BoundHook = (cb: (err: any) => void) => (void|Promise<any>);
+    type BoundHook = (cb: (err: any) => void) => (void | Promise<any>);
     let boundHooks: BoundHook[];
-    let done: (err?: any) => void = (_err: any) => {};
+    let done: (err?: any) => void = (_err: any) => { };
     let argsEnd = args.length - 1;
     if (args[argsEnd] instanceof Function) {
       done = args[argsEnd];
@@ -143,7 +143,7 @@ export class Context extends events.EventEmitter {
     }
     const hookArgs = args.slice(0, argsEnd + 1);
     boundHooks =
-        hooks.map((hook) => hook.bind.apply(hook, [null].concat(hookArgs)));
+      hooks.map((hook) => hook.bind.apply(hook, [null].concat(hookArgs)));
     if (!boundHooks) {
       boundHooks = <any>hooks;
     }
@@ -205,8 +205,8 @@ export class Context extends events.EventEmitter {
   enabledPlugins(): string[] {
     // Plugins with falsy configuration or disabled: true are _not_ loaded.
     const pairs = _.reject(
-        (<any>_).pairs(this.options.plugins),
-        (p: [string, {disabled: boolean}]) => !p[1] || p[1].disabled);
+      (<any>_).pairs(this.options.plugins),
+      (p: [string, { disabled: boolean }]) => !p[1] || p[1].disabled);
     return _.map(pairs, (p) => p[0]);
   }
 
