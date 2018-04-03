@@ -23,7 +23,7 @@ import * as semver from 'semver';
 import * as send from 'send';
 import * as serverDestroy from 'server-destroy';
 
-import {getPackageName, NPMPackage, resolveWctNpmEntrypointNames} from './config';
+import {getPackageName, resolveWctNpmEntrypointNames} from './config';
 import {Context} from './context';
 
 // Template for generated indexes.
@@ -37,19 +37,16 @@ const DEFAULT_HEADERS = {
 };
 
 // scripts to be injected into the running test
-const ENVIRONMENT_SCRIPTS: NPMPackage[] = [
-  {name: 'stacky', jsEntrypoint: 'browser.js'},
-  {name: 'async', jsEntrypoint: 'lib/async.js'},
-  {name: 'lodash', jsEntrypoint: 'index.js'},
-  {name: 'mocha', jsEntrypoint: 'mocha.js'},
-  {name: 'chai', jsEntrypoint: 'chai.js'},
-  {name: '@polymer/sinonjs', jsEntrypoint: 'sinon.js'},
-  {name: 'sinon-chai', jsEntrypoint: 'lib/sinon-chai.js'},
-  {
-    name: 'accessibility-developer-tools',
-    jsEntrypoint: 'dist/js/axs_testing.js'
-  },
-  {name: '@polymer/test-fixture', jsEntrypoint: 'test-fixture.js'},
+const ENVIRONMENT_SCRIPTS: string[] = [
+  'stacky/browser.js',
+  'async/lib/async.js',
+  'lodash/index.js',
+  'mocha/mocha.js',
+  'chai/chai.js',
+  '@polymer/sinonjs/sinon.js',
+  'sinon-chai/lib/sinon-chai.js',
+  'accessibility-developer-tools/dist/js/axs_testing.js',
+  '@polymer/test-fixture/test-fixture.js',
 ];
 
 /**
@@ -102,7 +99,7 @@ export function webserver(wct: Context): void {
           options.clientOptions.environmentScripts || [];
       options.clientOptions.environmentScripts =
           options.clientOptions.environmentScripts.concat(
-              resolveWctNpmEntrypointNames(options, ENVIRONMENT_SCRIPTS));
+              await resolveWctNpmEntrypointNames(options, ENVIRONMENT_SCRIPTS));
 
       if (isPackageScoped) {
         browserScript = `../${browserScript}`;
@@ -142,7 +139,8 @@ export function webserver(wct: Context): void {
       if (!version) {
         throw new Error(`
 The web-component-tester Bower package is not installed as a dependency of this project (${
-            packageName}).
+                                                                                           packageName
+                                                                                         }).
 
 Please run this command to install:
     bower install --save-dev web-component-tester

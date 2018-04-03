@@ -44,7 +44,7 @@ export interface Config {
   testTimeout?: number;
   persistent?: boolean;
   extraScripts?: string[];
-  wctPackageName?: string;
+  wctBrowserPackageName?: string;
   clientOptions?:
       {root?: string; verbose?: boolean; environmentScripts?: string[]};
   activeBrowsers?: BrowserDef[];
@@ -85,20 +85,6 @@ export interface Config {
   };
   /** A deprecated option */
   browsers?: Browser[]|Browser;
-}
-
-export interface NPMPackage {
-  /**
-   * Name of the node package. e.g. '@polymer/polymer'
-   */
-  name: string;
-
-  /**
-   * JS entrypoints relative to packageName e.g. lodash/index.js would simply
-   * be ['index.js'] and myPackage/dist/addon.js and myPackage/lib/core.js would
-   * be ['dist/addon.js', 'lib/core.js']
-   */
-  jsEntrypoint: string;
 }
 
 /**
@@ -145,23 +131,6 @@ export function getPackageName(options: Config): string|undefined {
 }
 
 /**
- * Truncates the path to the slash after the last occurrence of the given
- * package name.
- *
- * @param directory Name of directory
- * @param pathName Path to be truncated
- */
-export function truncatePathToDir(directory: string, pathName: string): string|
-    null {
-  const delimitedDir = `/${directory}/`;
-  const lastDirOccurrence = pathName.lastIndexOf(delimitedDir);
-  if (lastDirOccurrence === -1) {
-    return null;
-  }
-  return pathName.substr(0, lastDirOccurrence + delimitedDir.length);
-}
-
-/**
  * Resolves npm paths from current config root to ScriptNames.
  *
  * e.g. a/b.js is actually resolved in directory c's node modules, it would
@@ -169,49 +138,51 @@ export function truncatePathToDir(directory: string, pathName: string): string|
  * to WCT.
  *
  * @param config Current config / options / scope
- * @param npmPackages List of NPMScript objects to be resolved
+ * @param npmPackages List of module IDs to be resolved
  * @param wctPackageName Name of wct package with browser.js (Defaults to
  * wct-browser-legacy)
  */
-export function resolveWctNpmEntrypointNames(
-    config: Config, npmPackages: NPMPackage[]): string[] {
-  // grab from CLI flag defaults to wct-browser-legacy
-  let wctPackageName = config.wctPackageName;
+export async function resolveWctNpmEntrypointNames(
+    config: Config, npmPackages: string[]): Promise<string[]> {
+  const {wctBrowserPackageName = 'wct-browser-legacy'} = config;
 
-  if (wctPackageName === undefined) {
-    wctPackageName = 'wct-browser-legacy';
-  }
-
-  let absoluteBrowserPath;
+  let wctBrowserPackageMainPath: string;
 
   try {
-    absoluteBrowserPath = resolve.sync(wctPackageName, {basedir: config.root});
+    wctBrowserPackageMainPath = await new Promise<string>(
+        (res, rej) => resolve(
+            wctBrowserPackageName, {
+              basedir: config.root,
+            },
+            (error, result) => {
+              error ? rej(error) : res(result);
+            }));
   } catch {
     throw new Error(
-        `${wctPackageName} not installed. Please change --wct-package-name` +
+        `${
+           wctBrowserPackageName
+         } not installed. Please change --wct-package-name` +
         ` flag or install the package.`);
   }
 
   // We want to find and inject dependencies WCT relies on not the local
   // package or its dependencies' dependencies
-  const absoluteWCTRoot =
-      truncatePathToDir(wctPackageName, absoluteBrowserPath);
+  const wctBrowserPackageDirPath = path.dirname(wctBrowserPackageMainPath);
   const resolvedEntrypoints: string[] = [];
 
   for (const npmPackage of npmPackages) {
     const absoluteNpmMainPath =
-        resolve.sync(npmPackage.name, {basedir: absoluteWCTRoot});
+        resolve.sync(npmPackage, {basedir: wctBrowserPackageDirPath});
 
-    const absoluteBasePath =
-        truncatePathToDir(npmPackage.name, absoluteNpmMainPath);
+    // const absoluteBasePath =
+    //     truncatePathToDir(npmPackage.name, absoluteNpmMainPath);
 
     // Find path relative to our testing element's node_modules
     const nodeModulesDir = path.posix.join(config.root, 'node_modules');
     const relativeBasePath =
-        path.posix.relative(nodeModulesDir, absoluteBasePath);
+        path.posix.relative(nodeModulesDir, absoluteNpmMainPath);
 
-    resolvedEntrypoints.push(
-        path.posix.join(relativeBasePath, npmPackage.jsEntrypoint));
+    resolvedEntrypoints.push(relativeBasePath);
   }
 
   return resolvedEntrypoints;
@@ -305,7 +276,7 @@ export function defaults(): Config {
       hostname: 'localhost',
     },
     // The name of the NPM package that is vending wct's browser.js
-    wctPackageName: 'wct-browser-legacy'
+    wctBrowserPackageName: 'wct-browser-legacy'
   };
 }
 
@@ -636,9 +607,9 @@ function expandDeprecated(context: Context) {
         'The --browsers flag/option is deprecated. Please use ' +
             '--local and --sauce instead, or configure via plugins.' +
             '[local|sauce].browsers.');
-    const fragment: {
-      plugins: {[name: string]: {browsers?: Browser[]}}
-    } = {plugins: {sauce: {}, local: {}}};
+    const fragment: {plugins: {[name: string]: {browsers?: Browser[]}}} = {
+      plugins: {sauce: {}, local: {}}
+    };
     fragments.push(fragment);
 
     for (const browser of browsers) {

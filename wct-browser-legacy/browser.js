@@ -576,7 +576,7 @@ var ChildRunner = /** @class */ (function () {
         if (childRunner) {
             return childRunner;
         }
-        if (window.parent === window) {
+        if (window.parent === window) { // Top window.
             if (traversal) {
                 console.warn('Subsuite loaded but was never registered. This most likely is due to wonky history behavior. Reloading...');
                 window.location.reload();
