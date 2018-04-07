@@ -352,6 +352,7 @@ const ARG_CONFIG = {
   },
   simpleOutput: {
     help: 'Avoid fancy terminal output.',
+    full: 'simple-output',
     flag: true,
   },
   skipUpdateCheck: {
@@ -361,7 +362,7 @@ const ARG_CONFIG = {
   },
   configFile: {
     help: 'Config file that needs to be used by wct. ie: wct.config-sauce.js',
-    full: 'configFile',
+    full: 'config-file',
   },
   npm: {
     help: 'Use node_modules instead of bower_components for all browser ' +
