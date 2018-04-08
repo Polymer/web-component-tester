@@ -5,8 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-<!-- ## Unreleased -->
 <!-- Add new, unreleased items here. -->
+## Unreleased
+* Fixed incorrect CLI arguments
 
 ## 6.6.0-pre.3 - 2018-03-21
 * Upgrade polyserve to ^0.25.2 and add the --module-resolution flag
