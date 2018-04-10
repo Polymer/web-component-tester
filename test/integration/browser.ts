@@ -160,10 +160,6 @@ function runsIntegrationSuite(
     const testResults = new TestResults();
 
     before(async function() {
-      // TODO(usergenic): Don't use suite-specific timeouts.  Move to global
-      // mocha.opts
-      this.timeout(500 * 1000);
-
       const suiteRoot = await makeProperTestDir(dirName);
       const allOptions: config.Config = Object.assign(
           {
@@ -420,9 +416,6 @@ function repeatBrowsers<T>(
 
 describe('define:webserver hook', () => {
   it('supports substituting given app', async function() {
-    // TODO(usergenic): Don't use suite-specific timeouts.  Move to global
-    // mocha.opts
-    this.timeout(20 * 1000);
     const suiteRoot = await makeProperTestDir('define-webserver-hook');
     const log: string[] = [];
     const requestedUrls: string[] = [];
@@ -436,6 +429,7 @@ describe('define:webserver hook', () => {
       },
       plugins: <any>{
         local: {
+          browsers: testLocalBrowsersList,
           skipSeleniumInstall: true,
         }
       },
@@ -468,9 +462,6 @@ describe('define:webserver hook', () => {
 describe('early failures', () => {
   it(`wct doesn't start testing if it's not bower installed locally`,
      async function() {
-       // TODO(usergenic): Don't use suite-specific timeouts.  Move to global
-       // mocha.opts
-       this.timeout(20 * 1000);
        const log: string[] = [];
        const options: config.Config = {
          output: <any>{write: log.push.bind(log)},
@@ -482,11 +473,7 @@ describe('early failures', () => {
            tags: ['org:Polymer', 'repo:web-component-tester'],
          },
          plugins: <any>{
-           local: {
-             // Uncomment to customize the browsers to test when debugging.
-             //  browsers: ['firefox', 'chrome', 'safari'],
-             skipSeleniumInstall: true
-           },
+           local: {browsers: testLocalBrowsersList, skipSeleniumInstall: true},
          },
        };
        const context = new Context(options);
@@ -511,7 +498,7 @@ describe('early failures', () => {
            tags: ['org:Polymer', 'repo:web-component-tester'],
          },
          plugins: <any>{
-           local: {skipSeleniumInstall: true},
+           local: {browsers: testLocalBrowsersList, skipSeleniumInstall: true},
          },
        };
        const context = new Context(options);

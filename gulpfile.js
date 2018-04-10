@@ -154,7 +154,7 @@ gulp.task('build:wct-browser-legacy', [
 
 gulp.task('test:unit', function () {
   return gulp.src('test/unit/*.js', { read: false })
-    .pipe(mocha({ reporter: 'spec' }));
+    .pipe(mocha({ reporter: 'spec', timeout: 10000 }));
 });
 
 gulp.task('bower', function () {
@@ -163,7 +163,7 @@ gulp.task('bower', function () {
 
 gulp.task('test:integration', ['bower'], function () {
   return gulp.src('test/integration/*.js', { read: false })
-    .pipe(mocha({ reporter: 'spec' }));
+    .pipe(mocha({ reporter: 'spec', timeout: 60000 }));
 });
 
 gulp.task('tslint', () =>
