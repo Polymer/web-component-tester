@@ -127,6 +127,12 @@ export default class ChildRunner {
   loaded(error: any) {
     util.debug('ChildRunner#loaded', this.url, error);
 
+    if (this.iframe.contentWindow == null && error) {
+      this.signalRunComplete(error);
+      this.done();
+      return;
+    }
+
     // Not all targets have WCT loaded (compatiblity mode)
     if (this.iframe.contentWindow.WCT) {
       this.share = this.iframe.contentWindow.WCT.share;

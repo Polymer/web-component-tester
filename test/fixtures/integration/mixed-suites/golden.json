@@ -1,0 +1,54 @@
+{
+  "passing": 10,
+  "pending": 0,
+  "failing": 0,
+  "status": "complete",
+  "tests": {
+    "test/": {
+      "inline suite": {
+        "inline nested test": {
+          "state": "passing"
+        }
+      },
+      "inline test": {
+        "state": "passing"
+      },
+      "suite 1": {
+        "nested test 1": {
+          "state": "passing"
+        }
+      },
+      "test 1": {
+        "state": "passing"
+      },
+      "suite 2": {
+        "nested test 2": {
+          "state": "passing"
+        }
+      },
+      "test 2": {
+        "state": "passing"
+      }
+    },
+    "test/one.html": {
+      "suite 1": {
+        "nested test 1": {
+          "state": "passing"
+        }
+      },
+      "test 1": {
+        "state": "passing"
+      }
+    },
+    "test/two.html": {
+      "suite 2": {
+        "nested test 2": {
+          "state": "passing"
+        }
+      },
+      "test 2": {
+        "state": "passing"
+      }
+    }
+  }
+}
