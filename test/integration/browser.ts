@@ -26,9 +26,21 @@ import {Context} from '../../runner/context';
 import {test} from '../../runner/test';
 import {makeProperTestDir} from './setup_test_dir';
 
+function parseList(stringList?: string): string[] {
+  return (stringList || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => !!item);
+}
+
 const testLocalBrowsers = !process.env.SKIP_LOCAL_BROWSERS;
+const testLocalBrowsersList = parseList(process.env.TEST_LOCAL_BROWSERS);
 const testRemoteBrowsers = !process.env.SKIP_REMOTE_BROWSERS &&
     process.env.SAUCE_USERNAME && process.env.SAUCE_ACCESS_KEY;
+const testRemoteBrowsersList = parseList(process.env.TEST_REMOTE_BROWSERS);
+if (testRemoteBrowsersList.length === 0) {
+  testRemoteBrowsersList.push('default');
+}
 
 interface TestErrorExpectation {
   [fileName: string]: {
@@ -148,6 +160,8 @@ function runsIntegrationSuite(
     const testResults = new TestResults();
 
     before(async function() {
+      // TODO(usergenic): Don't use suite-specific timeouts.  Move to global
+      // mocha.opts
       this.timeout(500 * 1000);
 
       const suiteRoot = await makeProperTestDir(dirName);
@@ -243,7 +257,10 @@ if (testLocalBrowsers) {
   describe('Local Browser Tests', function() {
     runsAllIntegrationSuites({
       plugins: <any> {
-        local: {skipSeleniumInstall: true},
+        local: {
+          browsers: testLocalBrowsersList,
+          skipSeleniumInstall: true,
+        },
       }
     });
   });
@@ -254,7 +271,7 @@ if (testRemoteBrowsers) {
     runsAllIntegrationSuites({
       plugins: <any> {
         sauce: {
-          browsers: ['default'],
+          browsers: testRemoteBrowsersList,
         },
       }
     });
@@ -403,6 +420,8 @@ function repeatBrowsers<T>(
 
 describe('define:webserver hook', () => {
   it('supports substituting given app', async function() {
+    // TODO(usergenic): Don't use suite-specific timeouts.  Move to global
+    // mocha.opts
     this.timeout(20 * 1000);
     const suiteRoot = await makeProperTestDir('define-webserver-hook');
     const log: string[] = [];
@@ -449,6 +468,8 @@ describe('define:webserver hook', () => {
 describe('early failures', () => {
   it(`wct doesn't start testing if it's not bower installed locally`,
      async function() {
+       // TODO(usergenic): Don't use suite-specific timeouts.  Move to global
+       // mocha.opts
        this.timeout(20 * 1000);
        const log: string[] = [];
        const options: config.Config = {
