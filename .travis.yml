@@ -4,17 +4,17 @@ addons:
   firefox: latest
   apt:
     sources:
-      - google-chrome
+    - google-chrome
     packages:
-      - google-chrome-stable
+    - google-chrome-stable
   sauce_connect: true
 language: node_js
 node_js:
-  - node
-  - '6'
+- node
+- '6'
 script:
-  - xvfb-run npm test
+- xvfb-run npm test
 env:
   global:
-    - secure: erPJ5uPudGD1E05tCYCWk/sdSFYL5lK/7rzUPgijC27XtuTF0tvvLKJkId2sCzPb40yCBHhEv0UIVEnYzY4feCpx5kUqm+Iu6DHWDn4xJP+gRnCNMCJp0QcUFU3JDNGK07FG2mKUkxD8EHxYjATL7tnN9HduNxaornVapkgRu70=
-    - secure: WkrrR4HpJr1jD86mOegdumhLqI5M1skh2j1iX0AYF41oPym4CIRHvFA8REY1f12OlPXfXCVZL8+7nyuoM6NEyddEDzZZXmgAJVFkFbP++veVjXGVAWsr2++n5lzcUfvhIuYTxTqSTpnA6E3DhoJdXBxt0FBTFxYA3yXSIfJsu2k=
+  - secure: WqREPJCj0auiij7P86MfTpD5+buf7vlAuRiUILmcq0+rhVFvsgqG82NlKIjcQuCzM9WFMqBHxDyV0/iyfE5qiQsEXYd7g3SwMVFIAS3R8sKnMz/EMA0kCqFCGn14iwbakNduSuyjQhxHje72iczm/3S4nKFceOzDGFlnvGLxpTA=
+  - secure: D5P88V2PQF6mq/bPHlpzW1DgPSz4rKaoXJ1SNIsdeqUnd8xN+tmVUBO0/skunwIPIdws0y7cLfZOThEJuRMoDMUal0Fh81UcWna+yfM5N5NYziyCsOcf60UCZLpWdvS8QNEL0zGff6apO/TEaUkgYx7IMdzi0Bu+56v/iybwM3Q=
