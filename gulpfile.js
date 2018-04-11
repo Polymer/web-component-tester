@@ -24,6 +24,10 @@ const rollup = require('rollup');
 const runSequence = require('run-sequence');
 const typescript = require('typescript');
 
+const mochaConfig = { reporter: 'spec' };
+if (process.env.MOCHA_TIMEOUT) {
+  mochaConfig.timeout = parseInt(process.env.MOCHA_TIMEOUT, 10);
+}
 
 // const commonTools = require('tools-common/gulpfile');
 const commonTools = {
@@ -154,7 +158,7 @@ gulp.task('build:wct-browser-legacy', [
 
 gulp.task('test:unit', function () {
   return gulp.src('test/unit/*.js', { read: false })
-    .pipe(mocha({ reporter: 'spec', timeout: 30000 }));
+    .pipe(mocha(mochaConfig));
 });
 
 gulp.task('bower', function () {
@@ -163,7 +167,7 @@ gulp.task('bower', function () {
 
 gulp.task('test:integration', ['bower'], function () {
   return gulp.src('test/integration/*.js', { read: false })
-    .pipe(mocha({ reporter: 'spec', timeout: 120000 }));
+    .pipe(mocha(mochaConfig));
 });
 
 gulp.task('tslint', () =>

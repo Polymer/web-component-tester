@@ -16,5 +16,6 @@ script:
 - xvfb-run npm test
 env:
   global:
+  - MOCHA_TIMEOUT=300000
   - secure: WqREPJCj0auiij7P86MfTpD5+buf7vlAuRiUILmcq0+rhVFvsgqG82NlKIjcQuCzM9WFMqBHxDyV0/iyfE5qiQsEXYd7g3SwMVFIAS3R8sKnMz/EMA0kCqFCGn14iwbakNduSuyjQhxHje72iczm/3S4nKFceOzDGFlnvGLxpTA=
   - secure: D5P88V2PQF6mq/bPHlpzW1DgPSz4rKaoXJ1SNIsdeqUnd8xN+tmVUBO0/skunwIPIdws0y7cLfZOThEJuRMoDMUal0Fh81UcWna+yfM5N5NYziyCsOcf60UCZLpWdvS8QNEL0zGff6apO/TEaUkgYx7IMdzi0Bu+56v/iybwM3Q=
