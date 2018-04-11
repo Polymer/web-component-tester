@@ -39,6 +39,8 @@ function loadOptionsFile(dir: string): config.Config {
     const parsedOptions = JSON.parse(jsonOptions);
     if (parsedOptions !== null && typeof parsedOptions === 'object') {
       return parsedOptions;
+    } else {
+      return {};
     }
   } catch (e) {
     return {};
