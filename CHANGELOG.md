@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- ## Unreleased -->
 <!-- Add new, unreleased items here. -->
 
+## 6.6.0-pre.4 - 2018-04-11
+* Upgrade polyserve to pick up recent fixes.
+
 ## 6.6.0-pre.3 - 2018-03-21
 * Upgrade polyserve to ^0.25.2 and add the --module-resolution flag
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
