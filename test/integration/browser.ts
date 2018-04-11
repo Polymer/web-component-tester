@@ -11,7 +11,6 @@
  * subject to an additional IP rights grant found at
  * http://polymer.github.io/PATENTS.txt
  */
-
 import {expect} from 'chai';
 import * as express from 'express';
 import * as fs from 'fs';
@@ -31,6 +30,19 @@ function parseList(stringList?: string): string[] {
       .split(',')
       .map((item) => item.trim())
       .filter((item) => !!item);
+}
+
+function loadOptionsFile(dir: string): config.Config {
+  const filename = path.join(dir, 'wct.conf.json');
+  try {
+    const jsonOptions = fs.readFileSync(filename, 'utf-8').toString();
+    const parsedOptions = JSON.parse(jsonOptions);
+    if (parsedOptions !== null && typeof parsedOptions === 'object') {
+      return parsedOptions;
+    }
+  } catch (e) {
+    return {};
+  }
 }
 
 const testLocalBrowsers = !process.env.SKIP_LOCAL_BROWSERS;
@@ -161,6 +173,27 @@ function runsIntegrationSuite(
 
     before(async function() {
       const suiteRoot = await makeProperTestDir(dirName);
+      const suiteOptions = <any>loadOptionsFile(
+          path.join('test', 'fixtures', 'integration', dirName));
+      // Filter the list of browsers within the suite's options by the global
+      // overrides if they are present.
+      if (suiteOptions.plugins !== undefined) {
+        if (testLocalBrowsersList.length > 0 &&
+            !testLocalBrowsersList.includes('default') &&
+            suiteOptions.plugins.local !== undefined &&
+            suiteOptions.plugins.local.browsers !== undefined) {
+          suiteOptions.plugins.local.browsers =
+              suiteOptions.plugins.local.browsers.filter(
+                  (b: string) => testLocalBrowsersList.includes(b));
+        }
+        if (testRemoteBrowsersList.length > 0 &&
+            suiteOptions.plugins.sauce !== undefined &&
+            suiteOptions.plugins.sauce.browsers !== undefined) {
+          suiteOptions.plugins.sauce.browsers =
+              suiteOptions.plugins.sauce.browsers.filter(
+                  (b: string) => testRemoteBrowsersList.includes(b));
+        }
+      }
       const allOptions: config.Config = Object.assign(
           {
             output: <any>{write: log.push.bind(log)},
@@ -171,7 +204,7 @@ function runsIntegrationSuite(
               tags: ['org:Polymer', 'repo:web-component-tester'],
             },
           },
-          options);
+          options, suiteOptions);
       const context = new Context(allOptions);
 
       const addEventHandler = (name: string, handler: Function) => {
@@ -249,27 +282,22 @@ function runsIntegrationSuite(
   });
 }
 
-if (testLocalBrowsers) {
-  describe('Local Browser Tests', function() {
+if (testLocalBrowsers || testRemoteBrowsers) {
+  describe('Browser Tests', function() {
+    const pluginConfig = <any>{};
+    if (testLocalBrowsers) {
+      pluginConfig.local = {
+        browsers: testLocalBrowsersList,
+        skipSeleniumInstall: true,
+      };
+    }
+    if (testRemoteBrowsers) {
+      pluginConfig.sauce = {
+        browsers: testRemoteBrowsersList,
+      };
+    }
     runsAllIntegrationSuites({
-      plugins: <any> {
-        local: {
-          browsers: testLocalBrowsersList,
-          skipSeleniumInstall: true,
-        },
-      }
-    });
-  });
-}
-
-if (testRemoteBrowsers) {
-  describe('Remote Browser Tests', function() {
-    runsAllIntegrationSuites({
-      plugins: <any> {
-        sauce: {
-          browsers: testRemoteBrowsersList,
-        },
-      }
+      plugins: pluginConfig,
     });
   });
 }
