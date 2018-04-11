@@ -315,7 +315,7 @@ Alternatively, you can specify these options via the `clientOptions`
 key in `wct.conf.json`.
 
 A reference of the default configuration can be found at
-[browser/config.js](browser/config.js).
+[browser/config.ts](browser/config.ts).
 
 
 ## Gulp
