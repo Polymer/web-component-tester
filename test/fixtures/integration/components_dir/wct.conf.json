@@ -1,0 +1,10 @@
+{
+  "plugins": {
+    "local": {
+      "browsers": [
+        "chrome"
+      ],
+      "skipSeleniumInstall": true
+    }
+  }
+}
