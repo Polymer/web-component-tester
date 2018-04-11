@@ -163,7 +163,7 @@ gulp.task('bower', function () {
 
 gulp.task('test:integration', ['bower'], function () {
   return gulp.src('test/integration/*.js', { read: false })
-    .pipe(mocha({ reporter: 'spec', timeout: 600000 }));
+    .pipe(mocha({ reporter: 'spec', timeout: 90000 }));
 });
 
 gulp.task('tslint', () =>
