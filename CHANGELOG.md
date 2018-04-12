@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- ## Unreleased -->
 <!-- Add new, unreleased items here. -->
 
+## 6.6.0-pre.5 - 2018-04-12
+* Restore missing dependency 'findup-sync'.
+
 ## 6.6.0-pre.4 - 2018-04-11
 * Upgrade polyserve to pick up recent fixes.
 
@@ -15,7 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * Upgrade polyserve to ^0.25.2 and add the --module-resolution flag
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 * Injected libraries are now resolved to correct paths while using the runner. Note: simply serving the test file and running it will attempt to find the files, but they may load the wrong versions (e.g. lodash 4 might load instead of 3)
-* Not published: 6.6.0-pre.1 & 6.6.0-pre.2 
+* Not published: 6.6.0-pre.1 & 6.6.0-pre.2
 
 ## 6.5.0 - 2018-01-17
 * Upgrade wct-local to 2.1.0 to get support for headless Chrome.
