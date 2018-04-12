@@ -576,7 +576,7 @@ var ChildRunner = /** @class */ (function () {
         if (childRunner) {
             return childRunner;
         }
-        if (window.parent === window) {
+        if (window.parent === window) { // Top window.
             if (traversal) {
                 console.warn('Subsuite loaded but was never registered. This most likely is due to wonky history behavior. Reloading...');
                 window.location.reload();
@@ -619,6 +619,11 @@ var ChildRunner = /** @class */ (function () {
      */
     ChildRunner.prototype.loaded = function (error) {
         debug('ChildRunner#loaded', this.url, error);
+        if (this.iframe.contentWindow == null && error) {
+            this.signalRunComplete(error);
+            this.done();
+            return;
+        }
         // Not all targets have WCT loaded (compatiblity mode)
         if (this.iframe.contentWindow.WCT) {
             this.share = this.iframe.contentWindow.WCT.share;
