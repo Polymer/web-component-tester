@@ -191,6 +191,7 @@ commonTools.depcheck({
     '@polymer/test-fixture',
     '@webcomponents/webcomponentsjs',
     'async',
+    'findup-sync',
 
     // Only included to satisfy peer dependency and suppress error on install
     'sinon',
