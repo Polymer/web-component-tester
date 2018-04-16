@@ -179,6 +179,26 @@ any desired tests:
 _When you use `wct` on the command line, it is generating an index like this for
 you based on the suites you ask it to load._
 
+#### URL Parameters
+
+To pass URL parameters you can append them in your nexted suites:
+```html
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      WCT.loadSuites([
+        'awesomest-tests.html?query=awesome'
+      ]);
+    </script>
+  </body>
+</html>
+```
 
 # Configuration
 
