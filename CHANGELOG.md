@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * Upgrade polyserve to 0.24.0 and add the --module-resolution flag
 * Fix #488 - Support .bowerrc directory name override of bower_components, including variants
 * Fixed #547: WCT now respects webserver.port configuration option
-* Refactored #523: Defaults for hostname are correctly used
 * Injected libraries are now resolved to correct paths while using the runner. Note: simply serving the test file and running it will attempt to find the files, but they may load the wrong versions (e.g. lodash 4 might load instead of 3)
 
 ## 6.5.0 - 2018-01-17
