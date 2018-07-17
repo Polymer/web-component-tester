@@ -178,6 +178,7 @@ export default class ChildRunner {
     setTimeout(function() {
       this.iframe.parentNode.removeChild(this.iframe);
       this.iframe = null;
+      this.share = null;
     }.bind(this), 1);
   }
 

@@ -664,6 +664,7 @@ var ChildRunner = /** @class */ (function () {
         setTimeout(function () {
             this.iframe.parentNode.removeChild(this.iframe);
             this.iframe = null;
+            this.share = null;
         }.bind(this), 1);
     };
     ChildRunner.prototype.signalRunComplete = function (error) {
