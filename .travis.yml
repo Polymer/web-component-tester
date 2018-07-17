@@ -10,8 +10,8 @@ addons:
   sauce_connect: true
 language: node_js
 node_js:
-- node
 - '6'
+- '8'
 script:
 - xvfb-run npm test
 env:
