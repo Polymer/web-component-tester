@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 <!-- Add new, unreleased items here. -->
 
+## 6.5.1 - 2020-02-11
+* Special release for bower users: updated bower.json to point to Polymer/sinon.js instead of blittle/sinon.js
+
 ## 6.5.0 - 2018-01-17
 * Upgrade wct-local to 2.1.0 to get support for headless Chrome.
 
