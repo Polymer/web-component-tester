@@ -120,7 +120,7 @@
     "gulp-typescript": "^3.1.2",
     "lazypipe": "^1.0.1",
     "rimraf": "^2.5.4",
-    "rollup": "^0.25.1",
+    "rollup": "^3.29.5",
     "run-sequence": "^1.0.1",
     "tslint": "^5.7.0",
     "typescript": "^2.1.4",
